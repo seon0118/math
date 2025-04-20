@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>正比與反比關係互動教學</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1, h2 {
+            color: #2c3e50;
+            text-align: center;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        .tab-container {
+            display: flex;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        .tab {
+            padding: 10px 20px;
+            background-color: #e0e0e0;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px 5px 0 0;
+            margin-right: 2px;
+        }
+        .tab.active {
+            background-color: #3498db;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 0 5px 5px 5px;
+            background-color: white;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="range"], input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        input[type="range"] {
+            margin-bottom: 10px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        canvas {
+            display: block;
+            margin: 20px auto;
+            border: 1px solid #ddd;
+            background-color: white;
+        }
+        .formula {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-left: 5px solid #3498db;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        .example {
+            background-color: #e8f4f8;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .quiz-container {
+            background-color: #f0f8ff;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        .quiz-question {
+            margin-bottom: 15px;
+        }
+        .quiz-options {
+            display: flex;
+            flex-direction: column;
+        }
+        .quiz-option {
+            margin: 5px 0;
+            padding: 8px;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .quiz-option:hover {
+            background-color: #d0d0d0;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .correct {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .incorrect {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>正比與反比關係互動教學</h1>
+    
+    <div class="container">
+        <div class="tab-container">
+            <button class="tab active" onclick="openTab(event, 'intro')">介紹</button>
+            <button class="tab" onclick="openTab(event, 'direct')">正比關係</button>
+            <button class="tab" onclick="openTab(event, 'inverse')">反比關係</button>
+            <button class="tab" onclick="openTab(event, 'interactive')">互動實驗</button>
+            <button class="tab" onclick="openTab(event, 'quiz')">測驗</button>
+        </div>
+        
+        <div id="intro" class="tab-content active">
+            <h2>什麼是比例關係？</h2>
+            <p>在數學中，比例關係是描述兩個變數之間關係的一種方式。最常見的兩種比例關係是<strong>正比關係</strong>和<strong>反比關係</strong>。</p>
+            
+            <h3>正比關係 (Direct Proportion)</h3>
+            <p>當兩個變數的比值保持不變時，這兩個變數之間存在正比關係。也就是說，一個變數增加時，另一個變數也會按相同的比例增加。</p>
+            <div class="formula">
+                y = kx（其中k是比例常數）
+            </div>
+            
+            <h3>反比關係 (Inverse Proportion)</h3>
+            <p>當兩個變數的乘積保持不變時，這兩個變數之間存在反比關係。也就是說，一個變數增加時，另一個變數會按相應比例減少。</p>
+            <div class="formula">
+                y = k/x（其中k是比例常數）
+            </div>
+            
+            <p>在這個互動教學中，我們將探索這兩種關係的性質，並通過實例和互動圖表來理解它們。</p>
+        </div>
+        
+        <div id="direct" class="tab-content">
+            <h2>正比關係</h2>
+            <p>正比關係是指兩個變數之間的關係，當一個變數增加時，另一個變數也按相同比例增加。</p>
+            
+            <div class="formula">
+                y = kx（其中k是比例常數）
+            </div>
+            
+            <p>正比關係的特點：</p>
+            <ul>
+                <li>在座標平面上表現為一條通過原點的直線</li>
+                <li>任意兩點的y/x比值相等</li>
+                <li>當x增加n倍時，y也增加n倍</li>
+                <li>當x = 0時，y也等於0</li>
+            </ul>
+            
+            <div class="example">
+                <h3>實例：速度與距離</h3>
+                <p>假設一輛車以恆定速度行駛，那麼行駛的距離與時間成正比。</p>
+                <p>距離 = 速度 × 時間</p>
+                <p>如果車速是60公里/小時，那麼:</p>
+                <table>
+                    <tr>
+                        <th>時間（小時）</th>
+                        <th>距離（公里）</th>
+                    </tr>
+                    <tr>
+                        <td>1</td>
+                        <td>60</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>120</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>180</td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>240</td>
+                    </tr>
+                </table>
+                <p>在這個例子中，比例常數k = 60（車速）。</p>
+            </div>
+            
+            <canvas id="directChart" width="600" height="400"></canvas>
+        </div>
+        
+        <div id="inverse" class="tab-content">
+            <h2>反比關係</h2>
+            <p>反比關係是指兩個變數之間的關係，當一個變數增加時，另一個變數會按相應比例減少，使它們的乘積保持不變。</p>
+            
+            <div class="formula">
+                y = k/x（其中k是比例常數）
+            </div>
+            
+            <p>反比關係的特點：</p>
+            <ul>
+                <li>在座標平面上表現為一條雙曲線</li>
+                <li>任意兩點的x×y乘積相等</li>
+                <li>當x增加n倍時，y減少為原來的1/n</li>
+                <li>x不能等於0（因為會導致除以零的錯誤）</li>
+                <li>當x接近0時，y趨向於無窮大</li>
+                <li>當x趨向於無窮大時，y趨向於0</li>
+            </ul>
+            
+            <div class="example">
+                <h3>實例：壓力與體積</h3>
+                <p>根據波以耳定律（在恆定溫度下），氣體的壓力與其體積成反比。</p>
+                <p>壓力 × 體積 = 常數</p>
+                <p>假設常數k = 300，那麼:</p>
+                <table>
+                    <tr>
+                        <th>體積（立方米）</th>
+                        <th>壓力（帕）</th>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>100</td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <td>50</td>
+                    </tr>
+                    <tr>
+                        <td>10</td>
+                        <td>30</td>
+                    </tr>
+                    <tr>
+                        <td>30</td>
+                        <td>10</td>
+                    </tr>
+                </table>
+                <p>在這個例子中，比例常數k = 300。</p>
+            </div>
+            
+            <canvas id="inverseChart" width="600" height="400"></canvas>
+        </div>
+        
+        <div id="interactive" class="tab-content">
+            <h2>互動實驗</h2>
+            
+            <div class="tab-container">
+                <button class="tab active" onclick="openSubTab(event, 'direct-experiment')">正比關係實驗</button>
+                <button class="tab" onclick="openSubTab(event, 'inverse-experiment')">反比關係實驗</button>
+            </div>
+            
+            <div id="direct-experiment" class="tab-content active">
+                <h3>正比關係探索</h3>
+                <p>調整比例常數k的值，觀察y = kx曲線的變化。</p>
+                
+                <div class="input-group">
+                    <label for="direct-k">比例常數 k: <span id="direct-k-value">2</span></label>
+                    <input type="range" id="direct-k" min="0.5" max="5" step="0.1" value="2" oninput="updateDirectK(this.value)">
+                </div>
+                
+                <div class="input-group">
+                    <label for="direct-x">輸入x值:</label>
+                    <input type="number" id="direct-x" value="2" min="0" step="0.5">
+                </div>
+                
+                <button onclick="calculateDirect()">計算y值</button>
+                
+                <div id="direct-result" class="result"></div>
+                
+                <canvas id="directInteractiveChart" width="600" height="400"></canvas>
+            </div>
+            
+            <div id="inverse-experiment" class="tab-content">
+                <h3>反比關係探索</h3>
+                <p>調整比例常數k的值，觀察y = k/x曲線的變化。</p>
+                
+                <div class="input-group">
+                    <label for="inverse-k">比例常數 k: <span id="inverse-k-value">10</span></label>
+                    <input type="range" id="inverse-k" min="5" max="50" step="1" value="10" oninput="updateInverseK(this.value)">
+                </div>
+                
+                <div class="input-group">
+                    <label for="inverse-x">輸入x值:</label>
+                    <input type="number" id="inverse-x" value="2" min="0.1" step="0.5">
+                </div>
+                
+                <button onclick="calculateInverse()">計算y值</button>
+                
+                <div id="inverse-result" class="result"></div>
+                
+                <canvas id="inverseInteractiveChart" width="600" height="400"></canvas>
+            </div>
+        </div>
+        
+        <div id="quiz" class="tab-content">
+            <h2>測驗：正比與反比關係</h2>
+            
+            <div class="quiz-container">
+                <div class="quiz-question">
+                    <p><strong>1. 下列哪個關係式代表正比關係？</strong></p>
+                    <div class="quiz-options">
+                        <div class="quiz-option" onclick="checkAnswer(1, 'A')">A. y = 5x</div>
+                        <div class="quiz-option" onclick="checkAnswer(1, 'B')">B. y = 10/x</div>
+                        <div class="quiz-option" onclick="checkAnswer(1, 'C')">C. y = x² + 3</div>
+                        <div class="quiz-option" onclick="checkAnswer(1, 'D')">D. y = 2x + 1</div>
+                    </div>
+                    <div id="result1" class="result hidden"></div>
+                </div>
+                
+                <div class="quiz-question">
+                    <p><strong>2. 如果x與y成反比，當x減少到原來的1/4時，y會變成多少？</strong></p>
+                    <div class="quiz-options">
+                        <div class="quiz-option" onclick="checkAnswer(2, 'A')">A. 原來的1/4</div>
+                        <div class="quiz-option" onclick="checkAnswer(2, 'B')">B. 原來的4倍</div>
+                        <div class="quiz-option" onclick="checkAnswer(2, 'C')">C. 原來的1/2</div>
+                        <div class="quiz-option" onclick="checkAnswer(2, 'D')">D. 原來的2倍</div>
+                    </div>
+                    <div id="result2" class="result hidden"></div>
+                </div>
+                
+                <div class="quiz-question">
+                    <p><strong>3. 一個工人需要8天完成一項工作，那麼2個工人需要多少天完成同樣的工作？</strong></p>
+                    <div class="quiz-options">
+                        <div class="quiz-option" onclick="checkAnswer(3, 'A')">A. 4天</div>
+                        <div class="quiz-option" onclick="checkAnswer(3, 'B')">B. 16天</div>
+                        <div class="quiz-option" onclick="checkAnswer(3, 'C')">C. 10天</div>
+                        <div class="quiz-option" onclick="checkAnswer(3, 'D')">D. 6天</div>
+                    </div>
+                    <div id="result3" class="result hidden"></div>
+                </div>
+                
+                <div class="quiz-question">
+                    <p><strong>4. 下列哪種關係的圖形是一條通過原點的直線？</strong></p>
+                    <div class="quiz-options">
+                        <div class="quiz-option" onclick="checkAnswer(4, 'A')">A. 正比關係</div>
+                        <div class="quiz-option" onclick="checkAnswer(4, 'B')">B. 反比關係</div>
+                        <div class="quiz-option" onclick="checkAnswer(4, 'C')">C. 二次函數</div>
+                        <div class="quiz-option" onclick="checkAnswer(4, 'D')">D. 以上皆非</div>
+                    </div>
+                    <div id="result4" class="result hidden"></div>
+                </div>
+                
+                <div class="quiz-question">
+                    <p><strong>5. 如果x與y成正比，當x增加到原來的3倍時，y會變成多少？</strong></p>
+                    <div class="quiz-options">
+                        <div class="quiz-option" onclick="checkAnswer(5, 'A')">A. 原來的1/3</div>
+                        <div class="quiz-option" onclick="checkAnswer(5, 'B')">B. 原來的3倍</div>
+                        <div class="quiz-option" onclick="checkAnswer(5, 'C')">C. 原來的9倍</div>
+                        <div class="quiz-option" onclick="checkAnswer(5, 'D')">D. 原來的6倍</div>
+                    </div>
+                    <div id="result5" class="result hidden"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+    <script>
+        // 初始化圖表
+        window.onload = function() {
+            // 正比關係圖
+            const directCtx = document.getElementById('directChart').getContext('2d');
+            window.directChart = new Chart(directCtx, {
+                type: 'line',
+                data: {
+                    labels: [0, 1, 2, 3, 4, 5],
+                    datasets: [{
+                        label: 'y = 2x',
+                        data: [0, 2, 4, 6, 8, 10],
+                        borderColor: '#3498db',
+                        backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                        borderWidth: 2,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: false,
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'x值'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'y值'
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // 反比關係圖
+            const inverseCtx = document.getElementById('inverseChart').getContext('2d');
+            window.inverseChart = new Chart(inverseCtx, {
+                type: 'line',
+                data: {
+                    labels: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                    datasets: [{
+                        label: 'y = 10/x',
+                        data: [10, 5, 3.33, 2.5, 2, 1.67, 1.43, 1.25, 1.11, 1],
+                        borderColor: '#e74c3c',
+                        backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                        borderWidth: 2,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: false,
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'x值'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'y值'
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // 初始化互動圖表
+            initInteractiveCharts();
+        };
+        
+        // 切換標籤頁
+        function openTab(evt, tabName) {
+            const tabcontent = document.getElementsByClassName("tab-content");
+            for (let i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].classList.remove("active");
+            }
+            
+            const tablinks = document.getElementsByClassName("tab");
+            for (let i = 0; i < tablinks.length; i++) {
+                tablinks[i].classList.remove("active");
+            }
+            
+            document.getElementById(tabName).classList.add("active");
+            evt.currentTarget.classList.add("active");
+        }
+        
+        // 切換子標籤頁
+        function openSubTab(evt, tabName) {
+            const tabcontent = evt.currentTarget.parentElement.parentElement.getElementsByClassName("tab-content");
+            for (let i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].classList.remove("active");
+            }
+            
+            const tablinks = evt.currentTarget.parentElement.getElementsByClassName("tab");
+            for (let i = 0; i < tablinks.length; i++) {
+                tablinks[i].classList.remove("active");
+            }
+            
+            document.getElementById(tabName).classList.add("active");
+            evt.currentTarget.classList.add("active");
+        }
+        
+        // 初始化互動圖表
+        function initInteractiveCharts() {
+            // 正比互動圖
+            const directInteractiveCtx = document.getElementById('directInteractiveChart').getContext('2d');
+            window.directInteractiveChart = new Chart(directInteractiveCtx, {
+                type: 'line',
+                data: {
+                    labels: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                    datasets: [{
+                        label: 'y = 2x',
+                        data: [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20],
+                        borderColor: '#3498db',
+                        backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                        borderWidth: 2,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: false,
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'x值'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'y值'
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // 反比互動圖
+            const inverseInteractiveCtx = document.getElementById('inverseInteractiveChart').getContext('2d');
+            window.inverseInteractiveChart = new Chart(inverseInteractiveCtx, {
+                type: 'line',
+                data: {
+                    labels: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                    datasets: [{
+                        label: 'y = 10/x',
+                        data: [10, 5, 3.33, 2.5, 2, 1.67, 1.43, 1.25, 1.11, 1],
+                        borderColor: '#e74c3c',
+                        backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                        borderWidth: 2,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: false,
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'x值'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'y值'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // 更新正比常數k
+        function updateDirectK(value) {
+            document.getElementById('direct-k-value').textContent = value;
+            
+            // 更新圖表
+            const k = parseFloat(value);
+            const data = [];
+            for (let x = 0; x <= 10; x++) {
+                data.push(k * x);
+            }
+            
+            window.directInteractiveChart.data.datasets[0].data = data;
+            window.directInteractiveChart.data.datasets[0].label = `y = ${k}x`;
+            window.directInteractiveChart.update();
+        }
+        
+        // 更新反比常數k
+        function updateInverseK(value) {
+            document.getElementById('inverse-k-value').textContent = value;
+            
+            // 更新圖表
+            const k = parseFloat(value);
+            const data = [];
+            for (let x = 1; x <= 10; x++) {
+                data.push(k / x);
+            }
+            
+            window.inverseInteractiveChart.data.datasets[0].data = data;
+            window.inverseInteractiveChart.data.datasets[0].label = `y = ${k}/x`;
+            window.inverseInteractiveChart.update();
+        }
+        
+        // 計算正比函數
+        function calculateDirect() {
+            const k = parseFloat(document.getElementById('direct-k').value);
+            const x = parseFloat(document.getElementById('direct-x').value);
+            
+            if (isNaN(x)) {
+                alert('請輸入有效的x值');
+                return;
+            }
+            
+            const y = k * x;
+            document.getElementById('direct-result').textContent = `當x = ${x}時，y = ${k} × ${x} = ${y.toFixed(2)}`;
+            document.getElementById('direct-result').className = 'result';
+        }
+        
+        // 計算反比函數
+        function calculateInverse() {
+            const k = parseFloat(document.getElementById('inverse-k').value);
+            const x = parseFloat(document.getElementById('inverse-x').value);
+            
+            if (isNaN(x) || x === 0) {
+                alert('請輸入有效的非零x值');
+                return;
+            }
+            
+            const y = k / x;
+            document.getElementById('inverse-result').textContent = `當x = ${x}時，y = ${k} ÷ ${x} = ${y.toFixed(2)}`;
+            document.getElementById('inverse-result').className = 'result';
+        }
+        
+        // 檢查測驗答案
+        function checkAnswer(questionNum, selectedOption) {
+            const resultDiv = document.getElementById(`result${questionNum}`);
+            resultDiv.classList.remove('hidden');
+            
+            const correctAnswers = {
+                1: 'A', // y = 5x
+                2: 'B', // 原來的4倍
+                3: 'A', // 4天
+                4: 'A', // 正比關係
+                5: 'B'  // 原來的3倍
+            };
+            
+            if (selectedOption === correctAnswers[questionNum]) {
+                resultDiv.textContent = '正確！';
+                resultDiv.className = 'result correct';
+            } else {
+                resultDiv.textContent = `不正確，正確答案是 ${correctAnswers[questionNum]}`;
+                resultDiv.className = 'result incorrect';
+            }
+        }
+    </script>
+</body>
+</html>
