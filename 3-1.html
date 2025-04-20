@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>比與比例式互動學習</title>
+    <style>
+        :root {
+            --primary: #4a6fa5;
+            --secondary: #6b8cae;
+            --accent: #ff9a3c;
+            --light: #f5f7fa;
+            --dark: #333;
+        }
+        
+        body {
+            font-family: 'Microsoft JhengHei', Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--dark);
+            margin: 0;
+            padding: 0;
+            background-color: var(--light);
+        }
+        
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 1rem;
+            text-align: center;
+        }
+        
+        nav {
+            background-color: var(--secondary);
+            padding: 0.5rem;
+            display: flex;
+            justify-content: center;
+        }
+        
+        nav a {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            margin: 0 0.5rem;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        
+        nav a:hover {
+            background-color: var(--primary);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+        
+        .section {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        h1, h2, h3 {
+            color: var(--primary);
+        }
+        
+        .example {
+            background-color: #f0f5ff;
+            padding: 1rem;
+            border-left: 4px solid var(--primary);
+            margin: 1rem 0;
+        }
+        
+        .keyword {
+            color: var(--accent);
+            font-weight: bold;
+        }
+        
+        .interactive {
+            background-color: #fff5e6;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 1.5rem 0;
+        }
+        
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: var(--secondary);
+        }
+        
+        input, select {
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin: 0.5rem 0;
+        }
+        
+        .steps {
+            counter-reset: step;
+        }
+        
+        .step {
+            margin-left: 2rem;
+            position: relative;
+            margin-bottom: 1rem;
+        }
+        
+        .step::before {
+            counter-increment: step;
+            content: counter(step);
+            position: absolute;
+            left: -2rem;
+            width: 1.5rem;
+            height: 1.5rem;
+            background-color: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .hint {
+            color: #666;
+            font-style: italic;
+        }
+        
+        .quiz {
+            background-color: #e6f7ff;
+            padding: 1rem;
+            border-radius: 8px;
+        }
+        
+        .correct {
+            color: green;
+        }
+        
+        .incorrect {
+            color: red;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+        
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+        }
+        
+        th {
+            background-color: var(--secondary);
+            color: white;
+        }
+        
+        .progress-container {
+            background-color: #ddd;
+            border-radius: 10px;
+            height: 20px;
+            width: 100%;
+        }
+        
+        .progress-bar {
+            background-color: var(--accent);
+            height: 20px;
+            border-radius: 10px;
+            width: 0%;
+            transition: width 0.5s;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        @media (max-width: 768px) {
+            nav {
+                flex-direction: column;
+            }
+            
+            nav a {
+                margin: 0.25rem 0;
+            }
+            
+            .section {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>比與比例式互動學習</h1>
+        <p>探索比例概念，學習解決實際應用問題</p>
+    </header>
+    
+    <nav>
+        <a href="#basic">基本概念</a>
+        <a href="#keywords">關鍵字識別</a>
+        <a href="#examples">例題解析</a>
+        <a href="#interactive">互動練習</a>
+        <a href="#problem-solving">應用問題策略</a>
+    </nav>
+    
+    <div class="container">
+        <section id="basic" class="section">
+            <h2>基本概念：比與比例式</h2>
+            
+            <h3>什麼是比(Ratio)?</h3>
+            <p>比是兩個數量之間的關係，表示一個數量與另一個數量的倍數關係。</p>
+            <p>比的表示方法：a : b 或 a/b（讀作 "a 比 b"）</p>
+            
+            <div class="example">
+                <h4>例如：</h4>
+                <p>班上男生有 15 人，女生有 20 人，男女生人數比為 15 : 20 = 3 : 4</p>
+                <p>這表示男生人數是女生人數的 3/4，或女生人數是男生人數的 4/3。</p>
+            </div>
+            
+            <h3>什麼是比例式(Proportion)?</h3>
+            <p>比例式表示兩個比相等，寫成 a : b = c : d 或 a/b = c/d</p>
+            <p>比例式的基本性質：<b>內項之積等於外項之積</b>，即 a × d = b × c</p>
+            
+            <div class="example">
+                <h4>例如：</h4>
+                <p>如果 3 : 5 = 12 : 20，我們可以驗證：</p>
+                <p>內項之積：5 × 12 = 60</p>
+                <p>外項之積：3 × 20 = 60</p>
+                <p>由於 60 = 60，所以這是一個成立的比例式。</p>
+            </div>
+            
+            <h3>比的基本運算</h3>
+            <ul>
+                <li>比的前項與後項同時乘以或除以同一個數，比值不變</li>
+                <li>交換比的前項與後項位置，得到的是倒數關係</li>
+                <li>兩個比相加：(a : b) + (c : d) = (ad + bc) : bd</li>
+            </ul>
+        </section>
+        
+        <section id="keywords" class="section">
+            <h2>關鍵字識別與解題步驟</h2>
+            
+            <h3>辨識比例問題的關鍵字</h3>
+            <table>
+                <tr>
+                    <th>關鍵詞</th>
+                    <th>數學意義</th>
+                    <th>例句</th>
+                </tr>
+                <tr>
+                    <td class="keyword">比</td>
+                    <td>表示兩個量之間的倍數關係</td>
+                    <td>男女生人數<span class="keyword">比</span>為 3:4</td>
+                </tr>
+                <tr>
+                    <td class="keyword">比例</td>
+                    <td>表示兩個比相等</td>
+                    <td>兩個圖形的邊長成<span class="keyword">比例</span></td>
+                </tr>
+                <tr>
+                    <td class="keyword">倍</td>
+                    <td>表示一個量是另一個量的多少倍</td>
+                    <td>甲的年齡是乙的 2 <span class="keyword">倍</span></td>
+                </tr>
+                <tr>
+                    <td class="keyword">百分比</td>
+                    <td>表示部分占整體的比例</td>
+                    <td>考試成績提高了 15<span class="keyword">%</span></td>
+                </tr>
+                <tr>
+                    <td class="keyword">成正比</td>
+                    <td>y = kx，k > 0</td>
+                    <td>速度與時間<span class="keyword">成正比</span></td>
+                </tr>
+                <tr>
+                    <td class="keyword">成反比</td>
+                    <td>xy = k 或 y = k/x</td>
+                    <td>時間與速度<span class="keyword">成反比</span></td>
+                </tr>
+            </table>
+            
+            <h3>解題步驟</h3>
+            <div class="steps">
+                <div class="step">
+                    <h4>識別關鍵字</h4>
+                    <p>仔細閱讀題目，找出表示比例關係的詞語（比、倍、百分比等）。</p>
+                </div>
+                <div class="step">
+                    <h4>列出已知數量</h4>
+                    <p>找出題目中給出的具體數值和它們之間的關係。</p>
+                </div>
+                <div class="step">
+                    <h4>找出未知數</h4>
+                    <p>明確題目要求解決的問題，確定未知數。</p>
+                </div>
+                <div class="step">
+                    <h4>建立比例式</h4>
+                    <p>根據題目中的關係，用比例式表示已知數和未知數的關係。</p>
+                </div>
+                <div class="step">
+                    <h4>解比例式</h4>
+                    <p>利用比例式的性質（內項之積等於外項之積）求解未知數。</p>
+                </div>
+                <div class="step">
+                    <h4>檢查答案</h4>
+                    <p>將答案代回原題，檢查是否符合題目條件。</p>
+                </div>
+            </div>
+        </section>
+        
+        <section id="examples" class="section">
+            <h2>例題解析</h2>
+            
+            <div class="example">
+                <h3>例題 1：基本比例應用</h3>
+                <p>小明和小華分享一盒餅乾，他們的分配比為 3:5。如果小明得到 12 塊餅乾，那麼整盒共有多少塊餅乾？</p>
+                
+                <details>
+                    <summary>點擊查看解法</summary>
+                    <div class="steps">
+                        <div class="step">
+                            <h4>識別關鍵字</h4>
+                            <p>關鍵詞：「<span class="keyword">比為 3:5</span>」</p>
+                        </div>
+                        <div class="step">
+                            <h4>列出已知數量</h4>
+                            <p>小明與小華的分配比 = 3:5</p>
+                            <p>小明得到 12 塊餅乾</p>
+                        </div>
+                        <div class="step">
+                            <h4>找出未知數</h4>
+                            <p>整盒餅乾的總數</p>
+                        </div>
+                        <div class="step">
+                            <h4>建立比例式</h4>
+                            <p>設整盒餅乾有 x 塊</p>
+                            <p>小明分得：小華分得 = 3:5</p>
+                            <p>小明分得：整盒 = 3:(3+5) = 3:8</p>
+                            <p>因此 12/x = 3/8</p>
+                        </div>
+                        <div class="step">
+                            <h4>解比例式</h4>
+                            <p>利用內項之積等於外項之積：</p>
+                            <p>12 × 8 = x × 3</p>
+                            <p>96 = 3x</p>
+                            <p>x = 32</p>
+                        </div>
+                        <div class="step">
+                            <h4>檢查答案</h4>
+                            <p>整盒有 32 塊餅乾</p>
+                            <p>小明分得：小華分得 = 3:5</p>
+                            <p>小明分得 32 × (3/8) = 12 塊</p>
+                            <p>小華分得 32 × (5/8) = 20 塊</p>
+                            <p>12 + 20 = 32 ✓</p>
+                        </div>
+                    </div>
+                </details>
+            </div>
+            
+            <div class="example">
+                <h3>例題 2：成反比關係</h3>
+                <p>工人甲獨自完成一項工作需要 12 天，工人乙獨自完成同一項工作需要 8 天。如果兩人合作，需要多少天完成這項工作？</p>
+                
+                <details>
+                    <summary>點擊查看解法</summary>
+                    <div class="steps">
+                        <div class="step">
+                            <h4>識別關鍵字</h4>
+                            <p>完成工作與時間的關係是典型的<span class="keyword">反比例關係</span></p>
+                        </div>
+                        <div class="step">
+                            <h4>列出已知數量</h4>
+                            <p>工人甲需要 12 天完成</p>
+                            <p>工人乙需要 8 天完成</p>
+                        </div>
+                        <div class="step">
+                            <h4>找出未知數</h4>
+                            <p>兩人合作需要的天數 x</p>
+                        </div>
+                        <div class="step">
+                            <h4>建立工作效率關係</h4>
+                            <p>工人甲一天完成的工作量：1/12</p>
+                            <p>工人乙一天完成的工作量：1/8</p>
+                            <p>兩人一天合作完成的工作量：1/12 + 1/8</p>
+                        </div>
+                        <div class="step">
+                            <h4>解方程式</h4>
+                            <p>1/12 + 1/8 = 1/x 的倒數</p>
+                            <p>1/12 + 1/8 = (8+12)/(12×8) = 20/96 = 5/24</p>
+                            <p>所以 1/x = 5/24，即 x = 24/5 = 4.8</p>
+                        </div>
+                        <div class="step">
+                            <h4>檢查答案</h4>
+                            <p>兩人合作需要 4.8 天完成工作</p>
+                            <p>4.8 天內，工人甲完成：4.8/12 = 0.4 (即 40%)</p>
+                            <p>4.8 天內，工人乙完成：4.8/8 = 0.6 (即 60%)</p>
+                            <p>總完成率：0.4 + 0.6 = 1 (即 100%) ✓</p>
+                        </div>
+                    </div>
+                </details>
+            </div>
+            
+            <div class="example">
+                <h3>例題 3：百分比應用</h3>
+                <p>一件商品先打八折後又打九折，最後售價為 576 元。求這件商品的原價。</p>
+                
+                <details>
+                    <summary>點擊查看解法</summary>
+                    <div class="steps">
+                        <div class="step">
+                            <h4>識別關鍵字</h4>
+                            <p>關鍵詞：「<span class="keyword">打八折</span>」、「<span class="keyword">打九折</span>」</p>
+                        </div>
+                        <div class="step">
+                            <h4>列出已知數量</h4>
+                            <p>打八折後又打九折的價格為 576 元</p>
+                            <p>打八折 = 原價的 80%</p>
+                            <p>打九折 = 原價的 90%</p>
+                        </div>
+                        <div class="step">
+                            <h4>找出未知數</h4>
+                            <p>商品的原價 x</p>
+                        </div>
+                        <div class="step">
+                            <h4>建立比例關係</h4>
+                            <p>最終價格 = 原價 × 80% × 90%</p>
+                            <p>576 = x × 0.8 × 0.9</p>
+                        </div>
+                        <div class="step">
+                            <h4>解方程式</h4>
+                            <p>576 = x × 0.72</p>
+                            <p>x = 576 ÷ 0.72 = 800</p>
+                        </div>
+                        <div class="step">
+                            <h4>檢查答案</h4>
+                            <p>原價 800 元</p>
+                            <p>打八折後：800 × 0.8 = 640 元</p>
+                            <p>再打九折：640 × 0.9 = 576 元 ✓</p>
+                        </div>
+                    </div>
+                </details>
+            </div>
+        </section>
+        
+        <section id="interactive" class="section">
+            <h2>互動練習</h2>
+            
+            <div class="interactive">
+                <h3>練習 1：比例式計算</h3>
+                <p>解決比例式：3 : x = 15 : 35，求 x 的值。</p>
+                <input type="number" id="prop-answer" placeholder="請輸入答案...">
+                <button onclick="checkProportionAnswer()">檢查答案</button>
+                <p id="prop-result" class="hidden"></p>
+                
+                <script>
+                    function checkProportionAnswer() {
+                        const answer = document.getElementById('prop-answer').value;
+                        const result = document.getElementById('prop-result');
+                        result.classList.remove('hidden');
+                        
+                        if (answer == 7) {
+                            result.textContent = "正確！3 : 7 = 15 : 35，因為內項之積等於外項之積：3 × 35 = 7 × 15 = 105";
+                            result.className = "correct";
+                        } else {
+                            result.textContent = "不正確，請再試一次。提示：利用內項之積等於外項之積 3 × 35 = x × 15";
+                            result.className = "incorrect";
+                        }
+                    }
+                </script>
+            </div>
+            
+            <div class="interactive">
+                <h3>練習 2：應用問題</h3>
+                <p>小美以 72 元買了一些筆，平均每支 12 元。如果單價降為 9 元，同樣的錢可以多買幾支筆？</p>
+                <input type="number" id="app-answer" placeholder="請輸入答案...">
+                <button onclick="checkApplicationAnswer()">檢查答案</button>
+                <p id="app-result" class="hidden"></p>
+                
+                <script>
+                    function checkApplicationAnswer() {
+                        const answer = document.getElementById('app-answer').value;
+                        const result = document.getElementById('app-result');
+                        result.classList.remove('hidden');
+                        
+                        if (answer == 2) {
+                            result.textContent = "正確！原來可買 72÷12=6 支筆，降價後可買 72÷9=8 支筆，多買了 8-6=2 支筆。";
+                            result.className = "correct";
+                        } else {
+                            result.textContent = "不正確，請再試一次。提示：先算出原本可以買多少支筆，再算出降價後可以買多少支筆。";
+                            result.className = "incorrect";
+                        }
+                    }
+                </script>
+            </div>
+            
+            <div class="interactive">
+                <h3>關鍵字識別練習</h3>
+                <p>閱讀以下問題，找出所有表示比例關係的關鍵字。</p>
+                <p>"一款飲料的濃縮汁與水的比例是 1:4。如果要製作 750 毫升的飲料，需要多少毫升的濃縮汁？"</p>
+                
+                <div style="margin-top: 1rem;">
+                    <input type="checkbox" id="keyword1" value="比例">
+                    <label for="keyword1">比例</label>
+                </div>
+                <div>
+                    <input type="checkbox" id="keyword2" value="倍">
+                    <label for="keyword2">倍</label>
+                </div>
+                <div>
+                    <input type="checkbox" id="keyword3" value="多少">
+                    <label for="keyword3">多少</label>
+                </div>
+                <div>
+                    <input type="checkbox" id="keyword4" value="毫升">
+                    <label for="keyword4">毫升</label>
+                </div>
+                
+                <button onclick="checkKeywords()" style="margin-top: 1rem;">檢查</button>
+                <p id="keyword-result" class="hidden"></p>
+                
+                <script>
+                    function checkKeywords() {
+                        const result = document.getElementById('keyword-result');
+                        result.classList.remove('hidden');
+                        
+                        const keyword1 = document.getElementById('keyword1').checked;
+                        const keyword2 = document.getElementById('keyword2').checked;
+                        const keyword3 = document.getElementById('keyword3').checked;
+                        const keyword4 = document.getElementById('keyword4').checked;
+                        
+                        if (keyword1 && !keyword2 && !keyword3 && !keyword4) {
+                            result.textContent = "正確！「比例」是表示比例關係的關鍵字。在這個問題中，我們需要利用濃縮汁:水 = 1:4 的比例來求解。";
+                            result.className = "correct";
+                        } else {
+                            result.textContent = "不完全正確。在這個問題中，「比例」是表示比例關係的關鍵字，其他選項不是關鍵字。";
+                            result.className = "incorrect";
+                        }
+                    }
+                </script>
+            </div>
+        </section>
+        
+        <section id="problem-solving" class="section">
+            <h2>應用問題解題策略</h2>
+            
+            <h3>解題策略框架</h3>
+            <div class="steps">
+                <div class="step">
+                    <h4>理解問題</h4>
+                    <p>仔細閱讀題目，確定已知條件和所求問題。</p>
+                    <div class="hint">有時候，題目的信息可能不是直接給出的，需要從文字中推斷。</div>
+                </div>
+                <div class="step">
+                    <h4>識別比例關係</h4>
+                    <p>尋找關鍵字，確定問題中的比例關係。常見關鍵字包括：</p>
+                    <ul>
+                        <li><span class="keyword">比</span>：直接表示兩個量的比值</li>
+                        <li><span class="keyword">倍</span>：表示一個量是另一個量的幾倍</li>
+                        <li><span class="keyword">成正比/反比</span>：表示兩個量之間的函數關係</li>
+                        <li><span class="keyword">百分比</span>：表示部分占整體的比例</li>
+                    </ul>
+                </div>
+                <div class="step">
+                    <h4>劃分已知量和未知量</h4>
+                    <p>整理題目中的條件，區分已知量和未知量。</p>
+                    <div class="hint">可以用表格或簡單符號來表示不同的量。</div>
+                </div>
+                <div class="step">
+                    <h4>建立比例式</h4>
+                    <p>根據題目中的比例關係，建立適當的比例式。</p>
+                    <div class="hint">記住比例式的基本性質：內項之積等於外項之積。</div>
+                </div>
+                <div class="step">
+                    <h4>解方程求解</h4>
+                    <p>根據比例式的性質，解出未知量。</p>
+                </div>
+                <div class="step">
+                    <h4>檢驗結果</h4>
+                    <p>將結果代回原問題，檢查是否合理。</p>
+                </div>
+            </div>
+            
+            <h3>常見問題類型及關鍵字</h3>
+            <table>
+                <tr>
+                    <th>問題類型</th>
+                    <th>關鍵字/短語</th>
+                    <th>解題策略</th>
+                </tr>
+                <tr>
+                    <td>直接比例</td>
+                    <td>「比為...」「...的比是...」「按...比例分配」</td>
+                    <td>建立比例式，利用內項之積等於外項之積求解</td>
+                </tr>
+                <tr>
+                    <td>倍數關係</td>
+                    <td>「...是...的幾倍」「...倍於...」</td>
+                    <td>將倍數關係轉換為比例關係</td>
+                </tr>
+                <tr>
+                    <td>百分比問題</td>
+                    <td>「...％」「折扣」「漲幅」「利率」</td>
+                    <td>計算部分與整體的關係，使用小數或分數表示</td>
+                </tr>
+                <tr>
+                    <td>成正/反比例</td>
+                    <td>「成正比」「成反比」「隨...增加而增加/減少」</td>
+                    <td>根據正/反比例的性質建立函數關係</td>
+                </tr>
+                <tr>
+                    <td>工作效率問題</td>
+                    <td>「...天完成」「...小時工作」「效率」</td>
+                    <td>使用單位時間完成的工作量表示效率</td>
+                </tr>
+                <tr>
+                    <td>配方/濃度問題</td>
+                    <td>「濃度」「溶液」「配製」「濃縮/稀釋」</td>
+                    <td>利用質量守恒原理，建立含量關係</td>
+                </tr>
+            </table>
+            
+            <div class="example">
+                <h3>應用問題示範</h3>
+                <p>某學校有兩個班級，甲班和乙班的學生人數比為 4:5。已知甲班有 28 人，若從甲班調 4 人到乙班，則兩班人數之比為多少？</p>
+                
+                <details>
+                    <summary>分步解答</summary>
+                    <div class="steps">
+                        <div class="step">
+                            <h4>識別關鍵字</h4>
+                            <p>關鍵字：「<span class="keyword">人數比為 4:5</span>」、「<span class="keyword">人數之比</span>」</p>
+                        </div>
+                        <div class="step">
+                            <h4>列出已知數量</h4>
+                            <p>甲班與乙班的人數比 = 4:5</p>
+                            <p>甲班有 28 人</p>
+                            <p>從甲班調 4 人到乙班</p>
+                        </div>
+                        <div class="step">
+                            <h4>找出未知數</h4>
+                            <p>調整後甲班與乙班的人數比</p>
+                        </div>
+                        <div class="step">
+                            <h4>建立關係</h4>
+                            <p>由於甲:乙 = 4:5，且甲班有 28 人</p>
+                            <p>所以乙班人數 = 28 × (5/4) = 35 人</p>
+                            <p>調動後，甲班人數 = 28 - 4 = 24 人</p>
+                            <p>調動後，乙班人數 = 35 + 4 = 39 人</p>
+                        </div>
+                        <div class="step">
+                            <h4>求解比例</h4>
+                            <p>調動後的比例 = 24:39</p>
+                            <p>約分：24÷3 = 8，39÷3 = 13</p>
+                            <p>所以最終比例為 8:13</p>
+                        </div>
+                        <div class="step">
+                            <h4>檢查答案</h4>
+                            <p>調整前：甲班 28 人，乙班 35 人，比例為 4:5</p>
+                            <p>調整後：甲班 24 人，乙班 39 人，比例為 8:13</p>
+                        </div>
+                    </div>
+                </details>
+            </div>
+        </section>
+        
+        <section class="section">
+            <h2>綜合練習</h2>
+            
+            <div class="quiz">
+                <h3 id="quiz-title">隨機練習題</h3>
+                <p id="quiz-question"></p>
+                <div id="quiz-options" style="margin: 1rem 0;"></div>
+                <button onclick="checkQuizAnswer()">提交答案</button>
+                <p id="quiz-result" class="hidden"></p>
+                <button id="next-quiz" onclick="generateRandomQuiz()" style="display: none;">下一題</button>
+                
+                <div class="progress-container" style="margin-top: 1rem;">
+                    <div id="quiz-progress" class="progress-bar"></div>
+                </div>
+                <p id="quiz-score">得分：0/0</p>
+                
+                <script>
+                    const quizQuestions = [
+                        {
+                            question: "小明和小華分享一盒糖果，他們的分配比為 2:3。如果小華得到 15 顆糖果，那麼小明得到多少顆糖果？",
+                            options: ["5顆", "10顆", "12顆", "20顆"],
+                            answer: 1,
+                            explanation: "小明:小華 = 2:3，小華得到 15 顆，所以小明得到 15 × (2/3) = 10 顆糖果。"
+                        },
+                        {
+                            question: "一個三角形的三個內角比為 1:2:3，則最小的角度是多少度？",
+                            options: ["30°", "40°", "45°", "50°"],
+                            answer: 0,
+                            explanation: "三角形內角和為 180°。設三個角分別為 x, 2x, 3x，則 x + 2x + 3x = 180°，解得 x = 30°。"
+                        },
+                        {
+                            question: "一種合金由銅和鋅組成，銅與鋅的質量比為 7:3。若要製造 500 克的合金，需要多少克的銅？",
+                            options: ["150克", "300克", "350克", "450克"],
+                            answer: 2,
+                            explanation: "銅:鋅 = 7:3，銅占合金的比例為 7/(7+3) = 7/10，所以銅的質量為 500 × 7/10 = 350克。"
+                        },
+                        {
+                            question: "小華用 240 元買了鉛筆和原子筆，每支鉛筆 6 元，每支原子筆 8 元。如果鉛筆和原子筆的數量比是 3:2，那麼小華買了多少支鉛筆？",
+                            options: ["18支", "24支", "27支", "30支"],
+                            answer: 1,
+                            explanation: "設鉛筆數量為 3x，原子筆數量為 2x。則 6×3x + 8×2x = 240，解得 34x = 240，x = 240/34 = 120/17，所以鉛筆數量為 3x = 3×120/17 = 360/17 = 24（取整數解）。"
+                        },
+                        {
+                            question: "工廠生產一批產品，甲機器獨立工作需要 10 天完成，乙機器獨立工作需要 15 天完成。如果兩臺機器同時工作，多久能完成這批產品？",
+                            options: ["5天", "6天", "8天", "12天"],
+                            answer: 1,
+                            explanation: "甲一天完成 1/10，乙一天完成 1/15，兩機器一天共完成 1/10 + 1/15 = (3+2)/30 = 5/30 = 1/6，所以需要 6 天完成。"
+                        }
+                    ];
+                    
+                    let currentQuizIndex = 0;
+                    let correctAnswers = 0;
+                    let totalAnswered = 0;
+                    
+                    function generateRandomQuiz() {
+                        const quizQuestion = document.getElementById('quiz-question');
+                        const quizOptions = document.getElementById('quiz-options');
+                        const quizResult = document.getElementById('quiz-result');
+                        const nextQuizBtn = document.getElementById('next-quiz');
+                        
+                        quizResult.classList.add('hidden');
+                        nextQuizBtn.style.display = 'none';
+                        
+                        currentQuizIndex = (currentQuizIndex + 1) % quizQuestions.length;
+                        const quiz = quizQuestions[currentQuizIndex];
+                        
+                        quizQuestion.textContent = quiz.question;
+                        quizOptions.innerHTML = '';
+                        
+                        quiz.options.forEach((option, index) => {
+                            const radioBtn = document.createElement('div');
+                            radioBtn.innerHTML = `
+                                <input type="radio" id="option${index}" name="quiz" value="${index}">
+                                <label for="option${index}">${option}</label>
+                            `;
+                            quizOptions.appendChild(radioBtn);
+                        });
+                    }
+                    
+                    function checkQuizAnswer() {
+                        const selectedOption = document.querySelector('input[name="quiz"]:checked');
+                        const quizResult = document.getElementById('quiz-result');
+                        const nextQuizBtn = document.getElementById('next-quiz');
+                        const quizProgress = document.getElementById('quiz-progress');
+                        const quizScore = document.getElementById('quiz-score');
+                        
+                        if (!selectedOption) {
+                            alert('請選擇一個答案！');
+                            return;
+                        }
+                        
+                        const quiz = quizQuestions[currentQuizIndex];
+                        const isCorrect = parseInt(selectedOption.value) === quiz.answer;
+                        
+                        quizResult.classList.remove('hidden');
+                        quizResult.className = isCorrect ? 'correct' : 'incorrect';
+                        
+                        if (isCorrect) {
+                            quizResult.textContent = `正確！${quiz.explanation}`;
+                            correctAnswers++;
+                        } else {
+                            quizResult.textContent = `不正確。正確答案是：${quiz.options[quiz.answer]}。${quiz.explanation}`;
+                        }
+                        
+                        totalAnswered++;
+                        quizScore.textContent = `得分：${correctAnswers}/${totalAnswered}`;
+                        quizProgress.style.width = `${(correctAnswers / totalAnswered) * 100}%`;
+                        
+                        nextQuizBtn.style.display = 'block';
+                    }
+                    
+                    // 初始化第一題
+                    generateRandomQuiz();
+                </script>
+            </div>
+        </section>
+        
+        <section class="section">
+            <h2>解題模板與實用技巧</h2>
+            
+            <h3>找出關鍵字的技巧</h3>
+            <ul>
+                <li>圈出文字題中所有的數字和單位</li>
+                <li>找出描述關係的詞語（比、倍、成正/反比等）</li>
+                <li>尋找題目中的動詞和變化（增加、減少、提高、下降等）</li>
+                <li>辨別問題中的已知和未知數量</li>
+            </ul>
+            
+            <h3>解題模板</h3>
+            <div class="example">
+                <h4>基本比例問題模板</h4>
+                <pre>
+已知：a : b = c : d
+找出：其中一個未知數
+解法：利用內項之積等於外項之積
+      a × d = b × c
+</pre>
+            </div>
+            
+            <div class="example">
+                <h4>工作效率問題模板</h4>
+                <pre>
+甲獨立完成需要 A 天
+乙獨立完成需要 B 天
+甲的效率：1/A（每天完成的工作量）
+乙的效率：1/B（每天完成的工作量）
+合作效率：1/A + 1/B = (A+B)/(A×B)
+合作時間：A×B/(A+B)
+</pre>
+            </div>
+            
+            <div class="example">
+                <h4>百分比問題模板</h4>
+                <pre>
+漲價/減價問題：
+新價格 = 原價 × (1 ± 百分比)
+原價 = 新價格 ÷ (1 ± 百分比)
+
+連續變化問題：
+最終值 = 原值 × (1 ± 百分比1) × (1 ± 百分比2) × ...
+</pre>
+            </div>
+            
+            <h3>應用問題解題技巧</h3>
+            <ul>
+                <li>繪製表格整理數據，特別是有多個量或多個條件的問題</li>
+                <li>對於複雜問題，可以先解決其中一部分，再逐步解決其餘部分</li>
+                <li>利用單位換算確保所有數量使用相同的單位</li>
+                <li>檢查答案時，確保答案符合實際情況（如不能出現負數的人數）</li>
+            </ul>
+        </section>
+    </div>
+    
+    <footer style="background-color: var(--primary); color: white; text-align: center; padding: 1rem; margin-top: 2rem;">
+        <p>比與比例式互動學習網站 © 2025</p>
+    </footer>
+    
+    <script>
+        // 記錄學習進度
+        let visitedSections = {};
+        
+        // 監聽滾動事件，記錄已訪問的章節
+        window.addEventListener('scroll', function() {
+            const sections = document.querySelectorAll('.section');
+            sections.forEach(section => {
+                const rect = section.getBoundingClientRect();
+                if (rect.top < window.innerHeight && rect.bottom >= 0) {
+                    visitedSections[section.id] = true;
+                }
+            });
+        });
+    </script>
+</body>
+</html>
