@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>數學密室逃脫 - 藍黑電競風</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Courier New', monospace;
+        }
+        
+        body {
+            background-color: #0a0a23;
+            color: #4da6ff;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            border-bottom: 2px solid #00ccff;
+            position: relative;
+        }
+        
+        header h1 {
+            font-size: 2.5rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: #00ccff;
+            text-shadow: 0 0 10px #00ccff, 0 0 20px #00ccff;
+            animation: flicker 2s infinite;
+        }
+        
+        @keyframes flicker {
+            0%, 19.999%, 22%, 62.999%, 64%, 64.999%, 70%, 100% {
+                opacity: 1;
+            }
+            20%, 21.999%, 63%, 63.999%, 65%, 69.999% {
+                opacity: 0.8;
+            }
+        }
+        
+        .game-area {
+            background-color: #0f0f2d;
+            border: 2px solid #00ccff;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 0 15px #00ccff;
+        }
+        
+        .room {
+            display: none;
+            animation: fadeIn 1s;
+        }
+        
+        .room.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .room h2 {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            color: #00ccff;
+            text-shadow: 0 0 5px #00ccff;
+        }
+        
+        .room p {
+            margin-bottom: 20px;
+            line-height: 1.6;
+            font-size: 1.1rem;
+        }
+        
+        .challenge {
+            padding: 20px;
+            background-color: #131340;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            box-shadow: inset 0 0 10px #000;
+        }
+        
+        .challenge h3 {
+            color: #66ffff;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+        
+        .input-area {
+            margin-top: 20px;
+        }
+        
+        input[type="text"], input[type="number"] {
+            background-color: #0a0a23;
+            color: #00ccff;
+            border: 1px solid #00ccff;
+            padding: 10px;
+            border-radius: 5px;
+            width: 100%;
+            margin-bottom: 15px;
+            font-size: 1rem;
+        }
+        
+        button {
+            background-color: #00ccff;
+            color: #0a0a23;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        button:hover {
+            background-color: #66ffff;
+            box-shadow: 0 0 15px #00ccff;
+        }
+        
+        .message {
+            padding: 10px;
+            margin-top: 15px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        
+        .success {
+            background-color: rgba(0, 255, 0, 0.2);
+            color: #00ff00;
+            border: 1px solid #00ff00;
+        }
+        
+        .error {
+            background-color: rgba(255, 0, 0, 0.2);
+            color: #ff0066;
+            border: 1px solid #ff0066;
+        }
+        
+        .hint-btn {
+            background-color: transparent;
+            color: #ffcc00;
+            border: 1px solid #ffcc00;
+            margin-top: 10px;
+        }
+        
+        .hint-btn:hover {
+            background-color: #ffcc00;
+            color: #0a0a23;
+        }
+        
+        .hint {
+            display: none;
+            padding: 15px;
+            background-color: rgba(255, 204, 0, 0.1);
+            border: 1px solid #ffcc00;
+            color: #ffcc00;
+            border-radius: 5px;
+            margin-top: 15px;
+        }
+        
+        #timer {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 1.5rem;
+            color: #ff3366;
+            font-weight: bold;
+        }
+        
+        .graph-container {
+            width: 300px;
+            height: 300px;
+            margin: 0 auto;
+            position: relative;
+            background-color: #131340;
+            border: 1px solid #00ccff;
+        }
+        
+        .coordinate-system {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        
+        .x-axis, .y-axis {
+            position: absolute;
+            background-color: #00ccff;
+        }
+        
+        .x-axis {
+            width: 100%;
+            height: 2px;
+            top: 50%;
+        }
+        
+        .y-axis {
+            width: 2px;
+            height: 100%;
+            left: 50%;
+        }
+        
+        .line {
+            position: absolute;
+            height: 2px;
+            background-color: #ff3366;
+            transform-origin: 0 0;
+        }
+        
+        .terminal {
+            background-color: #000;
+            color: #00cc00;
+            font-family: 'Courier New', monospace;
+            padding: 20px;
+            border-radius: 5px;
+            margin-top: 20px;
+            height: 200px;
+            overflow-y: auto;
+            border: 1px solid #00cc00;
+        }
+        
+        .terminal-text {
+            margin: 0;
+            line-height: 1.4;
+        }
+        
+        .terminal-input {
+            display: flex;
+            margin-top: 10px;
+        }
+        
+        .terminal-input span {
+            color: #00cc00;
+            margin-right: 5px;
+        }
+        
+        .terminal-input input {
+            background-color: transparent;
+            border: none;
+            color: #00cc00;
+            font-family: 'Courier New', monospace;
+            flex-grow: 1;
+            outline: none;
+        }
+        
+        .progress-container {
+            width: 100%;
+            background-color: #131340;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            height: 20px;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background-color: #00ccff;
+            text-align: center;
+            line-height: 20px;
+            color: white;
+            transition: width 0.5s;
+        }
+        
+        .cyber-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(10, 10, 35, 0.8) 1px, transparent 1px), 
+                        linear-gradient(90deg, rgba(10, 10, 35, 0.8) 1px, transparent 1px);
+            background-size: 30px 30px;
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        .neon-border {
+            border: 2px solid #00ccff;
+            box-shadow: 0 0 15px #00ccff;
+        }
+        
+        .circle {
+            position: absolute;
+            border-radius: 50%;
+            border: 2px solid #ff3366;
+            background-color: transparent;
+        }
+        
+        .triangle {
+            width: 0;
+            height: 0;
+            margin: 20px auto;
+            border-left: 100px solid transparent;
+            border-right: 100px solid transparent;
+            border-bottom: 173px solid #131340;
+            position: relative;
+        }
+        
+        .triangle-dimensions {
+            position: absolute;
+            color: #00ccff;
+        }
+        
+        .fraction-table {
+            width: 80%;
+            margin: 20px auto;
+            border-collapse: collapse;
+        }
+        
+        .fraction-table td {
+            border: 1px solid #00ccff;
+            padding: 10px;
+            text-align: center;
+            color: #4da6ff;
+        }
+        
+        .polygon {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto;
+            position: relative;
+        }
+        
+        .polygon-point {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background-color: #ff3366;
+            border-radius: 50%;
+        }
+        
+        .polygon-line {
+            position: absolute;
+            height: 2px;
+            background-color: #00ccff;
+            transform-origin: 0 0;
+        }
+        
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .room h2 {
+                font-size: 1.5rem;
+            }
+            
+            .graph-container {
+                width: 250px;
+                height: 250px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="cyber-grid"></div>
+    <div class="container">
+        <header>
+            <h1>數學密室逃脫</h1>
+            <div id="timer">45:00</div>
+        </header>
+        
+        <div class="progress-container">
+            <div class="progress-bar" id="progress">0%</div>
+        </div>
+        
+        <div class="game-area">
+            <div class="room active" id="intro">
+                <h2>歡迎來到數學密室逃脫</h2>
+                <p>你被困在一個神秘的電腦密室中，要逃出去，你必須解決八個數學謎題。</p>
+                <p>系統提示：根據你的國中數學知識解鎖每個關卡，成功逃出這個密室！</p>
+                <div class="terminal">
+                    <p class="terminal-text">系統啟動中...</p>
+                    <p class="terminal-text">檢測到用戶進入...</p>
+                    <p class="terminal-text">歡迎來到國中數學密室逃脫挑戰。</p>
+                    <p class="terminal-text">你有45分鐘的時間解開所有謎題。</p>
+                    <p class="terminal-text">共有八個關卡等著你挑戰。</p>
+                    <p class="terminal-text">祝你好運！</p>
+                    <div class="terminal-input">
+                        <span>></span>
+                        <input type="text" id="start-input" placeholder="輸入 'start' 開始遊戲">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="room" id="room1">
+                <h2>第一關：二元一次方程式圖形</h2>
+                <p>要解開這個房間的門鎖，你需要找出圖中顯示的兩條直線的交點座標。</p>
+                
+                <div class="challenge">
+                    <h3>挑戰：找出下列兩條直線的交點</h3>
+                    <p>直線方程式 1：y = 2x - 3</p>
+                    <p>直線方程式 2：y = -x + 6</p>
+                    
+                    <div class="graph-container">
+                        <div class="coordinate-system">
+                            <div class="x-axis"></div>
+                            <div class="y-axis"></div>
+                            <div class="line" id="line1"></div>
+                            <div class="line" id="line2"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="input-area">
+                        <label for="answer1">交點座標 (x, y)：</label>
+                        <input type="text" id="answer1" placeholder="格式：x,y">
+                        <button onclick="checkAnswer1()">提交答案</button>
+                        <button class="hint-btn" onclick="showHint('hint1')">提示</button>
+                        <div class="hint" id="hint1">
+                            將兩個方程式聯立求解：2x - 3 = -x + 6，解出 x 後再代入其中一個方程式求 y。
+                        </div>
+                        <div id="message1" class="message"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="room" id="room2">
+                <h2>第二關：比與比例式</h2>
+                <p>這個房間的門被一個複雜的比例鎖鎖著，你需要解決下面的比例問題才能繼續前進。</p>
+                
+                <div class="challenge">
+                    <h3>挑戰：解決比例問題</h3>
+                    <p>在一場電競比賽中，紅隊與藍隊的得分比為 5:7。</p>
+                    <p>如果兩隊總得分為 180 分，那麼藍隊得了多少分？</p>
+                    
+                    <div class="input-area">
+                        <label for="answer2">藍隊得分：</label>
+                        <input type="number" id="answer2" placeholder="請輸入數字">
+                        <button onclick="checkAnswer2()">提交答案</button>
+                        <button class="hint-btn" onclick="showHint('hint2')">提示</button>
+                        <div class="hint" id="hint2">
+                            設紅隊得分為 5x，藍隊得分為 7x，則 5x + 7x = 180。求解 x 後，藍隊得分為 7x。
+                        </div>
+                        <div id="message2" class="message"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="room" id="room3">
+                <h2>第三關：正比與反比</h2>
+                <p>下一道門需要你理解正比和反比的概念才能解開。</p>
+                
+                <div class="challenge">
+                    <h3>挑戰：解決正比和反比問題</h3>
+                    <p>在一個電腦程式中，處理速度(S)與運行時間(T)成反比，且當處理速度為 2 單位時，運行時間為 15 分鐘。</p>
+                    <p>如果我們將處理速度提高到 5 單位，運行時間會變成多少分鐘？</p>
+                    
+                    <div class="input-area">
+                        <label for="answer3">新的運行時間：</label>
+                        <input type="number" id="answer3" placeholder="請輸入分鐘數">
+                        <button onclick="checkAnswer3()">提交答案</button>
+                        <button class="hint-btn" onclick="showHint('hint3')">提示</button>
+                        <div class="hint" id="hint3">
+                            因為 S 與 T 成反比，所以 S×T = k（常數）。已知 2×15 = k，求 5×T = k 時的 T 值。
+                        </div>
+                        <div id="message3" class="message"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="room" id="room4">
+                <h2>第四關：一元二次方程式</h2>
+                <p>這個房間被一元二次方程式加密的密碼鎖保護著。解開它才能前進！</p>
+                
+                <div class="challenge">
+                    <h3>挑戰：解決一元二次方程式</h3>
+                    <p>方程式：x² - 5x + 6 = 0</p>
+                    <p>求出所有解後，將兩個解的積作為答案。</p>
+                    
+                    <div class="input-area">
+                        <label for="answer4">解的積：</label>
+                        <input type="number" id="answer4" placeholder="請輸入數字">
+                        <button onclick="checkAnswer4()">提交答案</button>
+                        <button class="hint-btn" onclick="showHint('hint4')">提示</button>
+                        <div class="hint" id="hint4">
+                            可以使用因式分解解此方程式：x² - 5x + 6 = 0 可以分解為 (x-2)(x-3) = 0。
+                            或者使用公式法：x = (-b ± √(b² - 4ac))/(2a)，其中 a=1, b=-5, c=6。
+                        </div>
+                        <div id="message4" class="message"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="room" id="room5">
+                <h2>第五關：圓形方程式</h2>
+                <p>這扇門上有一個圓形的密碼鎖，你需要計算出相關數值來破解。</p>
+                
+                <div class="challenge">
+                    <h3>挑戰：解決圓的問題</h3>
+                    <p>一個圓的方程式為：(x - 2)² + (y + 3)² = 16</p>
+                    <p>求出此圓的圓心座標和半徑。</p>
+                    
+                    <div class="graph-container">
+                        <div class="coordinate-system">
+                            <div class="x-axis"></div>
+                            <div class="y-axis"></div>
+                            <div class="circle" id="circle1"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="input-area">
+                        <label for="answer5">請輸入圓心座標和半徑：</label>
+                        <input type="text" id="answer5" placeholder="格式：x,y,r">
+                        <button onclick="checkAnswer5()">提交答案</button>
+                        <button class="hint-btn" onclick="showHint('hint5')">提示</button>
+                        <div class="hint" id="hint5">
+                            圓的標準方程式為 (x - h)² + (y - k)² = r²，其中 (h, k) 是圓心，r 是半徑。
+                            對比給定方程式可找出圓心和半徑。
+                        </div>
+                        <div id="message5" class="message"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="room" id="room6">
+                <h2>第六關：三角形的面積</h2>
+                <p>這扇門上有一個三角形的標誌，你需要計算出其面積才能解鎖。</p>
+                
+                <div class="challenge">
+                    <h3>挑戰：計算三角形面積</h3>
+                    <p>有一個三角形，底為 12 cm，高為 8 cm。</p>
+                    <p>另外，你知道這個三角形兩邊長分別是 10 cm 和 13 cm。</p>
+                    
+                    <div class="triangle">
+                        <span class="triangle-dimensions" style="bottom: -25px; left: -20px;">底: 12 cm</span>
+                        <span class="triangle-dimensions" style="top: 80px; left: -60px;">高: 8 cm</span>
+                        <span class="triangle-dimensions" style="top: 80px; right: -60px;">13 cm</span>
+                        <span class="triangle-dimensions" style="top: 0px; left: 0px;">10 cm</span>
+                    </div>
+                    
+                    <div class="input-area">
+                        <label for="answer6">三角形面積：</label>
+                        <input type="number" id="answer6" placeholder="請輸入數字">
+                        <button onclick="checkAnswer6()">提交答案</button>
+                        <button class="hint-btn" onclick="showHint('hint6')">提示</button>
+                        <div class="hint" id="hint6">
+                            三角形面積可以用底乘高除以2來計算。面積 = (底 × 高) ÷ 2。
+                        </div>
+                        <div id="message6" class="message"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="room" id="room7">
+                <h2>第七關：分數運算</h2>
+                <p>這扇門上有一堆混亂的分數，你需要正確計算它們的加減乘除。</p>
+                
+                <div class="challenge">
+                    <h3>挑戰：解決分數運算問題</h3>
+                    <p>計算下列表達式的值：</p>
+                    
+                    <table class="fraction-table">
+                        <tr>
+                            <td>2/3</td>
+                            <td>×</td>
+                            <td>3/4</td>
+                            <td>+</td>
+                            <td>1/6</td>
+                        </tr>
+                    </table>
+                    
+                    <p>請將答案化為最簡分數，並以分子/分母的形式輸入。</p>
+                    
+                    <div class="input-area">
+                        <label for="answer7">運算結果：</label>
+                        <input type="text" id="answer7" placeholder="格式：分子/分母">
+                        <button onclick="checkAnswer7()">提交答案</button>
+                        <button class="hint-btn" onclick="showHint('hint7')">提示</button>
+                        <div class="hint" id="hint7">
+                            先計算乘法部分：2/3 × 3/4 = 6/12 = 1/2，然後加上 1/6：1/2 + 1/6 = 3/6 + 1/6 = 4/6 = 2/3。
+                        </div>
+                        <div id="message7" class="message"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="room" id="room8">
+                <h2>第八關：多邊形內角和</h2>
+                <p>最後一道門需要你計算多邊形的內角和才能解鎖。</p>
+                
+                <div class="challenge">
+                    <h3>挑戰：計算多邊形內角和</h3>
+                    <p>一個正八邊形的每個內角度數是多少？</p>
+                    
+                    <div class="polygon" id="octagon">
+                        <!-- Octagon will be drawn using JavaScript -->
+                    </div>
+                    
+                    <div class="input-area">
+                        <label for="answer8">每個內角的度數：</label>
+                        <input type="number" id="answer8" placeholder="請輸入度數">
+                        <button onclick="checkAnswer8()">提交答案</button>
+                        <button class="hint-btn" onclick="showHint('hint8')">提示</button>
+                        <div class="hint" id="hint8">
+                            n 邊形的內角和為 (n-2) × 180°。正多邊形的每個內角度數相等，所以每個內角的度數是內角和÷邊數。
+                        </div>
+                        <div id="message8" class="message"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="room" id="final">
+                <h2>恭喜你成功逃出！</h2>
+                <p>你成功解決了所有的數學謎題，證明了你的國中數學能力和邏輯思維！</p>
+                <p>總用時：<span id="time-used">00:00</span></p>
+                <button onclick="restartGame()">再玩一次</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 遊戲變數
+        let startTime;
+        let timerInterval;
+        let secondsLeft = 2700; // 45分鐘
+        
+        // 初始化遊戲
+        document.addEventListener('DOMContentLoaded', function() {
+            drawLines();
+            drawCircle();
+            drawOctagon();
+            
+            // 開始輸入監聽
+            document.getElementById('start-input').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    if (this.value.toLowerCase() === 'start') {
+                        startGame();
+                    }
+                }
+            });
+        });
+        
+        // 繪製直線
+        function drawLines() {
+            const line1 = document.getElementById('line1');
+            const line2 = document.getElementById('line2');
+            
+            // 繪製 y = 2x - 3
+            line1.style.width = '300px';
+            line1.style.transform = 'rotate(-63.4deg) translateY(150px)';
+            line1.style.top = '150px';
+            line1.style.left = '150px';
+            
+            // 繪製 y = -x + 6
+            line2.style.width = '300px';
+            line2.style.transform = 'rotate(45deg) translateY(150px)';
+            line2.style.top = '150px';
+            line2.style.left = '150px';
+        }
+        
+        // 繪製圓
+        function drawCircle() {
+            const circle1 = document.getElementById('circle1');
+            
+            // 設置圓的位置和大小
+            circle1.style.width = '80px';
+            circle1.style.height = '80px';
+            circle1.style.left = '170px'; // 圓心 x 座標調整為視覺效果
+            circle1.style.top = '120px';  // 圓心 y 座標調整為視覺效果
+        }
+        
+        // 繪製八邊形
+        function drawOctagon() {
+            const octagon = document.getElementById('octagon');
+            const center = { x: 100, y: 100 };
+            const radius = 80;
+            
+            // 繪製八邊形的頂點
+            for (let i = 0; i < 8; i++) {
+                const angle = Math.PI / 4 * i;
+                const x = center.x + radius * Math.cos(angle);
+                const y = center.y + radius * Math.sin(angle);
+                
+                const point = document.createElement('div');
+                point.className = 'polygon-point';
+                point.style.left = x + 'px';
+                point.style.top = y + 'px';
+                
+                octagon.appendChild(point);
+                
+                // 繪製線段
+                if (i > 0) {
+                    const prevAngle = Math.PI / 4 * (i - 1);
+                    const prevX = center.x + radius * Math.cos(prevAngle);
+                    const prevY = center.y + radius * Math.sin(prevAngle);
+                    
+                    const line = document.createElement('div');
+                    line.className = 'polygon-line';
+                    
+                    // 計算線段長度和角度
+                    const length = Math.sqrt(Math.pow(x - prevX, 2) + Math.pow(y - prevY, 2));
+                    const angle = Math.atan2(y - prevY, x - prevX);
+                    
+                    line.style.width = length + 'px';
+                    line.style.left = prevX + 'px';
+                    line.style.top = prevY + 'px';
+                    line.style.transform = 'rotate(' + angle + 'rad)';
+                    
+                    octagon.appendChild(line);
+                }
+            }
+            
+            // 連接最後一個點和第一個點
+            const firstAngle = 0;
+            const lastAngle = Math.PI / 4 * 7;
+            const firstX = center.x + radius * Math.cos(firstAngle);
+            const firstY = center.y + radius * Math.sin(firstAngle);
+            const lastX = center.x + radius * Math.cos(lastAngle);
+            const lastY = center.y + radius * Math.sin(lastAngle);
+            
+            const line = document.createElement('div');
+            line.className = 'polygon-line';
+            
+            // 計算線段長度和角度
+            const length = Math.sqrt(Math.pow(firstX - lastX, 2) + Math.pow(firstY - lastY, 2));
+            const angle = Math.atan2(firstY - lastY, firstX - lastX);
+            
+            line.style.width = length + 'px';
+            line.style.left = lastX + 'px';
+            line.style.top = lastY + 'px';
+            line.style.transform = 'rotate(' + angle + 'rad)';
+            
+            octagon.appendChild(line);
+        }
+        
+        // 開始遊戲
+        function startGame() {
+            startTime = new Date();
+            showRoom('room1');
+            updateProgress(0);
+            
+            // 啟動計時器
+            timerInterval = setInterval(updateTimer, 1000);
+        }
+        
+        // 更新計時器
+        function updateTimer() {
+            secondsLeft--;
+            
+            if (secondsLeft <= 0) {
+                clearInterval(timerInterval);
+                alert('時間到！遊戲結束');
+                restartGame();
+                return;
+            }
+            
+            const minutes = Math.floor(secondsLeft / 60);
+            const seconds = secondsLeft % 60;
+            
+            document.getElementById('timer').textContent = 
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+        
+        // 顯示房間
+        function showRoom(roomId) {
+            document.querySelectorAll('.room').forEach(room => {
+                room.classList.remove('active');
+            });
+            
+            document.getElementById(roomId).classList.add('active');
+        }
+        
+        // 更新進度
+        function updateProgress(percent) {
+            document.getElementById('progress').style.width = percent + '%';
+            document.getElementById('progress').textContent = percent + '%';
+        }
+        
+        // 顯示提示
+        function showHint(hintId) {
+            const hint = document.getElementById(hintId);
+            if (hint.style.display === 'block') {
+                hint.style.display = 'none';
+            } else {
+                hint.style.display = 'block';
+            }
+        }
+        
+        // 檢查第一關答案
+        function checkAnswer1() {
+            const answer = document.getElementById('answer1').value.trim();
+            const messageElement = document.getElementById('message1');
+            
+            // 正確答案是 (3,3)
+            if (answer === '3,3') {
+                messageElement.textContent = '正確！門鎖已解開，進入下一關。';
+                messageElement.className = 'message success';
+                
+                setTimeout(() => {
+                    showRoom('room2');
+                    updateProgress(12.5);
+                }, 1500);
+            } else {
+                messageElement.textContent = '答案不正確，請再試一次。';
+                messageElement.className = 'message error';
+            }
+        }
+        
+        // 檢查第二關答案
+        function checkAnswer2() {
+            const answer = document.getElementById('answer2').value.trim();
+            const messageElement = document.getElementById('message2');
+            
+            // 正確答案是 105
+            if (answer === '105') {
+                messageElement.textContent = '正確！門鎖已解開，進入下一關。';
+                messageElement.className = 'message success';
+                
+                setTimeout(() => {
+                    showRoom('room3');
+                    updateProgress(25);
+                }, 1500);
+            } else {
+                messageElement.textContent = '答案不正確，請再試一次。';
+                messageElement.className = 'message error';
+            }
+        }
+        
+        // 檢查第三關答案
+        function checkAnswer3() {
+            const answer = document.getElementById('answer3').value.trim();
+            const messageElement = document.getElementById('message3');
+            
+            // 正確答案是 6
+            if (answer === '6') {
+                messageElement.textContent = '正確！門鎖已解開，進入下一關。';
+                messageElement.className = 'message success';
+                
+                setTimeout(() => {
+                    showRoom('room4');
+                    updateProgress(37.5);
+                }, 1500);
+            } else {
+                messageElement.textContent = '答案不正確，請再試一次。';
+                messageElement.className = 'message error';
+            }
+        }
+        
+        // 檢查第四關答案
+        function checkAnswer4() {
+            const answer = document.getElementById('answer4').value.trim();
+            const messageElement = document.getElementById('message4');
+            
+            // 正確答案是 6 (2×3)
+            if (answer === '6') {
+                messageElement.textContent = '正確！門鎖已解開，進入下一關。';
+                messageElement.className = 'message success';
+                
+                setTimeout(() => {
+                    showRoom('room5');
+                    updateProgress(50);
+                }, 1500);
+            } else {
+                messageElement.textContent = '答案不正確，請再試一次。';
+                messageElement.className = 'message error';
+            }
+        }
+        
+        // 檢查第五關答案
+        function checkAnswer5() {
+            const answer = document.getElementById('answer5').value.trim();
+            const messageElement = document.getElementById('message5');
+            
+            // 正確答案是 (2,-3,4)
+            if (answer === '2,-3,4') {
+                messageElement.textContent = '正確！門鎖已解開，進入下一關。';
+                messageElement.className = 'message success';
+                
+                setTimeout(() => {
+                    showRoom('room6');
+                    updateProgress(62.5);
+                }, 1500);
+            } else {
+                messageElement.textContent = '答案不正確，請再試一次。';
+                messageElement.className = 'message error';
+            }
+        }
+        
+        // 檢查第六關答案
+        function checkAnswer6() {
+            const answer = document.getElementById('answer6').value.trim();
+            const messageElement = document.getElementById('message6');
+            
+            // 正確答案是 48
+            if (answer === '48') {
+                messageElement.textContent = '正確！門鎖已解開，進入下一關。';
+                messageElement.className = 'message success';
+                
+                setTimeout(() => {
+                    showRoom('room7');
+                    updateProgress(75);
+                }, 1500);
+            } else {
+                messageElement.textContent = '答案不正確，請再試一次。';
+                messageElement.className = 'message error';
+            }
+        }
+        
+        // 檢查第七關答案
+        function checkAnswer7() {
+            const answer = document.getElementById('answer7').value.trim().toLowerCase();
+            const messageElement = document.getElementById('message7');
+            
+            // 正確答案是 2/3
+            if (answer === '2/3') {
+                messageElement.textContent = '正確！門鎖已解開，進入最後一關。';
+                messageElement.className = 'message success';
+                
+                setTimeout(() => {
+                    showRoom('room8');
+                    updateProgress(87.5);
+                }, 1500);
+            } else {
+                messageElement.textContent = '答案不正確，請再試一次。';
+                messageElement.className = 'message error';
+            }
+        }
+        
+        // 檢查第八關答案
+        function checkAnswer8() {
+            const answer = document.getElementById('answer8').value.trim();
+            const messageElement = document.getElementById('message8');
+            
+            // 正確答案是 135
+            if (answer === '135') {
+                messageElement.textContent = '正確！恭喜你完成了所有的挑戰！';
+                messageElement.className = 'message success';
+                
+                clearInterval(timerInterval);
+                const endTime = new Date();
+                const timeUsed = Math.floor((endTime - startTime) / 1000);
+                const minutes = Math.floor(timeUsed / 60);
+                const seconds = timeUsed % 60;
+                
+                setTimeout(() => {
+                    document.getElementById('time-used').textContent = 
+                        `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                    showRoom('final');
+                    updateProgress(100);
+                }, 1500);
+            } else {
+                messageElement.textContent = '答案不正確，請再試一次。';
+                messageElement.className = 'message error';
+            }
+        }
+        
+        // 重新開始遊戲
+        function restartGame() {
+            clearInterval(timerInterval);
+            secondsLeft = 2700;
+            document.getElementById('timer').textContent = '45:00';
+            document.getElementById('start-input').value = '';
+            document.getElementById('answer1').value = '';
+            document.getElementById('answer2').value = '';
+            document.getElementById('answer3').value = '';
+            document.getElementById('answer4').value = '';
+            document.getElementById('answer5').value = '';
+            document.getElementById('answer6').value = '';
+            document.getElementById('answer7').value = '';
+            document.getElementById('answer8').value = '';
+            document.getElementById('message1').textContent = '';
+            document.getElementById('message2').textContent = '';
+            document.getElementById('message3').textContent = '';
+            document.getElementById('message4').textContent = '';
+            document.getElementById('message5').textContent = '';
+            document.getElementById('message6').textContent = '';
+            document.getElementById('message7').textContent = '';
+            document.getElementById('message8').textContent = '';
+            updateProgress(0);
+            showRoom('intro');
+        }
+    </script>
+</body>
+</html>
