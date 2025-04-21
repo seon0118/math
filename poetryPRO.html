@@ -234,6 +234,19 @@
                 grid-template-columns: 1fr;
             }
         }
+        
+        /* 輔助提示 */
+        .helper-text {
+            text-align: center;
+            color: #8a7968;
+            margin: 15px 0;
+            font-size: 1.1rem;
+        }
+        
+        /* 確保主題內容區域與畫布創作區域不會同時隱藏 */
+        #topics-section {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -243,13 +256,15 @@
     </header>
     
     <div class="container">
-        <div class="intro">
-            <p>歡迎來到數學拼貼詩創作網站。這裡我們將數學概念與日常生活連結，透過拼貼詩的方式探索數學與人生的交集。</p>
-            <p>請點擊下方任一主題，開始您的創作之旅。</p>
-        </div>
-        
-        <div class="topics" id="topics-container">
-            <!-- 主題卡片將由 JavaScript 生成 -->
+        <div id="topics-section">
+            <div class="intro">
+                <p>歡迎來到數學拼貼詩創作網站。這裡我們將數學概念與日常生活連結，透過拼貼詩的方式探索數學與人生的交集。</p>
+                <p>請點擊下方任一主題，開始您的創作之旅。</p>
+            </div>
+            
+            <div class="topics" id="topics-container">
+                <!-- 主題卡片將由 JavaScript 生成 -->
+            </div>
         </div>
         
         <div class="canvas-container" id="canvas-container">
@@ -268,6 +283,7 @@
             </div>
             
             <h3>創作畫布：</h3>
+            <div class="helper-text">請將詞卡拖曳到下方空白處進行創作</div>
             <div class="canvas-area" id="canvas-area">
                 <!-- 拖拽的詞卡將出現在這裡 -->
             </div>
@@ -282,7 +298,7 @@
     </div>
     
     <footer>
-        <p>數學拼貼詩 &copy; 2025 - 以數學觀點探索生活的藝術by chungchun</p>
+        <p>數學拼貼詩 &copy; 2025 - 以數學觀點探索生活的藝術 by chungchun</p>
     </footer>
     
     <script>
@@ -364,6 +380,7 @@
         
         // 初始化網站
         document.addEventListener('DOMContentLoaded', function() {
+            const topicsSection = document.getElementById('topics-section');
             const topicsContainer = document.getElementById('topics-container');
             const canvasContainer = document.getElementById('canvas-container');
             const wordBank = document.getElementById('word-bank');
@@ -389,7 +406,7 @@
                     <p class="topic-description">${topic.description}</p>
                 `;
                 
-                topicCard.addEventListener('click', () => {
+                topicCard.addEventListener('click', function() {
                     selectTopic(index);
                 });
                 
@@ -400,10 +417,12 @@
             function selectTopic(index) {
                 currentTopic = topics[index];
                 currentTopicTitle.textContent = `主題：${currentTopic.title}`;
-                topicsContainer.closest('.container').style.display = 'none';
+                
+                // 隱藏主題選擇區域，顯示畫布區域
+                topicsSection.style.display = 'none';
                 canvasContainer.style.display = 'block';
                 
-                // 顯示詞卡
+                // 生成詞卡
                 generateWordCards();
             }
             
@@ -411,11 +430,8 @@
             function generateWordCards() {
                 wordBank.innerHTML = '';
                 
-                // 洗牌詞卡
-                const shuffledWords = [...currentTopic.words].sort(() => Math.random() - 0.5);
-                
-                // 選擇前20個詞卡顯示
-                shuffledWords.slice(0, 20).forEach(word => {
+                // 使用所有詞卡 (固定20個)
+                currentTopic.words.forEach(word => {
                     const wordCard = createWordCard(word);
                     wordBank.appendChild(wordCard);
                 });
@@ -461,8 +477,8 @@
                 const x = e.clientX - rect.left - (newWordCard.offsetWidth / 2);
                 const y = e.clientY - rect.top - (newWordCard.offsetHeight / 2);
                 
-                newWordCard.style.left = x + 'px';
-                newWordCard.style.top = y + 'px';
+                newWordCard.style.left = `${x}px`;
+                newWordCard.style.top = `${y}px`;
                 
                 // 使詞卡可移動
                 makeMovable(newWordCard);
@@ -522,8 +538,8 @@
             
             // 返回按鈕
             backBtn.addEventListener('click', function() {
+                topicsSection.style.display = 'block';
                 canvasContainer.style.display = 'none';
-                topicsContainer.closest('.container').style.display = 'block';
                 clearCanvas();
             });
             
