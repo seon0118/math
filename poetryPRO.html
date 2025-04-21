@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>數學拼貼詩 - 數學與生活的交融</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft JhengHei", "SimSun", sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f0;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            padding: 30px 0;
+            border-bottom: 2px solid #8a7968;
+            margin-bottom: 30px;
+            background-color: #f9f6f2;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            color: #5c4f3d;
+            margin-bottom: 15px;
+        }
+        
+        .subtitle {
+            font-size: 1.3rem;
+            color: #8a7968;
+            font-weight: normal;
+        }
+        
+        .intro {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px;
+            border: 1px solid #d3ccc1;
+            background-color: #fbfbf8;
+            border-radius: 8px;
+        }
+        
+        .topics {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+        
+        .topic-card {
+            background-color: #fff;
+            border: 1px solid #d3ccc1;
+            border-radius: 8px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            height: 250px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .topic-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            border-color: #8a7968;
+        }
+        
+        .topic-emoji {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        
+        .topic-title {
+            font-size: 1.5rem;
+            color: #5c4f3d;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #d3ccc1;
+            padding-bottom: 10px;
+        }
+        
+        .topic-math {
+            font-size: 1.1rem;
+            color: #6a5c4a;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        .topic-description {
+            font-size: 1rem;
+            color: #666;
+            flex-grow: 1;
+        }
+        
+        .canvas-container {
+            display: none;
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #fbfbf8;
+            border: 1px solid #d3ccc1;
+            border-radius: 8px;
+        }
+        
+        .canvas-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .canvas-title {
+            font-size: 1.8rem;
+            color: #5c4f3d;
+        }
+        
+        .canvas-actions button {
+            padding: 10px 15px;
+            background-color: #8a7968;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-left: 10px;
+        }
+        
+        .canvas-actions button:hover {
+            background-color: #5c4f3d;
+        }
+        
+        .word-bank {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #fff;
+            border: 1px solid #d3ccc1;
+            border-radius: 5px;
+        }
+        
+        .word-card {
+            padding: 5px 15px;
+            background-color: #f0ebde;
+            border: 1px solid #d3ccc1;
+            border-radius: 5px;
+            cursor: move;
+            font-size: 30px;
+            user-select: none;
+            -moz-user-select: none;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+        }
+        
+        .word-card:hover {
+            background-color: #e6e0d1;
+        }
+        
+        .canvas-area {
+            height: 500px;
+            background-color: #fff;
+            border: 1px solid #d3ccc1;
+            border-radius: 5px;
+            position: relative;
+            padding: 20px;
+            overflow: hidden;
+        }
+        
+        .canvas-area .word-card {
+            position: absolute;
+            z-index: 1;
+        }
+        
+        .custom-word-container {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .custom-word-container input {
+            padding: 10px;
+            border: 1px solid #d3ccc1;
+            border-radius: 5px;
+            font-size: 1rem;
+            flex-grow: 1;
+        }
+        
+        .back-btn {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 15px;
+            background-color: #d3ccc1;
+            color: #5c4f3d;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        
+        .back-btn:hover {
+            background-color: #c5baaa;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px 0;
+            border-top: 1px solid #d3ccc1;
+            color: #8a7968;
+        }
+        
+        @media (max-width: 768px) {
+            .topics {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .topics {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>數學拼貼詩</h1>
+        <p class="subtitle">數字與生活的交融藝術</p>
+    </header>
+    
+    <div class="container">
+        <div class="intro">
+            <p>歡迎來到數學拼貼詩創作網站。這裡我們將數學概念與日常生活連結，透過拼貼詩的方式探索數學與人生的交集。</p>
+            <p>請點擊下方任一主題，開始您的創作之旅。</p>
+        </div>
+        
+        <div class="topics" id="topics-container">
+            <!-- 主題卡片將由 JavaScript 生成 -->
+        </div>
+        
+        <div class="canvas-container" id="canvas-container">
+            <div class="canvas-header">
+                <h2 class="canvas-title" id="current-topic-title">主題：從一點開始</h2>
+                <div class="canvas-actions">
+                    <button id="refresh-words-btn">重新選詞</button>
+                    <button id="clear-canvas-btn">清空畫布</button>
+                    <button id="save-poem-btn">儲存創作</button>
+                </div>
+            </div>
+            
+            <h3>詞卡：</h3>
+            <div class="word-bank" id="word-bank">
+                <!-- 詞卡將由 JavaScript 生成 -->
+            </div>
+            
+            <h3>創作畫布：</h3>
+            <div class="canvas-area" id="canvas-area">
+                <!-- 拖拽的詞卡將出現在這裡 -->
+            </div>
+            
+            <div class="custom-word-container">
+                <input type="text" id="custom-word-input" placeholder="輸入自訂詞卡">
+                <button id="add-custom-word-btn">新增詞卡</button>
+            </div>
+            
+            <button class="back-btn" id="back-btn">返回主題選擇</button>
+        </div>
+    </div>
+    
+    <footer>
+        <p>數學拼貼詩 &copy; 2025 - 以數學觀點探索生活的藝術by chungchun</p>
+    </footer>
+    
+    <script>
+        // 數學拼貼詩主題數據
+        const topics = [
+            {
+                emoji: "🌱",
+                title: "從一點開始",
+                math: "點、變數(x)",
+                description: "「點」像我們人生的起點，小但重要。「x」是還沒知道的東西，就像未來的自己。",
+                words: ["點", "起始", "開端", "變數", "未知", "可能", "旅程", "單一", "源頭", "種子", 
+                       "星光", "微小", "希望", "轉折", "孤獨", "足跡", "初心", "原點", "基礎", "嶄新"]
+            },
+            {
+                emoji: "🤝",
+                title: "我們之間的距離",
+                math: "線段、平行線、函數",
+                description: "「線段」像兩人之間的關係，有開始有結束。「平行線」像並肩同行的朋友。",
+                words: ["距離", "關係", "連結", "平行", "相交", "遠近", "牽絆", "橋樑", "隔閡", "思念", 
+                       "相望", "路徑", "軌跡", "分離", "靠近", "依偎", "陪伴", "錯過", "相逢", "回應"]
+            },
+            {
+                emoji: "👓",
+                title: "換個角度看世界",
+                math: "角度、對稱",
+                description: "「角度」代表看事情的方法，換個角度能更懂對方。「對稱」是美感與互相照應的來源。",
+                words: ["角度", "視野", "眼界", "對稱", "平衡", "觀點", "理解", "包容", "鏡像", "反思", 
+                       "和諧", "觀察", "透視", "轉念", "立場", "差異", "共鳴", "交流", "傾聽", "智慧"]
+            },
+            {
+                emoji: "➕",
+                title: "人生的加減乘除",
+                math: "加法、減法、乘法、除法",
+                description: "「加法」像交朋友、學新東西。「減法」像丟掉煩惱。「乘法」是努力的回報。「除法」是學會分享。",
+                words: ["增加", "減少", "放大", "分享", "得失", "取捨", "積累", "放下", "收穫", "選擇", 
+                       "成長", "學習", "放棄", "珍惜", "離別", "相聚", "乘載", "付出", "回報", "節制"]
+            },
+            {
+                emoji: "🔄",
+                title: "圓圓的生活",
+                math: "圓、一次函數、指數函數",
+                description: "「圓」像循環的生活。「一次函數」像穩定前進。「指數函數」像熱愛一件事時快速成長。",
+                words: ["圓滿", "循環", "圓融", "直線", "彎曲", "拋物", "飛躍", "規律", "變化", "重複", 
+                       "歲月", "光陰", "迴旋", "周而復始", "節奏", "韻律", "輪迴", "無窮", "抛物", "突破"]
+            },
+            {
+                emoji: "🎲",
+                title: "人生沒有一定會發生的事",
+                math: "機率、平均數、中位數",
+                description: "「機率」像生活中的可能性。「平均數」是整體趨勢但不代表個人。「中位數」找出中間值，有時更公平。",
+                words: ["機會", "可能", "平均", "中庸", "不確定", "等待", "偶然", "命運", "抉擇", "驚喜", 
+                       "意外", "冒險", "風險", "平衡", "考驗", "常態", "期望", "變數", "預測", "隨機"]
+            },
+            {
+                emoji: "🔍",
+                title: "尋找生活中的規律",
+                math: "數列、遞迴、黃金比例",
+                description: "「數列」像生活中的規律模式。「遞迴」是前一刻影響下一刻。「黃金比例」是自然中的和諧美感。",
+                words: ["規律", "秩序", "模式", "遞進", "反覆", "傳承", "影響", "連鎖", "和諧", "美感", 
+                       "黃金", "比例", "自然", "結構", "延續", "前因後果", "步調", "脈絡", "理性", "邏輯"]
+            },
+            {
+                emoji: "🌈",
+                title: "無限的想像空間",
+                math: "無限、維度、空間",
+                description: "「無限」像永不止息的好奇心。「維度」是思考的層次。「空間」是我們創造的可能性。",
+                words: ["無窮", "想像", "創造", "層次", "範圍", "廣闊", "包容", "深邃", "高度", "遼闊", 
+                       "夢想", "超越", "延伸", "疆界", "探索", "奧妙", "視野", "宇宙", "虛實", "境界"]
+            },
+            {
+                emoji: "🧩",
+                title: "拼湊人生的碎片",
+                math: "分數、比例、集合",
+                description: "「分數」像生活的不完美部分。「比例」是各方面的平衡。「集合」是不同元素組成的整體。",
+                words: ["碎片", "拼圖", "部分", "完整", "比例", "協調", "交集", "融合", "組合", "多元", 
+                       "差異", "包容", "統一", "分享", "歸屬", "群體", "個體", "連結", "整合", "共存"]
+            }
+        ];
+        
+        // 初始化網站
+        document.addEventListener('DOMContentLoaded', function() {
+            const topicsContainer = document.getElementById('topics-container');
+            const canvasContainer = document.getElementById('canvas-container');
+            const wordBank = document.getElementById('word-bank');
+            const canvasArea = document.getElementById('canvas-area');
+            const currentTopicTitle = document.getElementById('current-topic-title');
+            const customWordInput = document.getElementById('custom-word-input');
+            const addCustomWordBtn = document.getElementById('add-custom-word-btn');
+            const backBtn = document.getElementById('back-btn');
+            const refreshWordsBtn = document.getElementById('refresh-words-btn');
+            const clearCanvasBtn = document.getElementById('clear-canvas-btn');
+            const savePoembtn = document.getElementById('save-poem-btn');
+            
+            let currentTopic = null;
+            
+            // 生成主題卡片
+            topics.forEach((topic, index) => {
+                const topicCard = document.createElement('div');
+                topicCard.className = 'topic-card';
+                topicCard.innerHTML = `
+                    <div class="topic-emoji">${topic.emoji}</div>
+                    <h3 class="topic-title">${topic.title}</h3>
+                    <div class="topic-math">${topic.math}</div>
+                    <p class="topic-description">${topic.description}</p>
+                `;
+                
+                topicCard.addEventListener('click', () => {
+                    selectTopic(index);
+                });
+                
+                topicsContainer.appendChild(topicCard);
+            });
+            
+            // 選擇主題
+            function selectTopic(index) {
+                currentTopic = topics[index];
+                currentTopicTitle.textContent = `主題：${currentTopic.title}`;
+                topicsContainer.closest('.container').style.display = 'none';
+                canvasContainer.style.display = 'block';
+                
+                // 顯示詞卡
+                generateWordCards();
+            }
+            
+            // 生成詞卡
+            function generateWordCards() {
+                wordBank.innerHTML = '';
+                
+                // 洗牌詞卡
+                const shuffledWords = [...currentTopic.words].sort(() => Math.random() - 0.5);
+                
+                // 選擇前20個詞卡顯示
+                shuffledWords.slice(0, 20).forEach(word => {
+                    const wordCard = createWordCard(word);
+                    wordBank.appendChild(wordCard);
+                });
+            }
+            
+            // 創建詞卡元素
+            function createWordCard(word) {
+                const wordCard = document.createElement('div');
+                wordCard.className = 'word-card';
+                wordCard.textContent = word;
+                wordCard.draggable = true;
+                
+                // 拖拽事件
+                wordCard.addEventListener('dragstart', function(e) {
+                    e.dataTransfer.setData('text/plain', word);
+                    setTimeout(() => {
+                        this.style.opacity = '0.4';
+                    }, 0);
+                });
+                
+                wordCard.addEventListener('dragend', function() {
+                    this.style.opacity = '1';
+                });
+                
+                return wordCard;
+            }
+            
+            // 畫布拖拽事件
+            canvasArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+            });
+            
+            canvasArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                const word = e.dataTransfer.getData('text/plain');
+                
+                const newWordCard = document.createElement('div');
+                newWordCard.className = 'word-card';
+                newWordCard.textContent = word;
+                
+                // 設置拖放位置
+                const rect = canvasArea.getBoundingClientRect();
+                const x = e.clientX - rect.left - (newWordCard.offsetWidth / 2);
+                const y = e.clientY - rect.top - (newWordCard.offsetHeight / 2);
+                
+                newWordCard.style.left = x + 'px';
+                newWordCard.style.top = y + 'px';
+                
+                // 使詞卡可移動
+                makeMovable(newWordCard);
+                
+                canvasArea.appendChild(newWordCard);
+            });
+            
+            // 使詞卡可移動
+            function makeMovable(element) {
+                let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+                
+                element.onmousedown = dragMouseDown;
+                
+                function dragMouseDown(e) {
+                    e.preventDefault();
+                    // 獲取鼠標位置
+                    pos3 = e.clientX;
+                    pos4 = e.clientY;
+                    document.onmouseup = closeDragElement;
+                    document.onmousemove = elementDrag;
+                }
+                
+                function elementDrag(e) {
+                    e.preventDefault();
+                    // 計算新位置
+                    pos1 = pos3 - e.clientX;
+                    pos2 = pos4 - e.clientY;
+                    pos3 = e.clientX;
+                    pos4 = e.clientY;
+                    // 設置元素的新位置
+                    element.style.top = (element.offsetTop - pos2) + "px";
+                    element.style.left = (element.offsetLeft - pos1) + "px";
+                }
+                
+                function closeDragElement() {
+                    // 停止移動
+                    document.onmouseup = null;
+                    document.onmousemove = null;
+                }
+            }
+            
+            // 添加自定義詞卡
+            addCustomWordBtn.addEventListener('click', function() {
+                const customWord = customWordInput.value.trim();
+                if (customWord) {
+                    const wordCard = createWordCard(customWord);
+                    wordBank.appendChild(wordCard);
+                    customWordInput.value = '';
+                }
+            });
+            
+            customWordInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    addCustomWordBtn.click();
+                }
+            });
+            
+            // 返回按鈕
+            backBtn.addEventListener('click', function() {
+                canvasContainer.style.display = 'none';
+                topicsContainer.closest('.container').style.display = 'block';
+                clearCanvas();
+            });
+            
+            // 重新選詞按鈕
+            refreshWordsBtn.addEventListener('click', function() {
+                generateWordCards();
+            });
+            
+            // 清空畫布按鈕
+            clearCanvasBtn.addEventListener('click', function() {
+                clearCanvas();
+            });
+            
+            // 清空畫布
+            function clearCanvas() {
+                canvasArea.innerHTML = '';
+            }
+            
+            // 儲存創作按鈕 (這裡僅顯示提示，實際儲存功能需要後端支援)
+            savePoembtn.addEventListener('click', function() {
+                alert('您的創作已儲存！');
+            });
+            
+            // 初始顯示主題選擇
+            canvasContainer.style.display = 'none';
+        });
+    </script>
+</body>
+</html>
