@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>數學拼貼詩 - 以數理之美譜寫生活詩篇</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Noto Serif TC', serif;
+        }
+        
+        body {
+            background-color: #f7f3e9;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        header {
+            background-color: #9c7c5c;
+            padding: 20px 0;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            color: #f7f3e9;
+            font-weight: normal;
+            letter-spacing: 5px;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            color: #e6e0d4;
+            margin-top: 10px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .intro {
+            text-align: center;
+            margin: 40px 0;
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: #5d4037;
+        }
+        
+        .math-topics {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            margin: 40px 0;
+        }
+        
+        .topic-card {
+            width: 280px;
+            height: 300px;
+            background-color: #e6e0d4;
+            border-radius: 8px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .topic-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .topic-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background-color: #9c7c5c;
+        }
+        
+        .topic-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        
+        .topic-name {
+            font-size: 1.5rem;
+            color: #5d4037;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .topic-desc {
+            font-size: 0.9rem;
+            text-align: center;
+            color: #795548;
+        }
+        
+        .canvas-area {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 30px;
+        }
+        
+        .canvas-header {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        
+        .topic-title {
+            font-size: 1.8rem;
+            color: #5d4037;
+        }
+        
+        .canvas-actions {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .btn {
+            padding: 8px 15px;
+            background-color: #9c7c5c;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn:hover {
+            background-color: #7d634a;
+        }
+        
+        .canvas {
+            width: 800px;
+            height: 500px;
+            background-color: #fff;
+            border: 1px solid #d7cec7;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .topic-reflection {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f0e9df;
+            border-left: 4px solid #9c7c5c;
+            color: #5d4037;
+            font-style: italic;
+        }
+        
+        .word-cards-container {
+            margin-top: 20px;
+            width: 800px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        .word-card {
+            padding: 15px;
+            background-color: #e6e0d4;
+            border-radius: 4px;
+            cursor: move;
+            user-select: none;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            font-size: 30px;
+            transition: all 0.2s ease;
+        }
+        
+        .word-card:hover {
+            background-color: #d7cec7;
+        }
+        
+        .canvas .word-card {
+            position: absolute;
+            z-index: 1;
+        }
+        
+        .custom-word-input {
+            display: flex;
+            margin-top: 20px;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .custom-word-input input {
+            padding: 8px;
+            border: 1px solid #d7cec7;
+            border-radius: 4px;
+            width: 200px;
+        }
+        
+        .back-btn {
+            margin-top: 20px;
+            font-size: 0.9rem;
+            color: #9c7c5c;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+        
+        footer {
+            background-color: #5d4037;
+            color: #e6e0d4;
+            text-align: center;
+            padding: 20px 0;
+            margin-top: 60px;
+            font-size: 0.9rem;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <h1>數學拼貼詩</h1>
+        <div class="subtitle">以數理之美譜寫生活詩篇</div>
+    </header>
+    
+    <div class="container">
+        <div class="intro">
+            <p>數學與生活的交織，如詩般優美。在此，我們探索數學概念在日常生活中的詩意體現。</p>
+            <p>選擇一個主題，透過拖拉詞卡，創作屬於您的數學詩篇。</p>
+        </div>
+        
+        <div class="math-topics" id="topicsContainer">
+            <!-- 數學主題卡片，點擊後進入創作頁面 -->
+            <div class="topic-card" data-topic="starting-point">
+                <div class="topic-icon">🌱</div>
+                <div class="topic-name">從一點開始</div>
+                <div class="topic-desc">探索人生起點，如同數學中的原點，蘊含無限可能</div>
+            </div>
+            
+            <div class="topic-card" data-topic="distance">
+                <div class="topic-icon">🤝</div>
+                <div class="topic-name">我們之間的距離</div>
+                <div class="topic-desc">線段與函數，映射人際關係的各種可能</div>
+            </div>
+            
+            <div class="topic-card" data-topic="perspective">
+                <div class="topic-icon">👓</div>
+                <div class="topic-name">換個角度看世界</div>
+                <div class="topic-desc">角度與對稱，帶來全新視野與相互理解</div>
+            </div>
+            
+            <div class="topic-card" data-topic="operations">
+                <div class="topic-icon">➕</div>
+                <div class="topic-name">人生的加減乘除</div>
+                <div class="topic-desc">四則運算，映照生活中的增長與取捨</div>
+            </div>
+            
+            <div class="topic-card" data-topic="circular">
+                <div class="topic-icon">🔄</div>
+                <div class="topic-name">圓圓的生活</div>
+                <div class="topic-desc">循環與成長，如同不同函數的曲線軌跡</div>
+            </div>
+            
+            <div class="topic-card" data-topic="probability">
+                <div class="topic-icon">🎲</div>
+                <div class="topic-name">人生沒有一定會發生的事</div>
+                <div class="topic-desc">機率與統計，展現生活中的不確定性</div>
+            </div>
+            
+            <div class="topic-card" data-topic="shapes">
+                <div class="topic-icon">🔷</div>
+                <div class="topic-name">生活中的幾何形狀</div>
+                <div class="topic-desc">三角形、方形、圓形，環繞在我們身邊的幾何美學</div>
+            </div>
+            
+            <div class="topic-card" data-topic="patterns">
+                <div class="topic-icon">🔢</div>
+                <div class="topic-name">生活中的規律</div>
+                <div class="topic-desc">數列與模式，探索日常中隱藏的秩序</div>
+            </div>
+            
+            <div class="topic-card" data-topic="infinity">
+                <div class="topic-icon">♾️</div>
+                <div class="topic-name">超越有限</div>
+                <div class="topic-desc">無限與極限，思考生命與宇宙的邊界</div>
+            </div>
+        </div>
+        
+        <div class="canvas-area" id="canvasArea">
+            <div class="canvas-header">
+                <div class="topic-title" id="currentTopic">從一點開始</div>
+                <div class="canvas-actions">
+                    <button class="btn" id="refreshCards">重新隨機詞卡</button>
+                    <button class="btn" id="clearCanvas">清空畫布</button>
+                    <button class="btn" id="saveCreation">保存創作</button>
+                </div>
+            </div>
+            
+            <div class="topic-reflection" id="topicReflection">
+                你現在是一個「點」，未來會連接出什麼樣的圖形？
+            </div>
+            
+            <div class="canvas" id="canvas"></div>
+            
+            <div class="word-cards-container" id="wordCardsContainer"></div>
+            
+            <div class="custom-word-input">
+                <input type="text" id="customWord" placeholder="輸入自定義詞卡">
+                <button class="btn" id="addCustomWord">添加詞卡</button>
+            </div>
+            
+            <div class="back-btn" id="backToTopics">返回主題選擇</div>
+        </div>
+    </div>
+    
+    <footer>
+        <p>數學拼貼詩 © 2025 | 用數學的語言探索詩意的生活 by chungchun</p>
+    </footer>
+    
+    <script>
+        // 數學主題及其相關詞彙與思考問題
+        const mathTopics = {
+            "starting-point": {
+                name: "從一點開始",
+                reflection: "你現在是一個「點」，未來會連接出什麼樣的圖形？",
+                words: [
+                    "點", "變數", "x", "起點", "原點", "座標",
+                    "開始", "初心", "微小", "種子", "萌芽", "誕生",
+                    "未來", "未知", "可能", "徬徨", "出發", "嘗試",
+                    "邁步", "初衷", "基礎", "第一步", "最初", "簡單"
+                ],
+                mathWords: ["點", "變數", "x"],
+                lifeWords: ["起點", "未來", "初心", "種子", "原點", "未知"]
+            },
+            "distance": {
+                name: "我們之間的距離",
+                reflection: "你和朋友的關係，像哪一種線？",
+                words: [
+                    "線段", "平行線", "函數", "距離", "靠近", "遠離",
+                    "連結", "相交", "關係", "接觸", "分離", "回應",
+                    "互動", "默契", "依存", "友情", "親情", "愛情",
+                    "陪伴", "理解", "包容", "交集", "並肩", "共存"
+                ],
+                mathWords: ["線段", "平行線", "函數"],
+                lifeWords: ["關係", "距離", "互動", "並肩", "默契", "交集"]
+            },
+            "perspective": {
+                name: "換個角度看世界",
+                reflection: "最近有沒有因為「改變角度」，讓你更懂一件事？",
+                words: [
+                    "角度", "對稱", "旋轉", "翻轉", "視角", "觀點",
+                    "理解", "包容", "換位", "思考", "感受", "同理",
+                    "反思", "站在", "他人", "角度", "美感", "平衡",
+                    "和諧", "看見", "不同", "體會", "變化", "欣賞"
+                ],
+                mathWords: ["角度", "對稱", "旋轉"],
+                lifeWords: ["視角", "包容", "理解", "換位思考", "同理心", "和諧"]
+            },
+            "operations": {
+                name: "人生的加減乘除",
+                reflection: "你最近做了哪些「加」或「減」的選擇？",
+                words: [
+                    "加法", "減法", "乘法", "除法", "增加", "減少",
+                    "倍增", "分享", "得到", "放下", "累積", "捨棄",
+                    "朋友", "煩惱", "習慣", "努力", "合作", "負擔",
+                    "回報", "學習", "放棄", "選擇", "改變", "成長"
+                ],
+                mathWords: ["加法", "減法", "乘法", "除法"],
+                lifeWords: ["增加", "放下", "分享", "累積", "選擇", "改變"]
+            },
+            "circular": {
+                name: "圓圓的生活",
+                reflection: "你覺得你現在的學習，是圓的、直的還是往上跳的？",
+                words: [
+                    "圓", "一次函數", "指數函數", "循環", "重複", "軌跡",
+                    "規律", "日常", "突破", "慢慢", "飛躍", "成長",
+                    "快速", "熱愛", "進步", "每天", "持續", "遞增",
+                    "不斷", "改變", "旋轉", "軌道", "週期", "螺旋"
+                ],
+                mathWords: ["圓", "一次函數", "指數函數"],
+                lifeWords: ["循環", "進步", "熱愛", "成長", "規律", "突破"]
+            },
+            "probability": {
+                name: "人生沒有一定會發生的事",
+                reflection: "在你生活中，有什麼事是「機率高但不一定發生」的？",
+                words: [
+                    "機率", "平均數", "中位數", "可能性", "不確定", "變數",
+                    "意外", "驚喜", "預測", "計畫", "期待", "猜測",
+                    "風險", "機會", "選擇", "公平", "運氣", "命運",
+                    "偶然", "巧合", "決定", "希望", "失望", "等待"
+                ],
+                mathWords: ["機率", "平均數", "中位數"],
+                lifeWords: ["可能性", "變數", "意外", "機會", "運氣", "偶然"]
+            },
+            "shapes": {
+                name: "生活中的幾何形狀",
+                reflection: "你的人際關係網絡像什麼幾何形狀？",
+                words: [
+                    "三角形", "正方形", "圓形", "多邊形", "結構", "穩定",
+                    "完美", "規則", "框架", "邊界", "角落", "中心",
+                    "支撐", "平衡", "連結", "網絡", "建築", "設計",
+                    "藝術", "自然", "模式", "組合", "創造", "空間"
+                ],
+                mathWords: ["三角形", "正方形", "圓形", "多邊形"],
+                lifeWords: ["結構", "連結", "網絡", "平衡", "框架", "空間"]
+            },
+            "patterns": {
+                name: "生活中的規律",
+                reflection: "你能發現自己生活中哪些有趣的數學規律？",
+                words: [
+                    "數列", "遞增", "遞減", "等差", "等比", "斐波那契",
+                    "規律", "節奏", "秩序", "模式", "週期", "重複",
+                    "習慣", "作息", "季節", "自然", "成長", "變化",
+                    "律動", "和諧", "節奏", "韻律", "呼吸", "心跳"
+                ],
+                mathWords: ["數列", "等差", "等比", "斐波那契"],
+                lifeWords: ["規律", "節奏", "重複", "習慣", "成長", "秩序"]
+            },
+            "infinity": {
+                name: "超越有限",
+                reflection: "當你思考「無限」時，你想到了什麼？",
+                words: [
+                    "無限", "極限", "無窮", "邊界", "超越", "廣闊",
+                    "永恆", "宇宙", "星空", "海洋", "夢想", "想像",
+                    "可能", "探索", "未知", "思考", "靈魂", "時間",
+                    "空間", "生命", "自由", "希望", "愛", "遠方"
+                ],
+                mathWords: ["無限", "極限", "無窮"],
+                lifeWords: ["永恆", "宇宙", "夢想", "可能", "探索", "愛"]
+            }
+        };
+        
+        // DOM元素
+        const topicsContainer = document.getElementById('topicsContainer');
+        const canvasArea = document.getElementById('canvasArea');
+        const canvas = document.getElementById('canvas');
+        const currentTopic = document.getElementById('currentTopic');
+        const topicReflection = document.getElementById('topicReflection');
+        const wordCardsContainer = document.getElementById('wordCardsContainer');
+        const backToTopics = document.getElementById('backToTopics');
+        const refreshCards = document.getElementById('refreshCards');
+        const clearCanvas = document.getElementById('clearCanvas');
+        const saveCreation = document.getElementById('saveCreation');
+        const customWordInput = document.getElementById('customWord');
+        const addCustomWord = document.getElementById('addCustomWord');
+        
+        // 當前選中的主題
+        let selectedTopic = null;
+        
+        // 初始化事件監聽器
+        function initEventListeners() {
+            // 為每個主題卡片添加點擊事件
+            document.querySelectorAll('.topic-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    const topicId = card.getAttribute('data-topic');
+                    openTopic(topicId);
+                });
+            });
+            
+            // 返回主題選擇
+            backToTopics.addEventListener('click', () => {
+                topicsContainer.style.display = 'flex';
+                canvasArea.style.display = 'none';
+                selectedTopic = null;
+            });
+            
+            // 重新隨機詞卡
+            refreshCards.addEventListener('click', () => {
+                if (selectedTopic) {
+                    generateRandomWordCards();
+                }
+            });
+            
+            // 清空畫布
+            clearCanvas.addEventListener('click', () => {
+                while (canvas.firstChild) {
+                    canvas.removeChild(canvas.firstChild);
+                }
+            });
+            
+            // 保存創作
+            saveCreation.addEventListener('click', () => {
+                alert('您的數學詩拼貼已保存！（實際應用中，這裡可以實現截圖或保存功能）');
+            });
+            
+            // 添加自定義詞卡
+            addCustomWord.addEventListener('click', () => {
+                const customWord = customWordInput.value.trim();
+                if (customWord) {
+                    createDraggableWordCard(customWord);
+                    customWordInput.value = '';
+                }
+            });
+            
+            // 在輸入框按Enter也能添加詞卡
+            customWordInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    addCustomWord.click();
+                }
+            });
+        }
+        
+        // 打開選中的主題
+        function openTopic(topicId) {
+            selectedTopic = topicId;
+            
+            // 更新UI
+            topicsContainer.style.display = 'none';
+            canvasArea.style.display = 'flex';
+            currentTopic.textContent = mathTopics[topicId].name;
+            topicReflection.textContent = mathTopics[topicId].reflection;
+            
+            // 生成隨機詞卡
+            generateRandomWordCards();
+        }
+        
+        // 生成隨機詞卡
+        function generateRandomWordCards() {
+            // 清空詞卡容器
+            wordCardsContainer.innerHTML = '';
+            
+            const topic = mathTopics[selectedTopic];
+            
+            // 確保至少包含一個數學詞和一個生活詞
+            let selected = [];
+            
+            // 先添加兩個數學詞
+            const mathWords = [...topic.mathWords].sort(() => 0.5 - Math.random()).slice(0, 2);
+            selected = selected.concat(mathWords);
+            
+            // 再添加兩個生活詞
+            const lifeWords = [...topic.lifeWords].sort(() => 0.5 - Math.random()).slice(0, 2);
+            selected = selected.concat(lifeWords);
+            
+            // 從所有詞中再隨機選兩個
+            const remainingWords = topic.words.filter(word => !selected.includes(word));
+            const additionalWords = [...remainingWords].sort(() => 0.5 - Math.random()).slice(0, 2);
+            selected = selected.concat(additionalWords);
+            
+            // 為每個詞創建可拖拽的詞卡
+            selected.forEach(word => {
+                createDraggableWordCard(word);
+            });
+        }
+        
+        // 創建可拖拽的詞卡
+        function createDraggableWordCard(word) {
+            const wordCard = document.createElement('div');
+            wordCard.className = 'word-card';
+            wordCard.textContent = word;
+            wordCard.draggable = true;
+            
+            // 添加拖拽事件
+            wordCard.addEventListener('dragstart', (e) => {
+                const clone = wordCard.cloneNode(true);
+                clone.style.position = 'absolute';
+                clone.style.zIndex = 1;
+                
+                // 儲存拖拽起點的坐標差值
+                const rect = wordCard.getBoundingClientRect();
+                clone.dataset.offsetX = e.clientX - rect.left;
+                clone.dataset.offsetY = e.clientY - rect.top;
+                
+                // 使詞卡可移動
+                makeDraggableInCanvas(clone);
+                
+                // 設置拖拽數據
+                e.dataTransfer.setData('text/plain', 'dummy');
+                e.dataTransfer.setDragImage(new Image(), 0, 0); // 隱藏原始拖拽圖像
+                
+                // 保存克隆對象，以便在drop事件中使用
+                e.dataTransfer.setData('application/json', JSON.stringify({
+                    word,
+                    offsetX: e.clientX - rect.left,
+                    offsetY: e.clientY - rect.top
+                }));
+            });
+            
+            wordCardsContainer.appendChild(wordCard);
+        }
+        
+        // 使詞卡在畫布中可移動
+        function makeDraggableInCanvas(element) {
+            let isDragging = false;
+            let currentX, currentY, initialX, initialY;
+            let xOffset = 0, yOffset = 0;
+            
+            element.addEventListener('mousedown', dragStart);
+            element.addEventListener('mouseup', dragEnd);
+            element.addEventListener('mousemove', drag);
+            
+            function dragStart(e) {
+                initialX = e.clientX - xOffset;
+                initialY = e.clientY - yOffset;
+                
+                isDragging = true;
+            }
+            
+            function dragEnd(e) {
+                initialX = currentX;
+                initialY = currentY;
+                
+                isDragging = false;
+            }
+            
+            function drag(e) {
+                if (isDragging) {
+                    e.preventDefault();
+                    
+                    currentX = e.clientX - initialX;
+                    currentY = e.clientY - initialY;
+                    
+                    xOffset = currentX;
+                    yOffset = currentY;
+                    
+                    setTranslate(currentX, currentY, element);
+                }
+            }
+            
+            function setTranslate(xPos, yPos, el) {
+                el.style.transform = `translate(${xPos}px, ${yPos}px)`;
+            }
+        }
+        
+        // 初始化畫布拖放功能
+        function initCanvasDrop() {
+            canvas.addEventListener('dragover', (e) => {
+                e.preventDefault();
+            });
+            
+            canvas.addEventListener('drop', (e) => {
+                e.preventDefault();
+                
+                try {
+                    const data = JSON.parse(e.dataTransfer.getData('application/json'));
+                    const { word, offsetX, offsetY } = data;
+                    
+                    // 創建詞卡並設置位置
+                    const wordCard = document.createElement('div');
+                    wordCard.className = 'word-card';
+                    wordCard.textContent = word;
+                    
+                    // 計算放置位置，考慮拖拽點偏移量
+                    const canvasRect = canvas.getBoundingClientRect();
+                    const x = e.clientX - canvasRect.left - offsetX;
+                    const y = e.clientY - canvasRect.top - offsetY;
+                    
+                    wordCard.style.left = `${x}px`;
+                    wordCard.style.top = `${y}px`;
+                    
+                    canvas.appendChild(wordCard);
+                    
+                    // 使詞卡在畫布中可移動
+                    makeDraggableInCanvas(wordCard);
+                } catch (err) {
+                    console.error('Error parsing drag data:', err);
+                }
+            });
+        }
+        
+        // 初始化網站
+        function initWebsite() {
+            initEventListeners();
+            initCanvasDrop();
+        }
+        
+        // 當頁面加載完成後初始化
+        document.addEventListener('DOMContentLoaded', initWebsite);
+    </script>
+</body>
+</html>
