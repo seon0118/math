@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>數學拼貼詩 - 數學與生活的交融</title>
+    <title>數學拼貼詩 - 數學、文學與生活的交融</title>
     <style>
         * {
             margin: 0;
@@ -158,31 +158,50 @@
             background-color: #f0ebde;
             border: 1px solid #d3ccc1;
             border-radius: 5px;
-            cursor: move;
+            cursor: pointer;
             font-size: 30px;
             user-select: none;
             -moz-user-select: none;
             -webkit-user-select: none;
             -ms-user-select: none;
+            transition: all 0.2s ease;
         }
         
         .word-card:hover {
             background-color: #e6e0d1;
+            transform: translateY(-2px);
+        }
+        
+        .word-card:active {
+            transform: translateY(0);
         }
         
         .canvas-area {
-            height: 500px;
+            min-height: 500px;
             background-color: #fff;
             border: 1px solid #d3ccc1;
             border-radius: 5px;
-            position: relative;
             padding: 20px;
-            overflow: hidden;
+            position: relative;
         }
         
-        .canvas-area .word-card {
-            position: absolute;
-            z-index: 1;
+        .poem-text {
+            width: 100%;
+            min-height: 460px;
+            border: none;
+            outline: none;
+            font-size: 30px;
+            line-height: 1.8;
+            resize: none;
+            padding: 10px;
+            white-space: pre-wrap;
+            background-color: transparent;
+            color: #333;
+        }
+        
+        .poem-text:focus {
+            border: none;
+            outline: none;
         }
         
         .custom-word-container {
@@ -223,6 +242,33 @@
             color: #8a7968;
         }
         
+        .edit-tools {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .edit-tools button {
+            padding: 8px 12px;
+            background-color: #e6e0d1;
+            border: 1px solid #d3ccc1;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            color: #5c4f3d;
+        }
+        
+        .edit-tools button:hover {
+            background-color: #d3ccc1;
+        }
+        
+        .helper-text {
+            text-align: center;
+            color: #8a7968;
+            margin: 15px 0;
+            font-size: 1.1rem;
+        }
+        
         @media (max-width: 768px) {
             .topics {
                 grid-template-columns: repeat(2, 1fr);
@@ -233,19 +279,6 @@
             .topics {
                 grid-template-columns: 1fr;
             }
-        }
-        
-        /* 輔助提示 */
-        .helper-text {
-            text-align: center;
-            color: #8a7968;
-            margin: 15px 0;
-            font-size: 1.1rem;
-        }
-        
-        /* 確保主題內容區域與畫布創作區域不會同時隱藏 */
-        #topics-section {
-            display: block;
         }
     </style>
 </head>
@@ -271,21 +304,26 @@
             <div class="canvas-header">
                 <h2 class="canvas-title" id="current-topic-title">主題：從一點開始</h2>
                 <div class="canvas-actions">
-                    <button id="refresh-words-btn">重新選詞</button>
-                    <button id="clear-canvas-btn">清空畫布</button>
+                    <button id="clear-canvas-btn">清空內容</button>
                     <button id="save-poem-btn">儲存創作</button>
                 </div>
             </div>
             
             <h3>詞卡：</h3>
+            <div class="helper-text">點擊下方詞卡，將文字添加到創作中</div>
             <div class="word-bank" id="word-bank">
                 <!-- 詞卡將由 JavaScript 生成 -->
             </div>
             
-            <h3>創作畫布：</h3>
-            <div class="helper-text">請將詞卡拖曳到下方空白處進行創作</div>
-            <div class="canvas-area" id="canvas-area">
-                <!-- 拖拽的詞卡將出現在這裡 -->
+            <div class="edit-tools">
+                <button id="delete-btn">刪除</button>
+                <button id="new-line-btn">換行</button>
+                <button id="space-btn">空格</button>
+            </div>
+            
+            <h3>創作區：</h3>
+            <div class="canvas-area">
+                <textarea class="poem-text" id="poem-text" placeholder="請點擊詞卡開始創作..."></textarea>
             </div>
             
             <div class="custom-word-container">
@@ -384,12 +422,14 @@
             const topicsContainer = document.getElementById('topics-container');
             const canvasContainer = document.getElementById('canvas-container');
             const wordBank = document.getElementById('word-bank');
-            const canvasArea = document.getElementById('canvas-area');
+            const poemText = document.getElementById('poem-text');
             const currentTopicTitle = document.getElementById('current-topic-title');
             const customWordInput = document.getElementById('custom-word-input');
             const addCustomWordBtn = document.getElementById('add-custom-word-btn');
             const backBtn = document.getElementById('back-btn');
-            const refreshWordsBtn = document.getElementById('refresh-words-btn');
+            const deleteBtn = document.getElementById('delete-btn');
+            const newLineBtn = document.getElementById('new-line-btn');
+            const spaceBtn = document.getElementById('space-btn');
             const clearCanvasBtn = document.getElementById('clear-canvas-btn');
             const savePoembtn = document.getElementById('save-poem-btn');
             
@@ -422,8 +462,16 @@
                 topicsSection.style.display = 'none';
                 canvasContainer.style.display = 'block';
                 
+                // 清空詩文創作區
+                poemText.value = '';
+                
                 // 生成詞卡
                 generateWordCards();
+                
+                // 讓詩文創作區獲得焦點
+                setTimeout(() => {
+                    poemText.focus();
+                }, 300);
             }
             
             // 生成詞卡
@@ -432,99 +480,78 @@
                 
                 // 使用所有詞卡 (固定20個)
                 currentTopic.words.forEach(word => {
-                    const wordCard = createWordCard(word);
+                    const wordCard = document.createElement('div');
+                    wordCard.className = 'word-card';
+                    wordCard.textContent = word;
+                    
+                    // 點擊事件
+                    wordCard.addEventListener('click', function() {
+                        addWordToPoem(word);
+                    });
+                    
                     wordBank.appendChild(wordCard);
                 });
             }
             
-            // 創建詞卡元素
-            function createWordCard(word) {
-                const wordCard = document.createElement('div');
-                wordCard.className = 'word-card';
-                wordCard.textContent = word;
-                wordCard.draggable = true;
+            // 將詞添加到詩中
+            function addWordToPoem(word) {
+                // 獲取當前光標位置
+                const startPos = poemText.selectionStart;
+                const endPos = poemText.selectionEnd;
                 
-                // 拖拽事件
-                wordCard.addEventListener('dragstart', function(e) {
-                    e.dataTransfer.setData('text/plain', word);
-                    setTimeout(() => {
-                        this.style.opacity = '0.4';
-                    }, 0);
-                });
+                // 插入詞
+                const currentValue = poemText.value;
+                poemText.value = currentValue.substring(0, startPos) + word + currentValue.substring(endPos);
                 
-                wordCard.addEventListener('dragend', function() {
-                    this.style.opacity = '1';
-                });
+                // 重新定位光標
+                const newPos = startPos + word.length;
+                poemText.selectionStart = newPos;
+                poemText.selectionEnd = newPos;
                 
-                return wordCard;
+                // 聚焦回文本區
+                poemText.focus();
             }
             
-            // 畫布拖拽事件
-            canvasArea.addEventListener('dragover', function(e) {
-                e.preventDefault();
+            // 刪除按鈕
+            deleteBtn.addEventListener('click', function() {
+                const startPos = poemText.selectionStart;
+                
+                if (startPos > 0) {
+                    // 刪除前一個字符
+                    poemText.value = poemText.value.substring(0, startPos - 1) + poemText.value.substring(startPos);
+                    
+                    // 重新定位光標
+                    poemText.selectionStart = startPos - 1;
+                    poemText.selectionEnd = startPos - 1;
+                }
+                
+                poemText.focus();
             });
             
-            canvasArea.addEventListener('drop', function(e) {
-                e.preventDefault();
-                const word = e.dataTransfer.getData('text/plain');
-                
-                const newWordCard = document.createElement('div');
-                newWordCard.className = 'word-card';
-                newWordCard.textContent = word;
-                
-                // 設置拖放位置
-                const rect = canvasArea.getBoundingClientRect();
-                const x = e.clientX - rect.left - (newWordCard.offsetWidth / 2);
-                const y = e.clientY - rect.top - (newWordCard.offsetHeight / 2);
-                
-                newWordCard.style.left = `${x}px`;
-                newWordCard.style.top = `${y}px`;
-                
-                // 使詞卡可移動
-                makeMovable(newWordCard);
-                
-                canvasArea.appendChild(newWordCard);
+            // 換行按鈕
+            newLineBtn.addEventListener('click', function() {
+                addWordToPoem('\n');
             });
             
-            // 使詞卡可移動
-            function makeMovable(element) {
-                let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
-                
-                element.onmousedown = dragMouseDown;
-                
-                function dragMouseDown(e) {
-                    e.preventDefault();
-                    // 獲取鼠標位置
-                    pos3 = e.clientX;
-                    pos4 = e.clientY;
-                    document.onmouseup = closeDragElement;
-                    document.onmousemove = elementDrag;
-                }
-                
-                function elementDrag(e) {
-                    e.preventDefault();
-                    // 計算新位置
-                    pos1 = pos3 - e.clientX;
-                    pos2 = pos4 - e.clientY;
-                    pos3 = e.clientX;
-                    pos4 = e.clientY;
-                    // 設置元素的新位置
-                    element.style.top = (element.offsetTop - pos2) + "px";
-                    element.style.left = (element.offsetLeft - pos1) + "px";
-                }
-                
-                function closeDragElement() {
-                    // 停止移動
-                    document.onmouseup = null;
-                    document.onmousemove = null;
-                }
-            }
+            // 空格按鈕
+            spaceBtn.addEventListener('click', function() {
+                addWordToPoem(' ');
+            });
             
             // 添加自定義詞卡
             addCustomWordBtn.addEventListener('click', function() {
                 const customWord = customWordInput.value.trim();
                 if (customWord) {
-                    const wordCard = createWordCard(customWord);
+                    // 創建新詞卡
+                    const wordCard = document.createElement('div');
+                    wordCard.className = 'word-card';
+                    wordCard.textContent = customWord;
+                    
+                    // 點擊事件
+                    wordCard.addEventListener('click', function() {
+                        addWordToPoem(customWord);
+                    });
+                    
                     wordBank.appendChild(wordCard);
                     customWordInput.value = '';
                 }
@@ -540,31 +567,35 @@
             backBtn.addEventListener('click', function() {
                 topicsSection.style.display = 'block';
                 canvasContainer.style.display = 'none';
-                clearCanvas();
             });
             
-            // 重新選詞按鈕
-            refreshWordsBtn.addEventListener('click', function() {
-                generateWordCards();
-            });
-            
-            // 清空畫布按鈕
+            // 清空按鈕
             clearCanvasBtn.addEventListener('click', function() {
-                clearCanvas();
+                poemText.value = '';
+                poemText.focus();
             });
-            
-            // 清空畫布
-            function clearCanvas() {
-                canvasArea.innerHTML = '';
-            }
             
             // 儲存創作按鈕 (這裡僅顯示提示，實際儲存功能需要後端支援)
             savePoembtn.addEventListener('click', function() {
-                alert('您的創作已儲存！');
+                if (poemText.value.trim()) {
+                    alert('您的創作已儲存！');
+                } else {
+                    alert('請先進行創作，再儲存！');
+                }
             });
             
             // 初始顯示主題選擇
             canvasContainer.style.display = 'none';
+            
+            // 鍵盤快捷鍵
+            poemText.addEventListener('keydown', function(e) {
+                // 檢查是否按下了 Ctrl+Z 組合鍵 (撤銷)
+                if (e.ctrlKey && e.key === 'z') {
+                    // 避免瀏覽器默認的撤銷行為
+                    e.preventDefault();
+                    // 自定義撤銷邏輯可以在這裡添加
+                }
+            });
         });
     </script>
 </body>
