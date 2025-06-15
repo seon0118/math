@@ -1,0 +1,1153 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>教師數學解題遊戲系統</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .header h1 {
+            color: #4a5568;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .nav-tabs {
+            display: flex;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            margin-bottom: 20px;
+            padding: 5px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-tab {
+            flex: 1;
+            padding: 15px 20px;
+            text-align: center;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            color: #666;
+        }
+
+        .nav-tab.active {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .nav-tab:hover:not(.active) {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #4a5568;
+            font-size: 1.1em;
+        }
+
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .image-upload-area {
+            border: 2px dashed #cbd5e0;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: #f7fafc;
+        }
+
+        .image-upload-area:hover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .image-upload-area.dragover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .image-preview {
+            max-width: 100%;
+            max-height: 200px;
+            margin-top: 15px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(45deg, #718096, #4a5568);
+        }
+
+        .btn-danger {
+            background: linear-gradient(45deg, #fc8181, #e53e3e);
+        }
+
+        .btn-success {
+            background: linear-gradient(45deg, #68d391, #38a169);
+        }
+
+        .question-list {
+            margin-top: 20px;
+        }
+
+        .question-item {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .question-item:hover {
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .question-title {
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 1.1em;
+        }
+
+        .question-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 14px;
+        }
+
+        .question-content {
+            color: #4a5568;
+            line-height: 1.6;
+        }
+
+        .game-area {
+            text-align: center;
+        }
+
+        .game-status {
+            background: linear-gradient(45deg, #68d391, #38a169);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(104, 211, 145, 0.3);
+        }
+
+        .question-display {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .question-image {
+            max-width: 100%;
+            max-height: 300px;
+            margin: 20px 0;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .answer-input {
+            width: 100%;
+            max-width: 400px;
+            padding: 15px;
+            font-size: 18px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            margin: 20px auto;
+            display: block;
+            text-align: center;
+        }
+
+        .answer-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .feedback {
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-weight: 600;
+            text-align: center;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .feedback.correct {
+            background: rgba(104, 211, 145, 0.2);
+            color: #38a169;
+            border: 2px solid #68d391;
+        }
+
+        .feedback.incorrect {
+            background: rgba(252, 129, 129, 0.2);
+            color: #e53e3e;
+            border: 2px solid #fc8181;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transition: width 0.5s ease;
+            border-radius: 10px;
+        }
+
+        .save-load-controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .completion-screen {
+            text-align: center;
+            padding: 40px;
+            background: linear-gradient(135deg, #68d391, #38a169);
+            color: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(104, 211, 145, 0.3);
+        }
+
+        .completion-title {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            animation: bounce 1s ease-in-out;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .difficulty-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .difficulty-easy {
+            background: rgba(104, 211, 145, 0.2);
+            color: #38a169;
+        }
+
+        .difficulty-medium {
+            background: rgba(237, 137, 54, 0.2);
+            color: #dd6b20;
+        }
+
+        .difficulty-hard {
+            background: rgba(252, 129, 129, 0.2);
+            color: #e53e3e;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .nav-tabs {
+                flex-direction: column;
+            }
+            
+            .nav-tab {
+                margin-bottom: 5px;
+            }
+            
+            .question-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .question-actions {
+                width: 100%;
+                justify-content: flex-end;
+            }
+            
+            .save-load-controls {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📚 教師數學解題遊戲系統</h1>
+            <p>創建個人化的數學題目，讓學習更有趣！</p>
+        </div>
+
+        <div class="nav-tabs">
+            <div class="nav-tab active" onclick="switchTab('create')">建立題目</div>
+            <div class="nav-tab" onclick="switchTab('manage')">管理題目</div>
+            <div class="nav-tab" onclick="switchTab('play')">開始遊戲</div>
+            <div class="nav-tab" onclick="switchTab('save')">存檔管理</div>
+        </div>
+
+        <!-- 建立題目頁面 -->
+        <div id="createTab" class="tab-content active">
+            <h2 style="margin-bottom: 25px; color: #4a5568;">🎯 建立新題目</h2>
+            
+            <div class="form-group">
+                <label for="questionTitle">題目標題</label>
+                <input type="text" id="questionTitle" placeholder="例如：二次方程式練習">
+            </div>
+
+            <div class="form-group">
+                <label for="questionText">題目內容</label>
+                <textarea id="questionText" placeholder="請輸入完整的數學題目..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="questionImage">題目圖片（選填）</label>
+                <div class="image-upload-area" onclick="document.getElementById('imageInput').click()" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+                    <p>📷 點擊選擇圖片或拖拽圖片到此處</p>
+                    <p style="font-size: 14px; color: #666; margin-top: 10px;">支援 JPG, PNG, GIF 格式</p>
+                    <input type="file" id="imageInput" accept="image/*" style="display: none;" onchange="handleImageSelect(event)">
+                    <img id="imagePreview" class="image-preview hidden" alt="題目圖片預覽">
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 20px;">
+                <div class="form-group" style="flex: 1;">
+                    <label for="correctAnswer">正確答案</label>
+                    <input type="text" id="correctAnswer" placeholder="輸入正確答案">
+                </div>
+
+                <div class="form-group" style="flex: 1;">
+                    <label for="difficulty">難度等級</label>
+                    <select id="difficulty">
+                        <option value="easy">簡單</option>
+                        <option value="medium">中等</option>
+                        <option value="hard">困難</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="hint">提示（選填）</label>
+                <input type="text" id="hint" placeholder="給學生的解題提示">
+            </div>
+
+            <button class="btn" onclick="addQuestion()">➕ 新增題目</button>
+        </div>
+
+        <!-- 管理題目頁面 -->
+        <div id="manageTab" class="tab-content">
+            <h2 style="margin-bottom: 25px; color: #4a5568;">📋 題目管理</h2>
+            <div class="question-list" id="questionList">
+                <p style="text-align: center; color: #666; padding: 40px;">目前沒有題目，請先建立一些題目！</p>
+            </div>
+        </div>
+
+        <!-- 遊戲頁面 -->
+        <div id="playTab" class="tab-content">
+            <div id="gameSetup">
+                <h2 style="margin-bottom: 25px; color: #4a5568;">🎮 遊戲設定</h2>
+                
+                <div class="form-group">
+                    <label for="gameMode">遊戲模式</label>
+                    <select id="gameMode">
+                        <option value="all">所有題目</option>
+                        <option value="easy">只有簡單題目</option>
+                        <option value="medium">只有中等題目</option>
+                        <option value="hard">只有困難題目</option>
+                        <option value="random">隨機選擇</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="questionCount">題目數量</label>
+                    <input type="number" id="questionCount" value="5" min="1" max="20">
+                </div>
+
+                <button class="btn" onclick="startGame()">🚀 開始遊戲</button>
+            </div>
+
+            <div id="gameArea" class="game-area hidden">
+                <div class="game-status">
+                    <h3 id="gameTitle">數學解題挑戰</h3>
+                    <p>題目 <span id="currentQuestion">1</span> / <span id="totalQuestions">5</span></p>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill" style="width: 20%;"></div>
+                    </div>
+                </div>
+
+                <div class="question-display">
+                    <h3 id="displayQuestionTitle">題目標題</h3>
+                    <p id="displayQuestionText">題目內容將顯示在這裡</p>
+                    <img id="displayQuestionImage" class="question-image hidden" alt="題目圖片">
+                </div>
+
+                <input type="text" id="playerAnswer" class="answer-input" placeholder="請輸入你的答案" onkeypress="handleAnswerKeyPress(event)">
+                
+                <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                    <button class="btn" onclick="submitAnswer()">✓ 提交答案</button>
+                    <button class="btn btn-secondary" onclick="showHint()">💡 顯示提示</button>
+                    <button class="btn btn-secondary" onclick="skipQuestion()">⏭️ 跳過題目</button>
+                </div>
+
+                <div id="gameFeedback" class="feedback hidden"></div>
+
+                <div class="save-load-controls">
+                    <button class="btn btn-secondary" onclick="saveGame()">💾 儲存遊戲</button>
+                    <button class="btn btn-secondary" onclick="exitGame()">🚪 退出遊戲</button>
+                </div>
+            </div>
+
+            <div id="completionScreen" class="completion-screen hidden">
+                <h2 class="completion-title">🎉 恭喜完成！</h2>
+                <div id="gameResults"></div>
+                <button class="btn" onclick="restartGame()" style="margin: 20px 10px;">🔄 重新開始</button>
+                <button class="btn btn-secondary" onclick="exitGame()">🏠 回到主頁</button>
+            </div>
+        </div>
+
+        <!-- 存檔管理頁面 -->
+        <div id="saveTab" class="tab-content">
+            <h2 style="margin-bottom: 25px; color: #4a5568;">💾 存檔管理</h2>
+            
+            <div style="display: flex; gap: 15px; margin-bottom: 25px; flex-wrap: wrap;">
+                <button class="btn" onclick="exportQuestions()">📤 匯出題目</button>
+                <button class="btn btn-secondary" onclick="document.getElementById('importInput').click()">📥 匯入題目</button>
+                <input type="file" id="importInput" accept=".json" style="display: none;" onchange="importQuestions(event)">
+                <button class="btn btn-danger" onclick="clearAllData()">🗑️ 清除所有資料</button>
+            </div>
+
+            <div id="saveList">
+                <h3 style="margin-bottom: 15px;">遊戲存檔</h3>
+                <div id="savedGames"></div>
+            </div>
+
+            <div style="margin-top: 30px;">
+                <h3 style="margin-bottom: 15px;">統計資訊</h3>
+                <div id="statistics" style="background: #f7fafc; padding: 20px; border-radius: 10px;">
+                    <p>題目總數: <span id="totalQuestionsCount">0</span></p>
+                    <p>已完成遊戲: <span id="completedGamesCount">0</span></p>
+                    <p>總答題數: <span id="totalAnswersCount">0</span></p>
+                    <p>正確率: <span id="accuracyRate">0%</span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 遊戲狀態管理
+        let gameData = {
+            questions: JSON.parse(localStorage.getItem('mathGameQuestions') || '[]'),
+            currentGame: null,
+            gameStats: JSON.parse(localStorage.getItem('mathGameStats') || '{"completed": 0, "totalAnswers": 0, "correctAnswers": 0}')
+        };
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            updateQuestionList();
+            updateStatistics();
+            updateSavedGames();
+        });
+
+        // 標籤切換
+        function switchTab(tabName) {
+            // 隱藏所有標籤內容
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // 移除所有標籤的active類
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // 顯示選中的標籤內容
+            document.getElementById(tabName + 'Tab').classList.add('active');
+            
+            // 添加active類到選中的標籤
+            event.target.classList.add('active');
+        }
+
+        // 圖片處理
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.currentTarget.classList.add('dragover');
+        }
+
+        function handleDragLeave(e) {
+            e.currentTarget.classList.remove('dragover');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0 && files[0].type.startsWith('image/')) {
+                displayImage(files[0]);
+            }
+        }
+
+        function handleImageSelect(e) {
+            const file = e.target.files[0];
+            if (file && file.type.startsWith('image/')) {
+                displayImage(file);
+            }
+        }
+
+        function displayImage(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.getElementById('imagePreview');
+                preview.src = e.target.result;
+                preview.classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // 題目管理
+        function addQuestion() {
+            const title = document.getElementById('questionTitle').value.trim();
+            const text = document.getElementById('questionText').value.trim();
+            const answer = document.getElementById('correctAnswer').value.trim();
+            const difficulty = document.getElementById('difficulty').value;
+            const hint = document.getElementById('hint').value.trim();
+            const imagePreview = document.getElementById('imagePreview');
+            
+            if (!title || !text || !answer) {
+                alert('請填寫必要欄位：標題、內容和答案！');
+                return;
+            }
+
+            const question = {
+                id: Date.now(),
+                title: title,
+                text: text,
+                answer: answer.toLowerCase(),
+                difficulty: difficulty,
+                hint: hint,
+                image: imagePreview.classList.contains('hidden') ? null : imagePreview.src,
+                created: new Date().toLocaleString()
+            };
+
+            gameData.questions.push(question);
+            saveQuestions();
+            updateQuestionList();
+            
+            // 清除表單
+            document.getElementById('questionTitle').value = '';
+            document.getElementById('questionText').value = '';
+            document.getElementById('correctAnswer').value = '';
+            document.getElementById('hint').value = '';
+            document.getElementById('imagePreview').classList.add('hidden');
+            document.getElementById('difficulty').value = 'easy';
+            
+            alert('題目新增成功！');
+        }
+
+        function editQuestion(id) {
+            const question = gameData.questions.find(q => q.id === id);
+            if (!question) return;
+            
+            document.getElementById('questionTitle').value = question.title;
+            document.getElementById('questionText').value = question.text;
+            document.getElementById('correctAnswer').value = question.answer;
+            document.getElementById('difficulty').value = question.difficulty;
+            document.getElementById('hint').value = question.hint || '';
+            
+            if (question.image) {
+                const preview = document.getElementById('imagePreview');
+                preview.src = question.image;
+                preview.classList.remove('hidden');
+            }
+            
+            // 刪除原題目
+            deleteQuestion(id);
+            
+            // 切換到建立頁面
+            switchTab('create');
+            document.querySelector('[onclick="switchTab(\'create\')"]').classList.add('active');
+        }
+
+        function deleteQuestion(id) {
+            if (confirm('確定要刪除這個題目嗎？')) {
+                gameData.questions = gameData.questions.filter(q => q.id !== id);
+                saveQuestions();
+                updateQuestionList();
+            }
+        }
+
+        function updateQuestionList() {
+            const list = document.getElementById('questionList');
+            
+            if (gameData.questions.length === 0) {
+                list.innerHTML = '<p style="text-align: center; color: #666; padding: 40px;">目前沒有題目，請先建立一些題目！</p>';
+                return;
+            }
+
+            list.innerHTML = gameData.questions.map(question => `
+                <div class="question-item">
+                    <div class="question-header">
+                        <div>
+                            <h3 class="question-title">${question.title}</h3>
+                            <span class="difficulty-badge difficulty-${question.difficulty}">${getDifficultyText(question.difficulty)}</span>
+                        </div>
+                        <div class="question-actions">
+                            <button class="btn btn-small btn-secondary" onclick="editQuestion(${question.id})">✏️ 編輯</button>
+                            <button class="btn btn-small btn-danger" onclick="deleteQuestion(${question.id})">🗑️ 刪除</button>
+                        </div>
+                    </div>
+                    <div class="question-content">
+                        <p><strong>題目：</strong>${question.text}</p>
+                        <p><strong>答案：</strong>${question.answer}</p>
+                        ${question.hint ? `<p><strong>提示：</strong>${question.hint}</p>` : ''}
+                        ${question.image ? `<img src="${question.image}" alt="題目圖片" style="max-width: 200px; max-height: 150px; margin-top: 10px; border-radius: 5px;">` : ''}
+                        <p style="font-size: 12px; color: #666; margin-top: 10px;">建立時間: ${question.created}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function getDifficultyText(difficulty) {
+            const texts = {
+                'easy': '簡單',
+                'medium': '中等',
+                'hard': '困難'
+            };
+            return texts[difficulty] || '未知';
+        }
+
+        // 遊戲邏輯
+        function startGame() {
+            if (gameData.questions.length === 0) {
+                alert('請先建立一些題目才能開始遊戲！');
+                return;
+            }
+
+            const mode = document.getElementById('gameMode').value;
+            const count = parseInt(document.getElementById('questionCount').value);
+            
+            let availableQuestions = [...gameData.questions];
+            
+            // 根據模式篩選題目
+            if (mode !== 'all') {
+                if (mode === 'random') {
+                    availableQuestions = shuffleArray(availableQuestions);
+                } else {
+                    availableQuestions = availableQuestions.filter(q => q.difficulty === mode);
+                }
+            }
+            
+            if (availableQuestions.length === 0) {
+                alert('沒有符合條件的題目！');
+                return;
+            }
+            
+            // 限制題目數量
+            const gameQuestions = availableQuestions.slice(0, Math.min(count, availableQuestions.length));
+            
+            gameData.currentGame = {
+                questions: gameQuestions,
+                currentIndex: 0,
+                score: 0,
+                answers: [],
+                startTime: Date.now()
+            };
+            
+            document.getElementById('gameSetup').classList.add('hidden');
+            document.getElementById('gameArea').classList.remove('hidden');
+            
+            updateGameDisplay();
+        }
+
+        function updateGameDisplay() {
+            const game = gameData.currentGame;
+            const currentQ = game.questions[game.currentIndex];
+            
+            document.getElementById('currentQuestion').textContent = game.currentIndex + 1;
+            document.getElementById('totalQuestions').textContent = game.questions.length;
+            document.getElementById('displayQuestionTitle').textContent = currentQ.title;
+            document.getElementById('displayQuestionText').textContent = currentQ.text;
+            
+            // 更新進度條
+            const progress = ((game.currentIndex + 1) / game.questions.length) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+            
+            // 顯示或隱藏圖片
+            const imageElement = document.getElementById('displayQuestionImage');
+            if (currentQ.image) {
+                imageElement.src = currentQ.image;
+                imageElement.classList.remove('hidden');
+            } else {
+                imageElement.classList.add('hidden');
+            }
+            
+            // 清除之前的答案和反饋
+            document.getElementById('playerAnswer').value = '';
+            document.getElementById('gameFeedback').classList.add('hidden');
+        }
+
+        function handleAnswerKeyPress(event) {
+            if (event.key === 'Enter') {
+                submitAnswer();
+            }
+        }
+
+        function submitAnswer() {
+            const game = gameData.currentGame;
+            const currentQ = game.questions[game.currentIndex];
+            const playerAnswer = document.getElementById('playerAnswer').value.trim().toLowerCase();
+            
+            if (!playerAnswer) {
+                alert('請輸入答案！');
+                return;
+            }
+            
+            const isCorrect = playerAnswer === currentQ.answer;
+            const feedback = document.getElementById('gameFeedback');
+            
+            // 記錄答案
+            game.answers.push({
+                question: currentQ.title,
+                playerAnswer: playerAnswer,
+                correctAnswer: currentQ.answer,
+                isCorrect: isCorrect,
+                timestamp: Date.now()
+            });
+            
+            // 更新統計
+            gameData.gameStats.totalAnswers++;
+            if (isCorrect) {
+                game.score++;
+                gameData.gameStats.correctAnswers++;
+            }
+            
+            // 顯示反饋
+            feedback.className = `feedback ${isCorrect ? 'correct' : 'incorrect'}`;
+            feedback.textContent = isCorrect ? 
+                '✅ 答對了！做得很好！' : 
+                `❌ 答錯了，正確答案是：${currentQ.answer}`;
+            feedback.classList.remove('hidden');
+            
+            // 延遲後進入下一題
+            setTimeout(() => {
+                nextQuestion();
+            }, 2000);
+        }
+
+        function nextQuestion() {
+            const game = gameData.currentGame;
+            game.currentIndex++;
+            
+            if (game.currentIndex >= game.questions.length) {
+                endGame();
+            } else {
+                updateGameDisplay();
+            }
+        }
+
+        function showHint() {
+            const game = gameData.currentGame;
+            const currentQ = game.questions[game.currentIndex];
+            
+            if (currentQ.hint) {
+                alert(`💡 提示：${currentQ.hint}`);
+            } else {
+                alert('這題沒有提示喔！');
+            }
+        }
+
+        function skipQuestion() {
+            if (confirm('確定要跳過這題嗎？')) {
+                const game = gameData.currentGame;
+                const currentQ = game.questions[game.currentIndex];
+                
+                // 記錄為跳過
+                game.answers.push({
+                    question: currentQ.title,
+                    playerAnswer: '(跳過)',
+                    correctAnswer: currentQ.answer,
+                    isCorrect: false,
+                    timestamp: Date.now()
+                });
+                
+                gameData.gameStats.totalAnswers++;
+                nextQuestion();
+            }
+        }
+
+        function endGame() {
+            const game = gameData.currentGame;
+            const endTime = Date.now();
+            const duration = Math.floor((endTime - game.startTime) / 1000);
+            const accuracy = Math.round((game.score / game.questions.length) * 100);
+            
+            // 更新統計
+            gameData.gameStats.completed++;
+            saveGameStats();
+            
+            // 顯示結果
+            document.getElementById('gameArea').classList.add('hidden');
+            document.getElementById('completionScreen').classList.remove('hidden');
+            
+            const resultsHtml = `
+                <div style="font-size: 1.2em; margin: 20px 0;">
+                    <p><strong>🎯 答對題數：</strong>${game.score} / ${game.questions.length}</p>
+                    <p><strong>📊 正確率：</strong>${accuracy}%</p>
+                    <p><strong>⏱️ 遊戲時間：</strong>${formatTime(duration)}</p>
+                </div>
+                <div style="margin: 20px 0; text-align: left; max-height: 200px; overflow-y: auto; background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px;">
+                    <h4>📝 答題詳情：</h4>
+                    ${game.answers.map((answer, index) => `
+                        <p style="margin: 5px 0; font-size: 0.9em;">
+                            <strong>${index + 1}.</strong> ${answer.question} - 
+                            ${answer.isCorrect ? '✅' : '❌'} 
+                            你的答案：${answer.playerAnswer}
+                            ${!answer.isCorrect && answer.playerAnswer !== '(跳過)' ? ` (正確：${answer.correctAnswer})` : ''}
+                        </p>
+                    `).join('')}
+                </div>
+            `;
+            
+            document.getElementById('gameResults').innerHTML = resultsHtml;
+            updateStatistics();
+        }
+
+        function restartGame() {
+            document.getElementById('completionScreen').classList.add('hidden');
+            document.getElementById('gameSetup').classList.remove('hidden');
+            gameData.currentGame = null;
+        }
+
+        function exitGame() {
+            document.getElementById('gameArea').classList.add('hidden');
+            document.getElementById('completionScreen').classList.add('hidden');
+            document.getElementById('gameSetup').classList.remove('hidden');
+            gameData.currentGame = null;
+        }
+
+        // 存檔功能
+        function saveGame() {
+            if (!gameData.currentGame) return;
+            
+            const saveName = prompt('請輸入存檔名稱：') || `遊戲存檔 ${new Date().toLocaleString()}`;
+            const saveData = {
+                name: saveName,
+                game: { ...gameData.currentGame },
+                timestamp: Date.now()
+            };
+            
+            let savedGames = JSON.parse(localStorage.getItem('mathGameSaves') || '[]');
+            savedGames.push(saveData);
+            localStorage.setItem('mathGameSaves', JSON.stringify(savedGames));
+            
+            alert('遊戲已儲存！');
+            updateSavedGames();
+        }
+
+        function loadGame(index) {
+            const savedGames = JSON.parse(localStorage.getItem('mathGameSaves') || '[]');
+            if (savedGames[index]) {
+                if (confirm('載入存檔將會覆蓋目前的遊戲進度，確定要繼續嗎？')) {
+                    gameData.currentGame = savedGames[index].game;
+                    
+                    // 切換到遊戲頁面
+                    switchTab('play');
+                    document.querySelector('[onclick="switchTab(\'play\')"]').classList.add('active');
+                    
+                    document.getElementById('gameSetup').classList.add('hidden');
+                    document.getElementById('gameArea').classList.remove('hidden');
+                    updateGameDisplay();
+                    
+                    alert('存檔載入成功！');
+                }
+            }
+        }
+
+        function deleteSave(index) {
+            if (confirm('確定要刪除這個存檔嗎？')) {
+                let savedGames = JSON.parse(localStorage.getItem('mathGameSaves') || '[]');
+                savedGames.splice(index, 1);
+                localStorage.setItem('mathGameSaves', JSON.stringify(savedGames));
+                updateSavedGames();
+            }
+        }
+
+        function updateSavedGames() {
+            const savedGames = JSON.parse(localStorage.getItem('mathGameSaves') || '[]');
+            const container = document.getElementById('savedGames');
+            
+            if (savedGames.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">目前沒有遊戲存檔</p>';
+                return;
+            }
+            
+            container.innerHTML = savedGames.map((save, index) => `
+                <div class="question-item">
+                    <div class="question-header">
+                        <div>
+                            <h4>${save.name}</h4>
+                            <p style="font-size: 14px; color: #666;">
+                                存檔時間: ${new Date(save.timestamp).toLocaleString()}<br>
+                                進度: ${save.game.currentIndex + 1}/${save.game.questions.length} 題
+                                (${save.game.score} 答對)
+                            </p>
+                        </div>
+                        <div class="question-actions">
+                            <button class="btn btn-small" onclick="loadGame(${index})">📂 載入</button>
+                            <button class="btn btn-small btn-danger" onclick="deleteSave(${index})">🗑️ 刪除</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 資料管理
+        function exportQuestions() {
+            if (gameData.questions.length === 0) {
+                alert('沒有題目可以匯出！');
+                return;
+            }
+            
+            const data = {
+                questions: gameData.questions,
+                exportDate: new Date().toISOString(),
+                version: '1.0'
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `數學題目_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function importQuestions(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    
+                    if (data.questions && Array.isArray(data.questions)) {
+                        if (confirm(`發現 ${data.questions.length} 個題目，確定要匯入嗎？這將會覆蓋現有題目。`)) {
+                            gameData.questions = data.questions.map(q => ({
+                                ...q,
+                                id: Date.now() + Math.random() // 重新生成ID避免衝突
+                            }));
+                            saveQuestions();
+                            updateQuestionList();
+                            alert('題目匯入成功！');
+                        }
+                    } else {
+                        alert('檔案格式不正確！');
+                    }
+                } catch (error) {
+                    alert('檔案讀取失敗，請確認檔案格式正確！');
+                }
+            };
+            reader.readAsText(file);
+            
+            // 清除input
+            event.target.value = '';
+        }
+
+        function clearAllData() {
+            if (confirm('這將會刪除所有題目、存檔和統計資料，確定要繼續嗎？')) {
+                if (confirm('最後確認：真的要清除所有資料嗎？此操作無法復原！')) {
+                    localStorage.removeItem('mathGameQuestions');
+                    localStorage.removeItem('mathGameSaves');
+                    localStorage.removeItem('mathGameStats');
+                    
+                    gameData.questions = [];
+                    gameData.currentGame = null;
+                    gameData.gameStats = {completed: 0, totalAnswers: 0, correctAnswers: 0};
+                    
+                    updateQuestionList();
+                    updateSavedGames();
+                    updateStatistics();
+                    
+                    alert('所有資料已清除！');
+                }
+            }
+        }
+
+        function updateStatistics() {
+            document.getElementById('totalQuestionsCount').textContent = gameData.questions.length;
+            document.getElementById('completedGamesCount').textContent = gameData.gameStats.completed;
+            document.getElementById('totalAnswersCount').textContent = gameData.gameStats.totalAnswers;
+            
+            const accuracy = gameData.gameStats.totalAnswers > 0 ? 
+                Math.round((gameData.gameStats.correctAnswers / gameData.gameStats.totalAnswers) * 100) : 0;
+            document.getElementById('accuracyRate').textContent = accuracy + '%';
+        }
+
+        // 工具函數
+        function saveQuestions() {
+            localStorage.setItem('mathGameQuestions', JSON.stringify(gameData.questions));
+        }
+
+        function saveGameStats() {
+            localStorage.setItem('mathGameStats', JSON.stringify(gameData.gameStats));
+        }
+
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+    </script>
+</body>
+</html>
