@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>數學遊樂場</title>
+    <title>數學戰場</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
         
@@ -216,6 +216,17 @@
             to { transform: rotate(360deg); }
         }
 
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes feedbackPop {
+            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+            50% { transform: translate(-50%, -50%) scale(1.1); }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        }
+
         .score-board {
             display: flex;
             justify-content: space-around;
@@ -377,7 +388,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>數學遊樂場</h1>
+            <h1>數學戰場</h1>
         </div>
 
         <div class="nav-tabs">
@@ -882,20 +893,29 @@
             if (question.type === 'multiple') {
                 gameOptions.innerHTML = `
                     <div class="options-grid">
-                        <button class="option-btn" onclick="selectAnswer('A')">A. ${question.options.A}</button>
-                        <button class="option-btn" onclick="selectAnswer('B')">B. ${question.options.B}</button>
-                        <button class="option-btn" onclick="selectAnswer('C')">C. ${question.options.C}</button>
-                        <button class="option-btn" onclick="selectAnswer('D')">D. ${question.options.D}</button>
+                        <button class="option-btn" data-answer="A">A. ${question.options.A}</button>
+                        <button class="option-btn" data-answer="B">B. ${question.options.B}</button>
+                        <button class="option-btn" data-answer="C">C. ${question.options.C}</button>
+                        <button class="option-btn" data-answer="D">D. ${question.options.D}</button>
                     </div>
                 `;
             } else {
                 gameOptions.innerHTML = `
                     <div class="options-grid">
-                        <button class="option-btn" onclick="selectAnswer('true')">是 (正確)</button>
-                        <button class="option-btn" onclick="selectAnswer('false')">否 (錯誤)</button>
+                        <button class="option-btn" data-answer="true">是 (正確)</button>
+                        <button class="option-btn" data-answer="false">否 (錯誤)</button>
                     </div>
                 `;
             }
+            
+            // 為選項按鈕添加事件監聽器
+            document.querySelectorAll('.option-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    if (!this.disabled) {
+                        selectAnswer(this.getAttribute('data-answer'));
+                    }
+                });
+            });
             
             updateGameDisplay();
         }
@@ -906,24 +926,18 @@
             const buttons = document.querySelectorAll('.option-btn');
             
             // 禁用所有按鈕
-            buttons.forEach(btn => btn.disabled = true);
+            buttons.forEach(btn => {
+                btn.disabled = true;
+                btn.style.cursor = 'not-allowed';
+            });
             
             // 標記答案
             buttons.forEach(btn => {
-                if (question.type === 'multiple') {
-                    const optionLetter = btn.textContent.charAt(0);
-                    if (optionLetter === question.correctAnswer) {
-                        btn.classList.add('correct');
-                    } else if (optionLetter === answer && !isCorrect) {
-                        btn.classList.add('incorrect');
-                    }
-                } else {
-                    const btnAnswer = btn.onclick.toString().includes('true') ? 'true' : 'false';
-                    if (btnAnswer === question.correctAnswer) {
-                        btn.classList.add('correct');
-                    } else if (btnAnswer === answer && !isCorrect) {
-                        btn.classList.add('incorrect');
-                    }
+                const btnAnswer = btn.getAttribute('data-answer');
+                if (btnAnswer === question.correctAnswer) {
+                    btn.classList.add('correct');
+                } else if (btnAnswer === answer && !isCorrect) {
+                    btn.classList.add('incorrect');
                 }
             });
             
@@ -931,29 +945,65 @@
             if (isCorrect) {
                 gameStats.correct++;
                 gameStats.score += 100;
+                // 顯示答對效果
+                showFeedback('正確！+100分', 'success');
             } else {
                 gameStats.incorrect++;
+                // 顯示答錯效果
+                showFeedback('答錯了！', 'error');
             }
             
             // 顯示解釋
             if (question.explanation) {
                 setTimeout(() => {
                     const questionDisplay = document.getElementById('questionDisplay');
-                    questionDisplay.innerHTML += `
-                        <div style="margin-top: 20px; padding: 15px; background: rgba(0,255,136,0.1); border-radius: 10px; border: 1px solid #00ff88;">
-                            <strong>解釋：</strong>${question.explanation}
-                        </div>
+                    const explanationDiv = document.createElement('div');
+                    explanationDiv.style.cssText = `
+                        margin-top: 20px; 
+                        padding: 15px; 
+                        background: rgba(0,255,136,0.1); 
+                        border-radius: 10px; 
+                        border: 1px solid #00ff88;
+                        animation: fadeIn 0.5s ease-in;
                     `;
+                    explanationDiv.innerHTML = `<strong>💡 解釋：</strong>${question.explanation}`;
+                    questionDisplay.appendChild(explanationDiv);
                 }, 1000);
             }
             
-            // 2秒後顯示下一題
+            // 2.5秒後顯示下一題
             setTimeout(() => {
                 currentQuestionIndex++;
                 showQuestion();
-            }, 3000);
+            }, 2500);
             
             updateGameDisplay();
+        }
+
+        function showFeedback(message, type) {
+            const feedback = document.createElement('div');
+            feedback.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                padding: 20px 40px;
+                border-radius: 15px;
+                font-size: 1.5rem;
+                font-weight: 900;
+                z-index: 1000;
+                animation: feedbackPop 0.6s ease-out;
+                ${type === 'success' ? 
+                    'background: linear-gradient(135deg, #00ff88, #32cd32); color: #000;' : 
+                    'background: linear-gradient(135deg, #ff0080, #ff4444); color: white;'
+                }
+            `;
+            feedback.textContent = message;
+            document.body.appendChild(feedback);
+            
+            setTimeout(() => {
+                document.body.removeChild(feedback);
+            }, 1500);
         }
 
         function updateGameDisplay() {
