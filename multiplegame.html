@@ -1,0 +1,1307 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>倍判者聯盟</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Orbitron', monospace;
+            background: linear-gradient(135deg, #0a0a0a 0%, #2d1b69 50%, #8b1538 100%);
+            color: #fff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .game-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        
+        .bg-effects {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.15;
+        }
+        
+        .bg-grid {
+            background-image: 
+                linear-gradient(rgba(255,20,147,0.3) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(138,43,226,0.3) 1px, transparent 1px);
+            background-size: 50px 50px;
+            width: 100%;
+            height: 100%;
+            animation: gridMove 20s linear infinite;
+        }
+        
+        @keyframes gridMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+        }
+        
+        .header {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(45deg, #ff1493, #8a2be2, #dc143c);
+            background-size: 300% 300%;
+            animation: gradientShift 3s ease infinite;
+            border-bottom: 3px solid #ff20ff;
+            box-shadow: 0 4px 20px rgba(255,20,255,0.5);
+            position: relative;
+        }
+        
+        .audio-control {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(45, 27, 105, 0.8);
+            border: 2px solid #8a2be2;
+            border-radius: 10px;
+            padding: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.5rem;
+            color: #ff20ff;
+        }
+        
+        .audio-control:hover {
+            background: rgba(255, 20, 147, 0.2);
+            border-color: #ff1493;
+            transform: scale(1.1);
+        }
+        
+        .audio-control.muted {
+            color: #666;
+            background: rgba(0, 0, 0, 0.5);
+        }
+        
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        
+        .title {
+            font-size: 2.5rem;
+            font-weight: 900;
+            text-shadow: 0 0 20px #ff20ff, 0 0 40px #8a2be2;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            color: #ff69b4;
+            text-shadow: 0 0 10px #ff69b4;
+        }
+        
+        .mode-select {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex: 1;
+            padding: 40px;
+        }
+        
+        .mode-container {
+            display: flex;
+            gap: 40px;
+            max-width: 800px;
+            width: 100%;
+        }
+        
+        .mode-card {
+            flex: 1;
+            background: rgba(45, 27, 105, 0.9);
+            border: 2px solid #ff20ff;
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 40px rgba(255,20,255,0.3);
+        }
+        
+        .mode-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 50px rgba(255,20,255,0.5);
+            border-color: #ff1493;
+        }
+        
+        .mode-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            color: #ff1493;
+            text-shadow: 0 0 20px #ff1493;
+        }
+        
+        .mode-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #ff20ff;
+            margin-bottom: 15px;
+        }
+        
+        .mode-description {
+            font-size: 1rem;
+            color: #8a2be2;
+            line-height: 1.5;
+        }
+        
+        .setup-screen {
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex: 1;
+            padding: 40px;
+        }
+        
+        .setup-form {
+            background: rgba(45, 27, 105, 0.9);
+            border: 2px solid #ff20ff;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 0 40px rgba(255,20,255,0.3);
+            max-width: 500px;
+            width: 100%;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 10px;
+            color: #ff20ff;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+        
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #8a2be2;
+            border-radius: 10px;
+            background: rgba(0,0,0,0.7);
+            color: #fff;
+            font-family: 'Orbitron', monospace;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #ff1493;
+            box-shadow: 0 0 20px rgba(255,20,147,0.5);
+        }
+        
+        .start-btn, .back-btn {
+            width: 100%;
+            padding: 20px;
+            font-size: 1.3rem;
+            font-weight: 700;
+            background: linear-gradient(45deg, #ff1493, #8a2be2);
+            border: none;
+            border-radius: 15px;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            margin-bottom: 15px;
+        }
+        
+        .back-btn {
+            background: linear-gradient(45deg, #666, #999);
+        }
+        
+        .start-btn:hover, .back-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(255,20,147,0.4);
+        }
+        
+        .battle-screen {
+            display: none;
+            flex: 1;
+            padding: 20px;
+        }
+        
+        .battle-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        
+        .battle-header.single-player {
+            justify-content: center;
+        }
+        
+        .team-info {
+            background: rgba(45, 27, 105, 0.8);
+            padding: 20px 30px;
+            border-radius: 15px;
+            border: 3px solid #8a2be2;
+            min-width: 250px;
+            transition: all 0.3s ease;
+        }
+        
+        .team-info.active {
+            border-color: #ff1493;
+            background: rgba(255, 20, 147, 0.2);
+            box-shadow: 0 0 30px rgba(255,20,147,0.5);
+            transform: scale(1.05);
+        }
+        
+        .team-name {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #ff20ff;
+            margin-bottom: 5px;
+        }
+        
+        .team-score {
+            font-size: 2rem;
+            font-weight: 900;
+            color: #ff1493;
+        }
+        
+        .team-progress {
+            font-size: 0.9rem;
+            color: #8a2be2;
+            margin-top: 5px;
+        }
+        
+        .vs-indicator {
+            font-size: 3rem;
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 0 0 20px #ff1493;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        .game-status {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .timer {
+            font-size: 3rem;
+            font-weight: 900;
+            color: #ff1493;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px #ff1493;
+        }
+        
+        .timer.warning {
+            animation: timerWarning 0.5s infinite alternate;
+        }
+        
+        @keyframes timerWarning {
+            0% { color: #ff1493; }
+            100% { color: #ffff00; }
+        }
+        
+        .current-player {
+            font-size: 1.8rem;
+            color: #ff20ff;
+            margin-bottom: 20px;
+            text-shadow: 0 0 15px #ff20ff;
+            font-weight: 700;
+        }
+        
+        .round-info {
+            font-size: 1.2rem;
+            color: #8a2be2;
+            margin-bottom: 15px;
+        }
+        
+        .question-area {
+            background: rgba(45, 27, 105, 0.9);
+            border: 3px solid #ff20ff;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            text-align: center;
+            box-shadow: 0 0 40px rgba(255,20,255,0.2);
+        }
+        
+        .number-display {
+            font-size: 4rem;
+            font-weight: 900;
+            color: #fff;
+            margin-bottom: 20px;
+            text-shadow: 0 0 30px #8a2be2;
+        }
+        
+        .question-text {
+            font-size: 1.2rem;
+            color: #ff69b4;
+            margin-bottom: 20px;
+        }
+        
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .option-btn {
+            padding: 15px 20px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            background: rgba(138, 43, 226, 0.2);
+            border: 2px solid #8a2be2;
+            border-radius: 10px;
+            color: #8a2be2;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Orbitron', monospace;
+        }
+        
+        .option-btn:hover {
+            background: rgba(138, 43, 226, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(138, 43, 226, 0.3);
+        }
+        
+        .option-btn.selected {
+            background: rgba(255, 20, 147, 0.3);
+            border-color: #ff1493;
+            color: #ff1493;
+        }
+        
+        .submit-btn {
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            background: linear-gradient(45deg, #ff1493, #8a2be2);
+            border: none;
+            border-radius: 15px;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Orbitron', monospace;
+        }
+        
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 20, 147, 0.4);
+        }
+        
+        .result-screen {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .result-content {
+            background: rgba(45, 27, 105, 0.95);
+            border: 3px solid #ff20ff;
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            max-width: 600px;
+            width: 90%;
+            box-shadow: 0 0 50px rgba(255, 20, 255, 0.5);
+        }
+        
+        .result-title {
+            font-size: 2rem;
+            font-weight: 900;
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px #8a2be2;
+        }
+        
+        .correct {
+            color: #ff69b4;
+        }
+        
+        .incorrect {
+            color: #ff1493;
+        }
+        
+        .answer-detail {
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            color: #fff;
+        }
+        
+        .score-info {
+            font-size: 1.3rem;
+            color: #ff20ff;
+            margin-bottom: 30px;
+        }
+        
+        .next-btn {
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            background: linear-gradient(45deg, #8a2be2, #ff1493);
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Orbitron', monospace;
+        }
+        
+        .game-over {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .winner-announce {
+            font-size: 3rem;
+            font-weight: 900;
+            color: #ff1493;
+            text-shadow: 0 0 30px #ff1493;
+            margin-bottom: 30px;
+            animation: victoryGlow 2s infinite alternate;
+        }
+        
+        @keyframes victoryGlow {
+            0% { text-shadow: 0 0 30px #ff1493, 0 0 60px #ff1493; }
+            100% { text-shadow: 0 0 50px #ff1493, 0 0 100px #ff1493; }
+        }
+        
+        .final-score {
+            font-size: 1.5rem;
+            color: #8a2be2;
+            margin-bottom: 30px;
+        }
+        
+        .restart-btn {
+            padding: 20px 40px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            background: linear-gradient(45deg, #ff1493, #8a2be2);
+            border: none;
+            border-radius: 15px;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Orbitron', monospace;
+        }
+        
+        .round-transition {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        
+        .transition-text {
+            font-size: 3rem;
+            font-weight: 900;
+            color: #ff1493;
+            text-shadow: 0 0 30px #ff1493;
+            margin-bottom: 30px;
+            animation: transitionPulse 1s infinite alternate;
+        }
+        
+        @keyframes transitionPulse {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.1); }
+        }
+        
+        .transition-info {
+            font-size: 1.5rem;
+            color: #8a2be2;
+            text-align: center;
+        }
+
+        .single-player-stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 20px;
+        }
+
+        .stat-item {
+            background: rgba(45, 27, 105, 0.8);
+            padding: 15px 25px;
+            border-radius: 10px;
+            border: 2px solid #8a2be2;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #8a2be2;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #ff1493;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-effects">
+        <div class="bg-grid"></div>
+    </div>
+    
+    <div class="game-container">
+        <div class="header">
+            <div class="audio-control" id="audioControl" onclick="toggleAudio()" title="音樂開關">
+                🔊
+            </div>
+            <h1 class="title">倍判者聯盟</h1>
+            <div class="subtitle">數學對戰競技場</div>
+        </div>
+        
+        <!-- 模式選擇畫面 -->
+        <div class="mode-select" id="modeSelect">
+            <div class="mode-container">
+                <div class="mode-card" onclick="selectMode('single')">
+                    <div class="mode-icon">🎯</div>
+                    <div class="mode-title">單人模式</div>
+                    <div class="mode-description">
+                        挑戰自己的極限<br>
+                        30題連續挑戰<br>
+                        追求最高分數
+                    </div>
+                </div>
+                <div class="mode-card" onclick="selectMode('battle')">
+                    <div class="mode-icon">⚔️</div>
+                    <div class="mode-title">對戰模式</div>
+                    <div class="mode-description">
+                        雙人競技對戰<br>
+                        兩隊輪流答題<br>
+                        決出最強隊伍
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 設定畫面 -->
+        <div class="setup-screen" id="setupScreen">
+            <div class="setup-form">
+                <div id="singlePlayerSetup" style="display: none;">
+                    <div class="form-group">
+                        <label>玩家名稱：</label>
+                        <input type="text" id="playerName" placeholder="輸入你的名稱" maxlength="12">
+                    </div>
+                </div>
+                <div id="battleSetup" style="display: none;">
+                    <div class="form-group">
+                        <label>左側隊伍名稱：</label>
+                        <input type="text" id="team1Name" placeholder="輸入隊伍名稱" maxlength="12">
+                    </div>
+                    <div class="form-group">
+                        <label>右側隊伍名稱：</label>
+                        <input type="text" id="team2Name" placeholder="輸入隊伍名稱" maxlength="12">
+                    </div>
+                </div>
+                <button class="start-btn" onclick="startGame()">開始遊戲</button>
+                <button class="back-btn" onclick="backToModeSelect()">返回選擇</button>
+            </div>
+        </div>
+        
+        <!-- 對戰畫面 -->
+        <div class="battle-screen" id="battleScreen">
+            <div class="battle-header" id="battleHeader">
+                <div class="team-info" id="team1Info">
+                    <div class="team-name" id="displayTeam1"></div>
+                    <div class="team-score" id="team1Score">0</div>
+                    <div class="team-progress" id="team1Progress">0/15 題</div>
+                </div>
+                <div class="vs-indicator" id="vsIndicator">VS</div>
+                <div class="team-info" id="team2Info">
+                    <div class="team-name" id="displayTeam2"></div>
+                    <div class="team-score" id="team2Score">0</div>
+                    <div class="team-progress" id="team2Progress">0/15 題</div>
+                </div>
+            </div>
+
+            <!-- 單人模式統計 -->
+            <div class="single-player-stats" id="singlePlayerStats" style="display: none;">
+                <div class="stat-item">
+                    <div class="stat-label">題數</div>
+                    <div class="stat-value" id="questionCount">1/30</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">正確率</div>
+                    <div class="stat-value" id="accuracy">100%</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">連續答對</div>
+                    <div class="stat-value" id="streak">0</div>
+                </div>
+            </div>
+            
+            <div class="game-status">
+                <div class="timer" id="timer">30</div>
+                <div class="current-player" id="currentPlayer"></div>
+                <div class="round-info" id="roundInfo"></div>
+            </div>
+            
+            <div class="question-area">
+                <div class="number-display" id="numberDisplay"></div>
+                <div class="question-text" id="questionText"></div>
+                <div class="options-grid" id="optionsGrid"></div>
+                <button class="submit-btn" onclick="submitAnswer()">提交答案</button>
+            </div>
+        </div>
+        
+        <!-- 結果畫面 -->
+        <div class="result-screen" id="resultScreen">
+            <div class="result-content">
+                <div class="result-title" id="resultTitle"></div>
+                <div class="answer-detail" id="answerDetail"></div>
+                <div class="score-info" id="scoreInfo"></div>
+                <button class="next-btn" onclick="nextQuestion()">繼續</button>
+            </div>
+        </div>
+        
+        <!-- 回合轉換畫面 -->
+        <div class="round-transition" id="roundTransition">
+            <div class="transition-text" id="transitionText"></div>
+            <div class="transition-info" id="transitionInfo"></div>
+        </div>
+        
+        <!-- 遊戲結束畫面 -->
+        <div class="game-over" id="gameOver">
+            <div class="winner-announce" id="winnerAnnounce"></div>
+            <div class="final-score" id="finalScore"></div>
+            <button class="restart-btn" onclick="restartGame()">重新開始</button>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone.js/14.8.49/Tone.min.js"></script>
+    <script>
+        let gameState = {
+            gameMode: 'single', // 'single' or 'battle'
+            playerName: '',
+            team1Name: '',
+            team2Name: '',
+            team1Score: 0,
+            team2Score: 0,
+            team1Questions: 0,
+            team2Questions: 0,
+            currentTeam: 1,
+            currentRound: 1,
+            currentNumber: 0,
+            correctAnswers: [],
+            selectedOptions: [],
+            timer: 25,
+            timerInterval: null,
+            streak: { team1: 0, team2: 0, single: 0 },
+            questionStartTime: 0,
+            gamePhase: 'team1Round1',
+            // 單人模式統計
+            totalQuestions: 0,
+            correctCount: 0,
+            maxStreak: 0
+        };
+
+        const multipliers = [2, 3, 4, 5, 9, 11];
+        const multiplierNames = {
+            2: '2', 3: '3', 4: '4', 5: '5', 
+            9: '9', 11: '11', 0: '都不是'
+        };
+
+        // 創建背景音樂
+        let bgSynth, bgLoop;
+        
+        function initAudio() {
+            if (typeof Tone !== 'undefined') {
+                bgSynth = new Tone.PolySynth(Tone.Synth).toDestination();
+                
+                const sequence = [
+                    'C4', 'E4', 'G4', 'C5',
+                    'A3', 'C4', 'E4', 'A4',
+                    'F3', 'A3', 'C4', 'F4',
+                    'G3', 'B3', 'D4', 'G4'
+                ];
+                
+                bgLoop = new Tone.Sequence((time, note) => {
+                    bgSynth.triggerAttackRelease(note, '8n', time);
+                }, sequence, '4n');
+                
+                Tone.Transport.bpm.value = 140;
+            }
+        }
+
+        function selectMode(mode) {
+            gameState.gameMode = mode;
+            document.getElementById('modeSelect').style.display = 'none';
+            document.getElementById('setupScreen').style.display = 'flex';
+            
+            if (mode === 'single') {
+                document.getElementById('singlePlayerSetup').style.display = 'block';
+                document.getElementById('battleSetup').style.display = 'none';
+            } else {
+                document.getElementById('singlePlayerSetup').style.display = 'none';
+                document.getElementById('battleSetup').style.display = 'block';
+            }
+        }
+
+        function backToModeSelect() {
+            document.getElementById('setupScreen').style.display = 'none';
+            document.getElementById('modeSelect').style.display = 'flex';
+        }
+
+        function startGame() {
+            if (gameState.gameMode === 'single') {
+                const playerName = document.getElementById('playerName').value.trim();
+                if (!playerName) {
+                    alert('請輸入玩家名稱！');
+                    return;
+                }
+                gameState.playerName = playerName;
+                setupSinglePlayerMode();
+            } else {
+                const team1 = document.getElementById('team1Name').value.trim();
+                const team2 = document.getElementById('team2Name').value.trim();
+                
+                if (!team1 || !team2) {
+                    alert('請輸入兩隊的隊伍名稱！');
+                    return;
+                }
+                
+                gameState.team1Name = team1;
+                gameState.team2Name = team2;
+                setupBattleMode();
+            }
+            
+            document.getElementById('setupScreen').style.display = 'none';
+            document.getElementById('battleScreen').style.display = 'block';
+            
+            // 啟動音樂（如果啟用的話）
+            if (gameState.audioEnabled) {
+                initAudio();
+                if (typeof Tone !== 'undefined') {
+                    Tone.start().then(() => {
+                        bgLoop.start(0);
+                        Tone.Transport.start();
+                    });
+                }
+            }
+            
+            generateQuestion();
+        }
+
+        function toggleAudio() {
+            gameState.audioEnabled = !gameState.audioEnabled;
+            const audioControl = document.getElementById('audioControl');
+            
+            if (gameState.audioEnabled) {
+                audioControl.textContent = '🔊';
+                audioControl.classList.remove('muted');
+                audioControl.title = '點擊靜音';
+                
+                // 如果遊戲進行中，啟動音樂
+                if (document.getElementById('battleScreen').style.display === 'block') {
+                    initAudio();
+                    if (typeof Tone !== 'undefined') {
+                        Tone.start().then(() => {
+                            bgLoop.start(0);
+                            Tone.Transport.start();
+                        });
+                    }
+                }
+            } else {
+                audioControl.textContent = '🔇';
+                audioControl.classList.add('muted');
+                audioControl.title = '點擊開啟音樂';
+                
+                // 停止音樂
+                if (typeof Tone !== 'undefined' && bgLoop) {
+                    bgLoop.stop();
+                    Tone.Transport.stop();
+                }
+            }
+        }
+
+        function setupSinglePlayerMode() {
+            document.getElementById('battleHeader').style.display = 'none';
+            document.getElementById('singlePlayerStats').style.display = 'flex';
+            document.getElementById('vsIndicator').style.display = 'none';
+            
+            gameState.totalQuestions = 0;
+            gameState.correctCount = 0;
+            gameState.maxStreak = 0;
+            gameState.team1Score = 0; // 使用team1Score作為單人分數
+        }
+
+        function setupBattleMode() {
+            document.getElementById('battleHeader').style.display = 'flex';
+            document.getElementById('battleHeader').classList.remove('single-player');
+            document.getElementById('singlePlayerStats').style.display = 'none';
+            document.getElementById('vsIndicator').style.display = 'block';
+            
+            document.getElementById('displayTeam1').textContent = gameState.team1Name;
+            document.getElementById('displayTeam2').textContent = gameState.team2Name;
+        }
+
+        function generateQuestion() {
+            // 隨機生成4位數或6位數
+            const isLarge = Math.random() < 0.5;
+            let number;
+            
+            if (isLarge) {
+                number = Math.floor(Math.random() * 900000) + 100000; // 6位數
+            } else {
+                number = Math.floor(Math.random() * 9000) + 1000; // 4位數
+            }
+            
+            gameState.currentNumber = number;
+            gameState.correctAnswers = [];
+            gameState.selectedOptions = [];
+            gameState.questionStartTime = Date.now();
+            
+            // 計算正確答案
+            let hasMultiple = false;
+            for (let mult of multipliers) {
+                if (number % mult === 0) {
+                    gameState.correctAnswers.push(mult);
+                    hasMultiple = true;
+                }
+            }
+            
+            if (!hasMultiple) {
+                gameState.correctAnswers.push(0); // 都不是
+            }
+            
+            // 更新顯示
+            updateDisplay();
+            
+            // 生成選項
+            generateOptions();
+            
+            // 開始計時
+            startTimer();
+        }
+
+        function updateDisplay() {
+            // 更新數字和問題
+            document.getElementById('numberDisplay').textContent = gameState.currentNumber;
+            document.getElementById('questionText').textContent = 
+                `請選擇 ${gameState.currentNumber} 是哪些數字的倍數 (應選 ${gameState.correctAnswers.length} 項)`;
+            
+            if (gameState.gameMode === 'single') {
+                // 單人模式顯示
+                document.getElementById('currentPlayer').textContent = `${gameState.playerName} 加油！`;
+                document.getElementById('roundInfo').textContent = `第 ${gameState.totalQuestions + 1} 題 / 30`;
+                
+                // 更新統計資訊
+                document.getElementById('questionCount').textContent = `${gameState.totalQuestions + 1}/30`;
+                const accuracy = gameState.totalQuestions === 0 ? 100 : Math.round((gameState.correctCount / gameState.totalQuestions) * 100);
+                document.getElementById('accuracy').textContent = `${accuracy}%`;
+                document.getElementById('streak').textContent = gameState.streak.single;
+            } else {
+                // 對戰模式顯示
+                const currentTeamName = gameState.currentTeam === 1 ? gameState.team1Name : gameState.team2Name;
+                document.getElementById('currentPlayer').textContent = `${currentTeamName} 回答中...`;
+                
+                // 更新回合資訊
+                const currentQuestions = gameState.currentTeam === 1 ? gameState.team1Questions : gameState.team2Questions;
+                document.getElementById('roundInfo').textContent = 
+                    `第 ${gameState.currentRound} 輪 - 第 ${currentQuestions + 1} 題`;
+                
+                // 更新進度顯示
+                document.getElementById('team1Progress').textContent = `${gameState.team1Questions}/15 題`;
+                document.getElementById('team2Progress').textContent = `${gameState.team2Questions}/15 題`;
+                
+                // 高亮當前隊伍
+                document.getElementById('team1Info').classList.toggle('active', gameState.currentTeam === 1);
+                document.getElementById('team2Info').classList.toggle('active', gameState.currentTeam === 2);
+            }
+        }
+
+        function generateOptions() {
+            const optionsGrid = document.getElementById('optionsGrid');
+            optionsGrid.innerHTML = '';
+            
+            // 所有選項（包括"都不是"）
+            const allOptions = [...multipliers, 0];
+            
+            allOptions.forEach(option => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.textContent = multiplierNames[option];
+                btn.onclick = () => toggleOption(option, btn);
+                optionsGrid.appendChild(btn);
+            });
+        }
+
+        function toggleOption(option, btn) {
+            const index = gameState.selectedOptions.indexOf(option);
+            
+            if (index > -1) {
+                gameState.selectedOptions.splice(index, 1);
+                btn.classList.remove('selected');
+            } else {
+                gameState.selectedOptions.push(option);
+                btn.classList.add('selected');
+            }
+        }
+
+        function startTimer() {
+            gameState.timer = 30;
+            document.getElementById('timer').textContent = gameState.timer;
+            document.getElementById('timer').classList.remove('warning');
+            
+            gameState.timerInterval = setInterval(() => {
+                gameState.timer--;
+                document.getElementById('timer').textContent = gameState.timer;
+                
+                if (gameState.timer <= 10) {
+                    document.getElementById('timer').classList.add('warning');
+                }
+                
+                if (gameState.timer <= 0) {
+                    clearInterval(gameState.timerInterval);
+                    submitAnswer();
+                }
+            }, 1000);
+        }
+
+        function submitAnswer() {
+            clearInterval(gameState.timerInterval);
+            
+            const responseTime = Date.now() - gameState.questionStartTime;
+            const timeBonus = Math.max(0, 30 - Math.floor(responseTime / 1000));
+            
+            // 檢查答案
+            const correct = arraysEqual(
+                gameState.selectedOptions.sort(), 
+                gameState.correctAnswers.sort()
+            );
+            
+            let score = 0;
+            if (correct) {
+                score = 100 + timeBonus * 4; // 基礎分數100 + 時間獎勵
+                
+                if (gameState.gameMode === 'single') {
+                    // 單人模式計分
+                    gameState.streak.single++;
+                    if (gameState.streak.single > 1) {
+                        score += (gameState.streak.single - 1) * 20;
+                    }
+                    gameState.team1Score += score;
+                    gameState.correctCount++;
+                    gameState.maxStreak = Math.max(gameState.maxStreak, gameState.streak.single);
+                } else {
+                    // 對戰模式計分
+                    if (gameState.currentTeam === 1) {
+                        gameState.streak.team1++;
+                        gameState.streak.team2 = 0;
+                        if (gameState.streak.team1 > 1) {
+                            score += (gameState.streak.team1 - 1) * 20;
+                        }
+                        gameState.team1Score += score;
+                    } else {
+                        gameState.streak.team2++;
+                        gameState.streak.team1 = 0;
+                        if (gameState.streak.team2 > 1) {
+                            score += (gameState.streak.team2 - 1) * 20;
+                        }
+                        gameState.team2Score += score;
+                    }
+                }
+            } else {
+                // 答錯重置連續答對
+                if (gameState.gameMode === 'single') {
+                    gameState.streak.single = 0;
+                } else {
+                    if (gameState.currentTeam === 1) {
+                        gameState.streak.team1 = 0;
+                    } else {
+                        gameState.streak.team2 = 0;
+                    }
+                }
+            }
+            
+            // 更新題數
+            gameState.totalQuestions++;
+            if (gameState.gameMode === 'battle') {
+                if (gameState.currentTeam === 1) {
+                    gameState.team1Questions++;
+                } else {
+                    gameState.team2Questions++;
+                }
+            }
+            
+            // 更新分數顯示
+            document.getElementById('team1Score').textContent = gameState.team1Score;
+            if (gameState.gameMode === 'battle') {
+                document.getElementById('team2Score').textContent = gameState.team2Score;
+            }
+            
+            showResult(correct, score, timeBonus);
+        }
+
+        function showResult(correct, score, timeBonus) {
+            const resultScreen = document.getElementById('resultScreen');
+            const resultTitle = document.getElementById('resultTitle');
+            const answerDetail = document.getElementById('answerDetail');
+            const scoreInfo = document.getElementById('scoreInfo');
+            
+            resultTitle.textContent = correct ? '答對了！' : '答錯了！';
+            resultTitle.className = correct ? 'correct' : 'incorrect';
+            
+            // 生成答案說明
+            let explanation = `數字：${gameState.currentNumber}\n`;
+            explanation += `正確答案：${gameState.correctAnswers.map(a => multiplierNames[a]).join(', ')}\n`;
+            explanation += `你的答案：${gameState.selectedOptions.length > 0 
+                ? gameState.selectedOptions.map(a => multiplierNames[a]).join(', ') 
+                : '未選擇'}`;
+            
+            answerDetail.textContent = explanation;
+            
+            if (correct) {
+                if (gameState.gameMode === 'single') {
+                    const streak = gameState.streak.single;
+                    let scoreText = `${gameState.playerName} 獲得 ${score} 分！`;
+                    if (timeBonus > 0) scoreText += `\n時間獎勵：${timeBonus * 4} 分`;
+                    if (streak > 1) scoreText += `\n連續答對獎勵：${(streak - 1) * 20} 分`;
+                    scoreInfo.textContent = scoreText;
+                } else {
+                    const currentTeamName = gameState.currentTeam === 1 ? gameState.team1Name : gameState.team2Name;
+                    const streak = gameState.currentTeam === 1 ? gameState.streak.team1 : gameState.streak.team2;
+                    let scoreText = `${currentTeamName} 獲得 ${score} 分！`;
+                    if (timeBonus > 0) scoreText += `\n時間獎勵：${timeBonus * 4} 分`;
+                    if (streak > 1) scoreText += `\n連續答對獎勵：${(streak - 1) * 20} 分`;
+                    scoreInfo.textContent = scoreText;
+                }
+            } else {
+                scoreInfo.textContent = '本題無得分';
+            }
+            
+            resultScreen.style.display = 'flex';
+        }
+
+        function nextQuestion() {
+            document.getElementById('resultScreen').style.display = 'none';
+            
+            if (gameState.gameMode === 'single') {
+                // 單人模式：30題結束
+                if (gameState.totalQuestions >= 30) {
+                    endSinglePlayerGame();
+                    return;
+                }
+                generateQuestion();
+            } else {
+                // 對戰模式邏輯
+                if (gameState.currentTeam === 1 && gameState.team1Questions >= 15) {
+                    // 第一隊完成15題
+                    if (gameState.currentRound === 1) {
+                        // 第一輪結束，換第二隊
+                        showRoundTransition('team2Round1');
+                    } else {
+                        // 第二輪第一隊完成，等待第二隊
+                        if (gameState.team2Questions >= 15) {
+                            // 遊戲全部結束
+                            endGame();
+                            return;
+                        } else {
+                            showRoundTransition('team2Round2');
+                        }
+                    }
+                } else if (gameState.currentTeam === 2 && gameState.team2Questions >= 15) {
+                    // 第二隊完成15題
+                    if (gameState.currentRound === 1) {
+                        // 第一輪結束，第二輪開始
+                        showRoundTransition('team1Round2');
+                    } else {
+                        // 第二輪第二隊完成，遊戲結束
+                        endGame();
+                        return;
+                    }
+                } else {
+                    // 繼續當前隊伍的下一題
+                    generateQuestion();
+                }
+            }
+        }
+
+        function showRoundTransition(nextPhase) {
+            const transitionScreen = document.getElementById('roundTransition');
+            const transitionText = document.getElementById('transitionText');
+            const transitionInfo = document.getElementById('transitionInfo');
+            
+            gameState.gamePhase = nextPhase;
+            
+            switch(nextPhase) {
+                case 'team2Round1':
+                    gameState.currentTeam = 2;
+                    transitionText.textContent = `${gameState.team2Name} 準備！`;
+                    transitionInfo.textContent = '第一輪 - 請準備回答15道題目';
+                    break;
+                case 'team1Round2':
+                    gameState.currentRound = 2;
+                    gameState.currentTeam = 1;
+                    transitionText.textContent = '第二輪開始！';
+                    transitionInfo.textContent = `${gameState.team1Name} 先攻 - 最後15題`;
+                    break;
+                case 'team2Round2':
+                    gameState.currentTeam = 2;
+                    transitionText.textContent = `${gameState.team2Name} 最後衝刺！`;
+                    transitionInfo.textContent = '第二輪 - 決勝15題';
+                    break;
+            }
+            
+            transitionScreen.style.display = 'flex';
+            
+            // 3秒後自動開始下一階段
+            setTimeout(() => {
+                transitionScreen.style.display = 'none';
+                generateQuestion();
+            }, 3000);
+        }
+
+        function endGame() {
+            // 停止音樂
+            if (typeof Tone !== 'undefined' && bgLoop) {
+                bgLoop.stop();
+                Tone.Transport.stop();
+            }
+            
+            document.getElementById('battleScreen').style.display = 'none';
+            
+            const gameOver = document.getElementById('gameOver');
+            const winnerAnnounce = document.getElementById('winnerAnnounce');
+            const finalScore = document.getElementById('finalScore');
+            
+            let winner;
+            if (gameState.team1Score > gameState.team2Score) {
+                winner = gameState.team1Name;
+            } else if (gameState.team2Score > gameState.team1Score) {
+                winner = gameState.team2Name;
+            } else {
+                winner = '平手';
+            }
+            
+            winnerAnnounce.textContent = winner === '平手' ? '平手！' : `${winner} 獲勝！`;
+            finalScore.textContent = `最終比分：${gameState.team1Name} ${gameState.team1Score} : ${gameState.team2Score} ${gameState.team2Name}`;
+            
+            gameOver.style.display = 'block';
+        }
+
+        function endSinglePlayerGame() {
+            // 停止音樂
+            if (typeof Tone !== 'undefined' && bgLoop) {
+                bgLoop.stop();
+                Tone.Transport.stop();
+            }
+            
+            document.getElementById('battleScreen').style.display = 'none';
+            
+            const gameOver = document.getElementById('gameOver');
+            const winnerAnnounce = document.getElementById('winnerAnnounce');
+            const finalScore = document.getElementById('finalScore');
+            
+            winnerAnnounce.textContent = '挑戰完成！';
+            
+            const accuracy = Math.round((gameState.correctCount / 30) * 100);
+            let performance = '';
+            if (accuracy >= 90) performance = '完美表現！';
+            else if (accuracy >= 80) performance = '優秀表現！';
+            else if (accuracy >= 70) performance = '良好表現！';
+            else if (accuracy >= 60) performance = '尚可表現';
+            else performance = '需要加強';
+            
+            finalScore.innerHTML = `
+                玩家：${gameState.playerName}<br>
+                總分：${gameState.team1Score} 分<br>
+                正確率：${accuracy}% (${gameState.correctCount}/30)<br>
+                最高連擊：${gameState.maxStreak} 題<br>
+                評價：${performance}
+            `;
+            
+            gameOver.style.display = 'block';
+        }
+
+        function restartGame() {
+            // 停止音樂
+            if (typeof Tone !== 'undefined' && bgLoop) {
+                bgLoop.stop();
+                Tone.Transport.stop();
+            }
+            
+            // 重置遊戲狀態
+            gameState = {
+                gameMode: 'single',
+                playerName: '',
+                team1Name: '',
+                team2Name: '',
+                team1Score: 0,
+                team2Score: 0,
+                team1Questions: 0,
+                team2Questions: 0,
+                currentTeam: 1,
+                currentRound: 1,
+                currentNumber: 0,
+                correctAnswers: [],
+                selectedOptions: [],
+                timer: 30,
+                timerInterval: null,
+                streak: { team1: 0, team2: 0, single: 0 },
+                questionStartTime: 0,
+                gamePhase: 'team1Round1',
+                totalQuestions: 0,
+                correctCount: 0,
+                maxStreak: 0,
+                audioEnabled: true
+            };
+            
+            // 重置顯示
+            document.getElementById('gameOver').style.display = 'none';
+            document.getElementById('modeSelect').style.display = 'flex';
+            
+            // 重置音樂按鈕
+            const audioControl = document.getElementById('audioControl');
+            audioControl.textContent = '🔊';
+            audioControl.classList.remove('muted');
+            audioControl.title = '點擊靜音';
+            
+            // 清空輸入欄位
+            document.getElementById('playerName').value = '';
+            document.getElementById('team1Name').value = '';
+            document.getElementById('team2Name').value = '';
+        }
+
+        function arraysEqual(a, b) {
+            return a.length === b.length && a.every((val, index) => val === b[index]);
+        }
+    </script>
+</body>
+</html>
