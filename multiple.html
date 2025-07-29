@@ -1,324 +1,676 @@
-import React, { useState, useEffect } from 'react';
-import { Trophy, Star, RefreshCw, ArrowRight, CheckCircle, XCircle } from 'lucide-react';
-
-export default function MultipleJudgmentGame() {
-  const [currentLevel, setCurrentLevel] = useState(1);
-  const [currentQuestion, setCurrentQuestion] = useState(1);
-  const [score, setScore] = useState(0);
-  const [currentNumber, setCurrentNumber] = useState('');
-  const [currentMultiple, setCurrentMultiple] = useState(2);
-  const [gameStatus, setGameStatus] = useState('playing'); // 'playing', 'completed', 'levelComplete'
-  const [feedback, setFeedback] = useState('');
-  const [showFeedback, setShowFeedback] = useState(false);
-  const [totalScore, setTotalScore] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(10);
-  const [timerActive, setTimerActive] = useState(false);
-
-  // 遊戲設定
-  const gameConfig = {
-    1: { digits: 3, questionsPerLevel: 6 },
-    2: { digits: 4, questionsPerLevel: 6 },
-    3: { digits: 6, questionsPerLevel: 6 }
-  };
-
-  const multiples = [2, 4, 5, 8, 10, 11];
-
-  // 產生指定位數的隨機數字
-  const generateRandomNumber = (digits) => {
-    const min = Math.pow(10, digits - 1);
-    const max = Math.pow(10, digits) - 1;
-    return Math.floor(Math.random() * (max - min + 1)) + min;
-  };
-
-  // 產生新題目
-  const generateNewQuestion = () => {
-    const config = gameConfig[currentLevel];
-    const newNumber = generateRandomNumber(config.digits);
-    const randomMultiple = multiples[Math.floor(Math.random() * multiples.length)];
-    
-    setCurrentNumber(newNumber.toString());
-    setCurrentMultiple(randomMultiple);
-    setShowFeedback(false);
-    setFeedback('');
-    setTimeLeft(10);
-    setTimerActive(true);
-  };
-
-  // 計時器效果
-  useEffect(() => {
-    let interval;
-    if (timerActive && timeLeft > 0 && !showFeedback) {
-      interval = setInterval(() => {
-        setTimeLeft(time => time - 1);
-      }, 1000);
-    } else if (timeLeft === 0 && !showFeedback) {
-      // 時間到，自動判定為錯誤
-      setTimerActive(false);
-      setFeedback(`時間到！${currentNumber} ${parseInt(currentNumber) % currentMultiple === 0 ? '是' : '不是'} ${currentMultiple} 的倍數`);
-      setShowFeedback(true);
-      
-      setTimeout(() => {
-        if (currentQuestion < gameConfig[currentLevel].questionsPerLevel) {
-          setCurrentQuestion(currentQuestion + 1);
-          generateNewQuestion();
-        } else {
-          if (currentLevel < 3) {
-            setGameStatus('levelComplete');
-          } else {
-            setGameStatus('completed');
-          }
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>倍數判斷闖關遊戲</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-      }, 2000);
-    }
-    return () => clearInterval(interval);
-  }, [timerActive, timeLeft, showFeedback]);
 
-  // 檢查答案
-  const checkAnswer = (userAnswer) => {
-    if (showFeedback || !timerActive) return; // 防止重複點擊
-    
-    setTimerActive(false);
-    const number = parseInt(currentNumber);
-    const isCorrect = (number % currentMultiple === 0) === userAnswer;
-    
-    if (isCorrect) {
-      setScore(score + 1);
-      setTotalScore(totalScore + 1);
-      setFeedback('正確！');
-    } else {
-      setFeedback(`錯誤！${currentNumber} ${number % currentMultiple === 0 ? '是' : '不是'} ${currentMultiple} 的倍數`);
-    }
-    
-    setShowFeedback(true);
-    
-    // 延遲後進入下一題或下一關
-    setTimeout(() => {
-      if (currentQuestion < gameConfig[currentLevel].questionsPerLevel) {
-        setCurrentQuestion(currentQuestion + 1);
-        generateNewQuestion();
-      } else {
-        // 關卡完成
-        if (currentLevel < 3) {
-          setGameStatus('levelComplete');
-        } else {
-          setGameStatus('completed');
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+            min-height: 100vh;
+            padding: 20px;
         }
-      }
-    }, 2000);
-  };
 
-  // 進入下一關
-  const nextLevel = () => {
-    setCurrentLevel(currentLevel + 1);
-    setCurrentQuestion(1);
-    setScore(0);
-    setGameStatus('playing');
-    generateNewQuestion();
-  };
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
 
-  // 重新開始遊戲
-  const restartGame = () => {
-    setCurrentLevel(1);
-    setCurrentQuestion(1);
-    setScore(0);
-    setTotalScore(0);
-    setGameStatus('playing');
-    setTimerActive(false);
-    generateNewQuestion();
-  };
+        .title {
+            text-align: center;
+            margin-bottom: 30px;
+        }
 
-  // 初始化遊戲
-  useEffect(() => {
-    generateNewQuestion();
-  }, []);
+        .title h1 {
+            font-size: 2.5rem;
+            color: #333;
+            margin-bottom: 20px;
+        }
 
-  // 獲取關卡顏色
-  const getLevelColor = (level) => {
-    const colors = {
-      1: 'bg-green-500',
-      2: 'bg-blue-500',
-      3: 'bg-purple-500'
-    };
-    return colors[level] || 'bg-gray-500';
-  };
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 20px;
+        }
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-100 to-purple-200 p-4">
-      <div className="max-w-2xl mx-auto">
-        {/* 標題 */}
-        <div className="text-center mb-6">
-          <h1 className="text-4xl font-bold text-gray-800 mb-2">倍數判斷闖關遊戲</h1>
-          <div className="flex justify-center items-center gap-4 mb-4">
-            <div className="flex items-center gap-2">
-              <Star className="text-yellow-500" size={20} />
-              <span className="text-lg font-semibold">總分: {totalScore}</span>
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .level-progress {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        .level-circle {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 10px;
+            font-weight: bold;
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        .level-1 { background-color: #4caf50; }
+        .level-2 { background-color: #2196f3; }
+        .level-3 { background-color: #9c27b0; }
+        .level-inactive { background-color: #ccc; }
+        .level-completed { background-color: #66bb6a; }
+
+        .game-area {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            padding: 40px;
+            text-align: center;
+        }
+
+        .question-info {
+            margin-bottom: 30px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background-color: #e0e0e0;
+            border-radius: 4px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        .timer {
+            margin: 30px 0;
+        }
+
+        .timer-display {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .timer-bar {
+            width: 100%;
+            height: 12px;
+            background-color: #e0e0e0;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .timer-fill {
+            height: 100%;
+            transition: width 1s linear;
+        }
+
+        .timer-safe { color: #4caf50; background-color: #4caf50; }
+        .timer-warning { color: #ff9800; background-color: #ff9800; }
+        .timer-danger { 
+            color: #f44336; 
+            background-color: #f44336;
+            animation: pulse 0.5s infinite alternate;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            100% { opacity: 0.7; }
+        }
+
+        .number-display {
+            font-size: 4rem;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            color: #333;
+            background-color: #f5f5f5;
+            padding: 30px;
+            border-radius: 10px;
+            margin: 30px 0;
+        }
+
+        .question-text {
+            font-size: 1.5rem;
+            color: #555;
+            margin-bottom: 40px;
+        }
+
+        .question-text .multiple {
+            font-weight: bold;
+            color: #2196f3;
+        }
+
+        .answer-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            font-size: 1.3rem;
+            font-weight: bold;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-yes {
+            background-color: #4caf50;
+            color: white;
+        }
+
+        .btn-yes:hover:not(:disabled) {
+            background-color: #45a049;
+        }
+
+        .btn-no {
+            background-color: #f44336;
+            color: white;
+        }
+
+        .btn-no:hover:not(:disabled) {
+            background-color: #da190b;
+        }
+
+        .btn-primary {
+            background-color: #2196f3;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #1976d2;
+        }
+
+        .btn-purple {
+            background-color: #9c27b0;
+            color: white;
+        }
+
+        .btn-purple:hover {
+            background-color: #7b1fa2;
+        }
+
+        .feedback {
+            font-size: 1.3rem;
+            font-weight: bold;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .feedback-correct {
+            background-color: #e8f5e8;
+            color: #2e7d32;
+        }
+
+        .feedback-incorrect {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+
+        .feedback-timeout {
+            background-color: #fff3e0;
+            color: #ef6c00;
+        }
+
+        .completion-screen {
+            text-align: center;
+        }
+
+        .completion-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+
+        .completion-title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .completion-score {
+            font-size: 1.3rem;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .game-rules {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 30px;
+            text-align: left;
+        }
+
+        .game-rules h3 {
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .game-rules ul {
+            list-style: none;
+            color: #666;
+        }
+
+        .game-rules li {
+            margin-bottom: 8px;
+            padding-left: 10px;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 標題 -->
+        <div class="title">
+            <h1>倍數判斷闖關遊戲</h1>
+            <div class="stats">
+                <div class="stat-item">
+                    <span>⭐</span>
+                    <span>總分: <span id="totalScore">0</span></span>
+                </div>
+                <div class="stat-item">
+                    <span>🏆</span>
+                    <span>第 <span id="currentLevel">1</span> 關</span>
+                </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Trophy className="text-purple-500" size={20} />
-              <span className="text-lg font-semibold">第 {currentLevel} 關</span>
-            </div>
-          </div>
         </div>
 
-        {/* 關卡進度 */}
-        <div className="flex justify-center mb-6">
-          {[1, 2, 3].map((level) => (
-            <div
-              key={level}
-              className={`w-12 h-12 rounded-full flex items-center justify-center mx-2 text-white font-bold ${
-                level === currentLevel
-                  ? getLevelColor(level)
-                  : level < currentLevel
-                  ? 'bg-green-400'
-                  : 'bg-gray-300'
-              }`}
-            >
-              {level}
-            </div>
-          ))}
+        <!-- 關卡進度 -->
+        <div class="level-progress">
+            <div class="level-circle level-1" id="level1">1</div>
+            <div class="level-circle level-inactive" id="level2">2</div>
+            <div class="level-circle level-inactive" id="level3">3</div>
         </div>
 
-        {/* 遊戲區域 */}
-        <div className="bg-white rounded-xl shadow-lg p-8">
-          {gameStatus === 'playing' && (
-            <>
-              {/* 題目資訊 */}
-              <div className="text-center mb-6">
-                <div className="text-sm text-gray-600 mb-2">
-                  第 {currentLevel} 關 - 第 {currentQuestion} 題 / {gameConfig[currentLevel].questionsPerLevel} 題
-                </div>
-                <div className="text-sm text-gray-600 mb-4">
-                  本關分數: {score} / {gameConfig[currentLevel].questionsPerLevel}
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
-                  <div
-                    className={`h-2 rounded-full ${getLevelColor(currentLevel)}`}
-                    style={{
-                      width: `${(currentQuestion / gameConfig[currentLevel].questionsPerLevel) * 100}%`
-                    }}
-                  ></div>
-                </div>
-                
-                {/* 計時器 */}
-                <div className="mb-4">
-                  <div className={`text-3xl font-bold mb-2 ${
-                    timeLeft <= 3 ? 'text-red-500 animate-pulse' : 
-                    timeLeft <= 5 ? 'text-orange-500' : 'text-green-500'
-                  }`}>
-                    {timeLeft} 秒
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-3">
-                    <div
-                      className={`h-3 rounded-full transition-all duration-1000 ${
-                        timeLeft <= 3 ? 'bg-red-500' : 
-                        timeLeft <= 5 ? 'bg-orange-500' : 'bg-green-500'
-                      }`}
-                      style={{
-                        width: `${(timeLeft / 10) * 100}%`
-                      }}
-                    ></div>
-                  </div>
-                </div>
-              </div>
-
-              {/* 題目 */}
-              <div className="text-center mb-8">
-                <div className="text-6xl font-mono font-bold text-gray-800 mb-4 p-4 bg-gray-50 rounded-lg">
-                  {currentNumber}
-                </div>
-                <div className="text-2xl text-gray-700 mb-6">
-                  這個數字是 <span className="font-bold text-blue-600">{currentMultiple}</span> 的倍數嗎？
+        <!-- 遊戲區域 -->
+        <div class="game-area">
+            <!-- 遊戲進行中 -->
+            <div id="playingScreen">
+                <!-- 題目資訊 -->
+                <div class="question-info">
+                    <div>第 <span id="levelDisplay">1</span> 關 - 第 <span id="questionNumber">1</span> 題 / 6 題</div>
+                    <div>本關分數: <span id="levelScore">0</span> / 6</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    
+                    <!-- 計時器 -->
+                    <div class="timer">
+                        <div class="timer-display timer-safe" id="timerDisplay">10 秒</div>
+                        <div class="timer-bar">
+                            <div class="timer-fill timer-safe" id="timerFill"></div>
+                        </div>
+                    </div>
                 </div>
 
-                {/* 答案按鈕 */}
-                {!showFeedback && (
-                  <div className="flex justify-center gap-6">
-                    <button
-                      onClick={() => checkAnswer(true)}
-                      disabled={!timerActive}
-                      className="bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white font-bold py-4 px-8 rounded-lg text-xl transition-colors"
-                    >
-                      <CheckCircle className="inline mr-2" size={24} />
-                      是
-                    </button>
-                    <button
-                      onClick={() => checkAnswer(false)}
-                      disabled={!timerActive}
-                      className="bg-red-500 hover:bg-red-600 disabled:bg-gray-400 text-white font-bold py-4 px-8 rounded-lg text-xl transition-colors"
-                    >
-                      <XCircle className="inline mr-2" size={24} />
-                      不是
-                    </button>
-                  </div>
-                )}
+                <!-- 題目 -->
+                <div>
+                    <div class="number-display" id="numberDisplay">123</div>
+                    <div class="question-text">
+                        這個數字是 <span class="multiple" id="multipleDisplay">2</span> 的倍數嗎？
+                    </div>
 
-                {/* 答案反饋 */}
-                {showFeedback && (
-                  <div className={`text-xl font-bold p-4 rounded-lg ${
-                    feedback.includes('正確') ? 'bg-green-100 text-green-800' : 
-                    feedback.includes('時間到') ? 'bg-orange-100 text-orange-800' :
-                    'bg-red-100 text-red-800'
-                  }`}>
-                    {feedback}
-                  </div>
-                )}
-              </div>
-            </>
-          )}
+                    <!-- 答案按鈕 -->
+                    <div class="answer-buttons" id="answerButtons">
+                        <button class="btn btn-yes" id="yesBtn" onclick="checkAnswer(true)">
+                            ✓ 是
+                        </button>
+                        <button class="btn btn-no" id="noBtn" onclick="checkAnswer(false)">
+                            ✗ 不是
+                        </button>
+                    </div>
 
-          {/* 關卡完成畫面 */}
-          {gameStatus === 'levelComplete' && (
-            <div className="text-center">
-              <Trophy className="mx-auto text-yellow-500 mb-4" size={64} />
-              <h2 className="text-3xl font-bold text-gray-800 mb-4">第 {currentLevel} 關完成！</h2>
-              <div className="text-xl text-gray-600 mb-6">
-                本關分數: {score} / {gameConfig[currentLevel].questionsPerLevel}
-              </div>
-              <button
-                onClick={nextLevel}
-                className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg text-xl transition-colors"
-              >
-                <ArrowRight className="inline mr-2" size={20} />
-                進入第 {currentLevel + 1} 關
-              </button>
+                    <!-- 答案反饋 -->
+                    <div class="feedback hidden" id="feedback"></div>
+                </div>
             </div>
-          )}
 
-          {/* 遊戲完成畫面 */}
-          {gameStatus === 'completed' && (
-            <div className="text-center">
-              <div className="text-6xl mb-4">🎉</div>
-              <h2 className="text-3xl font-bold text-gray-800 mb-4">恭喜完成所有關卡！</h2>
-              <div className="text-xl text-gray-600 mb-6">
-                總分: {totalScore} / 18
-              </div>
-              <div className="text-lg text-gray-600 mb-6">
-                最終關卡分數: {score} / {gameConfig[currentLevel].questionsPerLevel}
-              </div>
-              <button
-                onClick={restartGame}
-                className="bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 px-6 rounded-lg text-xl transition-colors"
-              >
-                <RefreshCw className="inline mr-2" size={20} />
-                重新開始
-              </button>
+            <!-- 關卡完成畫面 -->
+            <div id="levelCompleteScreen" class="completion-screen hidden">
+                <div class="completion-icon">🏆</div>
+                <div class="completion-title">第 <span id="completedLevel">1</span> 關完成！</div>
+                <div class="completion-score">本關分數: <span id="completedScore">0</span> / 6</div>
+                <button class="btn btn-primary" onclick="nextLevel()">
+                    ➡️ 進入第 <span id="nextLevelNumber">2</span> 關
+                </button>
             </div>
-          )}
+
+            <!-- 遊戲完成畫面 -->
+            <div id="gameCompleteScreen" class="completion-screen hidden">
+                <div class="completion-icon">🎉</div>
+                <div class="completion-title">恭喜完成所有關卡！</div>
+                <div class="completion-score">總分: <span id="finalTotalScore">0</span> / 18</div>
+                <div class="completion-score">最終關卡分數: <span id="finalLevelScore">0</span> / 6</div>
+                <button class="btn btn-purple" onclick="restartGame()">
+                    🔄 重新開始
+                </button>
+            </div>
         </div>
 
-        {/* 遊戲說明 */}
-        <div className="mt-6 bg-white rounded-lg p-4 text-sm text-gray-600">
-          <h3 className="font-bold mb-2">遊戲規則：</h3>
-          <ul className="space-y-1">
-            <li>• 第一關：3位數，6題</li>
-            <li>• 第二關：4位數，6題</li>
-            <li>• 第三關：6位數，6題</li>
-            <li>• 每題限時 10 秒作答</li>
-            <li>• 每題隨機選擇倍數：2, 4, 5, 8, 10, 11</li>
-            <li>• 判斷數字是否為指定倍數</li>
-          </ul>
+        <!-- 遊戲說明 -->
+        <div class="game-rules">
+            <h3>遊戲規則：</h3>
+            <ul>
+                <li>• 第一關：3位數，6題</li>
+                <li>• 第二關：4位數，6題</li>
+                <li>• 第三關：6位數，6題</li>
+                <li>• 每題限時 10 秒作答</li>
+                <li>• 每題隨機選擇倍數：2, 4, 5, 8, 10, 11</li>
+                <li>• 判斷數字是否為指定倍數</li>
+            </ul>
         </div>
-      </div>
     </div>
-  );
-}
+
+    <script>
+        // 遊戲狀態
+        let currentLevel = 1;
+        let currentQuestion = 1;
+        let levelScore = 0;
+        let totalScore = 0;
+        let currentNumber = '';
+        let currentMultiple = 2;
+        let timeLeft = 10;
+        let timerInterval = null;
+        let timerActive = false;
+        let showingFeedback = false;
+
+        // 遊戲設定
+        const gameConfig = {
+            1: { digits: 3, questionsPerLevel: 6 },
+            2: { digits: 4, questionsPerLevel: 6 },
+            3: { digits: 6, questionsPerLevel: 6 }
+        };
+
+        const multiples = [2, 4, 5, 8, 10, 11];
+        const levelColors = {
+            1: '#4caf50',
+            2: '#2196f3', 
+            3: '#9c27b0'
+        };
+
+        // 產生指定位數的隨機數字
+        function generateRandomNumber(digits) {
+            const min = Math.pow(10, digits - 1);
+            const max = Math.pow(10, digits) - 1;
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        // 產生新題目
+        function generateNewQuestion() {
+            const config = gameConfig[currentLevel];
+            const newNumber = generateRandomNumber(config.digits);
+            const randomMultiple = multiples[Math.floor(Math.random() * multiples.length)];
+            
+            currentNumber = newNumber.toString();
+            currentMultiple = randomMultiple;
+            showingFeedback = false;
+            
+            // 更新顯示
+            document.getElementById('numberDisplay').textContent = currentNumber;
+            document.getElementById('multipleDisplay').textContent = currentMultiple;
+            document.getElementById('feedback').classList.add('hidden');
+            document.getElementById('answerButtons').style.display = 'flex';
+            
+            // 啟動計時器
+            startTimer();
+            updateDisplay();
+        }
+
+        // 啟動計時器
+        function startTimer() {
+            timeLeft = 10;
+            timerActive = true;
+            updateTimerDisplay();
+            
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateTimerDisplay();
+                
+                if (timeLeft <= 0) {
+                    handleTimeout();
+                }
+            }, 1000);
+        }
+
+        // 更新計時器顯示
+        function updateTimerDisplay() {
+            const timerDisplay = document.getElementById('timerDisplay');
+            const timerFill = document.getElementById('timerFill');
+            
+            timerDisplay.textContent = timeLeft + ' 秒';
+            timerFill.style.width = (timeLeft / 10) * 100 + '%';
+            
+            // 更新顏色
+            let colorClass = 'timer-safe';
+            if (timeLeft <= 3) {
+                colorClass = 'timer-danger';
+            } else if (timeLeft <= 5) {
+                colorClass = 'timer-warning';
+            }
+            
+            timerDisplay.className = 'timer-display ' + colorClass;
+            timerFill.className = 'timer-fill ' + colorClass;
+        }
+
+        // 時間到處理
+        function handleTimeout() {
+            if (showingFeedback) return;
+            
+            timerActive = false;
+            clearInterval(timerInterval);
+            
+            const number = parseInt(currentNumber);
+            const isMultiple = number % currentMultiple === 0;
+            const feedbackText = `時間到！${currentNumber} ${isMultiple ? '是' : '不是'} ${currentMultiple} 的倍數`;
+            
+            showFeedback(feedbackText, 'timeout');
+            disableButtons();
+            
+            setTimeout(() => {
+                nextQuestion();
+            }, 2000);
+        }
+
+        // 檢查答案
+        function checkAnswer(userAnswer) {
+            if (showingFeedback || !timerActive) return;
+            
+            timerActive = false;
+            clearInterval(timerInterval);
+            
+            const number = parseInt(currentNumber);
+            const isCorrect = (number % currentMultiple === 0) === userAnswer;
+            
+            let feedbackText;
+            let feedbackType;
+            
+            if (isCorrect) {
+                levelScore++;
+                totalScore++;
+                feedbackText = '正確！';
+                feedbackType = 'correct';
+            } else {
+                feedbackText = `錯誤！${currentNumber} ${number % currentMultiple === 0 ? '是' : '不是'} ${currentMultiple} 的倍數`;
+                feedbackType = 'incorrect';
+            }
+            
+            showFeedback(feedbackText, feedbackType);
+            disableButtons();
+            updateDisplay();
+            
+            setTimeout(() => {
+                nextQuestion();
+            }, 2000);
+        }
+
+        // 顯示反饋
+        function showFeedback(text, type) {
+            showingFeedback = true;
+            const feedback = document.getElementById('feedback');
+            feedback.textContent = text;
+            feedback.className = 'feedback feedback-' + type;
+            feedback.classList.remove('hidden');
+        }
+
+        // 禁用按鈕
+        function disableButtons() {
+            document.getElementById('yesBtn').disabled = true;
+            document.getElementById('noBtn').disabled = true;
+        }
+
+        // 啟用按鈕
+        function enableButtons() {
+            document.getElementById('yesBtn').disabled = false;
+            document.getElementById('noBtn').disabled = false;
+        }
+
+        // 下一題
+        function nextQuestion() {
+            const config = gameConfig[currentLevel];
+            
+            if (currentQuestion < config.questionsPerLevel) {
+                currentQuestion++;
+                enableButtons();
+                generateNewQuestion();
+            } else {
+                // 關卡完成
+                if (currentLevel < 3) {
+                    showLevelComplete();
+                } else {
+                    showGameComplete();
+                }
+            }
+        }
+
+        // 顯示關卡完成
+        function showLevelComplete() {
+            document.getElementById('playingScreen').classList.add('hidden');
+            document.getElementById('levelCompleteScreen').classList.remove('hidden');
+            document.getElementById('completedLevel').textContent = currentLevel;
+            document.getElementById('completedScore').textContent = levelScore;
+            document.getElementById('nextLevelNumber').textContent = currentLevel + 1;
+        }
+
+        // 進入下一關
+        function nextLevel() {
+            currentLevel++;
+            currentQuestion = 1;
+            levelScore = 0;
+            
+            // 更新關卡進度顯示
+            updateLevelProgress();
+            
+            document.getElementById('levelCompleteScreen').classList.add('hidden');
+            document.getElementById('playingScreen').classList.remove('hidden');
+            
+            enableButtons();
+            generateNewQuestion();
+        }
+
+        // 顯示遊戲完成
+        function showGameComplete() {
+            document.getElementById('playingScreen').classList.add('hidden');
+            document.getElementById('gameCompleteScreen').classList.remove('hidden');
+            document.getElementById('finalTotalScore').textContent = totalScore;
+            document.getElementById('finalLevelScore').textContent = levelScore;
+        }
+
+        // 重新開始遊戲
+        function restartGame() {
+            currentLevel = 1;
+            currentQuestion = 1;
+            levelScore = 0;
+            totalScore = 0;
+            
+            document.getElementById('gameCompleteScreen').classList.add('hidden');
+            document.getElementById('playingScreen').classList.remove('hidden');
+            
+            updateLevelProgress();
+            updateDisplay();
+            enableButtons();
+            generateNewQuestion();
+        }
+
+        // 更新顯示
+        function updateDisplay() {
+            document.getElementById('currentLevel').textContent = currentLevel;
+            document.getElementById('levelDisplay').textContent = currentLevel;
+            document.getElementById('questionNumber').textContent = currentQuestion;
+            document.getElementById('levelScore').textContent = levelScore;
+            document.getElementById('totalScore').textContent = totalScore;
+            
+            // 更新進度條
+            const config = gameConfig[currentLevel];
+            const progressPercent = (currentQuestion / config.questionsPerLevel) * 100;
+            const progressFill = document.getElementById('progressFill');
+            progressFill.style.width = progressPercent + '%';
+            progressFill.style.backgroundColor = levelColors[currentLevel];
+        }
+
+        // 更新關卡進度
+        function updateLevelProgress() {
+            for (let i = 1; i <= 3; i++) {
+                const levelCircle = document.getElementById('level' + i);
+                if (i === currentLevel) {
+                    levelCircle.className = 'level-circle level-' + i;
+                } else if (i < currentLevel) {
+                    levelCircle.className = 'level-circle level-completed';
+                } else {
+                    levelCircle.className = 'level-circle level-inactive';
+                }
+            }
+        }
+
+        // 初始化遊戲
+        function initGame() {
+            updateLevelProgress();
+            updateDisplay();
+            generateNewQuestion();
+        }
+
+        // 遊戲開始
+        initGame();
+    </script>
+</body>
+</html>
