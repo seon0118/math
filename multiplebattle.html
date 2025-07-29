@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>倍判者聯盟 - 對戰版</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Orbitron', monospace;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+            color: #fff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .background-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: 
+                radial-gradient(circle at 20% 20%, rgba(0, 255, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(255, 0, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 60%, rgba(0, 255, 0, 0.05) 0%, transparent 50%);
+            animation: pulse 4s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .title {
+            font-size: 3rem;
+            font-weight: 900;
+            text-align: center;
+            margin: 20px 0;
+            background: linear-gradient(45deg, #00ffff, #ff00ff, #ffff00);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradient-shift 2s ease-in-out infinite;
+            text-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
+        }
+        
+        @keyframes gradient-shift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        
+        .setup-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.8);
+            border: 3px solid #ffff00;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 800px;
+            margin: 0 auto;
+            box-shadow: 0 0 40px rgba(255, 255, 0, 0.4);
+        }
+        
+        .team-setup {
+            display: flex;
+            gap: 40px;
+            margin: 30px 0;
+            width: 100%;
+            justify-content: center;
+        }
+        
+        .team-input {
+            text-align: center;
+        }
+        
+        .team-label {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+        
+        .team-left .team-label {
+            color: #00ffff;
+        }
+        
+        .team-right .team-label {
+            color: #ff00ff;
+        }
+        
+        .team-name-input {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid #555;
+            border-radius: 10px;
+            padding: 15px;
+            font-size: 1.2rem;
+            color: #fff;
+            font-family: 'Orbitron', monospace;
+            text-align: center;
+            width: 200px;
+            margin-bottom: 20px;
+        }
+        
+        .team-left .team-name-input:focus {
+            border-color: #00ffff;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+            outline: none;
+        }
+        
+        .team-right .team-name-input:focus {
+            border-color: #ff00ff;
+            box-shadow: 0 0 15px rgba(255, 0, 255, 0.5);
+            outline: none;
+        }
+        
+        .start-btn {
+            background: linear-gradient(135deg, #00ff00, #00cc00);
+            border: none;
+            border-radius: 15px;
+            padding: 20px 50px;
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: #000;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Orbitron', monospace;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-top: 30px;
+        }
+        
+        .start-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.8);
+        }
+        
+        .battle-arena {
+            display: none;
+            height: 100vh;
+            flex-direction: column;
+        }
+        
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            border-bottom: 3px solid #ffff00;
+        }
+        
+        .game-info {
+            text-align: center;
+            color: #ffff00;
+        }
+        
+        .timer-display {
+            font-size: 3rem;
+            font-weight: 900;
+            color: #ff0080;
+        }
+        
+        .timer-display.warning {
+            animation: blink 0.5s infinite;
+        }
+        
+        .score-breakdown {
+            font-size: 0.8rem;
+            color: #aaa;
+            margin-top: 5px;
+        }
+        
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.3; }
+        }
+        
+        .battle-field {
+            display: flex;
+            flex: 1;
+            gap: 20px;
+            padding: 20px;
+        }
+        
+        .team-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 20px;
+            padding: 30px;
+            position: relative;
+        }
+        
+        .team-left {
+            border: 3px solid #00ffff;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.3);
+        }
+        
+        .team-right {
+            border: 3px solid #ff00ff;
+            box-shadow: 0 0 30px rgba(255, 0, 255, 0.3);
+        }
+        
+        .team-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .team-name {
+            font-size: 2rem;
+            font-weight: 900;
+            margin-bottom: 10px;
+        }
+        
+        .team-left .team-name {
+            color: #00ffff;
+        }
+        
+        .team-right .team-name {
+            color: #ff00ff;
+        }
+        
+        .team-score {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        
+        .question-display {
+            text-align: center;
+            margin: 30px 0;
+        }
+        
+        .number-display {
+            font-size: 3rem;
+            font-weight: 900;
+            color: #ffff00;
+            margin: 20px 0;
+            text-shadow: 0 0 20px rgba(255, 255, 0, 0.8);
+        }
+        
+        .question-text {
+            font-size: 1.2rem;
+            margin: 15px 0;
+        }
+        
+        .expected-count {
+            font-size: 1rem;
+            color: #00ff00;
+            font-weight: 700;
+        }
+        
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin: 20px 0;
+        }
+        
+        .option {
+            background: linear-gradient(135deg, #2a2a2a, #1a1a1a);
+            border: 2px solid #555;
+            border-radius: 8px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #fff;
+            text-align: center;
+        }
+        
+        .team-left .option:hover {
+            border-color: #00ffff;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        }
+        
+        .team-right .option:hover {
+            border-color: #ff00ff;
+            box-shadow: 0 0 10px rgba(255, 0, 255, 0.5);
+        }
+        
+        .team-left .option.selected {
+            background: linear-gradient(135deg, #00ffff, #0080ff);
+            border-color: #ffffff;
+            color: #000;
+        }
+        
+        .team-right .option.selected {
+            background: linear-gradient(135deg, #ff00ff, #ff0080);
+            border-color: #ffffff;
+            color: #000;
+        }
+        
+        .option.none-selected {
+            background: linear-gradient(135deg, #ff4444, #cc0000);
+            border-color: #ffffff;
+            color: #fff;
+        }
+        
+        .submit-btn {
+            background: linear-gradient(135deg, #ff0080, #8000ff);
+            border: none;
+            border-radius: 10px;
+            padding: 12px 25px;
+            font-size: 1.1rem;
+            font-weight: 900;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Orbitron', monospace;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 20px;
+        }
+        
+        .submit-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(255, 0, 128, 0.6);
+        }
+        
+        .submit-btn:disabled {
+            background: #555;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .vs-divider {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 80px;
+            font-size: 3rem;
+            font-weight: 900;
+            color: #ffff00;
+            text-shadow: 0 0 20px rgba(255, 255, 0, 0.8);
+        }
+        
+        .answer-reveal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .answer-content {
+            background: rgba(0, 0, 0, 0.9);
+            border: 3px solid #ffff00;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 0 40px rgba(255, 255, 0, 0.4);
+        }
+        
+        .answer-content h3 {
+            color: #ffff00;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2rem;
+        }
+        
+        .team-result {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        
+        .team-result.correct {
+            border-left: 5px solid #00ff00;
+            background: rgba(0, 255, 0, 0.1);
+        }
+        
+        .team-result.incorrect {
+            border-left: 5px solid #ff0000;
+            background: rgba(255, 0, 0, 0.1);
+        }
+        
+        .method-section {
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+        
+        .method-text {
+            font-size: 0.95rem;
+            color: #ccc;
+            margin-top: 8px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .continue-btn {
+            background: linear-gradient(135deg, #00ffff, #0080ff);
+            border: none;
+            border-radius: 15px;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            font-weight: 900;
+            color: #000;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Orbitron', monospace;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            display: block;
+            margin: 30px auto;
+        }
+        
+        .continue-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.6);
+        }
+        
+        .final-results {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .final-content {
+            background: rgba(0, 0, 0, 0.9);
+            border: 3px solid #00ff00;
+            border-radius: 20px;
+            padding: 50px;
+            max-width: 900px;
+            text-align: center;
+            box-shadow: 0 0 40px rgba(0, 255, 0, 0.4);
+        }
+        
+        .winner-announcement {
+            font-size: 3rem;
+            font-weight: 900;
+            margin-bottom: 30px;
+            background: linear-gradient(45deg, #00ffff, #ff00ff, #ffff00);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradient-shift 2s ease-in-out infinite;
+        }
+        
+        .final-scores {
+            display: flex;
+            justify-content: space-around;
+            margin: 30px 0;
+        }
+        
+        .final-team-score {
+            text-align: center;
+        }
+        
+        .final-team-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .final-score-value {
+            font-size: 2.5rem;
+            font-weight: 900;
+        }
+        
+        .restart-btn {
+            background: linear-gradient(135deg, #00ff00, #00cc00);
+            border: none;
+            border-radius: 15px;
+            padding: 15px 40px;
+            font-size: 1.3rem;
+            font-weight: 900;
+            color: #000;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Orbitron', monospace;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-top: 30px;
+        }
+        
+        .restart-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.6);
+        }
+        
+        .waiting-indicator {
+            color: #ffff00;
+            font-weight: 700;
+            text-align: center;
+            margin-top: 20px;
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse-text {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .game-rules {
+            text-align: left;
+            margin: 30px 0;
+        }
+        
+        .game-rules h3 {
+            color: #00ffff;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+        
+        .game-rules ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .game-rules li {
+            margin: 10px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        .game-rules li::before {
+            content: '▶';
+            position: absolute;
+            left: 0;
+            color: #ff00ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="background-animation"></div>
+    <div class="container">
+        <h1 class="title">倍判者聯盟 - 對戰版</h1>
+        
+        <!-- 隊伍設定畫面 -->
+        <div id="setupScreen" class="setup-screen">
+            <h2 style="color: #00ffff; margin-bottom: 20px;">歡迎來到對戰模式！</h2>
+            <div class="game-rules">
+                <h3>對戰規則：</h3>
+                <ul>
+                    <li>兩隊同時進行PK對戰</li>
+                    <li>共有三個關卡，每關卡6題</li>
+                    <li>第一關：3位數，第二關：4位數，第三關：6位數</li>
+                    <li>判斷數字是否為 2、3、4、5、9、10、11 的倍數</li>
+                    <li>每題限時20秒，愈快答對得分愈高</li>
+                    <li>答對得10分，連續答對有加分</li>
+                    <li>總分高的隊伍獲勝！</li>
+                </ul>
+            </div>
+            
+            <div class="team-setup">
+                <div class="team-input team-left">
+                    <div class="team-label">左隊隊名</div>
+                    <input type="text" class="team-name-input" id="leftTeamName" placeholder="輸入隊伍名稱" maxlength="10">
+                </div>
+                <div class="team-input team-right">
+                    <div class="team-label">右隊隊名</div>
+                    <input type="text" class="team-name-input" id="rightTeamName" placeholder="輸入隊伍名稱" maxlength="10">
+                </div>
+            </div>
+            
+            <button class="start-btn" onclick="startBattle()">開始對戰</button>
+        </div>
+
+        <!-- 對戰畫面 -->
+        <div id="battleArena" class="battle-arena">
+            <div class="game-header">
+                <div class="game-info">
+                    <div>關卡 <span id="currentLevel">1</span> - 題目 <span id="currentQuestion">1</span>/6</div>
+                </div>
+                <div class="timer-display" id="timerDisplay">10</div>
+                <div class="game-info">
+                    <div>對戰進行中</div>
+                </div>
+            </div>
+            
+            <div class="battle-field">
+                <!-- 左隊區域 -->
+                <div class="team-area team-left">
+                    <div class="team-header">
+                        <div class="team-name" id="leftTeamDisplay">左隊</div>
+                        <div class="team-score">分數: <span id="leftScore">0</span></div>
+                    </div>
+                    
+                    <div class="question-display">
+                        <div class="number-display" id="leftNumber">123</div>
+                        <div class="question-text">請選擇這個數字是以下哪些數的倍數：</div>
+                        <div class="expected-count" id="leftExpectedCount">請選擇正確的選項數量</div>
+                    </div>
+                    
+                    <div class="options-grid">
+                        <div class="option" data-team="left" data-value="2" onclick="toggleTeamOption('left', this)">2</div>
+                        <div class="option" data-team="left" data-value="3" onclick="toggleTeamOption('left', this)">3</div>
+                        <div class="option" data-team="left" data-value="4" onclick="toggleTeamOption('left', this)">4</div>
+                        <div class="option" data-team="left" data-value="5" onclick="toggleTeamOption('left', this)">5</div>
+                        <div class="option" data-team="left" data-value="9" onclick="toggleTeamOption('left', this)">9</div>
+                        <div class="option" data-team="left" data-value="10" onclick="toggleTeamOption('left', this)">10</div>
+                        <div class="option" data-team="left" data-value="11" onclick="toggleTeamOption('left', this)">11</div>
+                        <div class="option" data-team="left" data-value="none" onclick="toggleTeamNoneOption('left', this)">都不是</div>
+                    </div>
+                    
+                    <button class="submit-btn" onclick="submitTeamAnswer('left')" id="leftSubmitBtn">提交答案</button>
+                    <div class="waiting-indicator" id="leftWaiting" style="display: none;">等待對手...</div>
+                </div>
+                
+                <div class="vs-divider">VS</div>
+                
+                <!-- 右隊區域 -->
+                <div class="team-area team-right">
+                    <div class="team-header">
+                        <div class="team-name" id="rightTeamDisplay">右隊</div>
+                        <div class="team-score">分數: <span id="rightScore">0</span></div>
+                    </div>
+                    
+                    <div class="question-display">
+                        <div class="number-display" id="rightNumber">123</div>
+                        <div class="question-text">請選擇這個數字是以下哪些數的倍數：</div>
+                        <div class="expected-count" id="rightExpectedCount">請選擇正確的選項數量</div>
+                    </div>
+                    
+                    <div class="options-grid">
+                        <div class="option" data-team="right" data-value="2" onclick="toggleTeamOption('right', this)">2</div>
+                        <div class="option" data-team="right" data-value="3" onclick="toggleTeamOption('right', this)">3</div>
+                        <div class="option" data-team="right" data-value="4" onclick="toggleTeamOption('right', this)">4</div>
+                        <div class="option" data-team="right" data-value="5" onclick="toggleTeamOption('right', this)">5</div>
+                        <div class="option" data-team="right" data-value="9" onclick="toggleTeamOption('right', this)">9</div>
+                        <div class="option" data-team="right" data-value="10" onclick="toggleTeamOption('right', this)">10</div>
+                        <div class="option" data-team="right" data-value="11" onclick="toggleTeamOption('right', this)">11</div>
+                        <div class="option" data-team="right" data-value="none" onclick="toggleTeamNoneOption('right', this)">都不是</div>
+                    </div>
+                    
+                    <button class="submit-btn" onclick="submitTeamAnswer('right')" id="rightSubmitBtn">提交答案</button>
+                    <div class="waiting-indicator" id="rightWaiting" style="display: none;">等待對手...</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 答案解析畫面 -->
+        <div id="answerReveal" class="answer-reveal">
+            <div class="answer-content">
+                <h3>答案解析</h3>
+                <div id="answerContent"></div>
+                <button class="continue-btn" onclick="continueGame()">繼續對戰</button>
+            </div>
+        </div>
+        
+        <!-- 最終結果畫面 -->
+        <div id="finalResults" class="final-results">
+            <div class="final-content">
+                <div class="winner-announcement" id="winnerAnnouncement">遊戲結束！</div>
+                <div class="final-scores">
+                    <div class="final-team-score">
+                        <div class="final-team-name" id="finalLeftTeam" style="color: #00ffff;">左隊</div>
+                        <div class="final-score-value" id="finalLeftScore" style="color: #00ffff;">0</div>
+                    </div>
+                    <div class="final-team-score">
+                        <div class="final-team-name" id="finalRightTeam" style="color: #ff00ff;">右隊</div>
+                        <div class="final-score-value" id="finalRightScore" style="color: #ff00ff;">0</div>
+                    </div>
+                </div>
+                <button class="restart-btn" onclick="restartGame()">重新開始</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let gameState = {
+            level: 1,
+            question: 1,
+            leftTeam: { name: '', score: 0, answers: [], submitted: false, streak: 0, submitTime: 0 },
+            rightTeam: { name: '', score: 0, answers: [], submitted: false, streak: 0, submitTime: 0 },
+            currentNumbers: { left: 0, right: 0 },
+            correctAnswers: { left: [], right: [] },
+            timer: 20,
+            timerInterval: null,
+            gameData: []
+        };
+
+        function startBattle() {
+            const leftName = document.getElementById('leftTeamName').value.trim() || '左隊';
+            const rightName = document.getElementById('rightTeamName').value.trim() || '右隊';
+            
+            gameState.leftTeam.name = leftName;
+            gameState.rightTeam.name = rightName;
+            
+            document.getElementById('leftTeamDisplay').textContent = leftName;
+            document.getElementById('rightTeamDisplay').textContent = rightName;
+            
+            document.getElementById('setupScreen').style.display = 'none';
+            document.getElementById('battleArena').style.display = 'flex';
+            
+            resetGame();
+            generateBattleQuestion();
+            startTimer();
+        }
+
+        function resetGame() {
+            gameState = {
+                level: 1,
+                question: 1,
+                leftTeam: { name: gameState.leftTeam.name, score: 0, answers: [], submitted: false, streak: 0, submitTime: 0 },
+                rightTeam: { name: gameState.rightTeam.name, score: 0, answers: [], submitted: false, streak: 0, submitTime: 0 },
+                currentNumbers: { left: 0, right: 0 },
+                correctAnswers: { left: [], right: [] },
+                timer: 20,
+                timerInterval: null,
+                gameData: []
+            };
+            updateUI();
+        }
+
+        function generateRandomNumber(level) {
+            let digits;
+            switch(level) {
+                case 1: digits = 3; break;
+                case 2: digits = 4; break;
+                case 3: digits = 6; break;
+            }
+            
+            const min = Math.pow(10, digits - 1);
+            const max = Math.pow(10, digits) - 1;
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function checkMultiples(num) {
+            const multiples = [];
+            const divisors = [2, 3, 4, 5, 9, 10, 11];
+            
+            divisors.forEach(div => {
+                if (num % div === 0) {
+                    multiples.push(div.toString());
+                }
+            });
+            
+            return multiples.length > 0 ? multiples : ['none'];
+        }
+
+        function getDivisibilityMethod(num, divisor) {
+            switch(divisor) {
+                case 2:
+                    return `末位${num % 10}${num % 2 === 0 ? '是偶數→是' : '是奇數→不是'}2的倍數`;
+                case 3:
+                    const digitSum3 = num.toString().split('').reduce((sum, digit) => sum + parseInt(digit), 0);
+                    return `數字和${digitSum3}${digitSum3 % 3 === 0 ? '÷3=整數→是' : '÷3≠整數→不是'}3的倍數`;
+                case 4:
+                    const lastTwo = num % 100;
+                    return `末兩位${lastTwo}${lastTwo % 4 === 0 ? '÷4=整數→是' : '÷4≠整數→不是'}4的倍數`;
+                case 5:
+                    const lastDigit = num % 10;
+                    return `末位${lastDigit}${lastDigit === 0 || lastDigit === 5 ? '是0或5→是' : '不是0或5→不是'}5的倍數`;
+                case 9:
+                    const digitSum9 = num.toString().split('').reduce((sum, digit) => sum + parseInt(digit), 0);
+                    return `數字和${digitSum9}${digitSum9 % 9 === 0 ? '÷9=整數→是' : '÷9≠整數→不是'}9的倍數`;
+                case 10:
+                    return `末位${num % 10}${num % 10 === 0 ? '是0→是' : '不是0→不是'}10的倍數`;
+                case 11:
+                    const numStr = num.toString();
+                    let oddSum = 0, evenSum = 0;
+                    for(let i = 0; i < numStr.length; i++) {
+                        if(i % 2 === 0) oddSum += parseInt(numStr[i]);
+                        else evenSum += parseInt(numStr[i]);
+                    }
+                    const diff = Math.abs(oddSum - evenSum);
+                    return `奇偶位差值${diff}${diff % 11 === 0 ? '÷11=整數→是' : '÷11≠整數→不是'}11的倍數`;
+                default:
+                    return '';
+            }
+        }
+
+        function generateBattleQuestion() {
+            // 兩隊生成不同的數字
+            gameState.currentNumbers.left = generateRandomNumber(gameState.level);
+            gameState.currentNumbers.right = generateRandomNumber(gameState.level);
+            
+            gameState.correctAnswers.left = checkMultiples(gameState.currentNumbers.left);
+            gameState.correctAnswers.right = checkMultiples(gameState.currentNumbers.right);
+            
+            gameState.leftTeam.answers = [];
+            gameState.rightTeam.answers = [];
+            gameState.leftTeam.submitted = false;
+            gameState.rightTeam.submitted = false;
+            gameState.leftTeam.submitTime = 0;
+            gameState.rightTeam.submitTime = 0;
+            gameState.timer = 20;
+            
+            // 更新顯示
+            document.getElementById('leftNumber').textContent = gameState.currentNumbers.left;
+            document.getElementById('rightNumber').textContent = gameState.currentNumbers.right;
+            
+            document.getElementById('leftExpectedCount').textContent = 
+                gameState.correctAnswers.left.includes('none') ? '請選擇1項' : `請選擇${gameState.correctAnswers.left.length}項`;
+            document.getElementById('rightExpectedCount').textContent = 
+                gameState.correctAnswers.right.includes('none') ? '請選擇1項' : `請選擇${gameState.correctAnswers.right.length}項`;
+            
+            // 重置所有選項
+            document.querySelectorAll('.option').forEach(opt => {
+                opt.classList.remove('selected', 'none-selected');
+            });
+            
+            // 重置按鈕狀態
+            document.getElementById('leftSubmitBtn').disabled = false;
+            document.getElementById('rightSubmitBtn').disabled = false;
+            document.getElementById('leftWaiting').style.display = 'none';
+            document.getElementById('rightWaiting').style.display = 'none';
+            
+            updateUI();
+        }
+
+        function toggleTeamOption(team, element) {
+            const value = element.getAttribute('data-value');
+            
+            if (value === 'none') {
+                toggleTeamNoneOption(team, element);
+                return;
+            }
+            
+            // 如果已選擇"都不是"，先取消選擇
+            const noneOption = document.querySelector(`[data-team="${team}"][data-value="none"]`);
+            if (noneOption.classList.contains('none-selected')) {
+                noneOption.classList.remove('none-selected');
+                const teamState = team === 'left' ? gameState.leftTeam : gameState.rightTeam;
+                teamState.answers = teamState.answers.filter(v => v !== 'none');
+            }
+            
+            const teamState = team === 'left' ? gameState.leftTeam : gameState.rightTeam;
+            
+            if (element.classList.contains('selected')) {
+                element.classList.remove('selected');
+                teamState.answers = teamState.answers.filter(v => v !== value);
+            } else {
+                element.classList.add('selected');
+                teamState.answers.push(value);
+            }
+        }
+
+        function toggleTeamNoneOption(team, element) {
+            const teamState = team === 'left' ? gameState.leftTeam : gameState.rightTeam;
+            
+            // 清除其他所有選項
+            document.querySelectorAll(`[data-team="${team}"]`).forEach(opt => {
+                if (opt !== element) {
+                    opt.classList.remove('selected', 'none-selected');
+                }
+            });
+            
+            if (element.classList.contains('none-selected')) {
+                element.classList.remove('none-selected');
+                teamState.answers = [];
+            } else {
+                element.classList.add('none-selected');
+                teamState.answers = ['none'];
+            }
+        }
+
+        function submitTeamAnswer(team) {
+            const teamState = team === 'left' ? gameState.leftTeam : gameState.rightTeam;
+            teamState.submitted = true;
+            teamState.submitTime = 20 - gameState.timer; // 記錄答題時間
+            
+            // 禁用該隊的提交按鈕並顯示等待
+            document.getElementById(`${team}SubmitBtn`).disabled = true;
+            document.getElementById(`${team}Waiting`).style.display = 'block';
+            
+            // 檢查是否兩隊都已提交
+            if (gameState.leftTeam.submitted && gameState.rightTeam.submitted) {
+                clearInterval(gameState.timerInterval);
+                calculateScores();
+                showAnswerReveal();
+            }
+        }
+
+        function calculateScores() {
+            // 計算左隊得分
+            const leftCorrect = arraysEqual(
+                gameState.leftTeam.answers.sort(), 
+                gameState.correctAnswers.left.sort()
+            );
+            let leftScore = 0;
+            if (leftCorrect) {
+                // 基礎分數10分
+                leftScore = 10;
+                // 時間加分：愈快答對得分愈高 (最多額外5分)
+                const timeBonus = Math.max(0, Math.floor((20 - gameState.leftTeam.submitTime) / 4));
+                leftScore += timeBonus;
+                // 連續答對加分
+                gameState.leftTeam.streak++;
+                const streakBonus = Math.min(gameState.leftTeam.streak - 1, 3); // 最多額外3分
+                leftScore += streakBonus;
+            } else {
+                gameState.leftTeam.streak = 0; // 重置連勝
+            }
+            gameState.leftTeam.score += leftScore;
+            
+            // 計算右隊得分
+            const rightCorrect = arraysEqual(
+                gameState.rightTeam.answers.sort(), 
+                gameState.correctAnswers.right.sort()
+            );
+            let rightScore = 0;
+            if (rightCorrect) {
+                // 基礎分數10分
+                rightScore = 10;
+                // 時間加分：愈快答對得分愈高 (最多額外5分)
+                const timeBonus = Math.max(0, Math.floor((20 - gameState.rightTeam.submitTime) / 4));
+                rightScore += timeBonus;
+                // 連續答對加分
+                gameState.rightTeam.streak++;
+                const streakBonus = Math.min(gameState.rightTeam.streak - 1, 3); // 最多額外3分
+                rightScore += streakBonus;
+            } else {
+                gameState.rightTeam.streak = 0; // 重置連勝
+            }
+            gameState.rightTeam.score += rightScore;
+            
+            // 記錄遊戲資料
+            gameState.gameData.push({
+                level: gameState.level,
+                question: gameState.question,
+                left: {
+                    number: gameState.currentNumbers.left,
+                    userAnswers: [...gameState.leftTeam.answers],
+                    correctAnswers: [...gameState.correctAnswers.left],
+                    score: leftScore,
+                    isCorrect: leftCorrect,
+                    submitTime: gameState.leftTeam.submitTime,
+                    streak: gameState.leftTeam.streak
+                },
+                right: {
+                    number: gameState.currentNumbers.right,
+                    userAnswers: [...gameState.rightTeam.answers],
+                    correctAnswers: [...gameState.correctAnswers.right],
+                    score: rightScore,
+                    isCorrect: rightCorrect,
+                    submitTime: gameState.rightTeam.submitTime,
+                    streak: gameState.rightTeam.streak
+                }
+            });
+        }
+
+        function showAnswerReveal() {
+            const lastData = gameState.gameData[gameState.gameData.length - 1];
+            
+            let answerHTML = `
+                <div style="display: flex; gap: 30px; margin-bottom: 30px;">
+                    <div style="flex: 1;">
+                        <h4 style="color: #00ffff; margin-bottom: 15px;">${gameState.leftTeam.name}</h4>
+                        <div class="team-result ${lastData.left.isCorrect ? 'correct' : 'incorrect'}">
+                            <div>
+                                <strong>數字: ${lastData.left.number}</strong><br>
+                                答案: ${lastData.left.userAnswers.includes('none') ? '都不是' : 
+                                    lastData.left.userAnswers.length > 0 ? 
+                                    lastData.left.userAnswers.map(ans => `${ans}的倍數`).join(', ') : '未選擇'}<br>
+                                正確: ${lastData.left.correctAnswers.includes('none') ? '都不是' : 
+                                    lastData.left.correctAnswers.map(ans => `${ans}的倍數`).join(', ')}<br>
+                                <small style="color: #aaa;">答題時間: ${lastData.left.submitTime}秒 | 連勝: ${lastData.left.streak}題</small>
+                            </div>
+                            <div style="font-size: 1.5rem; font-weight: 900;">
+                                ${lastData.left.isCorrect ? `✓ +${lastData.left.score}` : '✗ +0'}
+                            </div>
+                        </div>
+                    </div>
+                    <div style="flex: 1;">
+                        <h4 style="color: #ff00ff; margin-bottom: 15px;">${gameState.rightTeam.name}</h4>
+                        <div class="team-result ${lastData.right.isCorrect ? 'correct' : 'incorrect'}">
+                            <div>
+                                <strong>數字: ${lastData.right.number}</strong><br>
+                                答案: ${lastData.right.userAnswers.includes('none') ? '都不是' : 
+                                    lastData.right.userAnswers.length > 0 ? 
+                                    lastData.right.userAnswers.map(ans => `${ans}的倍數`).join(', ') : '未選擇'}<br>
+                                正確: ${lastData.right.correctAnswers.includes('none') ? '都不是' : 
+                                    lastData.right.correctAnswers.map(ans => `${ans}的倍數`).join(', ')}<br>
+                                <small style="color: #aaa;">答題時間: ${lastData.right.submitTime}秒 | 連勝: ${lastData.right.streak}題</small>
+                            </div>
+                            <div style="font-size: 1.5rem; font-weight: 900;">
+                                ${lastData.right.isCorrect ? `✓ +${lastData.right.score}` : '✗ +0'}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // 顯示判別方法 (左隊數字)
+            const divisors = [2, 3, 4, 5, 9, 10, 11];
+            answerHTML += `<div style="margin-top: 30px;"><strong style="color: #ffff00;">判別方法 (${gameState.leftTeam.name} - ${lastData.left.number})：</strong></div>`;
+            
+            divisors.forEach(divisor => {
+                const method = getDivisibilityMethod(lastData.left.number, divisor);
+                answerHTML += `
+                    <div class="method-section">
+                        <strong>${divisor}的倍數判別：</strong><br>
+                        <div class="method-text">${method}</div>
+                    </div>
+                `;
+            });
+            
+            // 顯示判別方法 (右隊數字)
+            answerHTML += `<div style="margin-top: 30px;"><strong style="color: #ffff00;">判別方法 (${gameState.rightTeam.name} - ${lastData.right.number})：</strong></div>`;
+            
+            divisors.forEach(divisor => {
+                const method = getDivisibilityMethod(lastData.right.number, divisor);
+                answerHTML += `
+                    <div class="method-section">
+                        <strong>${divisor}的倍數判別：</strong><br>
+                        <div class="method-text">${method}</div>
+                    </div>
+                `;
+            });
+            
+            document.getElementById('answerContent').innerHTML = answerHTML;
+            document.getElementById('answerReveal').style.display = 'flex';
+        }
+
+        function continueGame() {
+            document.getElementById('answerReveal').style.display = 'none';
+            
+            if (gameState.question < 6) {
+                gameState.question++;
+                generateBattleQuestion();
+                startTimer();
+            } else if (gameState.level < 3) {
+                gameState.level++;
+                gameState.question = 1;
+                generateBattleQuestion();
+                startTimer();
+            } else {
+                showFinalResults();
+            }
+        }
+
+        function showFinalResults() {
+            const leftFinalScore = gameState.leftTeam.score;
+            const rightFinalScore = gameState.rightTeam.score;
+            
+            let winnerText;
+            if (leftFinalScore > rightFinalScore) {
+                winnerText = `🏆 ${gameState.leftTeam.name} 獲勝！`;
+            } else if (rightFinalScore > leftFinalScore) {
+                winnerText = `🏆 ${gameState.rightTeam.name} 獲勝！`;
+            } else {
+                winnerText = `🤝 平手！`;
+            }
+            
+            document.getElementById('winnerAnnouncement').textContent = winnerText;
+            document.getElementById('finalLeftTeam').textContent = gameState.leftTeam.name;
+            document.getElementById('finalRightTeam').textContent = gameState.rightTeam.name;
+            document.getElementById('finalLeftScore').textContent = leftFinalScore;
+            document.getElementById('finalRightScore').textContent = rightFinalScore;
+            
+            document.getElementById('finalResults').style.display = 'flex';
+        }
+
+        function startTimer() {
+            gameState.timer = 20;
+            updateTimer();
+            
+            gameState.timerInterval = setInterval(() => {
+                gameState.timer--;
+                updateTimer();
+                
+                if (gameState.timer <= 5) {
+                    document.getElementById('timerDisplay').classList.add('warning');
+                }
+                
+                if (gameState.timer <= 0) {
+                    // 時間到，自動提交還沒提交的隊伍
+                    if (!gameState.leftTeam.submitted) {
+                        gameState.leftTeam.submitTime = 20; // 時間到的話記錄為20秒
+                        submitTeamAnswer('left');
+                    }
+                    if (!gameState.rightTeam.submitted) {
+                        gameState.rightTeam.submitTime = 20; // 時間到的話記錄為20秒
+                        submitTeamAnswer('right');
+                    }
+                }
+            }, 1000);
+        }
+
+        function updateTimer() {
+            document.getElementById('timerDisplay').textContent = gameState.timer;
+            if (gameState.timer > 5) {
+                document.getElementById('timerDisplay').classList.remove('warning');
+            }
+        }
+
+        function updateUI() {
+            document.getElementById('currentLevel').textContent = gameState.level;
+            document.getElementById('currentQuestion').textContent = gameState.question;
+            document.getElementById('leftScore').textContent = gameState.leftTeam.score;
+            document.getElementById('rightScore').textContent = gameState.rightTeam.score;
+        }
+
+        function arraysEqual(a, b) {
+            return a.length === b.length && a.every((val, i) => val === b[i]);
+        }
+
+        function restartGame() {
+            document.getElementById('finalResults').style.display = 'none';
+            document.getElementById('battleArena').style.display = 'none';
+            document.getElementById('setupScreen').style.display = 'block';
+            
+            // 清空輸入框
+            document.getElementById('leftTeamName').value = '';
+            document.getElementById('rightTeamName').value = '';
+        }
+    </script>
+</body>
+</html>
