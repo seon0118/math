@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>倍判者「空ㄎㄨㄥˋ數」大會</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Orbitron', monospace;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+            color: #00ff88;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(0, 255, 136, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(0, 191, 255, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .title {
+            font-size: 3.5rem;
+            font-weight: 900;
+            background: linear-gradient(45deg, #00ff88, #00bfff, #ff0080);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px rgba(0, 255, 136, 0.5);
+            margin-bottom: 10px;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { text-shadow: 0 0 30px rgba(0, 255, 136, 0.5); }
+            to { text-shadow: 0 0 50px rgba(0, 255, 136, 0.8), 0 0 70px rgba(0, 191, 255, 0.3); }
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0, 255, 136, 0.1);
+            border: 2px solid #00ff88;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+        }
+
+        .info-item {
+            text-align: center;
+            font-size: 1.2rem;
+        }
+
+        .info-label {
+            color: #00bfff;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            font-weight: 700;
+            font-size: 1.8rem;
+            color: #00ff88;
+        }
+
+        .timer {
+            color: #ff0080 !important;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .game-area {
+            background: rgba(0, 0, 0, 0.7);
+            border: 3px solid #00ff88;
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 30px;
+            position: relative;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 0 50px rgba(0, 255, 136, 0.3);
+        }
+
+        .question {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .number-display {
+            font-size: 4rem;
+            font-weight: 900;
+            letter-spacing: 0.5rem;
+            margin: 20px 0;
+            color: #00bfff;
+            text-shadow: 0 0 20px rgba(0, 191, 255, 0.8);
+        }
+
+        .star {
+            color: #ff0080;
+            animation: twinkle 1.5s infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+
+        .divisors {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .divisor-item {
+            background: rgba(0, 255, 136, 0.1);
+            border: 2px solid #00ff88;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+        }
+
+        .divisor-item:hover {
+            background: rgba(0, 255, 136, 0.2);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 255, 136, 0.3);
+        }
+
+        .choices {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .choice-btn {
+            background: rgba(0, 191, 255, 0.2);
+            border: 2px solid #00bfff;
+            border-radius: 10px;
+            padding: 15px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #00bfff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Orbitron', monospace;
+        }
+
+        .choice-btn:hover {
+            background: rgba(0, 191, 255, 0.4);
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(0, 191, 255, 0.5);
+        }
+
+        .choice-btn.selected {
+            background: rgba(0, 255, 136, 0.6);
+            border-color: #00ff88;
+            color: #fff;
+            box-shadow: 0 0 30px rgba(0, 255, 136, 0.7);
+        }
+
+        .all-option {
+            grid-column: span 5;
+            background: rgba(255, 0, 128, 0.2);
+            border-color: #ff0080;
+            color: #ff0080;
+        }
+
+        .all-option:hover {
+            background: rgba(255, 0, 128, 0.4);
+        }
+
+        .all-option.selected {
+            background: rgba(255, 0, 128, 0.6);
+            color: #fff;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 20px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(45deg, #00ff88, #00bfff);
+            border: none;
+            border-radius: 15px;
+            color: #000;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Orbitron', monospace;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 40px rgba(0, 255, 136, 0.5);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .result-modal {
+            background: rgba(0, 0, 0, 0.9);
+            border: 3px solid #00ff88;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            text-align: center;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 0 50px rgba(0, 255, 136, 0.5);
+            animation: slideIn 0.5s ease-out;
+            position: relative;
+        }
+
+        @keyframes slideIn {
+            from { 
+                transform: scale(0.8) translateY(-50px);
+                opacity: 0;
+            }
+            to { 
+                transform: scale(1) translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .result-modal.correct {
+            border-color: #00ff88;
+            background: rgba(0, 255, 136, 0.1);
+            box-shadow: 0 0 50px rgba(0, 255, 136, 0.7);
+        }
+
+        .result-modal.wrong {
+            border-color: #ff0080;
+            background: rgba(255, 0, 128, 0.1);
+            box-shadow: 0 0 50px rgba(255, 0, 128, 0.7);
+        }
+
+        .result-title {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            font-weight: 900;
+        }
+
+        .result-modal.correct .result-title {
+            color: #00ff88;
+            text-shadow: 0 0 20px rgba(0, 255, 136, 0.8);
+        }
+
+        .result-modal.wrong .result-title {
+            color: #ff0080;
+            text-shadow: 0 0 20px rgba(255, 0, 128, 0.8);
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 2rem;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.3s ease;
+        }
+
+        .close-btn:hover {
+            opacity: 1;
+        }
+
+        .next-btn {
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            background: linear-gradient(45deg, #00ff88, #00bfff);
+            border: none;
+            border-radius: 10px;
+            color: #000;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Orbitron', monospace;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-top: 20px;
+        }
+
+        .next-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(0, 255, 136, 0.7);
+        }
+
+        .start-screen, .end-screen {
+            text-align: center;
+            padding: 50px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 3px solid #00ff88;
+            border-radius: 20px;
+            backdrop-filter: blur(15px);
+        }
+
+        .start-btn {
+            padding: 20px 40px;
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(45deg, #00ff88, #00bfff);
+            border: none;
+            border-radius: 15px;
+            color: #000;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Orbitron', monospace;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-top: 30px;
+        }
+
+        .start-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 50px rgba(0, 255, 136, 0.8);
+        }
+
+        .explanation {
+            background: rgba(0, 191, 255, 0.1);
+            border: 2px solid #00bfff;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .title {
+                font-size: 2.5rem;
+            }
+            
+            .choices {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .all-option {
+                grid-column: span 2;
+            }
+            
+            .divisors {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="title">倍判者「空ㄎㄨㄥˋ數」大會</h1>
+        </div>
+
+        <div id="startScreen" class="start-screen">
+            <h2>歡迎來到電競數學競技場！</h2>
+            <p style="margin: 20px 0; font-size: 1.2rem;">
+                挑戰你的整除性判斷能力！<br>
+                系統會隨機產生六位數，其中一位用★代替<br>
+                你需要判斷哪些數字可以填入★位置，使整個數字能被指定數整除
+            </p>
+            <p style="color: #ff0080; margin: 20px 0;">時間限制：2分鐘</p>
+            <button class="start-btn" onclick="startGame()">開始挑戰</button>
+        </div>
+
+        <div id="gameScreen" class="hidden">
+            <div class="game-info">
+                <div class="info-item">
+                    <div class="info-label">題目</div>
+                    <div class="info-value" id="questionNumber">1</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">分數</div>
+                    <div class="info-value" id="score">0</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">連續答對</div>
+                    <div class="info-value" id="streak">0</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">剩餘時間</div>
+                    <div class="info-value timer" id="timer">120</div>
+                </div>
+            </div>
+
+            <div class="game-area">
+                <div class="question">
+                    <div>找出★位置可以填入的數字，使六位數能被以下數字整除：</div>
+                    <div class="divisors" id="divisors"></div>
+                    <div class="number-display" id="numberDisplay"></div>
+                </div>
+
+                <div class="choices">
+                    <button class="choice-btn" data-value="0">0</button>
+                    <button class="choice-btn" data-value="1">1</button>
+                    <button class="choice-btn" data-value="2">2</button>
+                    <button class="choice-btn" data-value="3">3</button>
+                    <button class="choice-btn" data-value="4">4</button>
+                    <button class="choice-btn" data-value="5">5</button>
+                    <button class="choice-btn" data-value="6">6</button>
+                    <button class="choice-btn" data-value="7">7</button>
+                    <button class="choice-btn" data-value="8">8</button>
+                    <button class="choice-btn" data-value="9">9</button>
+                    <button class="choice-btn all-option" data-value="all">以上皆可</button>
+                </div>
+
+                <button class="submit-btn" onclick="submitAnswer()">送出答案</button>
+            </div>
+        </div>
+
+        <!-- 結果浮動視窗 -->
+        <div id="resultModal" class="modal-overlay hidden">
+            <div class="result-modal" id="resultContent">
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+                <div class="result-title" id="resultTitle"></div>
+                <div class="explanation" id="resultExplanation"></div>
+                <div id="resultStats"></div>
+                <button class="next-btn" onclick="nextQuestion()">下一題</button>
+            </div>
+        </div>
+
+        <div id="endScreen" class="end-screen hidden">
+            <h2>遊戲結束！</h2>
+            <div id="finalStats"></div>
+            <button class="start-btn" onclick="restartGame()">再次挑戰</button>
+        </div>
+    </div>
+
+    <script>
+        let gameState = {
+            timeLeft: 120,
+            score: 0,
+            streak: 0,
+            questionNumber: 1,
+            currentQuestion: null,
+            selectedChoices: new Set(),
+            timer: null,
+            startTime: null,
+            gameRunning: false
+        };
+
+        const divisors = [2, 3, 4, 5, 9, 11];
+
+        function startGame() {
+            document.getElementById('startScreen').classList.add('hidden');
+            document.getElementById('gameScreen').classList.remove('hidden');
+            gameState.gameRunning = true;
+            startTimer();
+            generateQuestion();
+        }
+
+        function startTimer() {
+            gameState.timer = setInterval(() => {
+                gameState.timeLeft--;
+                document.getElementById('timer').textContent = gameState.timeLeft;
+                
+                if (gameState.timeLeft <= 0) {
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        function generateQuestion() {
+            gameState.startTime = Date.now();
+            gameState.selectedChoices.clear();
+            
+            // 隨機生成六位數
+            let number = '';
+            for (let i = 0; i < 6; i++) {
+                if (i === 0) {
+                    number += Math.floor(Math.random() * 9) + 1; // 首位不能是0
+                } else {
+                    number += Math.floor(Math.random() * 10);
+                }
+            }
+            
+            // 隨機選擇末三位中的一位作為未知數
+            const unknownPosition = 3 + Math.floor(Math.random() * 3);
+            const numberArray = number.split('');
+            const originalDigit = numberArray[unknownPosition];
+            numberArray[unknownPosition] = '★';
+            
+            // 隨機選擇一個除數
+            const selectedDivisors = [divisors[Math.floor(Math.random() * divisors.length)]];
+            
+            gameState.currentQuestion = {
+                number: numberArray.join(''),
+                originalNumber: number,
+                unknownPosition,
+                divisors: selectedDivisors,
+                correctAnswers: findCorrectAnswers(number, unknownPosition, selectedDivisors)
+            };
+            
+            displayQuestion();
+            clearChoices();
+        }
+
+        function findCorrectAnswers(originalNumber, unknownPosition, divisors) {
+            const correct = [];
+            const numberArray = originalNumber.split('');
+            
+            for (let digit = 0; digit <= 9; digit++) {
+                numberArray[unknownPosition] = digit.toString();
+                const testNumber = parseInt(numberArray.join(''));
+                
+                let allDivisible = true;
+                for (const divisor of divisors) {
+                    if (!isDivisible(testNumber, divisor)) {
+                        allDivisible = false;
+                        break;
+                    }
+                }
+                
+                if (allDivisible) {
+                    correct.push(digit);
+                }
+            }
+            
+            return correct;
+        }
+
+        function isDivisible(number, divisor) {
+            switch (divisor) {
+                case 2:
+                    return number % 2 === 0;
+                case 3:
+                    return number % 3 === 0;
+                case 4:
+                    return number % 4 === 0;
+                case 5:
+                    return number % 5 === 0;
+                case 9:
+                    return number % 9 === 0;
+                case 11:
+                    return number % 11 === 0;
+                default:
+                    return false;
+            }
+        }
+
+        function displayQuestion() {
+            document.getElementById('questionNumber').textContent = gameState.questionNumber;
+            document.getElementById('numberDisplay').innerHTML = 
+                gameState.currentQuestion.number.replace('★', '<span class="star">★</span>');
+            
+            const divisorsContainer = document.getElementById('divisors');
+            divisorsContainer.innerHTML = '';
+            gameState.currentQuestion.divisors.forEach(divisor => {
+                const div = document.createElement('div');
+                div.className = 'divisor-item';
+                div.textContent = `${divisor}的倍數`;
+                divisorsContainer.appendChild(div);
+            });
+        }
+
+        function clearChoices() {
+            document.querySelectorAll('.choice-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            document.getElementById('result').classList.add('hidden');
+        }
+
+        // 選擇答案
+        document.querySelectorAll('.choice-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const value = btn.dataset.value;
+                
+                if (value === 'all') {
+                    // 如果選擇"以上皆可"，清除其他選擇
+                    gameState.selectedChoices.clear();
+                    document.querySelectorAll('.choice-btn').forEach(b => b.classList.remove('selected'));
+                    gameState.selectedChoices.add('all');
+                    btn.classList.add('selected');
+                } else {
+                    // 如果選擇數字，先移除"以上皆可"
+                    if (gameState.selectedChoices.has('all')) {
+                        gameState.selectedChoices.delete('all');
+                        document.querySelector('[data-value="all"]').classList.remove('selected');
+                    }
+                    
+                    if (gameState.selectedChoices.has(value)) {
+                        gameState.selectedChoices.delete(value);
+                        btn.classList.remove('selected');
+                    } else {
+                        gameState.selectedChoices.add(value);
+                        btn.classList.add('selected');
+                    }
+                }
+            });
+        });
+
+        function submitAnswer() {
+            if (gameState.selectedChoices.size === 0 || !gameState.gameRunning) return;
+            
+            const correct = gameState.currentQuestion.correctAnswers;
+            const timeSpent = (Date.now() - gameState.startTime) / 1000;
+            
+            let isCorrect = false;
+            
+            if (gameState.selectedChoices.has('all')) {
+                // 檢查是否所有數字都可以
+                isCorrect = correct.length === 10;
+            } else {
+                // 檢查選擇的數字是否完全正確
+                const selectedNumbers = Array.from(gameState.selectedChoices).map(x => parseInt(x));
+                isCorrect = selectedNumbers.length === correct.length && 
+                           selectedNumbers.every(num => correct.includes(num));
+            }
+            
+            displayResult(isCorrect, correct, timeSpent);
+            updateScore(isCorrect, timeSpent);
+        }
+
+        function displayResult(isCorrect, correctAnswers, timeSpent) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.classList.remove('hidden', 'correct', 'wrong');
+            resultDiv.classList.add(isCorrect ? 'correct' : 'wrong');
+            
+            let resultHTML = `
+                <h3>${isCorrect ? '✅ 答對了！' : '❌ 答錯了！'}</h3>
+                <div class="explanation">
+                    <strong>正確答案：</strong>
+                    ${correctAnswers.length === 10 ? '所有數字 (0-9) 都可以' : correctAnswers.join(', ')}
+                    <br><br>
+                    <strong>解釋：</strong><br>
+                    ${getDivisibilityRule(gameState.currentQuestion.divisors[0])}
+            
+            resultHTML += `</div>
+                <p>答題時間：${timeSpent.toFixed(1)}秒</p>
+            `;
+            
+            resultDiv.innerHTML = resultHTML;
+        }
+
+        function getDivisibilityRule(divisor) {
+            switch (divisor) {
+                case 2: return '末位數字為偶數';
+                case 3: return '各位數字和能被3整除';
+                case 4: return '末兩位數字能被4整除';
+                case 5: return '末位數字為0或5';
+                case 9: return '各位數字和能被9整除';
+                case 11: return '奇數位數字和與偶數位數字和的差能被11整除';
+                default: return '';
+            }
+        }
+
+        function updateScore(isCorrect, timeSpent) {
+            if (isCorrect) {
+                gameState.streak++;
+                // 基礎分數 + 時間獎勵 + 連續答對獎勵
+                const baseScore = 100;
+                const timeBonus = Math.max(0, 50 - Math.floor(timeSpent * 2));
+                const streakBonus = gameState.streak * 20;
+                const totalPoints = baseScore + timeBonus + streakBonus;
+                gameState.score += totalPoints;
+            } else {
+                gameState.streak = 0;
+            }
+            
+            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('streak').textContent = gameState.streak;
+        }
+
+        function endGame() {
+            gameState.gameRunning = false;
+            if (gameState.timer) {
+                clearInterval(gameState.timer);
+            }
+            
+            // 如果答案視窗正在顯示，先關閉它
+            document.getElementById('resultModal').classList.add('hidden');
+            
+            document.getElementById('gameScreen').classList.add('hidden');
+            document.getElementById('endScreen').classList.remove('hidden');
+            
+            document.getElementById('finalStats').innerHTML = `
+                <h3>最終成績</h3>
+                <p style="font-size: 2rem; color: #00ff88; margin: 20px 0;">總分：${gameState.score}</p>
+                <p>最高連續答對：${gameState.streak}</p>
+                <p>完成題目：${gameState.questionNumber - 1}</p>
+                <p>平均每題分數：${gameState.questionNumber > 1 ? Math.round(gameState.score / (gameState.questionNumber - 1)) : 0}</p>
+            `;
+        }
+
+        function restartGame() {
+            gameState = {
+                timeLeft: 120,
+                score: 0,
+                streak: 0,
+                questionNumber: 1,
+                currentQuestion: null,
+                selectedChoices: new Set(),
+                timer: null,
+                startTime: null,
+                gameRunning: false
+            };
+            
+            document.getElementById('endScreen').classList.add('hidden');
+            document.getElementById('startScreen').classList.remove('hidden');
+            document.getElementById('score').textContent = '0';
+            document.getElementById('streak').textContent = '0';
+            document.getElementById('timer').textContent = '120';
+        }
+
+        function closeModal() {
+            document.getElementById('resultModal').classList.add('hidden');
+            
+            // 恢復計時器（如果遊戲還在進行中）
+            if (gameState.gameRunning && gameState.timeLeft > 0) {
+                startTimer();
+            }
+            
+            if (gameState.gameRunning) {
+                gameState.questionNumber++;
+                generateQuestion();
+            }
+        }
+
+        function nextQuestion() {
+            closeModal();
+        }
+
+        // 點擊浮動視窗外部關閉
+        document.getElementById('resultModal').addEventListener('click', (e) => {
+            if (e.target.id === 'resultModal') {
+                closeModal();
+            }
+        });
+
+        // 按ESC鍵關閉浮動視窗
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !document.getElementById('resultModal').classList.contains('hidden')) {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>
