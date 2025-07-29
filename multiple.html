@@ -1,612 +1,324 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>倍判者聯盟 - 倍數判別法遊戲</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+import React, { useState, useEffect } from 'react';
+import { Trophy, Star, RefreshCw, ArrowRight, CheckCircle, XCircle } from 'lucide-react';
 
-        body {
-            font-family: 'Microsoft JhengHei', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: #333;
-        }
+export default function MultipleJudgmentGame() {
+  const [currentLevel, setCurrentLevel] = useState(1);
+  const [currentQuestion, setCurrentQuestion] = useState(1);
+  const [score, setScore] = useState(0);
+  const [currentNumber, setCurrentNumber] = useState('');
+  const [currentMultiple, setCurrentMultiple] = useState(2);
+  const [gameStatus, setGameStatus] = useState('playing'); // 'playing', 'completed', 'levelComplete'
+  const [feedback, setFeedback] = useState('');
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [totalScore, setTotalScore] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(10);
+  const [timerActive, setTimerActive] = useState(false);
 
-        .game-container {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-            max-width: 800px;
-            width: 90%;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
+  // 遊戲設定
+  const gameConfig = {
+    1: { digits: 3, questionsPerLevel: 6 },
+    2: { digits: 4, questionsPerLevel: 6 },
+    3: { digits: 6, questionsPerLevel: 6 }
+  };
 
-        .game-container::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 5px;
-            background: linear-gradient(90deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #feca57);
-            animation: shimmer 3s ease-in-out infinite;
-        }
+  const multiples = [2, 4, 5, 8, 10, 11];
 
-        @keyframes shimmer {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
-        }
+  // 產生指定位數的隨機數字
+  const generateRandomNumber = (digits) => {
+    const min = Math.pow(10, digits - 1);
+    const max = Math.pow(10, digits) - 1;
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  };
 
-        h1 {
-            color: #4a5568;
-            margin-bottom: 10px;
-            font-size: 2.5em;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
+  // 產生新題目
+  const generateNewQuestion = () => {
+    const config = gameConfig[currentLevel];
+    const newNumber = generateRandomNumber(config.digits);
+    const randomMultiple = multiples[Math.floor(Math.random() * multiples.length)];
+    
+    setCurrentNumber(newNumber.toString());
+    setCurrentMultiple(randomMultiple);
+    setShowFeedback(false);
+    setFeedback('');
+    setTimeLeft(10);
+    setTimerActive(true);
+  };
 
-        .subtitle {
-            color: #718096;
-            margin-bottom: 30px;
-            font-size: 1.2em;
+  // 計時器效果
+  useEffect(() => {
+    let interval;
+    if (timerActive && timeLeft > 0 && !showFeedback) {
+      interval = setInterval(() => {
+        setTimeLeft(time => time - 1);
+      }, 1000);
+    } else if (timeLeft === 0 && !showFeedback) {
+      // 時間到，自動判定為錯誤
+      setTimerActive(false);
+      setFeedback(`時間到！${currentNumber} ${parseInt(currentNumber) % currentMultiple === 0 ? '是' : '不是'} ${currentMultiple} 的倍數`);
+      setShowFeedback(true);
+      
+      setTimeout(() => {
+        if (currentQuestion < gameConfig[currentLevel].questionsPerLevel) {
+          setCurrentQuestion(currentQuestion + 1);
+          generateNewQuestion();
+        } else {
+          if (currentLevel < 3) {
+            setGameStatus('levelComplete');
+          } else {
+            setGameStatus('completed');
+          }
         }
+      }, 2000);
+    }
+    return () => clearInterval(interval);
+  }, [timerActive, timeLeft, showFeedback]);
 
-        .game-area {
-            margin: 30px 0;
+  // 檢查答案
+  const checkAnswer = (userAnswer) => {
+    if (showFeedback || !timerActive) return; // 防止重複點擊
+    
+    setTimerActive(false);
+    const number = parseInt(currentNumber);
+    const isCorrect = (number % currentMultiple === 0) === userAnswer;
+    
+    if (isCorrect) {
+      setScore(score + 1);
+      setTotalScore(totalScore + 1);
+      setFeedback('正確！');
+    } else {
+      setFeedback(`錯誤！${currentNumber} ${number % currentMultiple === 0 ? '是' : '不是'} ${currentMultiple} 的倍數`);
+    }
+    
+    setShowFeedback(true);
+    
+    // 延遲後進入下一題或下一關
+    setTimeout(() => {
+      if (currentQuestion < gameConfig[currentLevel].questionsPerLevel) {
+        setCurrentQuestion(currentQuestion + 1);
+        generateNewQuestion();
+      } else {
+        // 關卡完成
+        if (currentLevel < 3) {
+          setGameStatus('levelComplete');
+        } else {
+          setGameStatus('completed');
         }
+      }
+    }, 2000);
+  };
 
-        .number-display {
-            font-size: 4em;
-            font-weight: bold;
-            color: #2d3748;
-            margin: 20px 0;
-            padding: 20px;
-            background: linear-gradient(135deg, #ffecd2, #fcb69f);
-            border-radius: 15px;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
-            animation: pulse 2s ease-in-out infinite;
-        }
+  // 進入下一關
+  const nextLevel = () => {
+    setCurrentLevel(currentLevel + 1);
+    setCurrentQuestion(1);
+    setScore(0);
+    setGameStatus('playing');
+    generateNewQuestion();
+  };
 
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
+  // 重新開始遊戲
+  const restartGame = () => {
+    setCurrentLevel(1);
+    setCurrentQuestion(1);
+    setScore(0);
+    setTotalScore(0);
+    setGameStatus('playing');
+    setTimerActive(false);
+    generateNewQuestion();
+  };
 
-        .divisors-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
-            gap: 15px;
-            margin: 30px 0;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
-        }
+  // 初始化遊戲
+  useEffect(() => {
+    generateNewQuestion();
+  }, []);
 
-        .divisor-btn {
-            padding: 15px 10px;
-            border: none;
-            border-radius: 12px;
-            background: linear-gradient(135deg, #a8edea, #fed6e3);
-            color: #2d3748;
-            font-size: 1.2em;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            position: relative;
-            overflow: hidden;
-        }
+  // 獲取關卡顏色
+  const getLevelColor = (level) => {
+    const colors = {
+      1: 'bg-green-500',
+      2: 'bg-blue-500',
+      3: 'bg-purple-500'
+    };
+    return colors[level] || 'bg-gray-500';
+  };
 
-        .divisor-btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
-            transition: left 0.6s ease;
-        }
-
-        .divisor-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-        }
-
-        .divisor-btn:hover::before {
-            left: 100%;
-        }
-
-        .divisor-btn.correct {
-            background: linear-gradient(135deg, #84fab0, #8fd3f4);
-            animation: correctAnswer 0.6s ease;
-        }
-
-        .divisor-btn.incorrect {
-            background: linear-gradient(135deg, #ffa4a4, #ffb4b4);
-            animation: incorrectAnswer 0.6s ease;
-        }
-
-        @keyframes correctAnswer {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
-        }
-
-        @keyframes incorrectAnswer {
-            0% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            75% { transform: translateX(5px); }
-            100% { transform: translateX(0); }
-        }
-
-        .score-info {
-            display: flex;
-            justify-content: space-around;
-            margin: 30px 0;
-            flex-wrap: wrap;
-            gap: 20px;
-        }
-
-        .score-item {
-            background: rgba(255, 255, 255, 0.8);
-            padding: 15px 25px;
-            border-radius: 25px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            min-width: 120px;
-        }
-
-        .score-label {
-            font-size: 0.9em;
-            color: #718096;
-            margin-bottom: 5px;
-        }
-
-        .score-value {
-            font-size: 1.8em;
-            font-weight: bold;
-            color: #2d3748;
-        }
-
-        .control-buttons {
-            margin-top: 30px;
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .control-btn {
-            padding: 12px 25px;
-            border: none;
-            border-radius: 25px;
-            font-size: 1.1em;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        .next-btn {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-        }
-
-        .reset-btn {
-            background: linear-gradient(135deg, #ffa4a4, #ff6b6b);
-            color: white;
-        }
-
-        .control-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
-        }
-
-        .feedback {
-            margin: 20px 0;
-            padding: 15px;
-            border-radius: 10px;
-            font-weight: bold;
-            font-size: 1.1em;
-            min-height: 50px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .feedback.correct {
-            background: linear-gradient(135deg, #d4edda, #c3e6cb);
-            color: #155724;
-        }
-
-        .feedback.incorrect {
-            background: linear-gradient(135deg, #f8d7da, #f5c6cb);
-            color: #721c24;
-        }
-
-        .rules {
-            margin-top: 30px;
-            text-align: left;
-            background: rgba(255, 255, 255, 0.6);
-            padding: 20px;
-            border-radius: 15px;
-            border-left: 5px solid #667eea;
-        }
-
-        .rules h3 {
-            color: #4a5568;
-            margin-bottom: 15px;
-            text-align: center;
-        }
-
-        .rules ul {
-            list-style: none;
-            padding: 0;
-        }
-
-        .rules li {
-            margin: 8px 0;
-            padding-left: 20px;
-            position: relative;
-        }
-
-        .rules li::before {
-            content: '✓';
-            position: absolute;
-            left: 0;
-            color: #667eea;
-            font-weight: bold;
-        }
-
-        @media (max-width: 600px) {
-            .game-container {
-                padding: 20px;
-            }
-            
-            h1 {
-                font-size: 2em;
-            }
-            
-            .number-display {
-                font-size: 3em;
-            }
-            
-            .divisors-container {
-                grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
-                gap: 10px;
-            }
-            
-            .divisor-btn {
-                padding: 12px 8px;
-                font-size: 1em;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="game-container">
-        <h1>🎯 倍判者聯盟</h1>
-        <p class="subtitle">倍數判別法遊戲 - 成為倍數判別大師！</p>
-        
-        <div class="game-area">
-            <div class="number-display" id="numberDisplay">按開始遊戲</div>
-            
-            <div class="divisors-container" id="divisorsContainer">
-                <button class="divisor-btn" data-divisor="2">2</button>
-                <button class="divisor-btn" data-divisor="3">3</button>
-                <button class="divisor-btn" data-divisor="4">4</button>
-                <button class="divisor-btn" data-divisor="5">5</button>
-                <button class="divisor-btn" data-divisor="9">9</button>
-                <button class="divisor-btn" data-divisor="10">10</button>
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-indigo-100 to-purple-200 p-4">
+      <div className="max-w-2xl mx-auto">
+        {/* 標題 */}
+        <div className="text-center mb-6">
+          <h1 className="text-4xl font-bold text-gray-800 mb-2">倍數判斷闖關遊戲</h1>
+          <div className="flex justify-center items-center gap-4 mb-4">
+            <div className="flex items-center gap-2">
+              <Star className="text-yellow-500" size={20} />
+              <span className="text-lg font-semibold">總分: {totalScore}</span>
             </div>
-            
-            <div class="feedback" id="feedback"></div>
-        </div>
-        
-        <div class="score-info">
-            <div class="score-item">
-                <div class="score-label">關卡-題號</div>
-                <div class="score-value" id="currentQuestion">1-0</div>
+            <div className="flex items-center gap-2">
+              <Trophy className="text-purple-500" size={20} />
+              <span className="text-lg font-semibold">第 {currentLevel} 關</span>
             </div>
-            <div class="score-item">
-                <div class="score-label">正確率</div>
-                <div class="score-value" id="accuracy">0%</div>
+          </div>
+        </div>
+
+        {/* 關卡進度 */}
+        <div className="flex justify-center mb-6">
+          {[1, 2, 3].map((level) => (
+            <div
+              key={level}
+              className={`w-12 h-12 rounded-full flex items-center justify-center mx-2 text-white font-bold ${
+                level === currentLevel
+                  ? getLevelColor(level)
+                  : level < currentLevel
+                  ? 'bg-green-400'
+                  : 'bg-gray-300'
+              }`}
+            >
+              {level}
             </div>
-            <div class="score-item">
-                <div class="score-label">總分</div>
-                <div class="score-value" id="totalScore">0</div>
+          ))}
+        </div>
+
+        {/* 遊戲區域 */}
+        <div className="bg-white rounded-xl shadow-lg p-8">
+          {gameStatus === 'playing' && (
+            <>
+              {/* 題目資訊 */}
+              <div className="text-center mb-6">
+                <div className="text-sm text-gray-600 mb-2">
+                  第 {currentLevel} 關 - 第 {currentQuestion} 題 / {gameConfig[currentLevel].questionsPerLevel} 題
+                </div>
+                <div className="text-sm text-gray-600 mb-4">
+                  本關分數: {score} / {gameConfig[currentLevel].questionsPerLevel}
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
+                  <div
+                    className={`h-2 rounded-full ${getLevelColor(currentLevel)}`}
+                    style={{
+                      width: `${(currentQuestion / gameConfig[currentLevel].questionsPerLevel) * 100}%`
+                    }}
+                  ></div>
+                </div>
+                
+                {/* 計時器 */}
+                <div className="mb-4">
+                  <div className={`text-3xl font-bold mb-2 ${
+                    timeLeft <= 3 ? 'text-red-500 animate-pulse' : 
+                    timeLeft <= 5 ? 'text-orange-500' : 'text-green-500'
+                  }`}>
+                    {timeLeft} 秒
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-3">
+                    <div
+                      className={`h-3 rounded-full transition-all duration-1000 ${
+                        timeLeft <= 3 ? 'bg-red-500' : 
+                        timeLeft <= 5 ? 'bg-orange-500' : 'bg-green-500'
+                      }`}
+                      style={{
+                        width: `${(timeLeft / 10) * 100}%`
+                      }}
+                    ></div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 題目 */}
+              <div className="text-center mb-8">
+                <div className="text-6xl font-mono font-bold text-gray-800 mb-4 p-4 bg-gray-50 rounded-lg">
+                  {currentNumber}
+                </div>
+                <div className="text-2xl text-gray-700 mb-6">
+                  這個數字是 <span className="font-bold text-blue-600">{currentMultiple}</span> 的倍數嗎？
+                </div>
+
+                {/* 答案按鈕 */}
+                {!showFeedback && (
+                  <div className="flex justify-center gap-6">
+                    <button
+                      onClick={() => checkAnswer(true)}
+                      disabled={!timerActive}
+                      className="bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white font-bold py-4 px-8 rounded-lg text-xl transition-colors"
+                    >
+                      <CheckCircle className="inline mr-2" size={24} />
+                      是
+                    </button>
+                    <button
+                      onClick={() => checkAnswer(false)}
+                      disabled={!timerActive}
+                      className="bg-red-500 hover:bg-red-600 disabled:bg-gray-400 text-white font-bold py-4 px-8 rounded-lg text-xl transition-colors"
+                    >
+                      <XCircle className="inline mr-2" size={24} />
+                      不是
+                    </button>
+                  </div>
+                )}
+
+                {/* 答案反饋 */}
+                {showFeedback && (
+                  <div className={`text-xl font-bold p-4 rounded-lg ${
+                    feedback.includes('正確') ? 'bg-green-100 text-green-800' : 
+                    feedback.includes('時間到') ? 'bg-orange-100 text-orange-800' :
+                    'bg-red-100 text-red-800'
+                  }`}>
+                    {feedback}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+
+          {/* 關卡完成畫面 */}
+          {gameStatus === 'levelComplete' && (
+            <div className="text-center">
+              <Trophy className="mx-auto text-yellow-500 mb-4" size={64} />
+              <h2 className="text-3xl font-bold text-gray-800 mb-4">第 {currentLevel} 關完成！</h2>
+              <div className="text-xl text-gray-600 mb-6">
+                本關分數: {score} / {gameConfig[currentLevel].questionsPerLevel}
+              </div>
+              <button
+                onClick={nextLevel}
+                className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg text-xl transition-colors"
+              >
+                <ArrowRight className="inline mr-2" size={20} />
+                進入第 {currentLevel + 1} 關
+              </button>
             </div>
+          )}
+
+          {/* 遊戲完成畫面 */}
+          {gameStatus === 'completed' && (
+            <div className="text-center">
+              <div className="text-6xl mb-4">🎉</div>
+              <h2 className="text-3xl font-bold text-gray-800 mb-4">恭喜完成所有關卡！</h2>
+              <div className="text-xl text-gray-600 mb-6">
+                總分: {totalScore} / 18
+              </div>
+              <div className="text-lg text-gray-600 mb-6">
+                最終關卡分數: {score} / {gameConfig[currentLevel].questionsPerLevel}
+              </div>
+              <button
+                onClick={restartGame}
+                className="bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 px-6 rounded-lg text-xl transition-colors"
+              >
+                <RefreshCw className="inline mr-2" size={20} />
+                重新開始
+              </button>
+            </div>
+          )}
         </div>
-        
-        <div class="control-buttons">
-            <button class="control-btn next-btn" id="nextBtn">開始第 1 關</button>
-            <button class="control-btn reset-btn" id="resetBtn" onclick="resetGame()">重新開始</button>
+
+        {/* 遊戲說明 */}
+        <div className="mt-6 bg-white rounded-lg p-4 text-sm text-gray-600">
+          <h3 className="font-bold mb-2">遊戲規則：</h3>
+          <ul className="space-y-1">
+            <li>• 第一關：3位數，6題</li>
+            <li>• 第二關：4位數，6題</li>
+            <li>• 第三關：6位數，6題</li>
+            <li>• 每題限時 10 秒作答</li>
+            <li>• 每題隨機選擇倍數：2, 4, 5, 8, 10, 11</li>
+            <li>• 判斷數字是否為指定倍數</li>
+          </ul>
         </div>
-        
-        <div class="rules">
-            <h3>🎮 遊戲規則</h3>
-            <ul>
-                <li>每題會顯示一個數字，請判斷它能被哪些數整除（2, 3, 4, 5, 9, 10）</li>
-                <li>點擊所有正確的因數按鈕（可複選）</li>
-                <li>全部選對得10分，部分正確按比例給分</li>
-                <li>錯選會扣分，所以要仔細思考！</li>
-                <li>挑戰自己，看看能達到多高的正確率！</li>
-            </ul>
-        </div>
+      </div>
     </div>
-
-    <script>
-        let currentNumber = 0;
-        let currentQuestion = 0;
-        let totalQuestions = 0;
-        let correctAnswers = 0;
-        let totalScore = 0;
-        let selectedDivisors = new Set();
-        let correctDivisors = new Set();
-        let questionAnswered = false;
-        let currentLevel = 1;
-
-        const divisors = [2, 3, 4, 5, 9, 10];
-        const numberDisplay = document.getElementById('numberDisplay');
-        const feedback = document.getElementById('feedback');
-        const nextBtn = document.getElementById('nextBtn');
-        const currentQuestionDisplay = document.getElementById('currentQuestion');
-        const accuracyDisplay = document.getElementById('accuracy');
-        const totalScoreDisplay = document.getElementById('totalScore');
-
-        function generateRandomNumber() {
-            return Math.floor(Math.random() * 1000) + 100; // 100-1099之間的數字
-        }
-
-        function getCorrectDivisors(number) {
-            const correct = new Set();
-            divisors.forEach(divisor => {
-                if (number % divisor === 0) {
-                    correct.add(divisor);
-                }
-            });
-            return correct;
-        }
-
-        function showLevelComplete() {
-            const levelScore = calculateLevelScore();
-            const accuracy = Math.round((correctAnswers / 10) * 100);
-            
-            numberDisplay.textContent = `第 ${currentLevel} 關完成！`;
-            feedback.innerHTML = `
-                <div style="font-size: 1.2em; margin-bottom: 10px;">🎊 恭喜完成第 ${currentLevel} 關！</div>
-                <div>本關成績：${accuracy}% 正確率</div>
-                <div>獲得分數：${levelScore} 分</div>
-                <div style="margin-top: 10px;">準備挑戰下一關嗎？</div>
-            `;
-            feedback.className = 'feedback correct';
-            
-            nextBtn.textContent = `開始第 ${currentLevel + 1} 關`;
-            nextBtn.disabled = false;
-            
-            // 重設關卡數據
-            correctAnswers = 0;
-            currentLevel++;
-        }
-
-        function getDivisibilityRules(number, divisor) {
-            const rules = {
-                2: () => `${number} 的個位數是 ${number % 10}，${number % 10 % 2 === 0 ? '是偶數，所以能被2整除' : '是奇數，所以不能被2整除'}`,
-                3: () => {
-                    const digitSum = number.toString().split('').reduce((sum, digit) => sum + parseInt(digit), 0);
-                    return `${number} 的各位數字和 = ${number.toString().split('').join('+')} = ${digitSum}，${digitSum % 3 === 0 ? `${digitSum}能被3整除，所以${number}能被3整除` : `${digitSum}不能被3整除，所以${number}不能被3整除`}`;
-                },
-                4: () => {
-                    const lastTwoDigits = number % 100;
-                    return `${number} 的末兩位數是 ${lastTwoDigits.toString().padStart(2, '0')}，${lastTwoDigits % 4 === 0 ? `${lastTwoDigits}能被4整除，所以${number}能被4整除` : `${lastTwoDigits}不能被4整除，所以${number}不能被4整除`}`;
-                },
-                5: () => `${number} 的個位數是 ${number % 10}，${(number % 10 === 0 || number % 10 === 5) ? '是0或5，所以能被5整除' : '不是0或5，所以不能被5整除'}`,
-                9: () => {
-                    const digitSum = number.toString().split('').reduce((sum, digit) => sum + parseInt(digit), 0);
-                    return `${number} 的各位數字和 = ${number.toString().split('').join('+')} = ${digitSum}，${digitSum % 9 === 0 ? `${digitSum}能被9整除，所以${number}能被9整除` : `${digitSum}不能被9整除，所以${number}不能被9整除`}`;
-                },
-                10: () => `${number} 的個位數是 ${number % 10}，${number % 10 === 0 ? '是0，所以能被10整除' : '不是0，所以不能被10整除'}`
-            };
-            
-            return rules[divisor] ? rules[divisor]() : '';
-        }
-
-        function nextQuestion() {
-            // 如果已經回答過問題，先檢查答案
-            if (questionAnswered) {
-                checkAnswer();
-                return;
-            }
-            
-            // 檢查是否完成10題
-            if (currentQuestion > 0 && currentQuestion % 10 === 0) {
-                showLevelComplete();
-                return;
-            }
-            
-            currentNumber = generateRandomNumber();
-            correctDivisors = getCorrectDivisors(currentNumber);
-            selectedDivisors.clear();
-            questionAnswered = false;
-            
-            numberDisplay.textContent = currentNumber;
-            feedback.textContent = `請選擇 ${currentNumber} 的所有因數：`;
-            feedback.className = 'feedback';
-            
-            nextBtn.textContent = '確認答案';
-            nextBtn.disabled = true; // 預設禁用，直到選擇答案
-            
-            // 重設按鈕狀態
-            document.querySelectorAll('.divisor-btn').forEach(btn => {
-                btn.className = 'divisor-btn';
-                btn.disabled = false;
-            });
-            
-            currentQuestion++;
-            totalQuestions++;
-            updateDisplay();
-        }
-
-        function checkAnswer() {
-            let correctCount = 0;
-            let incorrectCount = 0;
-            
-            // 計算正確和錯誤的選擇
-            selectedDivisors.forEach(divisor => {
-                if (correctDivisors.has(divisor)) {
-                    correctCount++;
-                } else {
-                    incorrectCount++;
-                }
-            });
-            
-            // 計算漏選的正確答案
-            const missedCount = correctDivisors.size - correctCount;
-            
-            // 計算分數（全對10分，按比例給分，錯選扣分）
-            let questionScore = 0;
-            if (correctDivisors.size > 0) {
-                const correctRatio = correctCount / correctDivisors.size;
-                questionScore = Math.max(0, correctRatio * 10 - incorrectCount * 2);
-            }
-            
-            totalScore += Math.round(questionScore);
-            
-            // 判斷是否完全正確
-            const isCompletelyCorrect = correctCount === correctDivisors.size && incorrectCount === 0;
-            if (isCompletelyCorrect) {
-                correctAnswers++;
-            }
-            
-            // 顯示反饋和判別法說明
-            const correctList = Array.from(correctDivisors).sort((a, b) => a - b);
-            let feedbackHTML = '';
-            
-            if (isCompletelyCorrect) {
-                feedbackHTML = `<div style="margin-bottom: 15px;">🎉 完全正確！${currentNumber} 的因數是：${correctList.join(', ')} (+${Math.round(questionScore)}分)</div>`;
-            } else {
-                feedbackHTML = `<div style="margin-bottom: 15px;">❌ 不完全正確。${currentNumber} 的因數是：${correctList.join(', ')} (+${Math.round(questionScore)}分)</div>`;
-            }
-            
-            // 添加判別法說明
-            feedbackHTML += '<div style="text-align: left; font-size: 0.9em; background: rgba(255,255,255,0.8); padding: 10px; border-radius: 8px; margin-top: 10px;">';
-            feedbackHTML += '<strong>📚 判別法說明：</strong><br>';
-            
-            divisors.forEach(divisor => {
-                const rule = getDivisibilityRules(currentNumber, divisor);
-                feedbackHTML += `<div style="margin: 5px 0;">• ${rule}</div>`;
-            });
-            
-            feedbackHTML += '</div>';
-            
-            feedback.innerHTML = feedbackHTML;
-            feedback.className = isCompletelyCorrect ? 'feedback correct' : 'feedback incorrect';
-            
-            // 更新按鈕顯示
-            document.querySelectorAll('.divisor-btn').forEach(btn => {
-                const divisor = parseInt(btn.dataset.divisor);
-                btn.disabled = true;
-                
-                if (correctDivisors.has(divisor)) {
-                    btn.classList.add('correct');
-                } else if (selectedDivisors.has(divisor)) {
-                    btn.classList.add('incorrect');
-                }
-            });
-            
-            // 檢查是否為第10題
-            if (currentQuestion % 10 === 0) {
-                nextBtn.textContent = '查看關卡結果';
-            } else {
-                nextBtn.textContent = '下一題';
-            }
-            
-            questionAnswered = true;
-            nextBtn.disabled = false;
-            updateDisplay();
-        }
-
-        function calculateLevelScore() {
-            // 可以根據需要調整關卡分數計算方式
-            return Math.round((correctAnswers / 10) * 100);
-        }
-
-        function resetGame() {
-            currentQuestion = 0;
-            totalQuestions = 0;
-            correctAnswers = 0;
-            totalScore = 0;
-            currentLevel = 1;
-            selectedDivisors.clear();
-            correctDivisors.clear();
-            questionAnswered = false;
-            
-            numberDisplay.textContent = '按開始遊戲';
-            feedback.textContent = '';
-            feedback.className = 'feedback';
-            nextBtn.textContent = '開始第 1 關';
-            nextBtn.disabled = false;
-            
-            document.querySelectorAll('.divisor-btn').forEach(btn => {
-                btn.className = 'divisor-btn';
-                btn.disabled = false;
-            });
-            
-            updateDisplay();
-        }
-
-        function updateDisplay() {
-            const questionInLevel = ((currentQuestion - 1) % 10) + 1;
-            currentQuestionDisplay.textContent = `${currentLevel}-${questionInLevel}`;
-            accuracyDisplay.textContent = totalQuestions > 0 ? 
-                Math.round((correctAnswers / Math.min(totalQuestions, 10)) * 100) + '%' : '0%';
-            totalScoreDisplay.textContent = totalScore;
-        }
-
-        // 為因數按鈕添加點擊事件
-        document.querySelectorAll('.divisor-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                if (this.disabled || questionAnswered) return;
-                
-                const divisor = parseInt(this.dataset.divisor);
-                
-                if (selectedDivisors.has(divisor)) {
-                    selectedDivisors.delete(divisor);
-                    this.style.opacity = '1';
-                    this.style.transform = 'scale(1)';
-                } else {
-                    selectedDivisors.add(divisor);
-                    this.style.opacity = '0.7';
-                    this.style.transform = 'scale(0.95)';
-                }
-                
-                // 啟用確認按鈕（至少選擇一個答案）
-                nextBtn.disabled = selectedDivisors.size === 0;
-            });
-        });
-
-        // 為下一題按鈕添加點擊事件
-        nextBtn.addEventListener('click', nextQuestion);
-
-        // 初始化顯示
-        updateDisplay();
-    </script>
-</body>
-</html>
+  );
+}
