@@ -405,8 +405,9 @@
                 grid-column: span 2;
             }
             
-            .divisors {
-                grid-template-columns: repeat(2, 1fr);
+            .game-info {
+                flex-wrap: wrap;
+                gap: 10px;
             }
         }
     </style>
@@ -425,7 +426,7 @@
                 你需要判斷哪些數字可以填入★位置，使整個數字能被指定數整除
             </p>
             <p style="color: #ff0080; margin: 20px 0;">時間限制：2分鐘</p>
-            <button class="start-btn" onclick="startGame()">開始挑戰</button>
+            <button class="start-btn" id="startButton">開始挑戰</button>
         </div>
 
         <div id="gameScreen" class="hidden">
@@ -469,29 +470,30 @@
                     <button class="choice-btn all-option" data-value="all">以上皆可</button>
                 </div>
 
-                <button class="submit-btn" onclick="submitAnswer()">送出答案</button>
+                <button class="submit-btn" id="submitButton">送出答案</button>
             </div>
         </div>
 
         <!-- 結果浮動視窗 -->
         <div id="resultModal" class="modal-overlay hidden">
             <div class="result-modal" id="resultContent">
-                <button class="close-btn" onclick="closeModal()">&times;</button>
+                <button class="close-btn" id="closeButton">&times;</button>
                 <div class="result-title" id="resultTitle"></div>
                 <div class="explanation" id="resultExplanation"></div>
                 <div id="resultStats"></div>
-                <button class="next-btn" onclick="nextQuestion()">下一題</button>
+                <button class="next-btn" id="nextButton">下一題</button>
             </div>
         </div>
 
         <div id="endScreen" class="end-screen hidden">
             <h2>遊戲結束！</h2>
             <div id="finalStats"></div>
-            <button class="start-btn" onclick="restartGame()">再次挑戰</button>
+            <button class="start-btn" id="restartButton">再次挑戰</button>
         </div>
     </div>
 
     <script>
+        // 遊戲狀態
         let gameState = {
             timeLeft: 120,
             score: 0,
@@ -506,15 +508,81 @@
 
         const divisors = [2, 3, 4, 5, 9, 11];
 
+        // DOM 元素
+        const startScreen = document.getElementById('startScreen');
+        const gameScreen = document.getElementById('gameScreen');
+        const endScreen = document.getElementById('endScreen');
+        const resultModal = document.getElementById('resultModal');
+        
+        const startButton = document.getElementById('startButton');
+        const submitButton = document.getElementById('submitButton');
+        const closeButton = document.getElementById('closeButton');
+        const nextButton = document.getElementById('nextButton');
+        const restartButton = document.getElementById('restartButton');
+
+        // 事件監聽器
+        startButton.addEventListener('click', startGame);
+        submitButton.addEventListener('click', submitAnswer);
+        closeButton.addEventListener('click', closeModal);
+        nextButton.addEventListener('click', nextQuestion);
+        restartButton.addEventListener('click', restartGame);
+
+        // 選擇按鈕事件監聽器
+        document.querySelectorAll('.choice-btn').forEach(btn => {
+            btn.addEventListener('click', handleChoiceClick);
+        });
+
+        // 浮動視窗外部點擊關閉
+        resultModal.addEventListener('click', (e) => {
+            if (e.target === resultModal) {
+                closeModal();
+            }
+        });
+
+        // ESC 鍵關閉浮動視窗
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !resultModal.classList.contains('hidden')) {
+                closeModal();
+            }
+        });
+
+        // 遊戲函數
         function startGame() {
-            document.getElementById('startScreen').classList.add('hidden');
-            document.getElementById('gameScreen').classList.remove('hidden');
+            // 清除任何現有的計時器
+            if (gameState.timer) {
+                clearInterval(gameState.timer);
+            }
+            
+            // 重置遊戲狀態
+            gameState.timeLeft = 120;
+            gameState.score = 0;
+            gameState.streak = 0;
+            gameState.questionNumber = 1;
+            gameState.selectedChoices = new Set();
             gameState.gameRunning = true;
+            
+            // 更新顯示
+            document.getElementById('score').textContent = '0';
+            document.getElementById('streak').textContent = '0';
+            document.getElementById('timer').textContent = '120';
+            document.getElementById('questionNumber').textContent = '1';
+            
+            // 切換畫面
+            startScreen.classList.add('hidden');
+            gameScreen.classList.remove('hidden');
+            resultModal.classList.add('hidden');
+            
+            // 開始遊戲
             startTimer();
             generateQuestion();
         }
 
         function startTimer() {
+            // 清除任何現有的計時器
+            if (gameState.timer) {
+                clearInterval(gameState.timer);
+            }
+            
             gameState.timer = setInterval(() => {
                 gameState.timeLeft--;
                 document.getElementById('timer').textContent = gameState.timeLeft;
@@ -542,25 +610,24 @@
             // 隨機選擇末三位中的一位作為未知數
             const unknownPosition = 3 + Math.floor(Math.random() * 3);
             const numberArray = number.split('');
-            const originalDigit = numberArray[unknownPosition];
             numberArray[unknownPosition] = '★';
             
             // 隨機選擇一個除數
-            const selectedDivisors = [divisors[Math.floor(Math.random() * divisors.length)]];
+            const selectedDivisor = divisors[Math.floor(Math.random() * divisors.length)];
             
             gameState.currentQuestion = {
                 number: numberArray.join(''),
                 originalNumber: number,
                 unknownPosition,
-                divisors: selectedDivisors,
-                correctAnswers: findCorrectAnswers(number, unknownPosition, selectedDivisors)
+                divisor: selectedDivisor,
+                correctAnswers: findCorrectAnswers(number, unknownPosition, selectedDivisor)
             };
             
             displayQuestion();
             clearChoices();
         }
 
-        function findCorrectAnswers(originalNumber, unknownPosition, divisors) {
+        function findCorrectAnswers(originalNumber, unknownPosition, divisor) {
             const correct = [];
             const numberArray = originalNumber.split('');
             
@@ -568,15 +635,7 @@
                 numberArray[unknownPosition] = digit.toString();
                 const testNumber = parseInt(numberArray.join(''));
                 
-                let allDivisible = true;
-                for (const divisor of divisors) {
-                    if (!isDivisible(testNumber, divisor)) {
-                        allDivisible = false;
-                        break;
-                    }
-                }
-                
-                if (allDivisible) {
+                if (isDivisible(testNumber, divisor)) {
                     correct.push(digit);
                 }
             }
@@ -585,22 +644,7 @@
         }
 
         function isDivisible(number, divisor) {
-            switch (divisor) {
-                case 2:
-                    return number % 2 === 0;
-                case 3:
-                    return number % 3 === 0;
-                case 4:
-                    return number % 4 === 0;
-                case 5:
-                    return number % 5 === 0;
-                case 9:
-                    return number % 9 === 0;
-                case 11:
-                    return number % 11 === 0;
-                default:
-                    return false;
-            }
+            return number % divisor === 0;
         }
 
         function displayQuestion() {
@@ -610,49 +654,43 @@
             
             const divisorsContainer = document.getElementById('divisors');
             divisorsContainer.innerHTML = '';
-            gameState.currentQuestion.divisors.forEach(divisor => {
-                const div = document.createElement('div');
-                div.className = 'divisor-item';
-                div.textContent = `${divisor}的倍數`;
-                divisorsContainer.appendChild(div);
-            });
+            const div = document.createElement('div');
+            div.className = 'divisor-item';
+            div.textContent = `${gameState.currentQuestion.divisor}的倍數`;
+            divisorsContainer.appendChild(div);
         }
 
         function clearChoices() {
             document.querySelectorAll('.choice-btn').forEach(btn => {
                 btn.classList.remove('selected');
             });
-            document.getElementById('result').classList.add('hidden');
         }
 
-        // 選擇答案
-        document.querySelectorAll('.choice-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const value = btn.dataset.value;
-                
-                if (value === 'all') {
-                    // 如果選擇"以上皆可"，清除其他選擇
-                    gameState.selectedChoices.clear();
-                    document.querySelectorAll('.choice-btn').forEach(b => b.classList.remove('selected'));
-                    gameState.selectedChoices.add('all');
-                    btn.classList.add('selected');
-                } else {
-                    // 如果選擇數字，先移除"以上皆可"
-                    if (gameState.selectedChoices.has('all')) {
-                        gameState.selectedChoices.delete('all');
-                        document.querySelector('[data-value="all"]').classList.remove('selected');
-                    }
-                    
-                    if (gameState.selectedChoices.has(value)) {
-                        gameState.selectedChoices.delete(value);
-                        btn.classList.remove('selected');
-                    } else {
-                        gameState.selectedChoices.add(value);
-                        btn.classList.add('selected');
-                    }
+        function handleChoiceClick(e) {
+            const value = e.target.dataset.value;
+            
+            if (value === 'all') {
+                // 如果選擇"以上皆可"，清除其他選擇
+                gameState.selectedChoices.clear();
+                document.querySelectorAll('.choice-btn').forEach(b => b.classList.remove('selected'));
+                gameState.selectedChoices.add('all');
+                e.target.classList.add('selected');
+            } else {
+                // 如果選擇數字，先移除"以上皆可"
+                if (gameState.selectedChoices.has('all')) {
+                    gameState.selectedChoices.delete('all');
+                    document.querySelector('[data-value="all"]').classList.remove('selected');
                 }
-            });
-        });
+                
+                if (gameState.selectedChoices.has(value)) {
+                    gameState.selectedChoices.delete(value);
+                    e.target.classList.remove('selected');
+                } else {
+                    gameState.selectedChoices.add(value);
+                    e.target.classList.add('selected');
+                }
+            }
+        }
 
         function submitAnswer() {
             if (gameState.selectedChoices.size === 0 || !gameState.gameRunning) return;
@@ -677,24 +715,37 @@
         }
 
         function displayResult(isCorrect, correctAnswers, timeSpent) {
-            const resultDiv = document.getElementById('result');
-            resultDiv.classList.remove('hidden', 'correct', 'wrong');
-            resultDiv.classList.add(isCorrect ? 'correct' : 'wrong');
+            // 暫停計時器
+            if (gameState.timer) {
+                clearInterval(gameState.timer);
+            }
             
-            let resultHTML = `
-                <h3>${isCorrect ? '✅ 答對了！' : '❌ 答錯了！'}</h3>
-                <div class="explanation">
-                    <strong>正確答案：</strong>
-                    ${correctAnswers.length === 10 ? '所有數字 (0-9) 都可以' : correctAnswers.join(', ')}
-                    <br><br>
-                    <strong>解釋：</strong><br>
-                    ${getDivisibilityRule(gameState.currentQuestion.divisors[0])}
+            const content = document.getElementById('resultContent');
+            const title = document.getElementById('resultTitle');
+            const explanation = document.getElementById('resultExplanation');
+            const stats = document.getElementById('resultStats');
             
-            resultHTML += `</div>
-                <p>答題時間：${timeSpent.toFixed(1)}秒</p>
+            // 設置樣式
+            content.classList.remove('correct', 'wrong');
+            content.classList.add(isCorrect ? 'correct' : 'wrong');
+            
+            // 設置標題
+            title.textContent = isCorrect ? '✅ 答對了！' : '❌ 答錯了！';
+            
+            // 設置解釋
+            explanation.innerHTML = `
+                <strong>正確答案：</strong>
+                ${correctAnswers.length === 10 ? '所有數字 (0-9) 都可以' : correctAnswers.join(', ')}
+                <br><br>
+                <strong>解釋：</strong><br>
+                ${getDivisibilityRule(gameState.currentQuestion.divisor)}
             `;
             
-            resultDiv.innerHTML = resultHTML;
+            // 設置統計
+            stats.innerHTML = `<p>答題時間：${timeSpent.toFixed(1)}秒</p>`;
+            
+            // 顯示浮動視窗
+            resultModal.classList.remove('hidden');
         }
 
         function getDivisibilityRule(divisor) {
@@ -726,49 +777,8 @@
             document.getElementById('streak').textContent = gameState.streak;
         }
 
-        function endGame() {
-            gameState.gameRunning = false;
-            if (gameState.timer) {
-                clearInterval(gameState.timer);
-            }
-            
-            // 如果答案視窗正在顯示，先關閉它
-            document.getElementById('resultModal').classList.add('hidden');
-            
-            document.getElementById('gameScreen').classList.add('hidden');
-            document.getElementById('endScreen').classList.remove('hidden');
-            
-            document.getElementById('finalStats').innerHTML = `
-                <h3>最終成績</h3>
-                <p style="font-size: 2rem; color: #00ff88; margin: 20px 0;">總分：${gameState.score}</p>
-                <p>最高連續答對：${gameState.streak}</p>
-                <p>完成題目：${gameState.questionNumber - 1}</p>
-                <p>平均每題分數：${gameState.questionNumber > 1 ? Math.round(gameState.score / (gameState.questionNumber - 1)) : 0}</p>
-            `;
-        }
-
-        function restartGame() {
-            gameState = {
-                timeLeft: 120,
-                score: 0,
-                streak: 0,
-                questionNumber: 1,
-                currentQuestion: null,
-                selectedChoices: new Set(),
-                timer: null,
-                startTime: null,
-                gameRunning: false
-            };
-            
-            document.getElementById('endScreen').classList.add('hidden');
-            document.getElementById('startScreen').classList.remove('hidden');
-            document.getElementById('score').textContent = '0';
-            document.getElementById('streak').textContent = '0';
-            document.getElementById('timer').textContent = '120';
-        }
-
         function closeModal() {
-            document.getElementById('resultModal').classList.add('hidden');
+            resultModal.classList.add('hidden');
             
             // 恢復計時器（如果遊戲還在進行中）
             if (gameState.gameRunning && gameState.timeLeft > 0) {
@@ -785,19 +795,56 @@
             closeModal();
         }
 
-        // 點擊浮動視窗外部關閉
-        document.getElementById('resultModal').addEventListener('click', (e) => {
-            if (e.target.id === 'resultModal') {
-                closeModal();
+        function endGame() {
+            gameState.gameRunning = false;
+            if (gameState.timer) {
+                clearInterval(gameState.timer);
             }
-        });
+            
+            // 如果答案視窗正在顯示，先關閉它
+            resultModal.classList.add('hidden');
+            
+            gameScreen.classList.add('hidden');
+            endScreen.classList.remove('hidden');
+            
+            document.getElementById('finalStats').innerHTML = `
+                <h3>最終成績</h3>
+                <p style="font-size: 2rem; color: #00ff88; margin: 20px 0;">總分：${gameState.score}</p>
+                <p>最高連續答對：${gameState.streak}</p>
+                <p>完成題目：${gameState.questionNumber - 1}</p>
+                <p>平均每題分數：${gameState.questionNumber > 1 ? Math.round(gameState.score / (gameState.questionNumber - 1)) : 0}</p>
+            `;
+        }
 
-        // 按ESC鍵關閉浮動視窗
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && !document.getElementById('resultModal').classList.contains('hidden')) {
-                closeModal();
+        function restartGame() {
+            // 清除任何現有的計時器
+            if (gameState.timer) {
+                clearInterval(gameState.timer);
             }
-        });
+            
+            gameState = {
+                timeLeft: 120,
+                score: 0,
+                streak: 0,
+                questionNumber: 1,
+                currentQuestion: null,
+                selectedChoices: new Set(),
+                timer: null,
+                startTime: null,
+                gameRunning: false
+            };
+            
+            // 關閉任何開啟的模態視窗
+            resultModal.classList.add('hidden');
+            endScreen.classList.add('hidden');
+            startScreen.classList.remove('hidden');
+            
+            // 重置顯示
+            document.getElementById('score').textContent = '0';
+            document.getElementById('streak').textContent = '0';
+            document.getElementById('timer').textContent = '120';
+            document.getElementById('questionNumber').textContent = '1';
+        }
     </script>
 </body>
 </html>
