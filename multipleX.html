@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>倍判者聯盟</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .game-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        .game-header {
+            margin-bottom: 30px;
+        }
+        
+        .game-title {
+            font-size: 2.5em;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        
+        .level-info {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 20px;
+            font-size: 1.2em;
+        }
+        
+        .level-badge {
+            background: #3498db;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+        
+        .question-info {
+            background: #ecf0f1;
+            color: #2c3e50;
+            padding: 8px 16px;
+            border-radius: 20px;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #ecf0f1;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 30px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3498db, #2980b9);
+            transition: width 0.3s ease;
+        }
+        
+        .question-container {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 2px solid #e9ecef;
+        }
+        
+        .current-number {
+            font-size: 3em;
+            color: #2c3e50;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        
+        .question-text {
+            font-size: 1.2em;
+            color: #5a6c7d;
+            margin-bottom: 10px;
+        }
+        
+        .expected-count {
+            background: #e74c3c;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 25px;
+        }
+        
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .option-label {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 15px 20px;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            font-size: 1.1em;
+        }
+        
+        .option-label:hover {
+            border-color: #3498db;
+            background: #f8f9ff;
+        }
+        
+        .option-label.selected {
+            border-color: #3498db;
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+        
+        .option-label.none-selected {
+            border-color: #e74c3c;
+            background: #ffebee;
+            color: #c62828;
+        }
+        
+        .checkbox {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #dee2e6;
+            border-radius: 4px;
+            position: relative;
+            flex-shrink: 0;
+        }
+        
+        .checkbox.checked {
+            background: #3498db;
+            border-color: #3498db;
+        }
+        
+        .checkbox.checked::after {
+            content: '✓';
+            color: white;
+            font-weight: bold;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 14px;
+        }
+        
+        .checkbox.none-checked {
+            background: #e74c3c;
+            border-color: #e74c3c;
+        }
+        
+        .checkbox.none-checked::after {
+            content: '✓';
+            color: white;
+            font-weight: bold;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 14px;
+        }
+        
+        .submit-btn {
+            background: linear-gradient(135deg, #27ae60, #229954);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 25px;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+        }
+        
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
+        }
+        
+        .next-btn {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 25px;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+            margin-right: 15px;
+        }
+        
+        .next-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+        }
+        
+        .restart-btn {
+            background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 25px;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(149, 165, 166, 0.3);
+        }
+        
+        .restart-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(149, 165, 166, 0.4);
+        }
+        
+        .result-container {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+        
+        .result-correct {
+            border-left: 5px solid #27ae60;
+            background: #d5f4e6;
+        }
+        
+        .result-incorrect {
+            border-left: 5px solid #e74c3c;
+            background: #fadbd8;
+        }
+        
+        .result-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .result-status {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+        
+        .status-correct {
+            background: #27ae60;
+            color: white;
+        }
+        
+        .status-incorrect {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .answers-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 15px;
+        }
+        
+        .answer-section h4 {
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+        
+        .answer-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .answer-tag {
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+        
+        .tag-correct {
+            background: #d5f4e6;
+            color: #27ae60;
+        }
+        
+        .tag-incorrect {
+            background: #fadbd8;
+            color: #e74c3c;
+        }
+        
+        .final-results {
+            text-align: center;
+        }
+        
+        .trophy {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+        
+        .final-title {
+            font-size: 2.5em;
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+        
+        .level-scores {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .level-score {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid #dee2e6;
+        }
+        
+        .level-score h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .level-score .score {
+            font-size: 2em;
+            font-weight: bold;
+            color: #3498db;
+        }
+        
+        .total-score {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 30px;
+        }
+        
+        .total-score .score-number {
+            color: #27ae60;
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <!-- 遊戲進行頁面 -->
+        <div id="gameScreen">
+            <div class="game-header">
+                <h1 class="game-title">數字倍數判斷遊戲</h1>
+                <div class="level-info">
+                    <div class="level-badge">第<span id="currentLevel">1</span>關</div>
+                    <div class="question-info">第<span id="currentQuestion">1</span>題 / 6題</div>
+                    <div class="question-info"><span id="digitCount">3</span>位數字</div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </div>
+            
+            <div class="question-container">
+                <div class="current-number" id="currentNumber">123</div>
+                <div class="question-text">請選擇這個數字是哪些數的倍數：</div>
+                <div class="expected-count">應選 <span id="expectedCount">0</span> 項</div>
+                
+                <div class="options-grid">
+                    <label class="option-label" data-value="2">
+                        <div class="checkbox"></div>
+                        <span>2的倍數</span>
+                    </label>
+                    <label class="option-label" data-value="4">
+                        <div class="checkbox"></div>
+                        <span>4的倍數</span>
+                    </label>
+                    <label class="option-label" data-value="5">
+                        <div class="checkbox"></div>
+                        <span>5的倍數</span>
+                    </label>
+                    <label class="option-label" data-value="8">
+                        <div class="checkbox"></div>
+                        <span>8的倍數</span>
+                    </label>
+                    <label class="option-label" data-value="10">
+                        <div class="checkbox"></div>
+                        <span>10的倍數</span>
+                    </label>
+                    <label class="option-label" data-value="11">
+                        <div class="checkbox"></div>
+                        <span>11的倍數</span>
+                    </label>
+                    <label class="option-label" data-value="none">
+                        <div class="checkbox"></div>
+                        <span>都不是</span>
+                    </label>
+                </div>
+                
+                <button class="submit-btn" onclick="submitAnswer()">提交答案</button>
+            </div>
+        </div>
+        
+        <!-- 答案結果頁面 -->
+        <div id="resultScreen" class="hidden">
+            <div class="game-header">
+                <h2>第<span id="resultLevel">1</span>關 - 第<span id="resultQuestion">1</span>題結果</h2>
+            </div>
+            
+            <div id="resultContainer" class="result-container">
+                <div class="result-header">
+                    <h3>數字: <span id="resultNumber">123</span></h3>
+                    <div id="resultStatus" class="result-status">正確</div>
+                </div>
+                
+                <div class="answers-comparison">
+                    <div class="answer-section">
+                        <h4>正確答案 (<span id="correctCount">0</span>項):</h4>
+                        <div class="answer-tags" id="correctAnswers"></div>
+                    </div>
+                    <div class="answer-section">
+                        <h4>你的答案 (<span id="userCount">0</span>項):</h4>
+                        <div class="answer-tags" id="userAnswers"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div>
+                <button class="next-btn" onclick="nextQuestion()" id="nextBtn">下一題</button>
+                <button class="restart-btn" onclick="restartGame()">重新開始</button>
+            </div>
+        </div>
+        
+        <!-- 最終結果頁面 -->
+        <div id="finalScreen" class="hidden">
+            <div class="final-results">
+                <div class="trophy">🏆</div>
+                <h1 class="final-title">遊戲完成！</h1>
+                
+                <div class="level-scores">
+                    <div class="level-score">
+                        <h3>第1關</h3>
+                        <div class="score" id="level1Score">0/6</div>
+                        <div>(3位數字)</div>
+                    </div>
+                    <div class="level-score">
+                        <h3>第2關</h3>
+                        <div class="score" id="level2Score">0/6</div>
+                        <div>(4位數字)</div>
+                    </div>
+                    <div class="level-score">
+                        <h3>第3關</h3>
+                        <div class="score" id="level3Score">0/6</div>
+                        <div>(6位數字)</div>
+                    </div>
+                </div>
+                
+                <div class="total-score">
+                    總分: <span class="score-number" id="totalScore">0/18</span>
+                </div>
+                
+                <button class="restart-btn" onclick="restartGame()">重新開始</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 遊戲狀態
+        let gameState = {
+            currentLevel: 1,
+            currentQuestion: 1,
+            currentNumber: 0,
+            selectedOptions: new Set(),
+            levelScores: [0, 0, 0],
+            totalQuestions: 18,
+            levelDigits: [3, 4, 6]
+        };
+
+        const divisors = [2, 4, 5, 8, 10, 11];
+
+        // 生成隨機數字
+        function generateNumber(digits) {
+            const min = Math.pow(10, digits - 1);
+            const max = Math.pow(10, digits) - 1;
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        // 檢查是否為倍數
+        function isMultiple(number, divisor) {
+            return number % divisor === 0;
+        }
+
+        // 獲取正確答案
+        function getCorrectAnswers(number) {
+            const multiples = divisors.filter(divisor => isMultiple(number, divisor));
+            return multiples.length === 0 ? ['none'] : multiples;
+        }
+
+        // 初始化題目
+        function initializeQuestion() {
+            const digits = gameState.levelDigits[gameState.currentLevel - 1];
+            gameState.currentNumber = generateNumber(digits);
+            gameState.selectedOptions.clear();
+
+            // 更新UI
+            document.getElementById('currentLevel').textContent = gameState.currentLevel;
+            document.getElementById('currentQuestion').textContent = gameState.currentQuestion;
+            document.getElementById('digitCount').textContent = digits;
+            document.getElementById('currentNumber').textContent = gameState.currentNumber.toLocaleString();
+
+            // 計算正確答案數量
+            const correctAnswers = getCorrectAnswers(gameState.currentNumber);
+            document.getElementById('expectedCount').textContent = correctAnswers.length;
+
+            // 更新進度條
+            const totalProgress = ((gameState.currentLevel - 1) * 6 + gameState.currentQuestion - 1) / gameState.totalQuestions;
+            document.getElementById('progressFill').style.width = (totalProgress * 100) + '%';
+
+            // 重置選項
+            resetOptions();
+        }
+
+        // 重置選項
+        function resetOptions() {
+            const options = document.querySelectorAll('.option-label');
+            options.forEach(option => {
+                option.classList.remove('selected', 'none-selected');
+                const checkbox = option.querySelector('.checkbox');
+                checkbox.classList.remove('checked', 'none-checked');
+            });
+        }
+
+        // 處理選項點擊
+        document.querySelectorAll('.option-label').forEach(option => {
+            option.addEventListener('click', () => {
+                const value = option.dataset.value;
+                const checkbox = option.querySelector('.checkbox');
+
+                if (value === 'none') {
+                    // 選擇"都不是"時，清除其他選項
+                    if (gameState.selectedOptions.has('none')) {
+                        gameState.selectedOptions.delete('none');
+                        option.classList.remove('none-selected');
+                        checkbox.classList.remove('none-checked');
+                    } else {
+                        gameState.selectedOptions.clear();
+                        resetOptions();
+                        gameState.selectedOptions.add('none');
+                        option.classList.add('none-selected');
+                        checkbox.classList.add('none-checked');
+                    }
+                } else {
+                    // 選擇具體倍數時，清除"都不是"選項
+                    if (gameState.selectedOptions.has('none')) {
+                        gameState.selectedOptions.delete('none');
+                        const noneOption = document.querySelector('[data-value="none"]');
+                        noneOption.classList.remove('none-selected');
+                        noneOption.querySelector('.checkbox').classList.remove('none-checked');
+                    }
+
+                    if (gameState.selectedOptions.has(value)) {
+                        gameState.selectedOptions.delete(value);
+                        option.classList.remove('selected');
+                        checkbox.classList.remove('checked');
+                    } else {
+                        gameState.selectedOptions.add(value);
+                        option.classList.add('selected');
+                        checkbox.classList.add('checked');
+                    }
+                }
+            });
+        });
+
+        // 提交答案
+        function submitAnswer() {
+            const correctAnswers = getCorrectAnswers(gameState.currentNumber);
+            const userAnswers = Array.from(gameState.selectedOptions);
+            
+            // 轉換用戶答案格式
+            const userAnswersFormatted = userAnswers.includes('none') ? ['none'] : 
+                userAnswers.filter(ans => ans !== 'none').map(ans => parseInt(ans));
+
+            // 判斷是否正確
+            const isCorrect = arraysEqual(correctAnswers, userAnswersFormatted);
+            
+            if (isCorrect) {
+                gameState.levelScores[gameState.currentLevel - 1]++;
+            }
+
+            // 顯示結果
+            showResult(correctAnswers, userAnswersFormatted, isCorrect);
+        }
+
+        // 比較數組是否相等
+        function arraysEqual(a, b) {
+            if (a.length !== b.length) return false;
+            const sortedA = [...a].sort();
+            const sortedB = [...b].sort();
+            return sortedA.every((val, index) => val === sortedB[index]);
+        }
+
+        // 顯示結果
+        function showResult(correctAnswers, userAnswers, isCorrect) {
+            document.getElementById('gameScreen').classList.add('hidden');
+            document.getElementById('resultScreen').classList.remove('hidden');
+
+            // 更新結果信息
+            document.getElementById('resultLevel').textContent = gameState.currentLevel;
+            document.getElementById('resultQuestion').textContent = gameState.currentQuestion;
+            document.getElementById('resultNumber').textContent = gameState.currentNumber.toLocaleString();
+
+            // 設置結果狀態
+            const resultContainer = document.getElementById('resultContainer');
+            const resultStatus = document.getElementById('resultStatus');
+            
+            if (isCorrect) {
+                resultContainer.classList.remove('result-incorrect');
+                resultContainer.classList.add('result-correct');
+                resultStatus.classList.remove('status-incorrect');
+                resultStatus.classList.add('status-correct');
+                resultStatus.textContent = '正確';
+            } else {
+                resultContainer.classList.remove('result-correct');
+                resultContainer.classList.add('result-incorrect');
+                resultStatus.classList.remove('status-correct');
+                resultStatus.classList.add('status-incorrect');
+                resultStatus.textContent = '錯誤';
+            }
+
+            // 顯示正確答案
+            document.getElementById('correctCount').textContent = correctAnswers.length;
+            const correctAnswersContainer = document.getElementById('correctAnswers');
+            correctAnswersContainer.innerHTML = '';
+            
+            if (correctAnswers.includes('none')) {
+                const tag = document.createElement('span');
+                tag.className = 'answer-tag tag-correct';
+                tag.textContent = '都不是';
+                correctAnswersContainer.appendChild(tag);
+            } else {
+                correctAnswers.forEach(answer => {
+                    const tag = document.createElement('span');
+                    tag.className = 'answer-tag tag-correct';
+                    tag.textContent = answer + '的倍數';
+                    correctAnswersContainer.appendChild(tag);
+                });
+            }
+
+            // 顯示用戶答案
+            document.getElementById('userCount').textContent = userAnswers.length;
+            const userAnswersContainer = document.getElementById('userAnswers');
+            userAnswersContainer.innerHTML = '';
+            
+            if (userAnswers.length === 0) {
+                const tag = document.createElement('span');
+                tag.className = 'answer-tag tag-incorrect';
+                tag.textContent = '未選擇';
+                userAnswersContainer.appendChild(tag);
+            } else if (userAnswers.includes('none')) {
+                const tag = document.createElement('span');
+                tag.className = `answer-tag ${correctAnswers.includes('none') ? 'tag-correct' : 'tag-incorrect'}`;
+                tag.textContent = '都不是';
+                userAnswersContainer.appendChild(tag);
+            } else {
+                userAnswers.forEach(answer => {
+                    const tag = document.createElement('span');
+                    tag.className = `answer-tag ${correctAnswers.includes(answer) ? 'tag-correct' : 'tag-incorrect'}`;
+                    tag.textContent = answer + '的倍數';
+                    userAnswersContainer.appendChild(tag);
+                });
+            }
+
+            // 設置下一題按鈕
+            const nextBtn = document.getElementById('nextBtn');
+            if (gameState.currentQuestion === 6 && gameState.currentLevel === 3) {
+                nextBtn.textContent = '查看總成績';
+            } else if (gameState.currentQuestion === 6) {
+                nextBtn.textContent = '下一關';
+            } else {
+                nextBtn.textContent = '下一題';
+            }
+        }
+
+        // 下一題
+        function nextQuestion() {
+            if (gameState.currentQuestion === 6) {
+                if (gameState.currentLevel === 3) {
+                    showFinalResults();
+                    return;
+                } else {
+                    gameState.currentLevel++;
+                    gameState.currentQuestion = 1;
+                }
+            } else {
+                gameState.currentQuestion++;
+            }
+
+            document.getElementById('resultScreen').classList.add('hidden');
+            document.getElementById('gameScreen').classList.remove('hidden');
+            initializeQuestion();
+        }
+
+        // 顯示最終結果
+        function showFinalResults() {
+            document.getElementById('resultScreen').classList.add('hidden');
+            document.getElementById('finalScreen').classList.remove('hidden');
+
+            // 更新分數顯示
+            document.getElementById('level1Score').textContent = gameState.levelScores[0] + '/6';
+            document.getElementById('level2Score').textContent = gameState.levelScores[1] + '/6';
+            document.getElementById('level3Score').textContent = gameState.levelScores[2] + '/6';
+
+            const totalScore = gameState.levelScores.reduce((sum, score) => sum + score, 0);
+            document.getElementById('totalScore').textContent = totalScore + '/18';
+        }
+
+        // 重新開始遊戲
+        function restartGame() {
+            gameState = {
+                currentLevel: 1,
+                currentQuestion: 1,
+                currentNumber: 0,
+                selectedOptions: new Set(),
+                levelScores: [0, 0, 0],
+                totalQuestions: 18,
+                levelDigits: [3, 4, 6]
+            };
+
+            document.getElementById('resultScreen').classList.add('hidden');
+            document.getElementById('finalScreen').classList.add('hidden');
+            document.getElementById('gameScreen').classList.remove('hidden');
+            
+            initializeQuestion();
+        }
+
+        // 初始化遊戲
+        initializeQuestion();
+    </script>
+</body>
+</html>
