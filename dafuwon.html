@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🍄 數學王國大冒險 🌟</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft JhengHei', sans-serif;
+            background: linear-gradient(135deg, #87CEEB 0%, #98FB98 50%, #FFB6C1 100%);
+            min-height: 100vh;
+            overflow-x: auto;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                radial-gradient(circle at 20% 20%, rgba(255,255,255,0.3) 2px, transparent 2px),
+                radial-gradient(circle at 80% 80%, rgba(255,255,255,0.3) 2px, transparent 2px);
+            background-size: 50px 50px;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .game-container {
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .game-title {
+            text-align: center;
+            color: #2E8B57;
+            margin-bottom: 20px;
+            font-size: 32px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+
+        /* 設定模態框 */
+        .setup-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .setup-content {
+            background: linear-gradient(145deg, #FFE4E1 0%, #F0E68C 100%);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            border: 4px solid #FF69B4;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .setup-content h2 {
+            color: #FF1493;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+
+        .player-setup {
+            margin: 15px 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: white;
+            padding: 15px;
+            border-radius: 15px;
+            border: 2px solid #FFB6C1;
+        }
+
+        .player-setup input {
+            border: 2px solid #FF69B4;
+            border-radius: 10px;
+            padding: 10px;
+            font-size: 16px;
+            width: 200px;
+        }
+
+        .player-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 15px;
+            border: 3px solid white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .start-btn {
+            background: linear-gradient(45deg, #32CD32, #228B22);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 20px;
+            border-radius: 15px;
+            cursor: pointer;
+            margin-top: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+        }
+
+        .start-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+        }
+
+        /* 遊戲板 - 大富翁風格 */
+        .board-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        .board {
+            width: 700px;
+            height: 700px;
+            position: relative;
+            background: linear-gradient(45deg, #90EE90, #98FB98);
+            border-radius: 20px;
+            border: 8px solid #228B22;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .board-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 400px;
+            height: 400px;
+            background: linear-gradient(45deg, #87CEEB, #B0E0E6);
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border: 4px solid #4682B4;
+            box-shadow: inset 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .center-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2E8B57;
+            margin-bottom: 20px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+
+        .dice-container {
+            display: flex;
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .dice {
+            width: 60px;
+            height: 60px;
+            background: white;
+            border: 4px solid #FF4500;
+            border-radius: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .dice:hover {
+            transform: rotate(15deg) scale(1.1);
+        }
+
+        .roll-btn {
+            background: linear-gradient(45deg, #FF6347, #FF4500);
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            font-size: 18px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .roll-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+        }
+
+        .roll-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* 棋盤格子 */
+        .cell {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 11px;
+            font-weight: bold;
+            text-align: center;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 3px solid rgba(255,255,255,0.8);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+        }
+
+        .cell:hover {
+            transform: scale(1.05);
+            z-index: 10;
+        }
+
+        /* 格子類型樣式 */
+        .start { 
+            background: linear-gradient(45deg, #32CD32, #228B22); 
+            color: white;
+            border-color: #90EE90;
+        }
+        .math { 
+            background: linear-gradient(45deg, #4169E1, #0000CD); 
+            color: white;
+            border-color: #87CEEB;
+        }
+        .chance { 
+            background: linear-gradient(45deg, #FFD700, #FFA500); 
+            color: #8B4513;
+            border-color: #FFFFE0;
+        }
+        .destiny { 
+            background: linear-gradient(45deg, #DA70D6, #9932CC); 
+            color: white;
+            border-color: #DDA0DD;
+        }
+        .rest { 
+            background: linear-gradient(45deg, #20B2AA, #008B8B); 
+            color: white;
+            border-color: #AFEEEE;
+        }
+
+        /* 角落特殊格子 */
+        .corner {
+            width: 90px;
+            height: 90px;
+            border-radius: 15px;
+            font-size: 12px;
+        }
+
+        /* 玩家角色 */
+        .player {
+            position: absolute;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            border: 2px solid white;
+            z-index: 100;
+            transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            background-size: cover;
+            background-position: center;
+        }
+
+        .player.moving {
+            animation: jump 0.5s ease-in-out;
+        }
+
+        @keyframes jump {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .player1 { 
+            background: linear-gradient(45deg, #FF1493, #FF69B4);
+            top: -5px; left: -5px;
+        }
+        .player2 { 
+            background: linear-gradient(45deg, #1E90FF, #00BFFF);
+            top: -5px; right: -5px;
+        }
+        .player3 { 
+            background: linear-gradient(45deg, #32CD32, #90EE90);
+            bottom: -5px; left: -5px;
+        }
+        .player4 { 
+            background: linear-gradient(45deg, #FF8C00, #FFA500);
+            bottom: -5px; right: -5px;
+        }
+
+        /* 玩家資訊面板 */
+        .game-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .players-panel {
+            background: linear-gradient(145deg, #F0F8FF, #E6E6FA);
+            padding: 20px;
+            border-radius: 15px;
+            border: 3px solid #9370DB;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .players-panel h3 {
+            color: #4B0082;
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: 18px;
+        }
+
+        .player-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 12px;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .player-card.current {
+            border-color: #FFD700;
+            background: linear-gradient(145deg, #FFFACD, #F0E68C);
+            transform: scale(1.02);
+            box-shadow: 0 4px 12px rgba(255,215,0,0.4);
+        }
+
+        .player-name {
+            display: flex;
+            align-items: center;
+            font-weight: bold;
+        }
+
+        .player-avatar-small {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            margin-right: 10px;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .game-status {
+            background: linear-gradient(145deg, #FFE4E1, #FFF0F5);
+            padding: 20px;
+            border-radius: 15px;
+            border: 3px solid #FF69B4;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+
+        .game-message {
+            background: linear-gradient(45deg, #98FB98, #90EE90);
+            padding: 15px;
+            border-radius: 12px;
+            margin: 15px 0;
+            font-weight: bold;
+            color: #2E8B57;
+            border: 2px solid #32CD32;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        /* 模態框樣式 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+        }
+
+        .modal-content {
+            background: linear-gradient(145deg, #FFF8DC, #F5DEB3);
+            margin: 10% auto;
+            padding: 30px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            border: 4px solid #DAA520;
+            animation: modalAppear 0.3s ease-out;
+        }
+
+        @keyframes modalAppear {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .modal h2 {
+            color: #B8860B;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        .question {
+            font-size: 18px;
+            margin: 20px 0;
+            padding: 20px;
+            background: linear-gradient(45deg, #F0F8FF, #E6E6FA);
+            border-radius: 12px;
+            border: 2px solid #9370DB;
+            color: #4B0082;
+            font-weight: bold;
+        }
+
+        .answers {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin: 20px 0;
+        }
+
+        .answer-btn {
+            padding: 15px;
+            border: 3px solid #9370DB;
+            background: linear-gradient(45deg, #E6E6FA, #D8BFD8);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 16px;
+            font-weight: bold;
+            color: #4B0082;
+        }
+
+        .answer-btn:hover {
+            background: linear-gradient(45deg, #DDA0DD, #DA70D6);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .close-btn {
+            background: linear-gradient(45deg, #FF6347, #FF4500);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            margin: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .close-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        /* 響應式設計 */
+        @media (max-width: 768px) {
+            .board {
+                width: 500px;
+                height: 500px;
+            }
+            
+            .board-center {
+                width: 280px;
+                height: 280px;
+            }
+            
+            .cell {
+                width: 60px;
+                height: 60px;
+                font-size: 9px;
+            }
+            
+            .corner {
+                width: 70px;
+                height: 70px;
+            }
+            
+            .game-info {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 遊戲設定模態框 -->
+    <div id="setupModal" class="setup-modal">
+        <div class="setup-content">
+            <h2>🎮 歡迎來到數學王國！</h2>
+            <p style="margin-bottom: 25px; color: #8B4513; font-size: 16px;">請輸入玩家名稱開始遊戲</p>
+            
+            <div class="player-setup">
+                <div style="display: flex; align-items: center;">
+                    <div class="player-avatar" style="background: linear-gradient(45deg, #FF1493, #FF69B4);"></div>
+                    <span>玩家1：</span>
+                </div>
+                <input type="text" id="player1Name" placeholder="輸入名稱" maxlength="8">
+            </div>
+            
+            <div class="player-setup">
+                <div style="display: flex; align-items: center;">
+                    <div class="player-avatar" style="background: linear-gradient(45deg, #1E90FF, #00BFFF);"></div>
+                    <span>玩家2：</span>
+                </div>
+                <input type="text" id="player2Name" placeholder="輸入名稱" maxlength="8">
+            </div>
+            
+            <div class="player-setup">
+                <div style="display: flex; align-items: center;">
+                    <div class="player-avatar" style="background: linear-gradient(45deg, #32CD32, #90EE90);"></div>
+                    <span>玩家3：</span>
+                </div>
+                <input type="text" id="player3Name" placeholder="輸入名稱" maxlength="8">
+            </div>
+            
+            <div class="player-setup">
+                <div style="display: flex; align-items: center;">
+                    <div class="player-avatar" style="background: linear-gradient(45deg, #FF8C00, #FFA500);"></div>
+                    <span>玩家4：</span>
+                </div>
+                <input type="text" id="player4Name" placeholder="輸入名稱" maxlength="8">
+            </div>
+            
+            <button class="start-btn" onclick="startGame()">🚀 開始冒險！</button>
+        </div>
+    </div>
+
+    <div class="game-container">
+        <h1 class="game-title">🍄 數學王國大冒險 🌟</h1>
+        
+        <div class="board-container">
+            <div class="board" id="board">
+                <div class="board-center">
+                    <div class="center-title">🎯 數學王國</div>
+                    <div class="dice-container">
+                        <div class="dice" id="dice1">🎲</div>
+                        <div class="dice" id="dice2">🎲</div>
+                    </div>
+                    <button class="roll-btn" id="rollBtn" onclick="rollDice()">🎲 擲骰子</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="game-info">
+            <div class="players-panel">
+                <h3>👥 冒險者資訊</h3>
+                <div id="playersInfo"></div>
+            </div>
+            
+            <div class="game-status">
+                <h3>🎮 遊戲狀態</h3>
+                <div class="game-message" id="gameMessage">等待開始遊戲...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 數學題目模態框 -->
+    <div id="mathModal" class="modal">
+        <div class="modal-content">
+            <h2>🧮 數學挑戰時間！</h2>
+            <div class="question" id="mathQuestion"></div>
+            <div class="answers" id="mathAnswers"></div>
+        </div>
+    </div>
+
+    <!-- 機會模態框 -->
+    <div id="chanceModal" class="modal">
+        <div class="modal-content">
+            <h2>🍀 幸運機會卡</h2>
+            <div class="question" id="chanceText"></div>
+            <button class="close-btn" onclick="closeModal('chanceModal')">✨ 太棒了！</button>
+        </div>
+    </div>
+
+    <!-- 命運模態框 -->
+    <div id="destinyModal" class="modal">
+        <div class="modal-content">
+            <h2>⭐ 命運轉輪</h2>
+            <div class="question" id="destinyText"></div>
+            <button class="close-btn" onclick="closeModal('destinyModal')">🌟 接受命運！</button>
+        </div>
+    </div>
+
+    <script>
+        // 遊戲狀態
+        let currentPlayer = 0;
+        let gameStarted = false;
+        let players = [
+            { name: '小紅', position: 0, score: 0, color: 'linear-gradient(45deg, #FF1493, #FF69B4)' },
+            { name: '小藍', position: 0, score: 0, color: 'linear-gradient(45deg, #1E90FF, #00BFFF)' },
+            { name: '小綠', position: 0, score: 0, color: 'linear-gradient(45deg, #32CD32, #90EE90)' },
+            { name: '小橙', position: 0, score: 0, color: 'linear-gradient(45deg, #FF8C00, #FFA500)' }
+        ];
+
+        // 棋盤格子配置 - 大富翁風格排列
+        const boardLayout = [
+            // 下邊 (從左到右)
+            { type: 'start', text: '🏠\n起點', emoji: '🏠' },
+            { type: 'math', text: '📊\n分數', emoji: '📊' },
+            { type: 'chance', text: '🍀\n機會', emoji: '🍀' },
+            { type: 'math', text: '💰\n小數', emoji: '💰' },
+            { type: 'math', text: '📈\n百分比', emoji: '📈' },
+            { type: 'destiny', text: '⭐\n命運', emoji: '⭐' },
+            { type: 'math', text: '🔢\n因數', emoji: '🔢' },
+            { type: 'rest', text: '☕\n休息', emoji: '☕' },
+            
+            // 右邊 (從下到上)
+            { type: 'math', text: '✖️\n倍數', emoji: '✖️' },
+            { type: 'math', text: '📐\n面積', emoji: '📐' },
+            { type: 'chance', text: '🎁\n機會', emoji: '🎁' },
+            { type: 'math', text: '📦\n體積', emoji: '📦' },
+            { type: 'math', text: '⚖️\n比例', emoji: '⚖️' },
+            { type: 'math', text: '🏃\n速率', emoji: '🏃' },
+            { type: 'destiny', text: '🌟\n命運', emoji: '🌟' },
+            
+            // 上邊 (從右到左)
+            { type: 'rest', text: '🌴\n度假', emoji: '🌴' },
+            { type: 'math', text: '⭕\n圓周', emoji: '⭕' },
+            { type: 'math', text: '📋\n統計', emoji: '📋' },
+            { type: 'chance', text: '🎲\n機會', emoji: '🎲' },
+            { type: 'math', text: '🎯\n機率', emoji: '🎯' },
+            { type: 'math', text: '🔤\n代數', emoji: '🔤' },
+            { type: 'math', text: '📏\n幾何', emoji: '📏' },
+            { type: 'destiny', text: '💫\n命運', emoji: '💫' },
+            
+            // 左邊 (從上到下)
+            { type: 'math', text: '➖\n負數', emoji: '➖' },
+            { type: 'math', text: '🔍\n方程', emoji: '🔍' },
+            { type: 'chance', text: '🎪\n機會', emoji: '🎪' },
+            { type: 'math', text: '📍\n座標', emoji: '📍' },
+            { type: 'rest', text: '🛏️\n睡覺', emoji: '🛏️' },
+            { type: 'math', text: '📈\n函數', emoji: '📈' },
+            { type: 'math', text: '📐\n三角', emoji: '📐' },
+            { type: 'math', text: '²\n平方', emoji: '²' }
+        ];
+
+        // 數學題目庫
+        const mathQuestions = [
+            {
+                question: "🍕 小明吃了 3/4 片披薩，小華吃了 1/8 片，他們總共吃了多少片？",
+                answers: ["7/8 片", "4/12 片", "5/8 片", "1 片"],
+                correct: 0
+            },
+            {
+                question: "🛒 一件衣服原價100元，打75折後是多少錢？",
+                answers: ["25元", "75元", "85元", "90元"],
+                correct: 1
+            },
+            {
+                question: "🎈 0.25 × 8 等於多少？",
+                answers: ["0.2", "2", "2.5", "8"],
+                correct: 1
+            },
+            {
+                question: "🎪 25% 等於多少小數？",
+                answers: ["0.25", "2.5", "0.025", "25"],
+                correct: 0
+            },
+            {
+                question: "🎁 12 的所有因數有幾個？(1,2,3,4,6,12)",
+                answers: ["4個", "5個", "6個", "7個"],
+                correct: 2
+            },
+            {
+                question: "🏠 長方形長6公分，寬4公分，面積是多少？",
+                answers: ["10平方公分", "20平方公分", "24平方公分", "26平方公分"],
+                correct: 2
+            },
+            {
+                question: "🌤️ 溫度從 -3°C 上升 8°C，現在溫度是？",
+                answers: ["-11°C", "-5°C", "5°C", "11°C"],
+                correct: 2
+            },
+            {
+                question: "⭕ 圓的半徑是4公分，直徑是多少？",
+                answers: ["4公分", "8公分", "12公分", "16公分"],
+                correct: 1
+            },
+            {
+                question: "🚗 小車每小時行駛60公里，3小時能行駛多遠？",
+                answers: ["20公里", "63公里", "180公里", "240公里"],
+                correct: 2
+            },
+            {
+                question: "🍎 一籃子有紅蘋果6個，綠蘋果4個，紅蘋果占總數的幾分之幾？",
+                answers: ["4/10", "6/10", "6/4", "4/6"],
+                correct: 1
+            }
+        ];
+
+        // 機會卡內容
+        const chanceCards = [
+            "🌟 數學小天才！你解題特別快，前進3格！",
+            "💝 主動幫助同學解題，老師給你獎勵10分！",
+            "😅 計算時忘記進位了，後退2格再仔細想想！",
+            "🎉 發現了新的解題方法，前進4格！",
+            "👂 上課專心聽講，理解更深刻，獲得15分！",
+            "😴 上課打瞌睡錯過重點，停止一回合！",
+            "📚 主動複習昨天的課程，前進2格！",
+            "🎯 考試滿分，老師誇獎你，獲得20分！"
+        ];
+
+        // 命運卡內容
+        const destinyCards = [
+            "🏆 參加數學競賽榮獲第一名，前進5格！",
+            "👨‍🏫 被選為數學小老師，幫助同學，獲得25分！",
+            "😰 考試時太緊張，粗心算錯，後退3格！",
+            "🤔 成功解出超難題目，同學都佩服你，前進6格！",
+            "🧹 主動幫老師整理數學教具，獲得15分！",
+            "⏰ 睡過頭遲到了，匆忙趕到學校，後退1格！",
+            "📖 發現數學的趣味，愛上數學，獲得30分！",
+            "🎮 玩遊戲玩太久，功課沒做完，停止一回合！"
+        ];
+
+        // 棋盤位置計算
+        function getCellPosition(index) {
+            const cellSize = 80;
+            const boardSize = 700;
+            const margin = 10;
+            
+            if (index >= 0 && index <= 7) {
+                // 下邊
+                return {
+                    left: margin + index * cellSize + (index * 2),
+                    bottom: margin
+                };
+            } else if (index >= 8 && index <= 14) {
+                // 右邊
+                return {
+                    right: margin,
+                    bottom: margin + (index - 7) * cellSize + ((index - 7) * 2)
+                };
+            } else if (index >= 15 && index <= 22) {
+                // 上邊
+                return {
+                    right: margin + (index - 14) * cellSize + ((index - 14) * 2),
+                    top: margin
+                };
+            } else if (index >= 23 && index <= 31) {
+                // 左邊
+                return {
+                    left: margin,
+                    top: margin + (index - 22) * cellSize + ((index - 22) * 2)
+                };
+            }
+        }
+
+        // 開始遊戲
+        function startGame() {
+            // 獲取玩家名稱
+            for (let i = 0; i < 4; i++) {
+                const nameInput = document.getElementById(`player${i + 1}Name`);
+                if (nameInput.value.trim()) {
+                    players[i].name = nameInput.value.trim();
+                }
+            }
+            
+            document.getElementById('setupModal').style.display = 'none';
+            gameStarted = true;
+            initBoard();
+            updateGameDisplay();
+        }
+
+        // 初始化棋盤
+        function initBoard() {
+            const board = document.getElementById('board');
+            
+            // 清除現有格子
+            const existingCells = board.querySelectorAll('.cell');
+            existingCells.forEach(cell => cell.remove());
+            
+            // 創建格子
+            boardLayout.forEach((cellData, index) => {
+                const cell = document.createElement('div');
+                cell.className = `cell ${cellData.type}`;
+                cell.id = `cell-${index}`;
+                cell.innerHTML = cellData.text;
+                
+                // 設置位置
+                const position = getCellPosition(index);
+                Object.keys(position).forEach(key => {
+                    cell.style[key] = position[key] + 'px';
+                });
+                
+                // 角落格子特殊樣式
+                if (index === 0 || index === 7 || index === 15 || index === 23) {
+                    cell.classList.add('corner');
+                }
+                
+                board.appendChild(cell);
+            });
+            
+            updatePlayerPositions();
+        }
+
+        // 更新玩家位置
+        function updatePlayerPositions() {
+            // 清除所有玩家
+            document.querySelectorAll('.player').forEach(p => p.remove());
+            
+            // 添加玩家到對應位置
+            players.forEach((player, index) => {
+                const cell = document.getElementById(`cell-${player.position}`);
+                if (cell) {
+                    const playerDiv = document.createElement('div');
+                    playerDiv.className = `player player${index + 1}`;
+                    playerDiv.style.background = player.color;
+                    cell.appendChild(playerDiv);
+                }
+            });
+        }
+
+        // 更新遊戲顯示
+        function updateGameDisplay() {
+            const playersInfo = document.getElementById('playersInfo');
+            playersInfo.innerHTML = '';
+            
+            players.forEach((player, index) => {
+                const playerCard = document.createElement('div');
+                playerCard.className = 'player-card';
+                if (index === currentPlayer && gameStarted) {
+                    playerCard.classList.add('current');
+                }
+                
+                playerCard.innerHTML = `
+                    <div class="player-name">
+                        <div class="player-avatar-small" style="background: ${player.color}"></div>
+                        ${player.name}
+                    </div>
+                    <div>⭐ ${player.score}分</div>
+                `;
+                playersInfo.appendChild(playerCard);
+            });
+            
+            const message = document.getElementById('gameMessage');
+            if (gameStarted) {
+                message.textContent = `🎯 ${players[currentPlayer].name} 的回合`;
+            }
+        }
+
+        // 擲骰子
+        function rollDice() {
+            if (!gameStarted) return;
+            
+            const dice1Element = document.getElementById('dice1');
+            const dice2Element = document.getElementById('dice2');
+            const rollBtn = document.getElementById('rollBtn');
+            
+            rollBtn.disabled = true;
+            
+            // 骰子滾動動畫
+            let rollCount = 0;
+            const rollInterval = setInterval(() => {
+                const temp1 = Math.floor(Math.random() * 6) + 1;
+                const temp2 = Math.floor(Math.random() * 6) + 1;
+                dice1Element.textContent = temp1;
+                dice2Element.textContent = temp2;
+                
+                rollCount++;
+                if (rollCount >= 10) {
+                    clearInterval(rollInterval);
+                    
+                    // 最終結果
+                    const dice1 = Math.floor(Math.random() * 6) + 1;
+                    const dice2 = Math.floor(Math.random() * 6) + 1;
+                    const total = dice1 + dice2;
+                    
+                    dice1Element.textContent = dice1;
+                    dice2Element.textContent = dice2;
+                    
+                    setTimeout(() => {
+                        movePlayer(total);
+                    }, 500);
+                }
+            }, 100);
+        }
+
+        // 移動玩家
+        function movePlayer(steps) {
+            const player = players[currentPlayer];
+            const oldPosition = player.position;
+            
+            // 移動動畫
+            let currentStep = 0;
+            const moveInterval = setInterval(() => {
+                if (currentStep < steps) {
+                    player.position = (player.position + 1) % boardLayout.length;
+                    updatePlayerPositions();
+                    
+                    // 添加跳躍動畫
+                    const playerElement = document.querySelector(`#cell-${player.position} .player${currentPlayer + 1}`);
+                    if (playerElement) {
+                        playerElement.classList.add('moving');
+                        setTimeout(() => {
+                            playerElement.classList.remove('moving');
+                        }, 500);
+                    }
+                    
+                    currentStep++;
+                    
+                    // 經過起點獲得獎勵
+                    if (player.position === 0 && currentStep < steps) {
+                        player.score += 20;
+                        showMessage(`🎉 ${player.name} 經過起點，獲得20分！`);
+                    }
+                } else {
+                    clearInterval(moveInterval);
+                    
+                    // 處理到達格子的事件
+                    const currentCell = boardLayout[player.position];
+                    handleCellAction(currentCell);
+                }
+            }, 300);
+        }
+
+        // 處理格子事件
+        function handleCellAction(cell) {
+            const player = players[currentPlayer];
+            
+            switch(cell.type) {
+                case 'math':
+                    showMathQuestion();
+                    break;
+                case 'chance':
+                    showChanceCard();
+                    break;
+                case 'destiny':
+                    showDestinyCard();
+                    break;
+                case 'rest':
+                    showMessage(`😴 ${player.name} 在休息站放鬆一下！`);
+                    setTimeout(nextPlayer, 2000);
+                    break;
+                case 'start':
+                    if (player.position === 0) {
+                        showMessage(`🏠 ${player.name} 回到起點，獲得30分！`);
+                        player.score += 30;
+                    }
+                    setTimeout(nextPlayer, 2000);
+                    break;
+            }
+        }
+
+        // 顯示數學題目
+        function showMathQuestion() {
+            const question = mathQuestions[Math.floor(Math.random() * mathQuestions.length)];
+            document.getElementById('mathQuestion').textContent = question.question;
+            
+            const answersDiv = document.getElementById('mathAnswers');
+            answersDiv.innerHTML = '';
+            
+            question.answers.forEach((answer, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'answer-btn';
+                btn.textContent = answer;
+                btn.onclick = () => checkAnswer(index, question.correct);
+                answersDiv.appendChild(btn);
+            });
+            
+            document.getElementById('mathModal').style.display = 'block';
+        }
+
+        // 檢查答案
+        function checkAnswer(selected, correct) {
+            const player = players[currentPlayer];
+            
+            if (selected === correct) {
+                player.score += 20;
+                showMessage(`🎉 ${player.name} 答對了！真聰明！獲得20分！`);
+            } else {
+                showMessage(`😅 ${player.name} 答錯了，下次加油！沒關係，繼續努力！`);
+            }
+            
+            closeModal('mathModal');
+            setTimeout(nextPlayer, 2000);
+        }
+
+        // 顯示機會卡
+        function showChanceCard() {
+            const card = chanceCards[Math.floor(Math.random() * chanceCards.length)];
+            document.getElementById('chanceText').textContent = card;
+            document.getElementById('chanceModal').style.display = 'block';
+            
+            setTimeout(() => {
+                handleCardEffect(card);
+            }, 1000);
+        }
+
+        // 顯示命運卡
+        function showDestinyCard() {
+            const card = destinyCards[Math.floor(Math.random() * destinyCards.length)];
+            document.getElementById('destinyText').textContent = card;
+            document.getElementById('destinyModal').style.display = 'block';
+            
+            setTimeout(() => {
+                handleCardEffect(card);
+            }, 1000);
+        }
+
+        // 處理卡片效果
+        function handleCardEffect(cardText) {
+            const player = players[currentPlayer];
+            
+            if (cardText.includes('前進')) {
+                const steps = parseInt(cardText.match(/\d+/)[0]);
+                movePlayerSteps(steps);
+            } else if (cardText.includes('後退')) {
+                const steps = parseInt(cardText.match(/\d+/)[0]);
+                movePlayerSteps(-steps);
+            } else if (cardText.includes('獲得') && cardText.includes('分')) {
+                const score = parseInt(cardText.match(/\d+/)[0]);
+                player.score += score;
+            } else if (cardText.includes('停止一回合')) {
+                // 跳過下次回合的處理會在nextPlayer中實現
+            }
+            
+            updatePlayerPositions();
+            updateGameDisplay();
+        }
+
+        // 移動玩家指定步數
+        function movePlayerSteps(steps) {
+            const player = players[currentPlayer];
+            if (steps > 0) {
+                player.position = (player.position + steps) % boardLayout.length;
+            } else {
+                player.position = Math.max(0, player.position + steps);
+                if (player.position < 0) {
+                    player.position = 0;
+                }
+            }
+        }
+
+        // 關閉模態框
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+            if (modalId !== 'mathModal') {
+                setTimeout(nextPlayer, 500);
+            }
+        }
+
+        // 下一位玩家
+        function nextPlayer() {
+            currentPlayer = (currentPlayer + 1) % 4;
+            updateGameDisplay();
+            document.getElementById('rollBtn').disabled = false;
+        }
+
+        // 顯示訊息
+        function showMessage(message) {
+            document.getElementById('gameMessage').textContent = message;
+        }
+
+        // 初始化遊戲
+        document.addEventListener('DOMContentLoaded', function() {
+            // 遊戲開始前顯示設定畫面
+            document.getElementById('rollBtn').disabled = true;
+        });
+
+        // 添加鍵盤快捷鍵
+        document.addEventListener('keydown', function(event) {
+            if (event.code === 'Space' && gameStarted && !document.getElementById('rollBtn').disabled) {
+                event.preventDefault();
+                rollDice();
+            }
+        });
+
+        // 點擊模態框外部關閉
+        window.onclick = function(event) {
+            const modals = ['mathModal', 'chanceModal', 'destinyModal'];
+            modals.forEach(modalId => {
+                const modal = document.getElementById(modalId);
+                if (event.target === modal) {
+                    closeModal(modalId);
+                }
+            });
+        }
+    </script>
+</body>
+</html>
