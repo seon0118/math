@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>正負數加減法無限解題遊戲</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 800px;
+            width: 100%;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            animation: slideIn 0.8s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .title {
+            font-size: 2.5em;
+            color: #4a5568;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .subtitle {
+            color: #718096;
+            font-size: 1.1em;
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 30px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .time-setting {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(102, 126, 234, 0.1);
+            padding: 10px 15px;
+            border-radius: 10px;
+        }
+
+        .time-setting label {
+            font-weight: bold;
+            color: #4a5568;
+        }
+
+        .time-setting input {
+            padding: 8px 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 16px;
+            width: 80px;
+            text-align: center;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(45deg, #38a169, #48bb78);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-danger {
+            background: linear-gradient(45deg, #e53e3e, #f56565);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #f7fafc, #edf2f7);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transform: perspective(1000px) rotateX(5deg);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: perspective(1000px) rotateX(0deg) translateY(-5px);
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #718096;
+            font-size: 0.9em;
+        }
+
+        .question-area {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            text-align: center;
+            box-shadow: inset 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .question {
+            font-size: 2em;
+            color: #2d3748;
+            margin-bottom: 20px;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .question-type {
+            display: inline-block;
+            background: linear-gradient(45deg, #38a169, #48bb78);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .answer-area {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .answer-input {
+            padding: 15px 20px;
+            border: 3px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 1.5em;
+            text-align: center;
+            width: 150px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .answer-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
+            transform: scale(1.05);
+        }
+
+        .feedback {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: bold;
+            text-align: center;
+            transition: all 0.3s ease;
+            transform: scale(0);
+        }
+
+        .feedback.show {
+            transform: scale(1);
+        }
+
+        .feedback.correct {
+            background: linear-gradient(45deg, #38a169, #48bb78);
+            color: white;
+            box-shadow: 0 4px 15px rgba(56, 161, 105, 0.3);
+        }
+
+        .feedback.incorrect {
+            background: linear-gradient(45deg, #e53e3e, #f56565);
+            color: white;
+            box-shadow: 0 4px 15px rgba(229, 62, 62, 0.3);
+        }
+
+        .number-line {
+            margin: 20px 0;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .number-line svg {
+            width: 100%;
+            height: 100px;
+        }
+
+        .timer-display {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #e53e3e;
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 10px;
+            background: rgba(229, 62, 62, 0.1);
+            border-radius: 10px;
+            display: none;
+        }
+
+        .timer-display.active {
+            display: block;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @media (max-width: 768px) {
+            .game-container {
+                padding: 20px;
+            }
+
+            .title {
+                font-size: 2em;
+            }
+
+            .question {
+                font-size: 1.5em;
+            }
+
+            .controls {
+                flex-direction: column;
+            }
+
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <h1 class="title">正負數加減法無限解題遊戲</h1>
+            <p class="subtitle">挑戰您的數學技能！包含加法交換律、結合律、去括號及數線距離</p>
+        </div>
+
+        <div class="controls">
+            <div class="time-setting">
+                <label for="timeLimit">解題時間:</label>
+                <input type="number" id="timeLimit" value="30" min="10" max="300">
+                <span>秒</span>
+            </div>
+            <button class="btn btn-primary" onclick="startGame()">開始遊戲</button>
+            <button class="btn btn-secondary" onclick="nextQuestion()">下一題</button>
+            <button class="btn btn-danger" onclick="resetGame()">重置遊戲</button>
+        </div>
+
+        <div class="timer-display" id="timerDisplay"></div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="totalQuestions">0</div>
+                <div class="stat-label">總題數</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="correctAnswers">0</div>
+                <div class="stat-label">答對</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="accuracy">0%</div>
+                <div class="stat-label">正確率</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="averageTime">0</div>
+                <div class="stat-label">平均時間</div>
+            </div>
+        </div>
+
+        <div class="question-area">
+            <div class="question-type" id="questionType">開始遊戲來獲得題目</div>
+            <div class="question" id="questionText">點擊「開始遊戲」開始挑戰！</div>
+            <div class="number-line" id="numberLine" style="display: none;"></div>
+            <div class="answer-area">
+                <input type="number" class="answer-input" id="answerInput" placeholder="輸入答案" disabled>
+                <button class="btn btn-primary" onclick="checkAnswer()" disabled id="submitBtn">提交答案</button>
+            </div>
+        </div>
+
+        <div class="feedback" id="feedback"></div>
+    </div>
+
+    <script>
+        let gameStats = {
+            totalQuestions: 0,
+            correctAnswers: 0,
+            totalTime: 0,
+            currentAnswer: 0,
+            gameActive: false,
+            timer: null,
+            timeRemaining: 0,
+            questionStartTime: 0
+        };
+
+        let currentQuestion = null;
+
+        const questionTypes = [
+            '正負數加法',
+            '正負數減法',
+            '加法交換律',
+            '加法結合律',
+            '去括號',
+            '數線距離'
+        ];
+
+        function generateQuestion() {
+            const type = Math.floor(Math.random() * 6);
+            let question = '';
+            let answer = 0;
+            let questionType = '';
+
+            switch(type) {
+                case 0: // 正負數加法
+                    questionType = '正負數加法';
+                    const a1 = Math.floor(Math.random() * 21) - 10;
+                    const b1 = Math.floor(Math.random() * 21) - 10;
+                    question = `${a1} + (${b1}) = ?`;
+                    answer = a1 + b1;
+                    break;
+
+                case 1: // 正負數減法
+                    questionType = '正負數減法';
+                    const a2 = Math.floor(Math.random() * 21) - 10;
+                    const b2 = Math.floor(Math.random() * 21) - 10;
+                    question = `${a2} - (${b2}) = ?`;
+                    answer = a2 - b2;
+                    break;
+
+                case 2: // 加法交換律
+                    questionType = '加法交換律';
+                    const a3 = Math.floor(Math.random() * 21) - 10;
+                    const b3 = Math.floor(Math.random() * 21) - 10;
+                    const showOriginal = Math.random() > 0.5;
+                    if (showOriginal) {
+                        question = `${a3} + (${b3}) = (${b3}) + ?`;
+                        answer = a3;
+                    } else {
+                        question = `(${a3}) + ${b3} = ? + (${a3})`;
+                        answer = b3;
+                    }
+                    break;
+
+                case 3: // 加法結合律
+                    questionType = '加法結合律';
+                    const a4 = Math.floor(Math.random() * 11) - 5;
+                    const b4 = Math.floor(Math.random() * 11) - 5;
+                    const c4 = Math.floor(Math.random() * 11) - 5;
+                    const leftAssoc = Math.random() > 0.5;
+                    if (leftAssoc) {
+                        question = `(${a4} + ${b4}) + (${c4}) = ${a4} + (${b4} + ?)`;
+                        answer = c4;
+                    } else {
+                        question = `${a4} + (${b4} + ${c4}) = (${a4} + ?) + ${c4}`;
+                        answer = b4;
+                    }
+                    break;
+
+                case 4: // 去括號
+                    questionType = '去括號';
+                    const a5 = Math.floor(Math.random() * 11) - 5;
+                    const b5 = Math.floor(Math.random() * 11) - 5;
+                    const operation = Math.random() > 0.5 ? '+' : '-';
+                    if (operation === '+') {
+                        question = `${a5} + (${b5}) = ?`;
+                        answer = a5 + b5;
+                    } else {
+                        question = `${a5} - (${b5}) = ?`;
+                        answer = a5 - b5;
+                    }
+                    break;
+
+                case 5: // 數線上兩點間的距離
+                    questionType = '數線距離';
+                    const p1 = Math.floor(Math.random() * 21) - 10;
+                    const p2 = Math.floor(Math.random() * 21) - 10;
+                    question = `數線上點 ${p1} 與點 ${p2} 之間的距離是？`;
+                    answer = Math.abs(p1 - p2);
+                    drawNumberLine(p1, p2);
+                    break;
+            }
+
+            return {
+                question,
+                answer,
+                type: questionType
+            };
+        }
+
+        function drawNumberLine(p1, p2) {
+            const numberLine = document.getElementById('numberLine');
+            const min = Math.min(p1, p2, -10);
+            const max = Math.max(p1, p2, 10);
+            const range = max - min;
+            const width = 600;
+            const height = 100;
+            const padding = 50;
+
+            const svg = `
+                <svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+                    <!-- 數線 -->
+                    <line x1="${padding}" y1="50" x2="${width - padding}" y2="50" stroke="#333" stroke-width="2"/>
+                    
+                    <!-- 刻度 -->
+                    ${generateTicks(min, max, width, padding)}
+                    
+                    <!-- 標記點 -->
+                    <circle cx="${padding + ((p1 - min) / range) * (width - 2 * padding)}" cy="50" r="6" fill="#e53e3e"/>
+                    <text x="${padding + ((p1 - min) / range) * (width - 2 * padding)}" y="35" text-anchor="middle" fill="#e53e3e" font-weight="bold">${p1}</text>
+                    
+                    <circle cx="${padding + ((p2 - min) / range) * (width - 2 * padding)}" cy="50" r="6" fill="#38a169"/>
+                    <text x="${padding + ((p2 - min) / range) * (width - 2 * padding)}" y="75" text-anchor="middle" fill="#38a169" font-weight="bold">${p2}</text>
+                    
+                    <!-- 距離線 -->
+                    <line x1="${padding + ((Math.min(p1, p2) - min) / range) * (width - 2 * padding)}" 
+                          y1="30" 
+                          x2="${padding + ((Math.max(p1, p2) - min) / range) * (width - 2 * padding)}" 
+                          y2="30" 
+                          stroke="#667eea" stroke-width="3"/>
+                    <text x="${padding + (((p1 + p2) / 2 - min) / range) * (width - 2 * padding)}" y="20" text-anchor="middle" fill="#667eea" font-weight="bold">距離 = ?</text>
+                </svg>
+            `;
+            
+            numberLine.innerHTML = svg;
+            numberLine.style.display = 'block';
+        }
+
+        function generateTicks(min, max, width, padding) {
+            let ticks = '';
+            const range = max - min;
+            for (let i = min; i <= max; i++) {
+                const x = padding + ((i - min) / range) * (width - 2 * padding);
+                ticks += `<line x1="${x}" y1="45" x2="${x}" y2="55" stroke="#666" stroke-width="1"/>`;
+                ticks += `<text x="${x}" y="70" text-anchor="middle" font-size="12" fill="#666">${i}</text>`;
+            }
+            return ticks;
+        }
+
+        function startGame() {
+            gameStats.gameActive = true;
+            document.getElementById('answerInput').disabled = false;
+            document.getElementById('submitBtn').disabled = false;
+            nextQuestion();
+        }
+
+        function nextQuestion() {
+            if (!gameStats.gameActive) return;
+
+            // 隱藏數線
+            document.getElementById('numberLine').style.display = 'none';
+            
+            // 生成新題目
+            currentQuestion = generateQuestion();
+            gameStats.currentAnswer = currentQuestion.answer;
+            
+            // 更新介面
+            document.getElementById('questionType').textContent = currentQuestion.type;
+            document.getElementById('questionText').textContent = currentQuestion.question;
+            document.getElementById('answerInput').value = '';
+            document.getElementById('answerInput').focus();
+            
+            // 清除回饋
+            const feedback = document.getElementById('feedback');
+            feedback.classList.remove('show', 'correct', 'incorrect');
+            
+            // 開始計時
+            gameStats.questionStartTime = Date.now();
+            startTimer();
+        }
+
+        function startTimer() {
+            const timeLimit = parseInt(document.getElementById('timeLimit').value);
+            gameStats.timeRemaining = timeLimit;
+            
+            const timerDisplay = document.getElementById('timerDisplay');
+            timerDisplay.classList.add('active');
+            
+            if (gameStats.timer) {
+                clearInterval(gameStats.timer);
+            }
+            
+            gameStats.timer = setInterval(() => {
+                gameStats.timeRemaining--;
+                timerDisplay.textContent = `剩餘時間: ${gameStats.timeRemaining} 秒`;
+                
+                if (gameStats.timeRemaining <= 0) {
+                    clearInterval(gameStats.timer);
+                    timerDisplay.classList.remove('active');
+                    showFeedback(false, `時間到！正確答案是 ${gameStats.currentAnswer}`);
+                    setTimeout(nextQuestion, 2000);
+                }
+            }, 1000);
+        }
+
+        function checkAnswer() {
+            if (!gameStats.gameActive) return;
+            
+            const userAnswer = parseFloat(document.getElementById('answerInput').value);
+            const isCorrect = Math.abs(userAnswer - gameStats.currentAnswer) < 0.001;
+            
+            // 停止計時器
+            if (gameStats.timer) {
+                clearInterval(gameStats.timer);
+                document.getElementById('timerDisplay').classList.remove('active');
+            }
+            
+            // 計算用時
+            const timeUsed = (Date.now() - gameStats.questionStartTime) / 1000;
+            gameStats.totalTime += timeUsed;
+            gameStats.totalQuestions++;
+            
+            if (isCorrect) {
+                gameStats.correctAnswers++;
+                showFeedback(true, '答對了！太棒了！');
+            } else {
+                showFeedback(false, `答錯了！正確答案是 ${gameStats.currentAnswer}`);
+            }
+            
+            updateStats();
+            setTimeout(nextQuestion, 2000);
+        }
+
+        function showFeedback(isCorrect, message) {
+            const feedback = document.getElementById('feedback');
+            feedback.textContent = message;
+            feedback.classList.remove('correct', 'incorrect');
+            feedback.classList.add(isCorrect ? 'correct' : 'incorrect', 'show');
+        }
+
+        function updateStats() {
+            document.getElementById('totalQuestions').textContent = gameStats.totalQuestions;
+            document.getElementById('correctAnswers').textContent = gameStats.correctAnswers;
+            
+            const accuracy = gameStats.totalQuestions > 0 ? 
+                Math.round((gameStats.correctAnswers / gameStats.totalQuestions) * 100) : 0;
+            document.getElementById('accuracy').textContent = accuracy + '%';
+            
+            const avgTime = gameStats.totalQuestions > 0 ? 
+                Math.round(gameStats.totalTime / gameStats.totalQuestions) : 0;
+            document.getElementById('averageTime').textContent = avgTime + '秒';
+        }
+
+        function resetGame() {
+            gameStats = {
+                totalQuestions: 0,
+                correctAnswers: 0,
+                totalTime: 0,
+                currentAnswer: 0,
+                gameActive: false,
+                timer: null,
+                timeRemaining: 0,
+                questionStartTime: 0
+            };
+            
+            if (gameStats.timer) {
+                clearInterval(gameStats.timer);
+            }
+            
+            document.getElementById('timerDisplay').classList.remove('active');
+            document.getElementById('answerInput').disabled = true;
+            document.getElementById('submitBtn').disabled = true;
+            document.getElementById('answerInput').value = '';
+            document.getElementById('questionType').textContent = '開始遊戲來獲得題目';
+            document.getElementById('questionText').textContent = '點擊「開始遊戲」開始挑戰！';
+            document.getElementById('numberLine').style.display = 'none';
+            
+            const feedback = document.getElementById('feedback');
+            feedback.classList.remove('show', 'correct', 'incorrect');
+            
+            updateStats();
+        }
+
+        // 按下 Enter 鍵提交答案
+        document.getElementById('answerInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && gameStats.gameActive) {
+                checkAnswer();
+            }
+        });
+
+        // 初始化統計顯示
+        updateStats();
+    </script>
+</body>
+</html>
