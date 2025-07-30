@@ -123,13 +123,108 @@
             height: 80px;
         }
 
-        .answer-input {
+        .answer-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
             width: 100%;
-            max-width: 200px;
+            max-width: 300px;
+            margin-top: 20px;
+        }
+
+        .answer-option {
             padding: 20px;
             border: none;
             border-radius: 15px;
-            font-size: 2.5em;
+            font-size: 2em;
+            font-weight: bold;
+            color: #333;
+            background: rgba(255, 255, 255, 0.9);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .answer-option:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.3);
+            background: white;
+        }
+
+        .answer-option:active {
+            transform: scale(0.95);
+        }
+
+        .answer-option.selected {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            transform: scale(1.05);
+            box-shadow: 0 15px 40px rgba(52, 152, 219, 0.4);
+        }
+
+        .answer-option.correct {
+            background: linear-gradient(45deg, #2ecc71, #27ae60);
+            color: white;
+            animation: correctAnswer 0.6s ease;
+        }
+
+        .answer-option.incorrect {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            color: white;
+            animation: incorrectAnswer 0.6s ease;
+        }
+
+        @keyframes correctAnswer {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        @keyframes incorrectAnswer {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .manual-input-toggle {
+            margin-top: 15px;
+            padding: 10px 20px;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .manual-input-toggle:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.8);
+        }
+
+        .manual-input-area {
+            display: none;
+            width: 100%;
+            max-width: 300px;
+            margin-top: 20px;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .manual-input-area.active {
+            display: flex;
+        }
+
+        .answer-input {
+            width: 100%;
+            padding: 20px;
+            border: none;
+            border-radius: 15px;
+            font-size: 2em;
             text-align: center;
             background: rgba(255, 255, 255, 0.9);
             color: #333;
@@ -147,12 +242,10 @@
 
         .submit-btn {
             width: 100%;
-            max-width: 200px;
-            padding: 20px;
-            margin-top: 20px;
+            padding: 15px;
             border: none;
             border-radius: 15px;
-            font-size: 1.8em;
+            font-size: 1.5em;
             font-weight: bold;
             color: white;
             background: linear-gradient(45deg, #2ecc71, #27ae60);
@@ -425,8 +518,25 @@
                 <div class="question-type" id="leftQuestionType">等待開始</div>
                 <div class="question" id="leftQuestion">準備好了嗎？</div>
                 <div class="number-line" id="leftNumberLine" style="display: none;"></div>
-                <input type="number" class="answer-input" id="leftAnswer" placeholder="答案" disabled>
-                <button class="submit-btn" id="leftSubmit" disabled>提交</button>
+                
+                <!-- 點擊式答案選項 -->
+                <div class="answer-options" id="leftOptions" style="display: none;">
+                    <button class="answer-option" onclick="selectAnswer('left', 0)"></button>
+                    <button class="answer-option" onclick="selectAnswer('left', 1)"></button>
+                    <button class="answer-option" onclick="selectAnswer('left', 2)"></button>
+                    <button class="answer-option" onclick="selectAnswer('left', 3)"></button>
+                </div>
+                
+                <!-- 手動輸入切換 -->
+                <button class="manual-input-toggle" id="leftToggle" onclick="toggleInputMode('left')" style="display: none;">
+                    手動輸入
+                </button>
+                
+                <!-- 手動輸入區域 -->
+                <div class="manual-input-area" id="leftManualInput">
+                    <input type="number" class="answer-input" id="leftAnswer" placeholder="答案" disabled>
+                    <button class="submit-btn" id="leftSubmit" disabled>提交</button>
+                </div>
             </div>
         </div>
 
@@ -440,8 +550,25 @@
                 <div class="question-type" id="rightQuestionType">等待開始</div>
                 <div class="question" id="rightQuestion">準備好了嗎？</div>
                 <div class="number-line" id="rightNumberLine" style="display: none;"></div>
-                <input type="number" class="answer-input" id="rightAnswer" placeholder="答案" disabled>
-                <button class="submit-btn" id="rightSubmit" disabled>提交</button>
+                
+                <!-- 點擊式答案選項 -->
+                <div class="answer-options" id="rightOptions" style="display: none;">
+                    <button class="answer-option" onclick="selectAnswer('right', 0)"></button>
+                    <button class="answer-option" onclick="selectAnswer('right', 1)"></button>
+                    <button class="answer-option" onclick="selectAnswer('right', 2)"></button>
+                    <button class="answer-option" onclick="selectAnswer('right', 3)"></button>
+                </div>
+                
+                <!-- 手動輸入切換 -->
+                <button class="manual-input-toggle" id="rightToggle" onclick="toggleInputMode('right')" style="display: none;">
+                    手動輸入
+                </button>
+                
+                <!-- 手動輸入區域 -->
+                <div class="manual-input-area" id="rightManualInput">
+                    <input type="number" class="answer-input" id="rightAnswer" placeholder="答案" disabled>
+                    <button class="submit-btn" id="rightSubmit" disabled>提交</button>
+                </div>
             </div>
         </div>
 
@@ -492,7 +619,15 @@
                 left: null,
                 right: null
             },
-            questionStartTime: 0
+            questionStartTime: 0,
+            selectedAnswers: {
+                left: null,
+                right: null
+            },
+            inputModes: {
+                left: 'options', // 'options' or 'manual'
+                right: 'options'
+            }
         };
 
         const questionTypes = [
@@ -503,6 +638,97 @@
             '去括號',
             '數線距離'
         ];
+
+        function generateAnswerOptions(correctAnswer) {
+            const options = [correctAnswer];
+            
+            // 生成3個錯誤選項
+            while (options.length < 4) {
+                let wrongAnswer;
+                const variation = Math.floor(Math.random() * 5) + 1;
+                
+                switch (Math.floor(Math.random() * 4)) {
+                    case 0:
+                        wrongAnswer = correctAnswer + variation;
+                        break;
+                    case 1:
+                        wrongAnswer = correctAnswer - variation;
+                        break;
+                    case 2:
+                        wrongAnswer = correctAnswer * -1; // 符號錯誤
+                        break;
+                    case 3:
+                        wrongAnswer = Math.abs(correctAnswer) === correctAnswer ? 
+                                     correctAnswer - (Math.floor(Math.random() * 3) + 1) :
+                                     correctAnswer + (Math.floor(Math.random() * 3) + 1);
+                        break;
+                }
+                
+                // 確保不重複且不等於正確答案
+                if (!options.includes(wrongAnswer) && wrongAnswer !== correctAnswer) {
+                    options.push(wrongAnswer);
+                }
+            }
+            
+            // 隨機排序
+            return options.sort(() => Math.random() - 0.5);
+        }
+
+        function displayAnswerOptions(side, correctAnswer) {
+            const options = generateAnswerOptions(correctAnswer);
+            const optionsDiv = document.getElementById(side + 'Options');
+            const buttons = optionsDiv.querySelectorAll('.answer-option');
+            
+            buttons.forEach((button, index) => {
+                button.textContent = options[index];
+                button.classList.remove('selected', 'correct', 'incorrect');
+                button.disabled = false;
+            });
+            
+            // 儲存選項和正確答案的對應
+            gameState.currentQuestions[side].options = options;
+            gameState.currentQuestions[side].correctIndex = options.indexOf(correctAnswer);
+        }
+
+        function selectAnswer(side, optionIndex) {
+            if (!gameState.active) return;
+            
+            const optionsDiv = document.getElementById(side + 'Options');
+            const buttons = optionsDiv.querySelectorAll('.answer-option');
+            
+            // 清除之前的選擇
+            buttons.forEach(btn => btn.classList.remove('selected'));
+            
+            // 標記當前選擇
+            buttons[optionIndex].classList.add('selected');
+            gameState.selectedAnswers[side] = optionIndex;
+            
+            // 自動提交答案（延遲一點讓用戶看到選擇效果）
+            setTimeout(() => {
+                checkAnswer(side);
+            }, 300);
+        }
+
+        function toggleInputMode(side) {
+            const currentMode = gameState.inputModes[side];
+            const newMode = currentMode === 'options' ? 'manual' : 'options';
+            gameState.inputModes[side] = newMode;
+            
+            const optionsDiv = document.getElementById(side + 'Options');
+            const manualDiv = document.getElementById(side + 'ManualInput');
+            const toggleBtn = document.getElementById(side + 'Toggle');
+            
+            if (newMode === 'manual') {
+                optionsDiv.style.display = 'none';
+                manualDiv.classList.add('active');
+                toggleBtn.textContent = '選項模式';
+                document.getElementById(side + 'Answer').focus();
+            } else {
+                optionsDiv.style.display = 'grid';
+                manualDiv.classList.remove('active');
+                toggleBtn.textContent = '手動輸入';
+            }
+        }
 
         function generateQuestion() {
             const type = Math.floor(Math.random() * 6);
@@ -645,6 +871,10 @@
         function nextRound() {
             if (!gameState.active) return;
 
+            // 重置選擇狀態
+            gameState.selectedAnswers.left = null;
+            gameState.selectedAnswers.right = null;
+
             // 生成新題目
             gameState.currentQuestions.left = generateQuestion();
             gameState.currentQuestions.right = generateQuestion();
@@ -654,6 +884,18 @@
             document.getElementById('leftQuestion').textContent = gameState.currentQuestions.left.question;
             document.getElementById('leftAnswer').value = '';
             document.getElementById('leftNumberLine').style.display = 'none';
+            document.getElementById('leftOptions').style.display = 'none';
+            document.getElementById('leftToggle').style.display = 'none';
+            
+            // 根據輸入模式顯示相應界面
+            if (gameState.inputModes.left === 'options') {
+                document.getElementById('leftOptions').style.display = 'grid';
+                document.getElementById('leftToggle').style.display = 'block';
+                displayAnswerOptions('left', gameState.currentQuestions.left.answer);
+            } else {
+                document.getElementById('leftManualInput').classList.add('active');
+                document.getElementById('leftToggle').style.display = 'block';
+            }
 
             if (gameState.currentQuestions.left.needsNumberLine) {
                 drawNumberLine(
@@ -668,6 +910,18 @@
             document.getElementById('rightQuestion').textContent = gameState.currentQuestions.right.question;
             document.getElementById('rightAnswer').value = '';
             document.getElementById('rightNumberLine').style.display = 'none';
+            document.getElementById('rightOptions').style.display = 'none';
+            document.getElementById('rightToggle').style.display = 'none';
+            
+            // 根據輸入模式顯示相應界面
+            if (gameState.inputModes.right === 'options') {
+                document.getElementById('rightOptions').style.display = 'grid';
+                document.getElementById('rightToggle').style.display = 'block';
+                displayAnswerOptions('right', gameState.currentQuestions.right.answer);
+            } else {
+                document.getElementById('rightManualInput').classList.add('active');
+                document.getElementById('rightToggle').style.display = 'block';
+            }
 
             if (gameState.currentQuestions.right.needsNumberLine) {
                 drawNumberLine(
@@ -708,9 +962,38 @@
         function checkAnswer(side) {
             if (!gameState.active) return;
 
-            const userAnswer = parseFloat(document.getElementById(side + 'Answer').value);
-            const correctAnswer = gameState.currentQuestions[side].answer;
-            const isCorrect = Math.abs(userAnswer - correctAnswer) < 0.001;
+            let userAnswer;
+            let isCorrect = false;
+
+            if (gameState.inputModes[side] === 'options') {
+                // 選項模式
+                const selectedIndex = gameState.selectedAnswers[side];
+                if (selectedIndex === null) return;
+                
+                const correctIndex = gameState.currentQuestions[side].correctIndex;
+                isCorrect = selectedIndex === correctIndex;
+                userAnswer = gameState.currentQuestions[side].options[selectedIndex];
+                
+                // 視覺回饋
+                const optionsDiv = document.getElementById(side + 'Options');
+                const buttons = optionsDiv.querySelectorAll('.answer-option');
+                
+                if (isCorrect) {
+                    buttons[selectedIndex].classList.add('correct');
+                } else {
+                    buttons[selectedIndex].classList.add('incorrect');
+                    buttons[correctIndex].classList.add('correct');
+                }
+                
+                // 禁用所有選項
+                buttons.forEach(btn => btn.disabled = true);
+                
+            } else {
+                // 手動輸入模式
+                userAnswer = parseFloat(document.getElementById(side + 'Answer').value);
+                const correctAnswer = gameState.currentQuestions[side].answer;
+                isCorrect = Math.abs(userAnswer - correctAnswer) < 0.001;
+            }
 
             if (isCorrect) {
                 if (side === 'left') {
@@ -735,7 +1018,9 @@
                 } else {
                     setTimeout(nextRound, 2000);
                 }
-            } else {
+            } else if (gameState.inputModes[side] === 'manual') {
+                // 只有手動輸入模式才顯示錯誤提示（選項模式已經有視覺回饋）
+                const correctAnswer = gameState.currentQuestions[side].answer;
                 showFeedback(`答錯了！正確答案是 ${correctAnswer}`, 'incorrect');
             }
         }
@@ -774,6 +1059,12 @@
             document.getElementById('rightAnswer').disabled = false;
             document.getElementById('leftSubmit').disabled = false;
             document.getElementById('rightSubmit').disabled = false;
+            
+            // 啟用選項按鈕
+            const leftOptions = document.getElementById('leftOptions').querySelectorAll('.answer-option');
+            const rightOptions = document.getElementById('rightOptions').querySelectorAll('.answer-option');
+            leftOptions.forEach(btn => btn.disabled = false);
+            rightOptions.forEach(btn => btn.disabled = false);
         }
 
         function disableInputs() {
@@ -781,12 +1072,22 @@
             document.getElementById('rightAnswer').disabled = true;
             document.getElementById('leftSubmit').disabled = true;
             document.getElementById('rightSubmit').disabled = true;
+            
+            // 禁用選項按鈕
+            const leftOptions = document.getElementById('leftOptions').querySelectorAll('.answer-option');
+            const rightOptions = document.getElementById('rightOptions').querySelectorAll('.answer-option');
+            leftOptions.forEach(btn => btn.disabled = true);
+            rightOptions.forEach(btn => btn.disabled = true);
         }
 
         function resetGame() {
             gameState.active = false;
             gameState.leftScore = 0;
             gameState.rightScore = 0;
+            gameState.selectedAnswers.left = null;
+            gameState.selectedAnswers.right = null;
+            gameState.inputModes.left = 'options';
+            gameState.inputModes.right = 'options';
 
             if (gameState.timer) {
                 clearInterval(gameState.timer);
@@ -802,8 +1103,16 @@
             document.getElementById('leftQuestion').textContent = '準備好了嗎？';
             document.getElementById('rightQuestionType').textContent = '等待開始';
             document.getElementById('rightQuestion').textContent = '準備好了嗎？';
+            
+            // 隱藏所有答題界面
             document.getElementById('leftNumberLine').style.display = 'none';
             document.getElementById('rightNumberLine').style.display = 'none';
+            document.getElementById('leftOptions').style.display = 'none';
+            document.getElementById('rightOptions').style.display = 'none';
+            document.getElementById('leftToggle').style.display = 'none';
+            document.getElementById('rightToggle').style.display = 'none';
+            document.getElementById('leftManualInput').classList.remove('active');
+            document.getElementById('rightManualInput').classList.remove('active');
 
             updateScores();
             disableInputs();
@@ -852,26 +1161,90 @@
 
         // 自動聚焦輸入框（觸屏友好）
         function focusInput(side) {
-            const input = document.getElementById(side + 'Answer');
-            if (!input.disabled) {
-                input.focus();
-                // 觸屏設備上顯示鍵盤
-                input.click();
+            if (gameState.inputModes[side] === 'manual') {
+                const input = document.getElementById(side + 'Answer');
+                if (!input.disabled) {
+                    input.focus();
+                    input.click();
+                }
             }
         }
 
         // 為觸屏優化的點擊事件
         document.getElementById('leftAnswer').addEventListener('touchstart', () => {
-            if (gameState.active) {
+            if (gameState.active && gameState.inputModes.left === 'manual') {
                 focusInput('left');
             }
         });
 
         document.getElementById('rightAnswer').addEventListener('touchstart', () => {
-            if (gameState.active) {
+            if (gameState.active && gameState.inputModes.right === 'manual') {
                 focusInput('right');
             }
         });
+
+        // 添加觸摸反饋
+        function addTouchFeedback() {
+            const allButtons = document.querySelectorAll('.answer-option, .control-btn, .submit-btn, .manual-input-toggle');
+            
+            allButtons.forEach(button => {
+                button.addEventListener('touchstart', function() {
+                    this.style.transform = 'scale(0.95)';
+                });
+                
+                button.addEventListener('touchend', function() {
+                    setTimeout(() => {
+                        this.style.transform = '';
+                    }, 100);
+                });
+            });
+        }
+
+        // 防止選項按鈕的雙擊效果
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('answer-option')) {
+                e.preventDefault();
+            }
+        });
+
+        // 添加震動反饋（如果設備支持）
+        function vibrate(pattern = [100]) {
+            if ('vibrate' in navigator) {
+                navigator.vibrate(pattern);
+            }
+        }
+
+        // 在答對或答錯時添加震動反饋
+        const originalCheckAnswer = checkAnswer;
+        window.checkAnswer = function(side) {
+            const result = originalCheckAnswer(side);
+            
+            // 根據結果提供不同的震動反饋
+            if (gameState.inputModes[side] === 'options') {
+                const selectedIndex = gameState.selectedAnswers[side];
+                const correctIndex = gameState.currentQuestions[side].correctIndex;
+                
+                if (selectedIndex === correctIndex) {
+                    vibrate([100, 50, 100]); // 答對：短震動兩次
+                } else {
+                    vibrate([200]); // 答錯：長震動一次
+                }
+            }
+            
+            return result;
+        };
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            addTouchFeedback();
+            updateScores();
+            disableInputs();
+        });
+
+        // 確保在載入完成後初始化
+        updateScores();
+        disableInputs();
+        addTouchFeedback();
 
         // 阻止頁面滾動和縮放
         document.addEventListener('touchmove', function(e) {
