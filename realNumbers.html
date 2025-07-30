@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>正負數冒險遊戲 🎮</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 25px;
+            padding: 30px;
+            max-width: 800px;
+            width: 90%;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255,255,255,0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .game-container::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #feca57);
+            z-index: -1;
+            border-radius: 27px;
+            animation: rainbow 3s ease-in-out infinite;
+        }
+
+        @keyframes rainbow {
+            0%, 100% { filter: hue-rotate(0deg); }
+            50% { filter: hue-rotate(180deg); }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .title {
+            font-size: 2.5em;
+            font-weight: 800;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.1em;
+            font-weight: 600;
+        }
+
+        .score-board {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .score-item {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 15px;
+            font-weight: 700;
+            font-size: 1.1em;
+            box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
+            transform: translateY(0);
+            transition: transform 0.3s ease;
+            flex: 1;
+            min-width: 120px;
+            text-align: center;
+        }
+
+        .score-item:hover {
+            transform: translateY(-3px);
+        }
+
+        .game-modes {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .mode-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            transform: translateY(0);
+        }
+
+        .mode-btn.active {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            box-shadow: 0 8px 16px rgba(255, 107, 107, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .mode-btn:not(.active) {
+            background: #f8f9fa;
+            color: #666;
+            border: 2px solid #e9ecef;
+        }
+
+        .mode-btn:not(.active):hover {
+            background: #e9ecef;
+            transform: translateY(-1px);
+        }
+
+        .question-area {
+            background: linear-gradient(135deg, #74b9ff, #0984e3);
+            color: white;
+            padding: 30px;
+            border-radius: 20px;
+            margin-bottom: 25px;
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(116, 185, 255, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .question-area::before {
+            content: '🎯';
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 2em;
+            opacity: 0.3;
+        }
+
+        .question {
+            font-size: 1.8em;
+            font-weight: 700;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .question-type {
+            font-size: 1em;
+            opacity: 0.9;
+            font-weight: 600;
+        }
+
+        .answers {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .answer-btn {
+            padding: 20px;
+            border: none;
+            border-radius: 15px;
+            font-size: 1.3em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: linear-gradient(135deg, #a29bfe, #6c5ce7);
+            color: white;
+            box-shadow: 0 8px 16px rgba(162, 155, 254, 0.3);
+            transform: translateY(0);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .answer-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .answer-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 24px rgba(162, 155, 254, 0.4);
+        }
+
+        .answer-btn:hover::before {
+            left: 100%;
+        }
+
+        .answer-btn.correct {
+            background: linear-gradient(135deg, #00b894, #00a085);
+            animation: bounce 0.6s ease;
+        }
+
+        .answer-btn.wrong {
+            background: linear-gradient(135deg, #e17055, #d63031);
+            animation: shake 0.6s ease;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .feedback {
+            text-align: center;
+            margin: 20px 0;
+            font-size: 1.2em;
+            font-weight: 700;
+            min-height: 30px;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s ease;
+        }
+
+        .feedback.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .feedback.correct {
+            color: #00b894;
+        }
+
+        .feedback.wrong {
+            color: #e17055;
+        }
+
+        .next-btn {
+            display: block;
+            margin: 0 auto;
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #fd79a8, #e84393);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 1.2em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            opacity: 0;
+            transform: translateY(20px);
+            box-shadow: 0 8px 16px rgba(253, 121, 168, 0.3);
+        }
+
+        .next-btn.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .next-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(253, 121, 168, 0.4);
+        }
+
+        .celebration {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #ff6b6b;
+            animation: confetti-fall 3s linear forwards;
+        }
+
+        @keyframes confetti-fall {
+            0% {
+                transform: translateY(-100vh) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        @media (max-width: 600px) {
+            .game-container {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            .title {
+                font-size: 2em;
+            }
+            
+            .answers {
+                grid-template-columns: 1fr;
+            }
+            
+            .score-board {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <h1 class="title">數字冒險王 🎮</h1>
+            <p class="subtitle">征服正負數、絕對值與相反數的奇妙世界！</p>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+
+        <div class="score-board">
+            <div class="score-item">
+                <div>🏆 分數</div>
+                <div id="score">0</div>
+            </div>
+            <div class="score-item">
+                <div>✅ 正確</div>
+                <div id="correct">0</div>
+            </div>
+            <div class="score-item">
+                <div>❌ 錯誤</div>
+                <div id="wrong">0</div>
+            </div>
+            <div class="score-item">
+                <div>🎯 題目</div>
+                <div><span id="current">1</span>/<span id="total">10</span></div>
+            </div>
+        </div>
+
+        <div class="game-modes">
+            <button class="mode-btn active" data-mode="mixed">🎲 綜合練習</button>
+            <button class="mode-btn" data-mode="positive-negative">➕➖ 正負數</button>
+            <button class="mode-btn" data-mode="absolute">📏 絕對值</button>
+            <button class="mode-btn" data-mode="opposite">🔄 相反數</button>
+        </div>
+
+        <div class="question-area">
+            <div class="question" id="question">載入中...</div>
+            <div class="question-type" id="questionType"></div>
+        </div>
+
+        <div class="answers" id="answers"></div>
+
+        <div class="feedback" id="feedback"></div>
+
+        <button class="next-btn" id="nextBtn">下一題 ➡️</button>
+    </div>
+
+    <div class="celebration" id="celebration"></div>
+
+    <script>
+        class MathGame {
+            constructor() {
+                this.score = 0;
+                this.correct = 0;
+                this.wrong = 0;
+                this.currentQuestion = 1;
+                this.totalQuestions = 10;
+                this.currentMode = 'mixed';
+                this.currentAnswer = null;
+                this.gameData = null;
+                
+                this.initializeElements();
+                this.bindEvents();
+                this.generateQuestion();
+            }
+
+            initializeElements() {
+                this.scoreEl = document.getElementById('score');
+                this.correctEl = document.getElementById('correct');
+                this.wrongEl = document.getElementById('wrong');
+                this.currentEl = document.getElementById('current');
+                this.totalEl = document.getElementById('total');
+                this.questionEl = document.getElementById('question');
+                this.questionTypeEl = document.getElementById('questionType');
+                this.answersEl = document.getElementById('answers');
+                this.feedbackEl = document.getElementById('feedback');
+                this.nextBtn = document.getElementById('nextBtn');
+                this.progressFill = document.getElementById('progressFill');
+                this.celebration = document.getElementById('celebration');
+            }
+
+            bindEvents() {
+                document.querySelectorAll('.mode-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        this.currentMode = btn.dataset.mode;
+                        this.resetGame();
+                    });
+                });
+
+                this.nextBtn.addEventListener('click', () => {
+                    this.nextQuestion();
+                });
+            }
+
+            resetGame() {
+                this.score = 0;
+                this.correct = 0;
+                this.wrong = 0;
+                this.currentQuestion = 1;
+                this.updateScore();
+                this.generateQuestion();
+            }
+
+            generateQuestion() {
+                this.clearFeedback();
+                this.updateProgress();
+                
+                const questionTypes = {
+                    'mixed': ['positive-negative', 'absolute', 'opposite'],
+                    'positive-negative': ['positive-negative'],
+                    'absolute': ['absolute'],
+                    'opposite': ['opposite']
+                };
+
+                const availableTypes = questionTypes[this.currentMode];
+                const questionType = availableTypes[Math.floor(Math.random() * availableTypes.length)];
+
+                switch(questionType) {
+                    case 'positive-negative':
+                        this.generatePositiveNegativeQuestion();
+                        break;
+                    case 'absolute':
+                        this.generateAbsoluteQuestion();
+                        break;
+                    case 'opposite':
+                        this.generateOppositeQuestion();
+                        break;
+                }
+
+                this.renderQuestion();
+            }
+
+            generatePositiveNegativeQuestion() {
+                const scenarios = [
+                    {
+                        type: 'compare',
+                        generate: () => {
+                            const a = Math.floor(Math.random() * 21) - 10;
+                            const b = Math.floor(Math.random() * 21) - 10;
+                            const question = `比較大小：${a} __ ${b}`;
+                            const correct = a > b ? '>' : a < b ? '<' : '=';
+                            const options = ['>', '<', '='];
+                            return { question, correct, options, type: '🔍 比較大小' };
+                        }
+                    },
+                    {
+                        type: 'order',
+                        generate: () => {
+                            const numbers = [];
+                            for(let i = 0; i < 4; i++) {
+                                numbers.push(Math.floor(Math.random() * 21) - 10);
+                            }
+                            const question = `將數字由小到大排列：${numbers.join(', ')}`;
+                            const correct = [...numbers].sort((a, b) => a - b).join(', ');
+                            const shuffled1 = [...numbers].sort(() => Math.random() - 0.5).join(', ');
+                            const shuffled2 = [...numbers].sort(() => Math.random() - 0.5).join(', ');
+                            const options = [correct, shuffled1, shuffled2].filter((v, i, a) => a.indexOf(v) === i);
+                            while(options.length < 3) {
+                                const newShuffle = [...numbers].sort(() => Math.random() - 0.5).join(', ');
+                                if(!options.includes(newShuffle)) options.push(newShuffle);
+                            }
+                            return { question, correct, options: options.slice(0, 3), type: '📊 排列順序' };
+                        }
+                    }
+                ];
+
+                const scenario = scenarios[Math.floor(Math.random() * scenarios.length)];
+                this.gameData = scenario.generate();
+            }
+
+            generateAbsoluteQuestion() {
+                const scenarios = [
+                    {
+                        type: 'calculate',
+                        generate: () => {
+                            const num = Math.floor(Math.random() * 21) - 10;
+                            const question = `|${num}| = ?`;
+                            const correct = Math.abs(num);
+                            const options = [correct, correct + 1, correct - 1].filter(n => n >= 0);
+                            if(options.length < 3) options.push(correct + 2);
+                            return { question, correct: correct.toString(), options: options.map(String), type: '📏 計算絕對值' };
+                        }
+                    },
+                    {
+                        type: 'compare-absolute',
+                        generate: () => {
+                            const a = Math.floor(Math.random() * 21) - 10;
+                            const b = Math.floor(Math.random() * 21) - 10;
+                            const question = `比較：|${a}| __ |${b}|`;
+                            const absA = Math.abs(a);
+                            const absB = Math.abs(b);
+                            const correct = absA > absB ? '>' : absA < absB ? '<' : '=';
+                            const options = ['>', '<', '='];
+                            return { question, correct, options, type: '🔍 絕對值比較' };
+                        }
+                    }
+                ];
+
+                const scenario = scenarios[Math.floor(Math.random() * scenarios.length)];
+                this.gameData = scenario.generate();
+            }
+
+            generateOppositeQuestion() {
+                const scenarios = [
+                    {
+                        type: 'find-opposite',
+                        generate: () => {
+                            const num = Math.floor(Math.random() * 21) - 10;
+                            const question = `${num}的相反數是？`;
+                            const correct = -num;
+                            const options = [correct, num, Math.abs(num)].filter((v, i, a) => a.indexOf(v) === i);
+                            while(options.length < 3) {
+                                const random = Math.floor(Math.random() * 21) - 10;
+                                if(!options.includes(random)) options.push(random);
+                            }
+                            return { question, correct: correct.toString(), options: options.slice(0, 3).map(String), type: '🔄 找相反數' };
+                        }
+                    },
+                    {
+                        type: 'opposite-pairs',
+                        generate: () => {
+                            const num = Math.floor(Math.random() * 15) + 1;
+                            const question = `下列哪一對是相反數？`;
+                            const correct = `${num} 和 ${-num}`;
+                            const wrong1 = `${num} 和 ${num}`;
+                            const wrong2 = `${-num} 和 ${-num}`;
+                            const options = [correct, wrong1, wrong2];
+                            return { question, correct, options, type: '👫 相反數配對' };
+                        }
+                    }
+                ];
+
+                const scenario = scenarios[Math.floor(Math.random() * scenarios.length)];
+                this.gameData = scenario.generate();
+            }
+
+            renderQuestion() {
+                this.questionEl.textContent = this.gameData.question;
+                this.questionTypeEl.textContent = this.gameData.type;
+                this.currentAnswer = this.gameData.correct;
+
+                this.answersEl.innerHTML = '';
+                const shuffledOptions = [...this.gameData.options].sort(() => Math.random() - 0.5);
+
+                shuffledOptions.forEach(option => {
+                    const btn = document.createElement('button');
+                    btn.className = 'answer-btn';
+                    btn.textContent = option;
+                    btn.addEventListener('click', () => {
+                        this.checkAnswer(option, btn);
+                    });
+                    this.answersEl.appendChild(btn);
+                });
+            }
+
+            checkAnswer(selectedAnswer, btn) {
+                const buttons = document.querySelectorAll('.answer-btn');
+                buttons.forEach(b => b.style.pointerEvents = 'none');
+
+                const isCorrect = selectedAnswer === this.currentAnswer;
+
+                if (isCorrect) {
+                    btn.classList.add('correct');
+                    this.correct++;
+                    this.score += 10;
+                    this.showFeedback('🎉 答對了！太棒了！', 'correct');
+                    this.createConfetti();
+                } else {
+                    btn.classList.add('wrong');
+                    this.wrong++;
+                    this.showFeedback(`❌ 答錯了！正確答案是：${this.currentAnswer}`, 'wrong');
+                    
+                    // 標示正確答案
+                    buttons.forEach(b => {
+                        if (b.textContent === this.currentAnswer) {
+                            b.classList.add('correct');
+                        }
+                    });
+                }
+
+                this.updateScore();
+                setTimeout(() => {
+                    this.nextBtn.classList.add('show');
+                }, 1000);
+            }
+
+            showFeedback(message, type) {
+                this.feedbackEl.textContent = message;
+                this.feedbackEl.className = `feedback show ${type}`;
+            }
+
+            clearFeedback() {
+                this.feedbackEl.className = 'feedback';
+                this.nextBtn.classList.remove('show');
+            }
+
+            nextQuestion() {
+                if (this.currentQuestion >= this.totalQuestions) {
+                    this.endGame();
+                    return;
+                }
+
+                this.currentQuestion++;
+                this.generateQuestion();
+                
+                // 重置按鈕狀態
+                const buttons = document.querySelectorAll('.answer-btn');
+                buttons.forEach(btn => {
+                    btn.style.pointerEvents = 'auto';
+                    btn.classList.remove('correct', 'wrong');
+                });
+            }
+
+            endGame() {
+                const accuracy = Math.round((this.correct / this.totalQuestions) * 100);
+                let message = '';
+                
+                if (accuracy >= 90) {
+                    message = '🏆 完美！你是數學天才！';
+                } else if (accuracy >= 70) {
+                    message = '🎯 很棒！繼續加油！';
+                } else if (accuracy >= 50) {
+                    message = '👍 不錯！還有進步空間！';
+                } else {
+                    message = '💪 多練習，你會更棒的！';
+                }
+
+                this.questionEl.textContent = `遊戲結束！${message}`;
+                this.questionTypeEl.textContent = `正確率：${accuracy}%`;
+                this.answersEl.innerHTML = `
+                    <button class="answer-btn" onclick="location.reload()">
+                        🔄 再玩一次
+                    </button>
+                `;
+                this.clearFeedback();
+                
+                if (accuracy >= 80) {
+                    this.createConfetti();
+                }
+            }
+
+            updateScore() {
+                this.scoreEl.textContent = this.score;
+                this.correctEl.textContent = this.correct;
+                this.wrongEl.textContent = this.wrong;
+                this.currentEl.textContent = this.currentQuestion;
+            }
+
+            updateProgress() {
+                const progress = (this.currentQuestion / this.totalQuestions) * 100;
+                this.progressFill.style.width = `${progress}%`;
+            }
+
+            createConfetti() {
+                const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57', '#ff9ff3', '#54a0ff'];
+                
+                for (let i = 0; i < 50; i++) {
+                    setTimeout(() => {
+                        const confetti = document.createElement('div');
+                        confetti.className = 'confetti';
+                        confetti.style.left = Math.random() * 100 + '%';
+                        confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+                        confetti.style.animationDelay = Math.random() * 2 + 's';
+                        this.celebration.appendChild(confetti);
+                        
+                        setTimeout(() => {
+                            confetti.remove();
+                        }, 3000);
+                    }, i * 100);
+                }
+            }
+        }
+
+        // 啟動遊戲
+        document.addEventListener('DOMContentLoaded', () => {
+            new MathGame();
+        });
+    </script>
+</body>
+</html>
