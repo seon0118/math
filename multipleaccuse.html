@@ -196,7 +196,7 @@
         }
 
         .all-option {
-            grid-column: span 5;
+            grid-column: span 2;
             background: rgba(255, 0, 128, 0.2);
             border-color: #ff0080;
             color: #ff0080;
@@ -208,6 +208,22 @@
 
         .all-option.selected {
             background: rgba(255, 0, 128, 0.6);
+            color: #fff;
+        }
+
+        .none-option {
+            grid-column: span 3;
+            background: rgba(255, 165, 0, 0.2);
+            border-color: #ffa500;
+            color: #ffa500;
+        }
+
+        .none-option:hover {
+            background: rgba(255, 165, 0, 0.4);
+        }
+
+        .none-option.selected {
+            background: rgba(255, 165, 0, 0.6);
             color: #fff;
         }
 
@@ -468,6 +484,7 @@
                     <button class="choice-btn" data-value="8">8</button>
                     <button class="choice-btn" data-value="9">9</button>
                     <button class="choice-btn all-option" data-value="all">以上皆可</button>
+                    <button class="choice-btn none-option" data-value="none">都不是</button>
                 </div>
 
                 <button class="submit-btn" id="submitButton">送出答案</button>
@@ -669,17 +686,21 @@
         function handleChoiceClick(e) {
             const value = e.target.dataset.value;
             
-            if (value === 'all') {
-                // 如果選擇"以上皆可"，清除其他選擇
+            if (value === 'all' || value === 'none') {
+                // 如果選擇"以上皆可"或"都不是"，清除其他選擇
                 gameState.selectedChoices.clear();
                 document.querySelectorAll('.choice-btn').forEach(b => b.classList.remove('selected'));
-                gameState.selectedChoices.add('all');
+                gameState.selectedChoices.add(value);
                 e.target.classList.add('selected');
             } else {
-                // 如果選擇數字，先移除"以上皆可"
+                // 如果選擇數字，先移除"以上皆可"和"都不是"
                 if (gameState.selectedChoices.has('all')) {
                     gameState.selectedChoices.delete('all');
                     document.querySelector('[data-value="all"]').classList.remove('selected');
+                }
+                if (gameState.selectedChoices.has('none')) {
+                    gameState.selectedChoices.delete('none');
+                    document.querySelector('[data-value="none"]').classList.remove('selected');
                 }
                 
                 if (gameState.selectedChoices.has(value)) {
@@ -703,6 +724,9 @@
             if (gameState.selectedChoices.has('all')) {
                 // 檢查是否所有數字都可以
                 isCorrect = correct.length === 10;
+            } else if (gameState.selectedChoices.has('none')) {
+                // 檢查是否沒有數字可以
+                isCorrect = correct.length === 0;
             } else {
                 // 檢查選擇的數字是否完全正確
                 const selectedNumbers = Array.from(gameState.selectedChoices).map(x => parseInt(x));
@@ -735,7 +759,9 @@
             // 設置解釋
             explanation.innerHTML = `
                 <strong>正確答案：</strong>
-                ${correctAnswers.length === 10 ? '所有數字 (0-9) 都可以' : correctAnswers.join(', ')}
+                ${correctAnswers.length === 10 ? '所有數字 (0-9) 都可以' : 
+                  correctAnswers.length === 0 ? '沒有數字可以填入' : 
+                  correctAnswers.join(', ')}
                 <br><br>
                 <strong>解釋：</strong><br>
                 ${getDivisibilityRule(gameState.currentQuestion.divisor)}
