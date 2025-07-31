@@ -411,6 +411,53 @@
             display: none;
         }
 
+        .game-timer-display {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #4299e1;
+            text-align: center;
+            margin-bottom: 15px;
+            padding: 12px;
+            background: rgba(66, 153, 225, 0.1);
+            border: 3px solid #4299e1;
+            border-radius: 15px;
+            display: none;
+        }
+
+        .game-timer-display.active {
+            display: block;
+            animation: gameTimerPulse 2s infinite;
+        }
+
+        .game-timer-display.warning {
+            color: #e53e3e;
+            background: rgba(229, 62, 62, 0.2);
+            border-color: #e53e3e;
+            animation: gameTimerWarning 1s infinite;
+        }
+
+        .game-timer-display.critical {
+            color: #c53030;
+            background: rgba(197, 48, 48, 0.3);
+            border-color: #c53030;
+            animation: gameTimerCritical 0.5s infinite;
+        }
+
+        @keyframes gameTimerPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        @keyframes gameTimerWarning {
+            0%, 100% { transform: scale(1); background: rgba(229, 62, 62, 0.2); }
+            50% { transform: scale(1.03); background: rgba(229, 62, 62, 0.3); }
+        }
+
+        @keyframes gameTimerCritical {
+            0%, 100% { transform: scale(1); background: rgba(197, 48, 48, 0.3); }
+            50% { transform: scale(1.05); background: rgba(197, 48, 48, 0.5); }
+        }
+
         .timer-display.active {
             display: block;
             animation: timerPulse 1s infinite;
@@ -481,6 +528,11 @@
                 grid-template-columns: repeat(2, 1fr);
             }
 
+            .game-timer-display {
+                font-size: 1.5em;
+                padding: 8px;
+            }
+
             .timer-display {
                 font-size: 1.5em;
                 padding: 10px;
@@ -526,7 +578,7 @@
         </div>
 
         <div class="competition-info">
-            ⚡ 競賽規則：每題限時30秒，連續答錯3題即結束競賽 ⚡
+            ⚡ 競賽規則：總時長2分鐘，每題限時30秒，連續答錯3題即結束競賽 ⚡
         </div>
 
         <div class="controls">
@@ -535,6 +587,7 @@
             <button class="btn btn-warning" onclick="logout()">登出</button>
         </div>
 
+        <div class="game-timer-display" id="gameTimerDisplay"></div>
         <div class="timer-display" id="timerDisplay"></div>
 
         <div id="wrongStreakDisplay"></div>
@@ -587,7 +640,8 @@
             enableScoreUpload: true,  // 是否啟用成績上傳功能
             schoolName: '東興國中',     // 學校名稱
             subject: '數學競賽',       // 科目名稱
-            version: '1.0'            // 系統版本
+            version: '1.0',           // 系統版本
+            gameTimeLimit: 120        // 遊戲總時長限制（秒）- 2分鐘
         };
         
         // ============================================
@@ -605,7 +659,9 @@
             gameOver: false,
             questionAnswered: false,
             timeUp: false,
-            gameStartTime: 0
+            gameStartTime: 0,
+            gameTimer: null,
+            gameTimeRemaining: 0
         };
 
         let currentQuestion = null;
@@ -858,12 +914,98 @@
             gameStats.gameActive = true;
             gameStats.wrongStreak = 0;
             gameStats.gameStartTime = Date.now();
+            gameStats.gameTimeRemaining = SYSTEM_CONFIG.gameTimeLimit;
+            
             document.getElementById('startBtn').disabled = true;
             document.getElementById('wrongStreakDisplay').innerHTML = '';
+            
+            // 開始遊戲總計時器
+            startGameTimer();
+            
             nextQuestion();
         }
 
-        function nextQuestion() {
+        function startGameTimer() {
+            const gameTimerDisplay = document.getElementById('gameTimerDisplay');
+            gameTimerDisplay.classList.add('active');
+            gameTimerDisplay.classList.remove('warning', 'critical');
+            
+            if (gameStats.gameTimer) {
+                clearInterval(gameStats.gameTimer);
+            }
+            
+            gameStats.gameTimer = setInterval(() => {
+                gameStats.gameTimeRemaining--;
+                
+                const minutes = Math.floor(gameStats.gameTimeRemaining / 60);
+                const seconds = gameStats.gameTimeRemaining % 60;
+                const timeString = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                gameTimerDisplay.textContent = `🏆 總競賽時間: ${timeString}`;
+                
+                // 時間警告效果
+                if (gameStats.gameTimeRemaining <= 30) {
+                    gameTimerDisplay.classList.add('critical');
+                } else if (gameStats.gameTimeRemaining <= 60) {
+                    gameTimerDisplay.classList.add('warning');
+                }
+                
+                if (gameStats.gameTimeRemaining <= 0) {
+                    clearInterval(gameStats.gameTimer);
+                    gameTimerDisplay.classList.remove('active', 'warning', 'critical');
+                    if (gameStats.gameActive) {
+                        endGameByTime();
+                    }
+                }
+            }, 1000);
+        }
+
+        function endGameByTime() {
+            gameStats.gameActive = false;
+            gameStats.gameOver = true;
+            
+            // 停止當前題目計時器
+            if (gameStats.timer) {
+                clearInterval(gameStats.timer);
+                document.getElementById('timerDisplay').classList.remove('active', 'warning');
+            }
+            
+            const display = document.getElementById('gameOverDisplay');
+            const accuracy = gameStats.totalQuestions > 0 ? 
+                Math.round((gameStats.correctAnswers / gameStats.totalQuestions) * 100) : 0;
+            const avgTime = gameStats.totalQuestions > 0 ? 
+                Math.round(gameStats.totalTime / gameStats.totalQuestions * 10) / 10 : 0;
+            
+            display.innerHTML = `
+                <div class="game-over">
+                    ⏰ 競賽時間結束！⏰<br>
+                    ${currentUser}，您在2分鐘內的表現：<br><br>
+                    📊 最終成績：<br>
+                    答對 ${gameStats.correctAnswers} 題，總共 ${gameStats.totalQuestions} 題<br>
+                    正確率：${accuracy}%<br>
+                    平均答題時間：${avgTime} 秒<br><br>
+                    🎯 恭喜完成挑戰！點擊「開始競賽」再次挑戰！
+                </div>
+            `;
+            
+            // 準備上傳資料
+            const gameData = {
+                name: currentUser,
+                class: currentClass,
+                totalQuestions: gameStats.totalQuestions,
+                correctAnswers: gameStats.correctAnswers,
+                accuracy: accuracy + '%',
+                averageTime: avgTime + '秒',
+                gameTime: new Date().toLocaleString('zh-TW'),
+                totalGameTime: SYSTEM_CONFIG.gameTimeLimit + '秒',
+                endReason: '時間到'
+            };
+            
+            // 上傳成績
+            uploadScore(gameData);
+            
+            // 重置按鈕狀態
+            resetGameButtons();
+        }
             if (!gameStats.gameActive || gameStats.gameOver) return;
 
             // 重置狀態
@@ -1034,23 +1176,33 @@
                 accuracy: accuracy + '%',
                 averageTime: avgTime + '秒',
                 gameTime: new Date().toLocaleString('zh-TW'),
-                totalGameTime: totalGameTime + '秒'
+                totalGameTime: totalGameTime + '秒',
+                endReason: '連續答錯3題'
             };
             
             // 上傳成績
             uploadScore(gameData);
             
-            // 重置按鈕狀態
+            // 重置按鈕狀態和計時器
+            resetGameButtons();
+        }
+
+        function resetGameButtons() {
             document.getElementById('startBtn').disabled = false;
             document.getElementById('nextBtn').disabled = true;
             document.getElementById('submitBtn').disabled = true;
             document.getElementById('answerInput').disabled = true;
             document.getElementById('wrongStreakDisplay').innerHTML = '';
             
-            // 停止計時器
+            // 停止所有計時器
             if (gameStats.timer) {
                 clearInterval(gameStats.timer);
                 document.getElementById('timerDisplay').classList.remove('active', 'warning');
+            }
+            
+            if (gameStats.gameTimer) {
+                clearInterval(gameStats.gameTimer);
+                document.getElementById('gameTimerDisplay').classList.remove('active', 'warning', 'critical');
             }
         }
 
@@ -1086,6 +1238,10 @@
                 clearInterval(gameStats.timer);
             }
             
+            if (gameStats.gameTimer) {
+                clearInterval(gameStats.gameTimer);
+            }
+            
             gameStats = {
                 totalQuestions: 0,
                 correctAnswers: 0,
@@ -1099,10 +1255,13 @@
                 gameOver: false,
                 questionAnswered: false,
                 timeUp: false,
-                gameStartTime: 0
+                gameStartTime: 0,
+                gameTimer: null,
+                gameTimeRemaining: 0
             };
             
             document.getElementById('timerDisplay').classList.remove('active', 'warning');
+            document.getElementById('gameTimerDisplay').classList.remove('active', 'warning', 'critical');
             document.getElementById('answerInput').disabled = true;
             document.getElementById('submitBtn').disabled = true;
             document.getElementById('nextBtn').disabled = true;
@@ -1227,12 +1386,12 @@ function doPost(e) {
         <h3>系統配置範例</h3>
         <pre style="background: #f5f5f5; padding: 15px; border-radius: 5px;">
 // Google Apps Script API 網址 - 請管理員在此設定
-const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzdua1guVw1KbXnV_mFvG8D4XyASMRs2yo3zfX__xVRVkUo7nOkLgZRT9JZ7bDtERa1/exec';
+const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx.../exec';
 
 // 系統設定
 const SYSTEM_CONFIG = {
     enableScoreUpload: true,    // 是否啟用成績上傳功能
-    schoolName: '東興國民中學',      // 學校名稱
+    schoolName: '桃園國小',      // 學校名稱
     subject: '數學競賽',         // 科目名稱
     version: '1.0'              // 系統版本
 };
