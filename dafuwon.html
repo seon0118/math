@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🍄 數學王國大冒險 🌟</title>
+    <title>🍄 數學王國大冒險 - 升國中準備 🌟</title>
     <style>
         * {
             margin: 0;
@@ -15,8 +15,7 @@
             font-family: 'Microsoft JhengHei', sans-serif;
             background: linear-gradient(135deg, #87CEEB 0%, #98FB98 50%, #FFB6C1 100%);
             min-height: 100vh;
-            overflow-x: auto;
-            position: relative;
+            padding: 10px;
         }
 
         body::before {
@@ -27,33 +26,33 @@
             right: 0;
             bottom: 0;
             background-image: 
-                radial-gradient(circle at 20% 20%, rgba(255,255,255,0.3) 2px, transparent 2px),
-                radial-gradient(circle at 80% 80%, rgba(255,255,255,0.3) 2px, transparent 2px);
-            background-size: 50px 50px;
+                radial-gradient(circle at 20% 20%, rgba(255,255,255,0.2) 2px, transparent 2px),
+                radial-gradient(circle at 80% 80%, rgba(255,255,255,0.2) 2px, transparent 2px);
+            background-size: 60px 60px;
             pointer-events: none;
             z-index: -1;
         }
 
         .game-container {
-            padding: 20px;
-            max-width: 1200px;
+            max-width: 1000px;
             margin: 0 auto;
+            padding: 20px;
         }
 
         .game-title {
             text-align: center;
             color: #2E8B57;
             margin-bottom: 20px;
-            font-size: 32px;
+            font-size: 28px;
             font-weight: bold;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-            animation: bounce 2s infinite;
+            animation: bounce 2s infinite ease-in-out;
         }
 
         @keyframes bounce {
             0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-            40% { transform: translateY(-10px); }
-            60% { transform: translateY(-5px); }
+            40% { transform: translateY(-8px); }
+            60% { transform: translateY(-4px); }
         }
 
         /* 設定模態框 */
@@ -72,175 +71,182 @@
 
         .setup-content {
             background: linear-gradient(145deg, #FFE4E1 0%, #F0E68C 100%);
-            padding: 40px;
+            padding: 30px;
             border-radius: 20px;
             text-align: center;
             box-shadow: 0 20px 40px rgba(0,0,0,0.3);
             border: 4px solid #FF69B4;
-            max-width: 500px;
+            max-width: 450px;
             width: 90%;
         }
 
         .setup-content h2 {
             color: #FF1493;
-            margin-bottom: 30px;
-            font-size: 28px;
+            margin-bottom: 20px;
+            font-size: 24px;
         }
 
         .player-setup {
-            margin: 15px 0;
+            margin: 12px 0;
             display: flex;
             align-items: center;
             justify-content: space-between;
             background: white;
-            padding: 15px;
-            border-radius: 15px;
+            padding: 12px;
+            border-radius: 12px;
             border: 2px solid #FFB6C1;
         }
 
         .player-setup input {
             border: 2px solid #FF69B4;
-            border-radius: 10px;
-            padding: 10px;
-            font-size: 16px;
-            width: 200px;
+            border-radius: 8px;
+            padding: 8px;
+            font-size: 14px;
+            width: 150px;
         }
 
         .player-avatar {
-            width: 40px;
-            height: 40px;
+            width: 30px;
+            height: 30px;
             border-radius: 50%;
-            margin-right: 15px;
-            border: 3px solid white;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            margin-right: 10px;
+            border: 2px solid white;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
         }
 
         .start-btn {
             background: linear-gradient(45deg, #32CD32, #228B22);
             color: white;
             border: none;
-            padding: 15px 30px;
-            font-size: 20px;
-            border-radius: 15px;
+            padding: 15px 25px;
+            font-size: 18px;
+            border-radius: 12px;
             cursor: pointer;
             margin-top: 20px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
             transition: all 0.3s ease;
         }
 
         .start-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.4);
         }
 
-        /* 遊戲板 - 大富翁風格 */
-        .board-container {
+        /* 遊戲主版面 */
+        .game-board {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            align-items: start;
+        }
+
+        /* 棋盤區域 */
+        .board-area {
             display: flex;
             justify-content: center;
-            margin-bottom: 30px;
         }
 
         .board {
-            width: 700px;
-            height: 700px;
+            width: 600px;
+            height: 600px;
             position: relative;
             background: linear-gradient(45deg, #90EE90, #98FB98);
-            border-radius: 20px;
-            border: 8px solid #228B22;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border-radius: 15px;
+            border: 6px solid #228B22;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
         }
 
+        /* 中央區域 */
         .board-center {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 400px;
-            height: 400px;
+            width: 300px;
+            height: 300px;
             background: linear-gradient(45deg, #87CEEB, #B0E0E6);
-            border-radius: 15px;
+            border-radius: 12px;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             border: 4px solid #4682B4;
-            box-shadow: inset 0 5px 15px rgba(0,0,0,0.2);
+            box-shadow: inset 0 4px 12px rgba(0,0,0,0.2);
         }
 
         .center-title {
-            font-size: 24px;
+            font-size: 20px;
             font-weight: bold;
             color: #2E8B57;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
         }
 
         .dice-container {
             display: flex;
-            gap: 15px;
-            margin: 20px 0;
+            gap: 10px;
+            margin: 15px 0;
         }
 
         .dice {
-            width: 60px;
-            height: 60px;
+            width: 50px;
+            height: 50px;
             background: white;
-            border: 4px solid #FF4500;
-            border-radius: 12px;
+            border: 3px solid #FF4500;
+            border-radius: 8px;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 28px;
+            font-size: 24px;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            box-shadow: 0 3px 6px rgba(0,0,0,0.2);
         }
 
         .dice:hover {
-            transform: rotate(15deg) scale(1.1);
+            transform: rotate(10deg) scale(1.05);
         }
 
         .roll-btn {
             background: linear-gradient(45deg, #FF6347, #FF4500);
             color: white;
             border: none;
-            padding: 15px 25px;
-            font-size: 18px;
-            border-radius: 12px;
+            padding: 12px 20px;
+            font-size: 16px;
+            border-radius: 10px;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.3);
         }
 
         .roll-btn:hover:not(:disabled) {
             transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+            box-shadow: 0 5px 12px rgba(0,0,0,0.4);
         }
 
         .roll-btn:disabled {
             background: #ccc;
             cursor: not-allowed;
-            transform: none;
         }
 
         /* 棋盤格子 */
         .cell {
             position: absolute;
-            width: 80px;
-            height: 80px;
+            width: 70px;
+            height: 70px;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            font-size: 11px;
+            font-size: 10px;
             font-weight: bold;
             text-align: center;
-            border-radius: 12px;
+            border-radius: 8px;
             cursor: pointer;
             transition: all 0.3s ease;
-            border: 3px solid rgba(255,255,255,0.8);
-            box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+            border: 2px solid rgba(255,255,255,0.8);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
         }
 
         .cell:hover {
@@ -248,114 +254,98 @@
             z-index: 10;
         }
 
-        /* 格子類型樣式 */
+        /* 格子樣式 */
         .start { 
             background: linear-gradient(45deg, #32CD32, #228B22); 
             color: white;
-            border-color: #90EE90;
         }
         .math { 
             background: linear-gradient(45deg, #4169E1, #0000CD); 
             color: white;
-            border-color: #87CEEB;
         }
         .chance { 
             background: linear-gradient(45deg, #FFD700, #FFA500); 
             color: #8B4513;
-            border-color: #FFFFE0;
         }
         .destiny { 
             background: linear-gradient(45deg, #DA70D6, #9932CC); 
             color: white;
-            border-color: #DDA0DD;
         }
         .rest { 
             background: linear-gradient(45deg, #20B2AA, #008B8B); 
             color: white;
-            border-color: #AFEEEE;
         }
 
-        /* 角落特殊格子 */
-        .corner {
-            width: 90px;
-            height: 90px;
-            border-radius: 15px;
-            font-size: 12px;
-        }
-
-        /* 玩家角色 */
+        /* 玩家棋子 */
         .player {
             position: absolute;
-            width: 25px;
-            height: 25px;
+            width: 20px;
+            height: 20px;
             border-radius: 50%;
             border: 2px solid white;
             z-index: 100;
-            transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-            background-size: cover;
-            background-position: center;
+            transition: all 0.4s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
 
         .player.moving {
-            animation: jump 0.5s ease-in-out;
+            animation: jump 0.4s ease-in-out;
         }
 
         @keyframes jump {
             0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
+            50% { transform: translateY(-8px); }
         }
 
         .player1 { 
             background: linear-gradient(45deg, #FF1493, #FF69B4);
-            top: -5px; left: -5px;
+            top: 2px; left: 2px;
         }
         .player2 { 
             background: linear-gradient(45deg, #1E90FF, #00BFFF);
-            top: -5px; right: -5px;
+            top: 2px; right: 2px;
         }
         .player3 { 
             background: linear-gradient(45deg, #32CD32, #90EE90);
-            bottom: -5px; left: -5px;
+            bottom: 2px; left: 2px;
         }
         .player4 { 
             background: linear-gradient(45deg, #FF8C00, #FFA500);
-            bottom: -5px; right: -5px;
+            bottom: 2px; right: 2px;
         }
 
-        /* 玩家資訊面板 */
+        /* 遊戲資訊區 */
         .game-info {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 20px;
-            max-width: 700px;
-            margin: 0 auto;
+            margin-top: 20px;
         }
 
-        .players-panel {
+        .info-panel {
             background: linear-gradient(145deg, #F0F8FF, #E6E6FA);
             padding: 20px;
-            border-radius: 15px;
+            border-radius: 12px;
             border: 3px solid #9370DB;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
 
-        .players-panel h3 {
+        .info-panel h3 {
             color: #4B0082;
             margin-bottom: 15px;
             text-align: center;
-            font-size: 18px;
+            font-size: 16px;
         }
 
         .player-card {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 12px;
-            margin: 8px 0;
-            border-radius: 12px;
+            padding: 10px;
+            margin: 6px 0;
+            border-radius: 8px;
             background: white;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
             border: 2px solid transparent;
             transition: all 0.3s ease;
         }
@@ -364,50 +354,43 @@
             border-color: #FFD700;
             background: linear-gradient(145deg, #FFFACD, #F0E68C);
             transform: scale(1.02);
-            box-shadow: 0 4px 12px rgba(255,215,0,0.4);
+            box-shadow: 0 3px 8px rgba(255,215,0,0.4);
         }
 
         .player-name {
             display: flex;
             align-items: center;
             font-weight: bold;
+            font-size: 14px;
         }
 
         .player-avatar-small {
-            width: 30px;
-            height: 30px;
+            width: 25px;
+            height: 25px;
             border-radius: 50%;
-            margin-right: 10px;
+            margin-right: 8px;
             border: 2px solid white;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        }
-
-        .game-status {
-            background: linear-gradient(145deg, #FFE4E1, #FFF0F5);
-            padding: 20px;
-            border-radius: 15px;
-            border: 3px solid #FF69B4;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-            text-align: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
         }
 
         .game-message {
             background: linear-gradient(45deg, #98FB98, #90EE90);
-            padding: 15px;
-            border-radius: 12px;
-            margin: 15px 0;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 12px 0;
             font-weight: bold;
             color: #2E8B57;
             border: 2px solid #32CD32;
+            text-align: center;
             animation: pulse 2s infinite;
         }
 
         @keyframes pulse {
             0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.02); }
+            50% { transform: scale(1.01); }
         }
 
-        /* 模態框樣式 */
+        /* 模態框 */
         .modal {
             display: none;
             position: fixed;
@@ -421,14 +404,14 @@
 
         .modal-content {
             background: linear-gradient(145deg, #FFF8DC, #F5DEB3);
-            margin: 10% auto;
-            padding: 30px;
-            border-radius: 20px;
+            margin: 8% auto;
+            padding: 25px;
+            border-radius: 15px;
             width: 90%;
-            max-width: 500px;
+            max-width: 450px;
             text-align: center;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-            border: 4px solid #DAA520;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.4);
+            border: 3px solid #DAA520;
             animation: modalAppear 0.3s ease-out;
         }
 
@@ -439,16 +422,16 @@
 
         .modal h2 {
             color: #B8860B;
-            margin-bottom: 20px;
-            font-size: 24px;
+            margin-bottom: 15px;
+            font-size: 20px;
         }
 
         .question {
-            font-size: 18px;
-            margin: 20px 0;
-            padding: 20px;
+            font-size: 16px;
+            margin: 15px 0;
+            padding: 15px;
             background: linear-gradient(45deg, #F0F8FF, #E6E6FA);
-            border-radius: 12px;
+            border-radius: 10px;
             border: 2px solid #9370DB;
             color: #4B0082;
             font-weight: bold;
@@ -457,18 +440,18 @@
         .answers {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin: 20px 0;
+            gap: 10px;
+            margin: 15px 0;
         }
 
         .answer-btn {
-            padding: 15px;
-            border: 3px solid #9370DB;
+            padding: 12px;
+            border: 2px solid #9370DB;
             background: linear-gradient(45deg, #E6E6FA, #D8BFD8);
-            border-radius: 12px;
+            border-radius: 8px;
             cursor: pointer;
             transition: all 0.3s ease;
-            font-size: 16px;
+            font-size: 14px;
             font-weight: bold;
             color: #4B0082;
         }
@@ -477,52 +460,62 @@
             background: linear-gradient(45deg, #DDA0DD, #DA70D6);
             color: white;
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.3);
         }
 
         .close-btn {
             background: linear-gradient(45deg, #FF6347, #FF4500);
             color: white;
             border: none;
-            padding: 12px 24px;
-            border-radius: 10px;
+            padding: 10px 20px;
+            border-radius: 8px;
             cursor: pointer;
             margin: 10px;
-            font-size: 16px;
+            font-size: 14px;
             font-weight: bold;
             transition: all 0.3s ease;
         }
 
         .close-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.3);
         }
 
         /* 響應式設計 */
         @media (max-width: 768px) {
             .board {
-                width: 500px;
-                height: 500px;
+                width: 400px;
+                height: 400px;
             }
             
             .board-center {
-                width: 280px;
-                height: 280px;
+                width: 200px;
+                height: 200px;
             }
             
             .cell {
-                width: 60px;
-                height: 60px;
-                font-size: 9px;
+                width: 50px;
+                height: 50px;
+                font-size: 8px;
             }
             
-            .corner {
-                width: 70px;
-                height: 70px;
+            .player {
+                width: 15px;
+                height: 15px;
             }
             
             .game-info {
                 grid-template-columns: 1fr;
+            }
+
+            .center-title {
+                font-size: 16px;
+            }
+
+            .dice {
+                width: 40px;
+                height: 40px;
+                font-size: 20px;
             }
         }
     </style>
@@ -532,14 +525,14 @@
     <div id="setupModal" class="setup-modal">
         <div class="setup-content">
             <h2>🎮 歡迎來到數學王國！</h2>
-            <p style="margin-bottom: 25px; color: #8B4513; font-size: 16px;">請輸入玩家名稱開始遊戲</p>
+            <p style="margin-bottom: 20px; color: #8B4513; font-size: 14px;">請輸入玩家名稱開始遊戲</p>
             
             <div class="player-setup">
                 <div style="display: flex; align-items: center;">
                     <div class="player-avatar" style="background: linear-gradient(45deg, #FF1493, #FF69B4);"></div>
                     <span>玩家1：</span>
                 </div>
-                <input type="text" id="player1Name" placeholder="輸入名稱" maxlength="8">
+                <input type="text" id="player1Name" placeholder="輸入名稱" maxlength="6" value="小紅">
             </div>
             
             <div class="player-setup">
@@ -547,7 +540,7 @@
                     <div class="player-avatar" style="background: linear-gradient(45deg, #1E90FF, #00BFFF);"></div>
                     <span>玩家2：</span>
                 </div>
-                <input type="text" id="player2Name" placeholder="輸入名稱" maxlength="8">
+                <input type="text" id="player2Name" placeholder="輸入名稱" maxlength="6" value="小藍">
             </div>
             
             <div class="player-setup">
@@ -555,7 +548,7 @@
                     <div class="player-avatar" style="background: linear-gradient(45deg, #32CD32, #90EE90);"></div>
                     <span>玩家3：</span>
                 </div>
-                <input type="text" id="player3Name" placeholder="輸入名稱" maxlength="8">
+                <input type="text" id="player3Name" placeholder="輸入名稱" maxlength="6" value="小綠">
             </div>
             
             <div class="player-setup">
@@ -563,7 +556,7 @@
                     <div class="player-avatar" style="background: linear-gradient(45deg, #FF8C00, #FFA500);"></div>
                     <span>玩家4：</span>
                 </div>
-                <input type="text" id="player4Name" placeholder="輸入名稱" maxlength="8">
+                <input type="text" id="player4Name" placeholder="輸入名稱" maxlength="6" value="小橙">
             </div>
             
             <button class="start-btn" onclick="startGame()">🚀 開始冒險！</button>
@@ -573,28 +566,30 @@
     <div class="game-container">
         <h1 class="game-title">🍄 數學王國大冒險 🌟</h1>
         
-        <div class="board-container">
-            <div class="board" id="board">
-                <div class="board-center">
-                    <div class="center-title">🎯 數學王國</div>
-                    <div class="dice-container">
-                        <div class="dice" id="dice1">🎲</div>
-                        <div class="dice" id="dice2">🎲</div>
+        <div class="game-board">
+            <div class="board-area">
+                <div class="board" id="board">
+                    <div class="board-center">
+                        <div class="center-title">🎯 數學王國</div>
+                        <div class="dice-container">
+                            <div class="dice" id="dice1">1</div>
+                            <div class="dice" id="dice2">1</div>
+                        </div>
+                        <button class="roll-btn" id="rollBtn" onclick="rollDice()">🎲 擲骰子</button>
                     </div>
-                    <button class="roll-btn" id="rollBtn" onclick="rollDice()">🎲 擲骰子</button>
                 </div>
             </div>
-        </div>
-        
-        <div class="game-info">
-            <div class="players-panel">
-                <h3>👥 冒險者資訊</h3>
-                <div id="playersInfo"></div>
-            </div>
             
-            <div class="game-status">
-                <h3>🎮 遊戲狀態</h3>
-                <div class="game-message" id="gameMessage">等待開始遊戲...</div>
+            <div class="game-info">
+                <div class="info-panel">
+                    <h3>👥 冒險者資訊</h3>
+                    <div id="playersInfo"></div>
+                </div>
+                
+                <div class="info-panel">
+                    <h3>🎮 遊戲狀態</h3>
+                    <div class="game-message" id="gameMessage">等待開始遊戲...</div>
+                </div>
             </div>
         </div>
     </div>
@@ -637,46 +632,39 @@
             { name: '小橙', position: 0, score: 0, color: 'linear-gradient(45deg, #FF8C00, #FFA500)' }
         ];
 
-        // 棋盤格子配置 - 大富翁風格排列
-        const boardLayout = [
-            // 下邊 (從左到右)
-            { type: 'start', text: '🏠\n起點', emoji: '🏠' },
-            { type: 'math', text: '📊\n分數', emoji: '📊' },
-            { type: 'chance', text: '🍀\n機會', emoji: '🍀' },
-            { type: 'math', text: '💰\n小數', emoji: '💰' },
-            { type: 'math', text: '📈\n百分比', emoji: '📈' },
-            { type: 'destiny', text: '⭐\n命運', emoji: '⭐' },
-            { type: 'math', text: '🔢\n因數', emoji: '🔢' },
-            { type: 'rest', text: '☕\n休息', emoji: '☕' },
+        // 棋盤格子配置 - 簡化版本，24格圍成一圈
+        const boardCells = [
+            // 下邊 (0-5)
+            { type: 'start', text: '🏠起點' },
+            { type: 'math', text: '📊分數' },
+            { type: 'chance', text: '🍀機會' },
+            { type: 'math', text: '💰小數' },
+            { type: 'math', text: '📈百分比' },
+            { type: 'destiny', text: '⭐命運' },
             
-            // 右邊 (從下到上)
-            { type: 'math', text: '✖️\n倍數', emoji: '✖️' },
-            { type: 'math', text: '📐\n面積', emoji: '📐' },
-            { type: 'chance', text: '🎁\n機會', emoji: '🎁' },
-            { type: 'math', text: '📦\n體積', emoji: '📦' },
-            { type: 'math', text: '⚖️\n比例', emoji: '⚖️' },
-            { type: 'math', text: '🏃\n速率', emoji: '🏃' },
-            { type: 'destiny', text: '🌟\n命運', emoji: '🌟' },
+            // 右邊 (6-11)
+            { type: 'math', text: '🔢因數' },
+            { type: 'rest', text: '☕休息' },
+            { type: 'math', text: '✖️倍數' },
+            { type: 'math', text: '📐面積' },
+            { type: 'chance', text: '🎁機會' },
+            { type: 'math', text: '📦體積' },
             
-            // 上邊 (從右到左)
-            { type: 'rest', text: '🌴\n度假', emoji: '🌴' },
-            { type: 'math', text: '⭕\n圓周', emoji: '⭕' },
-            { type: 'math', text: '📋\n統計', emoji: '📋' },
-            { type: 'chance', text: '🎲\n機會', emoji: '🎲' },
-            { type: 'math', text: '🎯\n機率', emoji: '🎯' },
-            { type: 'math', text: '🔤\n代數', emoji: '🔤' },
-            { type: 'math', text: '📏\n幾何', emoji: '📏' },
-            { type: 'destiny', text: '💫\n命運', emoji: '💫' },
+            // 上邊 (12-17)
+            { type: 'math', text: '⚖️比例' },
+            { type: 'math', text: '🏃速率' },
+            { type: 'destiny', text: '🌟命運' },
+            { type: 'rest', text: '🌴度假' },
+            { type: 'math', text: '⭕圓周' },
+            { type: 'math', text: '📋統計' },
             
-            // 左邊 (從上到下)
-            { type: 'math', text: '➖\n負數', emoji: '➖' },
-            { type: 'math', text: '🔍\n方程', emoji: '🔍' },
-            { type: 'chance', text: '🎪\n機會', emoji: '🎪' },
-            { type: 'math', text: '📍\n座標', emoji: '📍' },
-            { type: 'rest', text: '🛏️\n睡覺', emoji: '🛏️' },
-            { type: 'math', text: '📈\n函數', emoji: '📈' },
-            { type: 'math', text: '📐\n三角', emoji: '📐' },
-            { type: 'math', text: '²\n平方', emoji: '²' }
+            // 左邊 (18-23)
+            { type: 'chance', text: '🎲機會' },
+            { type: 'math', text: '🎯機率' },
+            { type: 'math', text: '🔤代數' },
+            { type: 'math', text: '📏幾何' },
+            { type: 'destiny', text: '💫命運' },
+            { type: 'math', text: '➖負數' }
         ];
 
         // 數學題目庫
@@ -720,16 +708,6 @@
                 question: "⭕ 圓的半徑是4公分，直徑是多少？",
                 answers: ["4公分", "8公分", "12公分", "16公分"],
                 correct: 1
-            },
-            {
-                question: "🚗 小車每小時行駛60公里，3小時能行駛多遠？",
-                answers: ["20公里", "63公里", "180公里", "240公里"],
-                correct: 2
-            },
-            {
-                question: "🍎 一籃子有紅蘋果6個，綠蘋果4個，紅蘋果占總數的幾分之幾？",
-                answers: ["4/10", "6/10", "6/4", "4/6"],
-                correct: 1
             }
         ];
 
@@ -740,9 +718,7 @@
             "😅 計算時忘記進位了，後退2格再仔細想想！",
             "🎉 發現了新的解題方法，前進4格！",
             "👂 上課專心聽講，理解更深刻，獲得15分！",
-            "😴 上課打瞌睡錯過重點，停止一回合！",
-            "📚 主動複習昨天的課程，前進2格！",
-            "🎯 考試滿分，老師誇獎你，獲得20分！"
+            "😴 上課打瞌睡錯過重點，停止一回合！"
         ];
 
         // 命運卡內容
@@ -752,42 +728,50 @@
             "😰 考試時太緊張，粗心算錯，後退3格！",
             "🤔 成功解出超難題目，同學都佩服你，前進6格！",
             "🧹 主動幫老師整理數學教具，獲得15分！",
-            "⏰ 睡過頭遲到了，匆忙趕到學校，後退1格！",
-            "📖 發現數學的趣味，愛上數學，獲得30分！",
-            "🎮 玩遊戲玩太久，功課沒做完，停止一回合！"
+            "⏰ 睡過頭遲到了，匆忙趕到學校，後退1格！"
         ];
 
-        // 棋盤位置計算
+        // 計算格子位置
         function getCellPosition(index) {
-            const cellSize = 80;
-            const boardSize = 700;
-            const margin = 10;
+            const boardSize = 600;
+            const cellSize = 70;
+            const margin = 15;
             
-            if (index >= 0 && index <= 7) {
-                // 下邊
-                return {
-                    left: margin + index * cellSize + (index * 2),
+            const positions = [];
+            
+            // 下邊 (0-5)
+            for (let i = 0; i < 6; i++) {
+                positions.push({
+                    left: margin + i * (cellSize + 5),
                     bottom: margin
-                };
-            } else if (index >= 8 && index <= 14) {
-                // 右邊
-                return {
-                    right: margin,
-                    bottom: margin + (index - 7) * cellSize + ((index - 7) * 2)
-                };
-            } else if (index >= 15 && index <= 22) {
-                // 上邊
-                return {
-                    right: margin + (index - 14) * cellSize + ((index - 14) * 2),
-                    top: margin
-                };
-            } else if (index >= 23 && index <= 31) {
-                // 左邊
-                return {
-                    left: margin,
-                    top: margin + (index - 22) * cellSize + ((index - 22) * 2)
-                };
+                });
             }
+            
+            // 右邊 (6-11)
+            for (let i = 0; i < 6; i++) {
+                positions.push({
+                    right: margin,
+                    bottom: margin + (i + 1) * (cellSize + 5)
+                });
+            }
+            
+            // 上邊 (12-17)
+            for (let i = 0; i < 6; i++) {
+                positions.push({
+                    right: margin + i * (cellSize + 5),
+                    top: margin
+                });
+            }
+            
+            // 左邊 (18-23)
+            for (let i = 0; i < 6; i++) {
+                positions.push({
+                    left: margin,
+                    top: margin + (i + 1) * (cellSize + 5)
+                });
+            }
+            
+            return positions[index];
         }
 
         // 開始遊戲
@@ -804,6 +788,11 @@
             gameStarted = true;
             initBoard();
             updateGameDisplay();
+            
+            // 啟用擲骰子按鈕
+            const rollBtn = document.getElementById('rollBtn');
+            rollBtn.disabled = false;
+            showMessage(`🎮 遊戲開始！${players[currentPlayer].name} 的回合，請擲骰子！`);
         }
 
         // 初始化棋盤
@@ -815,7 +804,7 @@
             existingCells.forEach(cell => cell.remove());
             
             // 創建格子
-            boardLayout.forEach((cellData, index) => {
+            boardCells.forEach((cellData, index) => {
                 const cell = document.createElement('div');
                 cell.className = `cell ${cellData.type}`;
                 cell.id = `cell-${index}`;
@@ -826,11 +815,6 @@
                 Object.keys(position).forEach(key => {
                     cell.style[key] = position[key] + 'px';
                 });
-                
-                // 角落格子特殊樣式
-                if (index === 0 || index === 7 || index === 15 || index === 23) {
-                    cell.classList.add('corner');
-                }
                 
                 board.appendChild(cell);
             });
@@ -885,13 +869,19 @@
 
         // 擲骰子
         function rollDice() {
-            if (!gameStarted) return;
+            if (!gameStarted) {
+                showMessage('請先開始遊戲！');
+                return;
+            }
             
             const dice1Element = document.getElementById('dice1');
             const dice2Element = document.getElementById('dice2');
             const rollBtn = document.getElementById('rollBtn');
             
+            if (rollBtn.disabled) return;
+            
             rollBtn.disabled = true;
+            showMessage(`🎲 ${players[currentPlayer].name} 正在擲骰子...`);
             
             // 骰子滾動動畫
             let rollCount = 0;
@@ -902,7 +892,7 @@
                 dice2Element.textContent = temp2;
                 
                 rollCount++;
-                if (rollCount >= 10) {
+                if (rollCount >= 8) {
                     clearInterval(rollInterval);
                     
                     // 最終結果
@@ -913,9 +903,11 @@
                     dice1Element.textContent = dice1;
                     dice2Element.textContent = dice2;
                     
+                    showMessage(`🎯 ${players[currentPlayer].name} 擲出 ${dice1} + ${dice2} = ${total} 點！`);
+                    
                     setTimeout(() => {
                         movePlayer(total);
-                    }, 500);
+                    }, 1000);
                 }
             }, 100);
         }
@@ -923,13 +915,12 @@
         // 移動玩家
         function movePlayer(steps) {
             const player = players[currentPlayer];
-            const oldPosition = player.position;
             
             // 移動動畫
             let currentStep = 0;
             const moveInterval = setInterval(() => {
                 if (currentStep < steps) {
-                    player.position = (player.position + 1) % boardLayout.length;
+                    player.position = (player.position + 1) % boardCells.length;
                     updatePlayerPositions();
                     
                     // 添加跳躍動畫
@@ -938,7 +929,7 @@
                         playerElement.classList.add('moving');
                         setTimeout(() => {
                             playerElement.classList.remove('moving');
-                        }, 500);
+                        }, 400);
                     }
                     
                     currentStep++;
@@ -947,15 +938,16 @@
                     if (player.position === 0 && currentStep < steps) {
                         player.score += 20;
                         showMessage(`🎉 ${player.name} 經過起點，獲得20分！`);
+                        updateGameDisplay();
                     }
                 } else {
                     clearInterval(moveInterval);
                     
                     // 處理到達格子的事件
-                    const currentCell = boardLayout[player.position];
+                    const currentCell = boardCells[player.position];
                     handleCellAction(currentCell);
                 }
-            }, 300);
+            }, 400);
         }
 
         // 處理格子事件
@@ -977,10 +969,9 @@
                     setTimeout(nextPlayer, 2000);
                     break;
                 case 'start':
-                    if (player.position === 0) {
-                        showMessage(`🏠 ${player.name} 回到起點，獲得30分！`);
-                        player.score += 30;
-                    }
+                    showMessage(`🏠 ${player.name} 回到起點，獲得30分！`);
+                    player.score += 30;
+                    updateGameDisplay();
                     setTimeout(nextPlayer, 2000);
                     break;
             }
@@ -1017,6 +1008,7 @@
             }
             
             closeModal('mathModal');
+            updateGameDisplay();
             setTimeout(nextPlayer, 2000);
         }
 
@@ -1028,7 +1020,7 @@
             
             setTimeout(() => {
                 handleCardEffect(card);
-            }, 1000);
+            }, 1500);
         }
 
         // 顯示命運卡
@@ -1039,7 +1031,7 @@
             
             setTimeout(() => {
                 handleCardEffect(card);
-            }, 1000);
+            }, 1500);
         }
 
         // 處理卡片效果
@@ -1055,8 +1047,6 @@
             } else if (cardText.includes('獲得') && cardText.includes('分')) {
                 const score = parseInt(cardText.match(/\d+/)[0]);
                 player.score += score;
-            } else if (cardText.includes('停止一回合')) {
-                // 跳過下次回合的處理會在nextPlayer中實現
             }
             
             updatePlayerPositions();
@@ -1067,7 +1057,7 @@
         function movePlayerSteps(steps) {
             const player = players[currentPlayer];
             if (steps > 0) {
-                player.position = (player.position + steps) % boardLayout.length;
+                player.position = (player.position + steps) % boardCells.length;
             } else {
                 player.position = Math.max(0, player.position + steps);
                 if (player.position < 0) {
@@ -1098,15 +1088,24 @@
 
         // 初始化遊戲
         document.addEventListener('DOMContentLoaded', function() {
-            // 遊戲開始前顯示設定畫面
-            document.getElementById('rollBtn').disabled = true;
+            // 確保遊戲開始前骰子按鈕是禁用的
+            const rollBtn = document.getElementById('rollBtn');
+            rollBtn.disabled = true;
+            
+            // 確保設定模態框顯示
+            document.getElementById('setupModal').style.display = 'flex';
+            
+            console.log('遊戲初始化完成');
         });
 
         // 添加鍵盤快捷鍵
         document.addEventListener('keydown', function(event) {
-            if (event.code === 'Space' && gameStarted && !document.getElementById('rollBtn').disabled) {
-                event.preventDefault();
-                rollDice();
+            if (event.code === 'Space' && gameStarted) {
+                const rollBtn = document.getElementById('rollBtn');
+                if (!rollBtn.disabled) {
+                    event.preventDefault();
+                    rollDice();
+                }
             }
         });
 
@@ -1120,6 +1119,22 @@
                 }
             });
         }
+
+        // 確保按鈕點擊事件正常工作
+        function ensureButtonWorks() {
+            const rollBtn = document.getElementById('rollBtn');
+            if (rollBtn) {
+                rollBtn.addEventListener('click', function() {
+                    console.log('擲骰子按鈕被點擊');
+                    rollDice();
+                });
+            }
+        }
+
+        // 頁面載入完成後確保按鈕功能
+        window.addEventListener('load', function() {
+            ensureButtonWorks();
+        });
     </script>
 </body>
 </html>
