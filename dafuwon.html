@@ -6,7 +6,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🍄 數學王國大冒險 - 升國中準備 🌟</title>
+    <title>🍄 數學王國大冒險 🌟</title>
     <style>
         * {
             margin: 0;
@@ -604,13 +604,14 @@
         .answer-explanation {
             margin: 15px 0;
             padding: 15px;
-            background: linear-gradient(45deg, #F0FFF0, #E0FFE0);
+            background: linear-gradient(45deg, rgba(0,50,25,0.8), rgba(0,80,40,0.9));
             border-radius: 10px;
-            border: 2px solid #32CD32;
-            color: #006400;
+            border: 2px solid rgba(0,255,128,0.4);
+            color: #00ff80;
             font-weight: bold;
             text-align: left;
             display: none;
+            box-shadow: 0 0 15px rgba(0,255,128,0.2);
         }
 
         .answer-explanation.show {
@@ -621,6 +622,38 @@
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(-10px); }
             to { opacity: 1; transform: translateY(0); }
+        }
+
+        .confirm-btn {
+            background: linear-gradient(45deg, #00ff80, #00cc60);
+            color: #003320;
+            border: 2px solid rgba(0,255,128,0.6);
+            padding: 12px 25px;
+            border-radius: 10px;
+            cursor: pointer;
+            margin: 15px 10px;
+            font-size: 16px;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 
+                0 4px 15px rgba(0,0,0,0.3),
+                0 0 20px rgba(0,255,128,0.3);
+            display: none;
+        }
+
+        .confirm-btn.show {
+            display: inline-block;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        .confirm-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 
+                0 6px 20px rgba(0,0,0,0.4),
+                0 0 30px rgba(0,255,128,0.5);
+            background: linear-gradient(45deg, #00ff80, #00ff60);
         }
 
         .close-btn {
@@ -811,6 +844,7 @@
                 <div style="font-size: 18px; margin-bottom: 10px;">📝 詳細解答：</div>
                 <div id="explanationText"></div>
             </div>
+            <button class="confirm-btn" id="confirmBtn" onclick="confirmAndContinue()">✅ 我了解了，繼續遊戲</button>
         </div>
     </div>
 
@@ -1239,9 +1273,11 @@
             const answersDiv = document.getElementById('mathAnswers');
             answersDiv.innerHTML = '';
             
-            // 重置解釋區域
+            // 重置解釋區域和確認按鈕
             const explanationDiv = document.getElementById('answerExplanation');
+            const confirmBtn = document.getElementById('confirmBtn');
             explanationDiv.classList.remove('show');
+            confirmBtn.classList.remove('show');
             
             question.answers.forEach((answer, index) => {
                 const btn = document.createElement('button');
@@ -1305,10 +1341,16 @@
             
             updateGameDisplay();
             
-            // 4秒後自動關閉模態框
+            // 顯示確認按鈕（解釋顯示後1.5秒）
             setTimeout(() => {
-                closeModal('mathModal');
-            }, 4000);
+                const confirmBtn = document.getElementById('confirmBtn');
+                confirmBtn.classList.add('show');
+            }, 2500);
+        }
+
+        // 確認並繼續遊戲
+        function confirmAndContinue() {
+            closeModal('mathModal');
         }
 
         // 顯示解釋
@@ -1392,6 +1434,7 @@
                     btn.classList.remove('correct', 'incorrect');
                 });
                 document.getElementById('answerExplanation').classList.remove('show');
+                document.getElementById('confirmBtn').classList.remove('show');
                 currentQuestionIndex = -1;
                 selectedAnswerIndex = -1;
             }
