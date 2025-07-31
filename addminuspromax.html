@@ -1,0 +1,1242 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>正負數加減法競賽版本</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .login-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            animation: slideIn 0.8s ease-out;
+            text-align: center;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 800px;
+            width: 100%;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            animation: slideIn 0.8s ease-out;
+            display: none;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .title {
+            font-size: 2.5em;
+            color: #2c5282;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .subtitle {
+            color: #4a5568;
+            font-size: 1.1em;
+        }
+
+        .competition-badge {
+            display: inline-block;
+            background: linear-gradient(45deg, #f56565, #e53e3e);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 1.2em;
+            font-weight: bold;
+            margin: 10px 0;
+            box-shadow: 0 4px 15px rgba(245, 101, 101, 0.3);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .welcome-text {
+            color: #2c5282;
+            font-size: 1.2em;
+            margin-bottom: 20px;
+        }
+
+        .user-info {
+            background: linear-gradient(135deg, #e6fffa, #b2f5ea);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .username-display {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #2c5282;
+        }
+
+        .login-form {
+            margin-bottom: 30px;
+        }
+
+        .login-input, .class-input {
+            width: 100%;
+            padding: 15px 20px;
+            border: 3px solid #cbd5e0;
+            border-radius: 10px;
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .login-input:focus, .class-input:focus {
+            outline: none;
+            border-color: #4299e1;
+            box-shadow: 0 0 20px rgba(66, 153, 225, 0.3);
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 30px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .competition-info {
+            background: linear-gradient(45deg, #f56565, #e53e3e);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(245, 101, 101, 0.3);
+        }
+
+        .upload-status {
+            background: linear-gradient(45deg, #48bb78, #38a169);
+            color: white;
+            padding: 10px;
+            border-radius: 10px;
+            margin: 10px 0;
+            text-align: center;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(72, 187, 120, 0.3);
+            display: none;
+        }
+
+        .upload-status.error {
+            background: linear-gradient(45deg, #f56565, #e53e3e);
+            box-shadow: 0 4px 15px rgba(245, 101, 101, 0.3);
+        }
+
+        .upload-status.uploading {
+            background: linear-gradient(45deg, #ed8936, #dd6b20);
+            box-shadow: 0 4px 15px rgba(237, 137, 54, 0.3);
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #4299e1, #3182ce);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(45deg, #48bb78, #38a169);
+            color: white;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-danger {
+            background: linear-gradient(45deg, #f56565, #e53e3e);
+            color: white;
+        }
+
+        .btn-danger:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-warning {
+            background: linear-gradient(45deg, #ed8936, #dd6b20);
+            color: white;
+        }
+
+        .btn-warning:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #e6fffa, #b2f5ea);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transform: perspective(1000px) rotateX(5deg);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: perspective(1000px) rotateX(0deg) translateY(-5px);
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #2c5282;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #4a5568;
+            font-size: 0.9em;
+        }
+
+        .question-area {
+            background: linear-gradient(135deg, #f7fafc, #edf2f7);
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            text-align: center;
+            box-shadow: inset 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .question {
+            font-size: 2em;
+            color: #2d3748;
+            margin-bottom: 20px;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .question-type {
+            display: inline-block;
+            background: linear-gradient(45deg, #48bb78, #38a169);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .answer-area {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .answer-input {
+            padding: 15px 20px;
+            border: 3px solid #cbd5e0;
+            border-radius: 10px;
+            font-size: 1.5em;
+            text-align: center;
+            width: 150px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .answer-input:focus {
+            outline: none;
+            border-color: #4299e1;
+            box-shadow: 0 0 20px rgba(66, 153, 225, 0.3);
+            transform: scale(1.05);
+        }
+
+        .answer-input:disabled {
+            background-color: #f7fafc;
+            color: #a0aec0;
+            cursor: not-allowed;
+        }
+
+        .feedback {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: bold;
+            text-align: center;
+            transition: all 0.3s ease;
+            transform: scale(0);
+        }
+
+        .feedback.show {
+            transform: scale(1);
+        }
+
+        .feedback.correct {
+            background: linear-gradient(45deg, #48bb78, #38a169);
+            color: white;
+            box-shadow: 0 4px 15px rgba(72, 187, 120, 0.3);
+        }
+
+        .feedback.incorrect {
+            background: linear-gradient(45deg, #f56565, #e53e3e);
+            color: white;
+            box-shadow: 0 4px 15px rgba(245, 101, 101, 0.3);
+        }
+
+        .timeout-warning {
+            background: linear-gradient(45deg, #f56565, #e53e3e);
+            color: white;
+            box-shadow: 0 4px 15px rgba(245, 101, 101, 0.3);
+        }
+
+        .wrong-streak {
+            background: linear-gradient(45deg, #ed8936, #dd6b20);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: bold;
+            animation: shake 0.5s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .game-over {
+            background: linear-gradient(45deg, #f56565, #e53e3e);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 1.2em;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(245, 101, 101, 0.3);
+        }
+
+        .number-line {
+            margin: 20px 0;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .number-line svg {
+            width: 100%;
+            height: 100px;
+        }
+
+        .timer-display {
+            font-size: 2em;
+            font-weight: bold;
+            color: #f56565;
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(245, 101, 101, 0.1);
+            border: 3px solid #f56565;
+            border-radius: 15px;
+            display: none;
+        }
+
+        .timer-display.active {
+            display: block;
+            animation: timerPulse 1s infinite;
+        }
+
+        .timer-display.warning {
+            color: #e53e3e;
+            background: rgba(229, 62, 62, 0.2);
+            border-color: #e53e3e;
+            animation: timerWarning 0.5s infinite;
+        }
+
+        @keyframes timerPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        @keyframes timerWarning {
+            0%, 100% { transform: scale(1); background: rgba(229, 62, 62, 0.2); }
+            50% { transform: scale(1.05); background: rgba(229, 62, 62, 0.4); }
+        }
+
+        .setup-info {
+            background: linear-gradient(135deg, #e6f3ff, #cce7ff);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 5px solid #4299e1;
+        }
+
+        .setup-info h3 {
+            color: #2c5282;
+            margin-bottom: 10px;
+        }
+
+        .setup-info p {
+            color: #4a5568;
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+
+        .setup-info code {
+            background: rgba(66, 153, 225, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            color: #2c5282;
+        }
+
+        @media (max-width: 768px) {
+            .game-container, .login-container {
+                padding: 20px;
+            }
+
+            .title {
+                font-size: 2em;
+            }
+
+            .question {
+                font-size: 1.5em;
+            }
+
+            .controls {
+                flex-direction: column;
+            }
+
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .timer-display {
+                font-size: 1.5em;
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 登入畫面 -->
+    <div class="login-container" id="loginContainer">
+        <div class="header">
+            <h1 class="title">正負數加減法遊戲</h1>
+            <div class="competition-badge">🏆 競賽版本 🏆</div>
+            <p class="subtitle">挑戰您的數學技能！</p>
+        </div>
+        
+        <div class="setup-info">
+            <h3>📊 成績自動上傳功能</h3>
+            <p>✅ 系統已配置成績上傳功能</p>
+            <p>🎯 完成競賽後，您的成績將自動記錄到系統資料庫</p>
+            <p>📈 老師可以即時查看所有學生的競賽表現</p>
+        </div>
+        
+        <div class="login-form">
+            <div class="welcome-text">請輸入資訊開始競賽</div>
+            <input type="text" class="login-input" id="usernameInput" placeholder="請輸入您的姓名" maxlength="20">
+            <input type="text" class="class-input" id="classInput" placeholder="請輸入班級（選填）" maxlength="20">
+            <button class="btn btn-primary" onclick="login()">開始競賽</button>
+        </div>
+
+        <div class="upload-status" id="uploadStatus"></div>
+    </div>
+
+    <!-- 遊戲畫面 -->
+    <div class="game-container" id="gameContainer">
+        <div class="header">
+            <h1 class="title">正負數加減法競賽版本</h1>
+            <p class="subtitle">包含加法交換律、結合律、去括號及數線距離</p>
+        </div>
+
+        <div class="user-info">
+            <div class="username-display" id="usernameDisplay"></div>
+        </div>
+
+        <div class="competition-info">
+            ⚡ 競賽規則：每題限時30秒，連續答錯3題即結束競賽 ⚡
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-primary" onclick="startGame()" id="startBtn">開始競賽</button>
+            <button class="btn btn-danger" onclick="resetGame()">重置競賽</button>
+            <button class="btn btn-warning" onclick="logout()">登出</button>
+        </div>
+
+        <div class="timer-display" id="timerDisplay"></div>
+
+        <div id="wrongStreakDisplay"></div>
+        <div id="gameOverDisplay"></div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="totalQuestions">0</div>
+                <div class="stat-label">總題數</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="correctAnswers">0</div>
+                <div class="stat-label">答對</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="accuracy">0%</div>
+                <div class="stat-label">正確率</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="averageTime">0</div>
+                <div class="stat-label">平均時間</div>
+            </div>
+        </div>
+
+        <div class="question-area">
+            <div class="question-type" id="questionType">點擊「開始競賽」開始挑戰</div>
+            <div class="question" id="questionText">準備好了嗎？</div>
+            <div class="number-line" id="numberLine" style="display: none;"></div>
+            <div class="answer-area">
+                <input type="number" class="answer-input" id="answerInput" placeholder="輸入答案" disabled>
+                <button class="btn btn-primary" onclick="checkAnswer()" disabled id="submitBtn">提交答案</button>
+                <button class="btn btn-secondary" onclick="nextQuestion()" disabled id="nextBtn">下一題</button>
+            </div>
+        </div>
+
+        <div class="feedback" id="feedback"></div>
+        <div class="upload-status" id="gameUploadStatus"></div>
+    </div>
+
+    <script>
+        // ============================================
+        // 🔧 系統配置區域 - 管理員設定
+        // ============================================
+        
+        // Google Apps Script API 網址 - 請管理員在此設定
+        const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec';
+        
+        // 系統設定
+        const SYSTEM_CONFIG = {
+            enableScoreUpload: true,  // 是否啟用成績上傳功能
+            schoolName: '○○國小',     // 學校名稱
+            subject: '數學競賽',       // 科目名稱
+            version: '1.0'            // 系統版本
+        };
+        
+        // ============================================
+        
+        let gameStats = {
+            totalQuestions: 0,
+            correctAnswers: 0,
+            totalTime: 0,
+            currentAnswer: 0,
+            gameActive: false,
+            timer: null,
+            timeRemaining: 0,
+            questionStartTime: 0,
+            wrongStreak: 0,
+            gameOver: false,
+            questionAnswered: false,
+            timeUp: false,
+            gameStartTime: 0
+        };
+
+        let currentQuestion = null;
+        let currentUser = '';
+        let currentClass = '';
+        const TIME_LIMIT = 30; // 競賽版本固定30秒
+
+        const questionTypes = [
+            '正負數加法',
+            '正負數減法',
+            '加法交換律',
+            '加法結合律',
+            '去括號',
+            '數線距離'
+        ];
+
+        function login() {
+            const username = document.getElementById('usernameInput').value.trim();
+            if (!username) {
+                alert('請輸入您的姓名！');
+                return;
+            }
+            
+            currentUser = username;
+            currentClass = document.getElementById('classInput').value.trim() || '未填寫';
+            
+            const displayText = currentClass !== '未填寫' ? 
+                `參賽者：${currentUser}（${currentClass}）` : 
+                `參賽者：${currentUser}`;
+            
+            document.getElementById('usernameDisplay').textContent = displayText;
+            document.getElementById('loginContainer').style.display = 'none';
+            document.getElementById('gameContainer').style.display = 'block';
+        }
+
+        function logout() {
+            if (confirm('確定要登出嗎？這將重置您的競賽進度。')) {
+                resetGame();
+                document.getElementById('gameContainer').style.display = 'none';
+                document.getElementById('loginContainer').style.display = 'block';
+                document.getElementById('usernameInput').value = '';
+                document.getElementById('classInput').value = '';
+                currentUser = '';
+                currentClass = '';
+            }
+        }
+
+        async function uploadScore(gameData) {
+            // 檢查是否啟用上傳功能
+            if (!SYSTEM_CONFIG.enableScoreUpload) {
+                showUploadStatus('系統未啟用成績上傳功能', 'info');
+                return;
+            }
+
+            // 檢查是否已設定 API 網址
+            if (!GOOGLE_APPS_SCRIPT_URL || GOOGLE_APPS_SCRIPT_URL.includes('YOUR_SCRIPT_ID')) {
+                showUploadStatus('系統管理員尚未配置上傳設定', 'info');
+                return;
+            }
+
+            showUploadStatus('正在上傳成績...', 'uploading');
+
+            try {
+                // 加入系統資訊到上傳資料
+                const uploadData = {
+                    ...gameData,
+                    schoolName: SYSTEM_CONFIG.schoolName,
+                    subject: SYSTEM_CONFIG.subject,
+                    systemVersion: SYSTEM_CONFIG.version
+                };
+
+                const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'text/plain',
+                    },
+                    body: JSON.stringify(uploadData)
+                });
+
+                if (response.ok) {
+                    showUploadStatus('✅ 成績上傳成功！', 'success');
+                } else {
+                    throw new Error('上傳失敗');
+                }
+            } catch (error) {
+                console.error('上傳錯誤:', error);
+                showUploadStatus('❌ 成績上傳失敗，請檢查網路連線', 'error');
+            }
+        }
+
+        function showUploadStatus(message, type = 'info') {
+            const statusElements = [
+                document.getElementById('uploadStatus'),
+                document.getElementById('gameUploadStatus')
+            ];
+            
+            statusElements.forEach(element => {
+                if (element) {
+                    element.textContent = message;
+                    element.className = 'upload-status ' + type;
+                    element.style.display = 'block';
+                    
+                    if (type === 'success' || type === 'error') {
+                        setTimeout(() => {
+                            element.style.display = 'none';
+                        }, 5000);
+                    }
+                }
+            });
+        }
+
+        function generateQuestion() {
+            const type = Math.floor(Math.random() * 6);
+            let question = '';
+            let answer = 0;
+            let questionType = '';
+
+            switch(type) {
+                case 0: // 正負數加法
+                    questionType = '正負數加法';
+                    const a1 = Math.floor(Math.random() * 21) - 10;
+                    const b1 = Math.floor(Math.random() * 21) - 10;
+                    question = `${a1} + (${b1}) = ?`;
+                    answer = a1 + b1;
+                    break;
+
+                case 1: // 正負數減法
+                    questionType = '正負數減法';
+                    const a2 = Math.floor(Math.random() * 21) - 10;
+                    const b2 = Math.floor(Math.random() * 21) - 10;
+                    question = `${a2} - (${b2}) = ?`;
+                    answer = a2 - b2;
+                    break;
+
+                case 2: // 加法交換律
+                    questionType = '加法交換律';
+                    const a3 = Math.floor(Math.random() * 21) - 10;
+                    const b3 = Math.floor(Math.random() * 21) - 10;
+                    const showOriginal = Math.random() > 0.5;
+                    if (showOriginal) {
+                        question = `${a3} + (${b3}) = (${b3}) + ?`;
+                        answer = a3;
+                    } else {
+                        question = `(${a3}) + ${b3} = ? + (${a3})`;
+                        answer = b3;
+                    }
+                    break;
+
+                case 3: // 加法結合律
+                    questionType = '加法結合律';
+                    const a4 = Math.floor(Math.random() * 11) - 5;
+                    const b4 = Math.floor(Math.random() * 11) - 5;
+                    const c4 = Math.floor(Math.random() * 11) - 5;
+                    const leftAssoc = Math.random() > 0.5;
+                    if (leftAssoc) {
+                        question = `(${a4} + ${b4}) + (${c4}) = ${a4} + (${b4} + ?)`;
+                        answer = c4;
+                    } else {
+                        question = `${a4} + (${b4} + ${c4}) = (${a4} + ?) + ${c4}`;
+                        answer = b4;
+                    }
+                    break;
+
+                case 4: // 去括號
+                    questionType = '去括號';
+                    const a5 = Math.floor(Math.random() * 11) - 5;
+                    const b5 = Math.floor(Math.random() * 11) - 5;
+                    const operation = Math.random() > 0.5 ? '+' : '-';
+                    if (operation === '+') {
+                        question = `${a5} + (${b5}) = ?`;
+                        answer = a5 + b5;
+                    } else {
+                        question = `${a5} - (${b5}) = ?`;
+                        answer = a5 - b5;
+                    }
+                    break;
+
+                case 5: // 數線上兩點間的距離
+                    questionType = '數線距離';
+                    const p1 = Math.floor(Math.random() * 21) - 10;
+                    const p2 = Math.floor(Math.random() * 21) - 10;
+                    question = `數線上點 ${p1} 與點 ${p2} 之間的距離是？`;
+                    answer = Math.abs(p1 - p2);
+                    drawNumberLine(p1, p2);
+                    break;
+            }
+
+            return {
+                question,
+                answer,
+                type: questionType
+            };
+        }
+
+        function drawNumberLine(p1, p2) {
+            const numberLine = document.getElementById('numberLine');
+            const min = Math.min(p1, p2, -10);
+            const max = Math.max(p1, p2, 10);
+            const range = max - min;
+            const width = 600;
+            const height = 100;
+            const padding = 50;
+
+            const svg = `
+                <svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+                    <!-- 數線 -->
+                    <line x1="${padding}" y1="50" x2="${width - padding}" y2="50" stroke="#333" stroke-width="2"/>
+                    
+                    <!-- 刻度 -->
+                    ${generateTicks(min, max, width, padding)}
+                    
+                    <!-- 標記點 -->
+                    <circle cx="${padding + ((p1 - min) / range) * (width - 2 * padding)}" cy="50" r="6" fill="#f56565"/>
+                    <text x="${padding + ((p1 - min) / range) * (width - 2 * padding)}" y="35" text-anchor="middle" fill="#f56565" font-weight="bold">${p1}</text>
+                    
+                    <circle cx="${padding + ((p2 - min) / range) * (width - 2 * padding)}" cy="50" r="6" fill="#48bb78"/>
+                    <text x="${padding + ((p2 - min) / range) * (width - 2 * padding)}" y="75" text-anchor="middle" fill="#48bb78" font-weight="bold">${p2}</text>
+                    
+                    <!-- 距離線 -->
+                    <line x1="${padding + ((Math.min(p1, p2) - min) / range) * (width - 2 * padding)}" 
+                          y1="30" 
+                          x2="${padding + ((Math.max(p1, p2) - min) / range) * (width - 2 * padding)}" 
+                          y2="30" 
+                          stroke="#4299e1" stroke-width="3"/>
+                    <text x="${padding + (((p1 + p2) / 2 - min) / range) * (width - 2 * padding)}" y="20" text-anchor="middle" fill="#4299e1" font-weight="bold">距離 = ?</text>
+                </svg>
+            `;
+            
+            numberLine.innerHTML = svg;
+            numberLine.style.display = 'block';
+        }
+
+        function generateTicks(min, max, width, padding) {
+            let ticks = '';
+            const range = max - min;
+            for (let i = min; i <= max; i++) {
+                const x = padding + ((i - min) / range) * (width - 2 * padding);
+                ticks += `<line x1="${x}" y1="45" x2="${x}" y2="55" stroke="#666" stroke-width="1"/>`;
+                ticks += `<text x="${x}" y="70" text-anchor="middle" font-size="12" fill="#666">${i}</text>`;
+            }
+            return ticks;
+        }
+
+        function startGame() {
+            if (gameStats.gameOver) {
+                gameStats.gameOver = false;
+                document.getElementById('gameOverDisplay').innerHTML = '';
+            }
+            
+            gameStats.gameActive = true;
+            gameStats.wrongStreak = 0;
+            gameStats.gameStartTime = Date.now();
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('wrongStreakDisplay').innerHTML = '';
+            nextQuestion();
+        }
+
+        function nextQuestion() {
+            if (!gameStats.gameActive || gameStats.gameOver) return;
+
+            // 重置狀態
+            gameStats.questionAnswered = false;
+            gameStats.timeUp = false;
+            
+            // 隱藏數線
+            document.getElementById('numberLine').style.display = 'none';
+            
+            // 生成新題目
+            currentQuestion = generateQuestion();
+            gameStats.currentAnswer = currentQuestion.answer;
+            
+            // 更新介面
+            document.getElementById('questionType').textContent = currentQuestion.type;
+            document.getElementById('questionText').textContent = currentQuestion.question;
+            document.getElementById('answerInput').value = '';
+            document.getElementById('answerInput').disabled = false;
+            document.getElementById('answerInput').focus();
+            document.getElementById('submitBtn').disabled = false;
+            document.getElementById('nextBtn').disabled = true;
+            
+            // 清除回饋
+            const feedback = document.getElementById('feedback');
+            feedback.classList.remove('show', 'correct', 'incorrect', 'timeout-warning');
+            
+            // 開始計時
+            gameStats.questionStartTime = Date.now();
+            startTimer();
+        }
+
+        function startTimer() {
+            gameStats.timeRemaining = TIME_LIMIT;
+            
+            const timerDisplay = document.getElementById('timerDisplay');
+            timerDisplay.classList.add('active');
+            timerDisplay.classList.remove('warning');
+            
+            if (gameStats.timer) {
+                clearInterval(gameStats.timer);
+            }
+            
+            gameStats.timer = setInterval(() => {
+                gameStats.timeRemaining--;
+                timerDisplay.textContent = `⏰ 剩餘時間: ${gameStats.timeRemaining} 秒`;
+                
+                // 最後10秒警告效果
+                if (gameStats.timeRemaining <= 10) {
+                    timerDisplay.classList.add('warning');
+                }
+                
+                if (gameStats.timeRemaining <= 0) {
+                    clearInterval(gameStats.timer);
+                    timerDisplay.classList.remove('active', 'warning');
+                    if (!gameStats.questionAnswered) {
+                        handleTimeout();
+                    }
+                }
+            }, 1000);
+        }
+
+        function handleTimeout() {
+            gameStats.timeUp = true;
+            gameStats.questionAnswered = true;
+            
+            // 禁用輸入和提交按鈕
+            document.getElementById('answerInput').disabled = true;
+            document.getElementById('submitBtn').disabled = true;
+            document.getElementById('nextBtn').disabled = false;
+            
+            // 計算統計
+            gameStats.totalTime += TIME_LIMIT;
+            gameStats.totalQuestions++;
+            
+            handleWrongAnswer(`⏰ 時間到！正確答案是 ${gameStats.currentAnswer}`);
+        }
+
+        function checkAnswer() {
+            if (!gameStats.gameActive || gameStats.questionAnswered || gameStats.timeUp) return;
+            
+            const userAnswer = parseFloat(document.getElementById('answerInput').value);
+            if (isNaN(userAnswer)) {
+                alert('請輸入有效的數字！');
+                return;
+            }
+            
+            gameStats.questionAnswered = true;
+            const isCorrect = Math.abs(userAnswer - gameStats.currentAnswer) < 0.001;
+            
+            // 停止計時器
+            if (gameStats.timer) {
+                clearInterval(gameStats.timer);
+                document.getElementById('timerDisplay').classList.remove('active', 'warning');
+            }
+            
+            // 計算用時
+            const timeUsed = (Date.now() - gameStats.questionStartTime) / 1000;
+            gameStats.totalTime += timeUsed;
+            gameStats.totalQuestions++;
+            
+            // 禁用輸入和提交按鈕，啟用下一題按鈕
+            document.getElementById('answerInput').disabled = true;
+            document.getElementById('submitBtn').disabled = true;
+            document.getElementById('nextBtn').disabled = false;
+            
+            if (isCorrect) {
+                gameStats.correctAnswers++;
+                gameStats.wrongStreak = 0;
+                document.getElementById('wrongStreakDisplay').innerHTML = '';
+                showFeedback(true, '✅ 答對了！太棒了！');
+            } else {
+                handleWrongAnswer(`❌ 答錯了！正確答案是 ${gameStats.currentAnswer}`);
+            }
+            
+            updateStats();
+        }
+
+        function handleWrongAnswer(message) {
+            gameStats.wrongStreak++;
+            showFeedback(false, message);
+            
+            if (gameStats.wrongStreak >= 3) {
+                endGame();
+            } else {
+                updateWrongStreakDisplay();
+                // 如果沒有結束遊戲，啟用下一題按鈕
+                document.getElementById('nextBtn').disabled = false;
+            }
+        }
+
+        function updateWrongStreakDisplay() {
+            const display = document.getElementById('wrongStreakDisplay');
+            if (gameStats.wrongStreak > 0 && gameStats.wrongStreak < 3) {
+                display.innerHTML = `<div class="wrong-streak">⚠️ 連續答錯 ${gameStats.wrongStreak} 題！再錯 ${3 - gameStats.wrongStreak} 題就結束競賽！</div>`;
+            }
+        }
+
+        function endGame() {
+            gameStats.gameActive = false;
+            gameStats.gameOver = true;
+            
+            const display = document.getElementById('gameOverDisplay');
+            const accuracy = gameStats.totalQuestions > 0 ? 
+                Math.round((gameStats.correctAnswers / gameStats.totalQuestions) * 100) : 0;
+            const avgTime = gameStats.totalQuestions > 0 ? 
+                Math.round(gameStats.totalTime / gameStats.totalQuestions * 10) / 10 : 0;
+            const totalGameTime = Math.round((Date.now() - gameStats.gameStartTime) / 1000);
+            
+            display.innerHTML = `
+                <div class="game-over">
+                    🏆 競賽結束！🏆<br>
+                    ${currentUser}，您連續答錯了3題！<br><br>
+                    📊 最終成績：<br>
+                    答對 ${gameStats.correctAnswers} 題，總共 ${gameStats.totalQuestions} 題<br>
+                    正確率：${accuracy}%<br>
+                    平均答題時間：${avgTime} 秒<br>
+                    總遊戲時間：${totalGameTime} 秒<br><br>
+                    🎯 再接再厲！點擊「開始競賽」重新挑戰！
+                </div>
+            `;
+            
+            // 準備上傳資料
+            const gameData = {
+                name: currentUser,
+                class: currentClass,
+                totalQuestions: gameStats.totalQuestions,
+                correctAnswers: gameStats.correctAnswers,
+                accuracy: accuracy + '%',
+                averageTime: avgTime + '秒',
+                gameTime: new Date().toLocaleString('zh-TW'),
+                totalGameTime: totalGameTime + '秒'
+            };
+            
+            // 上傳成績
+            uploadScore(gameData);
+            
+            // 重置按鈕狀態
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('nextBtn').disabled = true;
+            document.getElementById('submitBtn').disabled = true;
+            document.getElementById('answerInput').disabled = true;
+            document.getElementById('wrongStreakDisplay').innerHTML = '';
+            
+            // 停止計時器
+            if (gameStats.timer) {
+                clearInterval(gameStats.timer);
+                document.getElementById('timerDisplay').classList.remove('active', 'warning');
+            }
+        }
+
+        function showFeedback(isCorrect, message) {
+            const feedback = document.getElementById('feedback');
+            feedback.textContent = message;
+            feedback.classList.remove('correct', 'incorrect', 'timeout-warning');
+            
+            if (message.includes('時間到')) {
+                feedback.classList.add('timeout-warning');
+            } else {
+                feedback.classList.add(isCorrect ? 'correct' : 'incorrect');
+            }
+            
+            feedback.classList.add('show');
+        }
+
+        function updateStats() {
+            document.getElementById('totalQuestions').textContent = gameStats.totalQuestions;
+            document.getElementById('correctAnswers').textContent = gameStats.correctAnswers;
+            
+            const accuracy = gameStats.totalQuestions > 0 ? 
+                Math.round((gameStats.correctAnswers / gameStats.totalQuestions) * 100) : 0;
+            document.getElementById('accuracy').textContent = accuracy + '%';
+            
+            const avgTime = gameStats.totalQuestions > 0 ? 
+                Math.round(gameStats.totalTime / gameStats.totalQuestions * 10) / 10 : 0;
+            document.getElementById('averageTime').textContent = avgTime + '秒';
+        }
+
+        function resetGame() {
+            if (gameStats.timer) {
+                clearInterval(gameStats.timer);
+            }
+            
+            gameStats = {
+                totalQuestions: 0,
+                correctAnswers: 0,
+                totalTime: 0,
+                currentAnswer: 0,
+                gameActive: false,
+                timer: null,
+                timeRemaining: 0,
+                questionStartTime: 0,
+                wrongStreak: 0,
+                gameOver: false,
+                questionAnswered: false,
+                timeUp: false,
+                gameStartTime: 0
+            };
+            
+            document.getElementById('timerDisplay').classList.remove('active', 'warning');
+            document.getElementById('answerInput').disabled = true;
+            document.getElementById('submitBtn').disabled = true;
+            document.getElementById('nextBtn').disabled = true;
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('answerInput').value = '';
+            document.getElementById('questionType').textContent = '點擊「開始競賽」開始挑戰';
+            document.getElementById('questionText').textContent = '準備好了嗎？';
+            document.getElementById('numberLine').style.display = 'none';
+            document.getElementById('wrongStreakDisplay').innerHTML = '';
+            document.getElementById('gameOverDisplay').innerHTML = '';
+            
+            const feedback = document.getElementById('feedback');
+            feedback.classList.remove('show', 'correct', 'incorrect', 'timeout-warning');
+            
+            updateStats();
+        }
+
+        // 按下 Enter 鍵提交答案或登入
+        document.getElementById('answerInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && gameStats.gameActive && !gameStats.questionAnswered && !gameStats.timeUp) {
+                checkAnswer();
+            }
+        });
+
+        document.getElementById('usernameInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                login();
+            }
+        });
+
+        // 初始化統計顯示
+        updateStats();
+    </script>
+
+    <!-- 管理員設定說明 -->
+    <div style="display: none;" id="adminGuide">
+        <h2>🔧 管理員設定指南</h2>
+        
+        <h3>第一步：建立 Google Sheets</h3>
+        <ol>
+            <li>開啟 Google Sheets 建立新試算表</li>
+            <li>將試算表命名為「正負數競賽成績記錄」</li>
+            <li>系統會自動建立標題列，無需手動設定</li>
+        </ol>
+        
+        <h3>第二步：設定 Google Apps Script</h3>
+        <ol>
+            <li>在試算表中點選「擴充功能」→「Apps Script」</li>
+            <li>刪除預設的 myFunction，貼入以下程式碼：</li>
+        </ol>
+        
+        <pre style="background: #f5f5f5; padding: 15px; border-radius: 5px; overflow-x: auto;">
+function doPost(e) {
+  try {
+    // 取得試算表
+    const sheet = SpreadsheetApp.getActiveSheet();
+    
+    // 解析傳入的資料
+    const data = JSON.parse(e.postData.contents);
+    
+    // 如果是第一次使用，加入標題列
+    if (sheet.getLastRow() === 0) {
+      sheet.getRange(1, 1, 1, 9).setValues([
+        ['學校', '姓名', '班級', '總題數', '答對題數', '正確率', '平均時間', '遊戲時間', '系統版本']
+      ]);
+      
+      // 設定標題列格式
+      const headerRange = sheet.getRange(1, 1, 1, 9);
+      headerRange.setBackground('#4285f4');
+      headerRange.setFontColor('#ffffff');
+      headerRange.setFontWeight('bold');
+    }
+    
+    // 新增資料到下一列
+    const nextRow = sheet.getLastRow() + 1;
+    sheet.getRange(nextRow, 1, 1, 9).setValues([[
+      data.schoolName || '未設定',
+      data.name,
+      data.class,
+      data.totalQuestions,
+      data.correctAnswers,
+      data.accuracy,
+      data.averageTime,
+      data.gameTime,
+      data.systemVersion || '1.0'
+    ]]);
+    
+    // 設定資料格式
+    const dataRange = sheet.getRange(nextRow, 1, 1, 9);
+    dataRange.setBorder(true, true, true, true, true, true);
+    
+    return ContentService
+      .createTextOutput(JSON.stringify({ success: true }))
+      .setMimeType(ContentService.MimeType.JSON);
+      
+  } catch (error) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ success: false, error: error.toString() }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+        </pre>
+        
+        <h3>第三步：部署應用程式</h3>
+        <ol>
+            <li>點選「部署」→「新增部署作業」</li>
+            <li>類型選擇「網頁應用程式」</li>
+            <li>說明填入：「正負數競賽成績收集系統」</li>
+            <li>執行身分：選擇您的帳戶</li>
+            <li>存取權限：選擇「任何人」</li>
+            <li>點選「部署」</li>
+        </ol>
+        
+        <h3>第四步：配置系統</h3>
+        <ol>
+            <li>複製部署後的網址</li>
+            <li>在程式碼中找到「系統配置區域」</li>
+            <li>將 <code>YOUR_SCRIPT_ID</code> 替換為您的完整網址</li>
+            <li>可選：修改學校名稱、科目名稱等設定</li>
+        </ol>
+        
+        <h3>系統配置範例</h3>
+        <pre style="background: #f5f5f5; padding: 15px; border-radius: 5px;">
+// Google Apps Script API 網址 - 請管理員在此設定
+const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzdua1guVw1KbXnV_mFvG8D4XyASMRs2yo3zfX__xVRVkUo7nOkLgZRT9JZ7bDtERa1/exec';
+
+// 系統設定
+const SYSTEM_CONFIG = {
+    enableScoreUpload: true,    // 是否啟用成績上傳功能
+    schoolName: '東興國民中學',      // 學校名稱
+    subject: '數學競賽',         // 科目名稱
+    version: '1.0'              // 系統版本
+};
+        </pre>
+    </div>
+</body>
+</html>
