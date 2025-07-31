@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CASIO fx-82 SOLAR II (十二年國教規格)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .calculator {
+            background: linear-gradient(145deg, #f8f9fa, #e9ecef);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 
+                0 15px 40px rgba(0,0,0,0.4),
+                inset 0 2px 4px rgba(255,255,255,0.9),
+                inset 0 -2px 4px rgba(0,0,0,0.2);
+            max-width: 380px;
+            width: 100%;
+            position: relative;
+            border: 2px solid #6c757d;
+        }
+
+        .top-section {
+            margin-bottom: 15px;
+        }
+
+        .solar-panel {
+            background: linear-gradient(45deg, #000000 25%, transparent 25%),
+                        linear-gradient(-45deg, #000000 25%, transparent 25%),
+                        linear-gradient(45deg, transparent 75%, #000000 75%),
+                        linear-gradient(-45deg, transparent 75%, #000000 75%);
+            background-size: 6px 6px;
+            background-position: 0 0, 0 3px, 3px -3px, -3px 0px;
+            height: 25px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            border: 2px solid #000000;
+            position: relative;
+            background-color: #495057;
+        }
+
+        .solar-panel::after {
+            content: 'SOLAR POWER';
+            position: absolute;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 8px;
+            color: #ffffff;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+        }
+
+        .brand-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .brand h1 {
+            color: #000000;
+            font-size: 20px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
+        }
+
+        .model {
+            color: #343a40;
+            font-size: 11px;
+            text-align: right;
+            line-height: 1.2;
+            font-weight: bold;
+        }
+
+        .display-container {
+            background: #000000;
+            border: 3px solid #000000;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 15px;
+            position: relative;
+            box-shadow: 
+                inset 0 3px 6px rgba(0,0,0,0.6),
+                0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .status-indicators {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 10px;
+            color: #00ff41;
+            height: 12px;
+        }
+
+        .left-indicators {
+            display: flex;
+            gap: 8px;
+        }
+
+        .right-indicators {
+            display: flex;
+            gap: 8px;
+        }
+
+        .indicator {
+            opacity: 0.2;
+            transition: opacity 0.3s;
+            font-weight: bold;
+        }
+
+        .indicator.active {
+            opacity: 1;
+            text-shadow: 0 0 6px #00ff41;
+        }
+
+        .display-frame {
+            background: #000000;
+            border-radius: 4px;
+            padding: 8px;
+            min-height: 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+        }
+
+        .expression-line {
+            color: #00cc33;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            text-align: right;
+            margin-bottom: 2px;
+            min-height: 14px;
+            font-weight: bold;
+        }
+
+        .display {
+            color: #00ff41;
+            font-family: 'Courier New', monospace;
+            font-size: 24px;
+            font-weight: bold;
+            text-shadow: 0 0 10px #00ff41;
+            text-align: right;
+            word-wrap: break-word;
+            min-height: 28px;
+        }
+
+        .function-labels {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 2px;
+            margin-bottom: 8px;
+            font-size: 8px;
+            color: #000000;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .function-labels div {
+            padding: 2px;
+            text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
+        }
+
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 6px;
+        }
+
+        .btn {
+            border: none;
+            border-radius: 6px;
+            padding: 10px 6px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            box-shadow: 
+                0 3px 6px rgba(0,0,0,0.15),
+                inset 0 1px 2px rgba(255,255,255,0.3);
+            position: relative;
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+            box-shadow: 
+                0 1px 3px rgba(0,0,0,0.15),
+                inset 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .btn-number {
+            background: linear-gradient(145deg, #ffffff, #f8f9fa);
+            color: #000000;
+            border: 2px solid #6c757d;
+            font-weight: bold;
+            text-shadow: none;
+        }
+
+        .btn-number:hover {
+            background: linear-gradient(145deg, #f8f9fa, #e9ecef);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        .btn-operator {
+            background: linear-gradient(145deg, #007bff, #0056b3);
+            color: #ffffff;
+            border: 2px solid #004085;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+
+        .btn-operator:hover {
+            background: linear-gradient(145deg, #0056b3, #004085);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,123,255,0.4);
+        }
+
+        .btn-function {
+            background: linear-gradient(145deg, #6c757d, #495057);
+            color: #ffffff;
+            border: 2px solid #343a40;
+            font-size: 10px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+
+        .btn-function:hover {
+            background: linear-gradient(145deg, #5a6268, #343a40);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(108,117,125,0.4);
+        }
+
+        .btn-memory {
+            background: linear-gradient(145deg, #6f42c1, #5a32a3);
+            color: #ffffff;
+            border: 2px solid #4c2a85);
+            font-size: 10px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+
+        .btn-memory:hover {
+            background: linear-gradient(145deg, #5a32a3, #4c2a85);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(111,66,193,0.4);
+        }
+
+        .btn-clear {
+            background: linear-gradient(145deg, #dc3545, #c82333);
+            color: #ffffff;
+            border: 2px solid #bd2130;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+
+        .btn-clear:hover {
+            background: linear-gradient(145deg, #c82333, #bd2130);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(220,53,69,0.4);
+        }
+
+        .btn-equals {
+            background: linear-gradient(145deg, #fd7e14, #e36209);
+            color: #ffffff;
+            border: 2px solid #d15502;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+
+        .btn-equals:hover {
+            background: linear-gradient(145deg, #e36209, #d15502);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(253,126,20,0.4);
+        }
+
+        .btn-on {
+            background: linear-gradient(145deg, #28a745, #218838);
+            color: #ffffff;
+            border: 2px solid #1e7e34;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+
+        .btn-on:hover {
+            background: linear-gradient(145deg, #218838, #1e7e34);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(40,167,69,0.4);
+        }
+
+        .secondary-text {
+            font-size: 7px;
+            color: #dc3545;
+            margin-bottom: 2px;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
+        }
+
+        .power-indicator {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            width: 8px;
+            height: 8px;
+            background: #27ae60;
+            border-radius: 50%;
+            box-shadow: 0 0 6px #27ae60;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .power-indicator.on {
+            opacity: 1;
+        }
+
+        .angle-mode {
+            position: absolute;
+            top: 30px;
+            right: 15px;
+            font-size: 10px;
+            color: #000000;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        .cursor {
+            animation: blink 1s infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <div class="power-indicator" id="powerIndicator"></div>
+        <div class="angle-mode" id="angleMode">DEG</div>
+        
+        <div class="top-section">
+            <div class="solar-panel"></div>
+            
+            <div class="brand-section">
+                <h1>CASIO</h1>
+                <div class="model">
+                    fx-82<br>
+                    SOLAR II
+                </div>
+            </div>
+        </div>
+        
+        <div class="display-container">
+            <div class="status-indicators">
+                <div class="left-indicators">
+                    <div class="indicator" id="memoryIndicator">M</div>
+                    <div class="indicator" id="shiftIndicator">SHIFT</div>
+                    <div class="indicator" id="alphaIndicator">ALPHA</div>
+                </div>
+                <div class="right-indicators">
+                    <div class="indicator" id="degIndicator">DEG</div>
+                    <div class="indicator" id="errorIndicator">ERROR</div>
+                </div>
+            </div>
+            <div class="display-frame">
+                <div class="expression-line" id="expressionLine"></div>
+                <div class="display" id="display">0</div>
+            </div>
+        </div>
+        
+        <div class="function-labels">
+            <div>SHIFT</div>
+            <div>sin⁻¹</div>
+            <div>cos⁻¹</div>
+            <div>tan⁻¹</div>
+            <div>ENG</div>
+            <div>MC</div>
+        </div>
+        
+        <div class="buttons">
+            <!-- 第一行 -->
+            <button class="btn btn-function" onclick="toggleShift()" title="第二功能">
+                SHIFT
+            </button>
+            <button class="btn btn-function" onclick="inputTrig('sin')" title="正弦">
+                <div class="secondary-text">sin⁻¹</div>
+                sin
+            </button>
+            <button class="btn btn-function" onclick="inputTrig('cos')" title="餘弦">
+                <div class="secondary-text">cos⁻¹</div>
+                cos
+            </button>
+            <button class="btn btn-function" onclick="inputTrig('tan')" title="正切">
+                <div class="secondary-text">tan⁻¹</div>
+                tan
+            </button>
+            <button class="btn btn-function" onclick="toggleScientificNotation()" title="工程記號">
+                <div class="secondary-text">ENG</div>
+                ×10ˣ
+            </button>
+            <button class="btn btn-memory" onclick="memoryClear()" title="記憶體清除">
+                <div class="secondary-text">MC</div>
+                MR
+            </button>
+            
+            <!-- 第二行 -->
+            <button class="btn btn-on" onclick="togglePower()" title="電源開關">ON</button>
+            <button class="btn btn-function" onclick="inputFunction('log')" title="對數">
+                <div class="secondary-text">10ˣ</div>
+                log
+            </button>
+            <button class="btn btn-function" onclick="inputFunction('ln')" title="自然對數">
+                <div class="secondary-text">eˣ</div>
+                ln
+            </button>
+            <button class="btn btn-function" onclick="inputBracket('(')" title="左括號">(</button>
+            <button class="btn btn-function" onclick="inputBracket(')')" title="右括號">)</button>
+            <button class="btn btn-memory" onclick="memoryAdd()" title="記憶體加法">M+</button>
+            
+            <!-- 第三行 -->
+            <button class="btn btn-clear" onclick="clearAll()" title="全部清除">AC</button>
+            <button class="btn btn-function" onclick="inputFunction('square')" title="平方">
+                <div class="secondary-text">√</div>
+                x²
+            </button>
+            <button class="btn btn-function" onclick="inputFunction('power')" title="次方">
+                <div class="secondary-text">ˣ√</div>
+                xʸ
+            </button>
+            <button class="btn btn-operator" onclick="inputOperator('/')" title="除法">÷</button>
+            <button class="btn btn-function" onclick="inputFunction('percentage')" title="百分比">%</button>
+            <button class="btn btn-memory" onclick="memorySubtract()" title="記憶體減法">M-</button>
+            
+            <!-- 第四行 -->
+            <button class="btn btn-clear" onclick="clearEntry()" title="清除輸入">C</button>
+            <button class="btn btn-number" onclick="inputNumber('7')">7</button>
+            <button class="btn btn-number" onclick="inputNumber('8')">8</button>
+            <button class="btn btn-number" onclick="inputNumber('9')">9</button>
+            <button class="btn btn-operator" onclick="inputOperator('*')" title="乘法">×</button>
+            <button class="btn btn-function" onclick="inputFunction('reciprocal')" title="倒數">1/x</button>
+            
+            <!-- 第五行 -->
+            <button class="btn btn-function" onclick="toggleSign()" title="正負號">±</button>
+            <button class="btn btn-number" onclick="inputNumber('4')">4</button>
+            <button class="btn btn-number" onclick="inputNumber('5')">5</button>
+            <button class="btn btn-number" onclick="inputNumber('6')">6</button>
+            <button class="btn btn-operator" onclick="inputOperator('-')" title="減法">-</button>
+            <button class="btn btn-function" onclick="inputFunction('sqrt')" title="開平方根">√</button>
+            
+            <!-- 第六行 -->
+            <button class="btn btn-function" onclick="inputExp()" title="科學記號">EXP</button>
+            <button class="btn btn-number" onclick="inputNumber('1')">1</button>
+            <button class="btn btn-number" onclick="inputNumber('2')">2</button>
+            <button class="btn btn-number" onclick="inputNumber('3')">3</button>
+            <button class="btn btn-operator" onclick="inputOperator('+')" title="加法">+</button>
+            <button class="btn btn-equals" onclick="calculate()" title="等於">=</button>
+            
+            <!-- 第七行 -->
+            <button class="btn btn-number" onclick="inputNumber('0')" style="grid-column: span 2;">0</button>
+            <button class="btn btn-number" onclick="inputDecimal()" title="小數點">.</button>
+            <button class="btn btn-function" onclick="inputAns()" title="前次答案">Ans</button>
+            <button class="btn btn-equals" onclick="calculate()" title="等於" style="grid-column: span 2;">=</button>
+        </div>
+    </div>
+
+    <script>
+        let currentInput = '0';
+        let expression = '';
+        let memory = 0;
+        let lastResult = 0;
+        let isPowerOn = true;
+        let isShiftMode = false;
+        let angleMode = 'DEG'; // DEG, RAD, GRAD
+        let bracketCount = 0;
+
+        const displayElement = document.getElementById('display');
+        const expressionElement = document.getElementById('expressionLine');
+        const powerIndicator = document.getElementById('powerIndicator');
+        const memoryIndicator = document.getElementById('memoryIndicator');
+        const shiftIndicator = document.getElementById('shiftIndicator');
+        const degIndicator = document.getElementById('degIndicator');
+        const errorIndicator = document.getElementById('errorIndicator');
+
+        function updateDisplay() {
+            if (!isPowerOn) {
+                displayElement.textContent = '';
+                expressionElement.textContent = '';
+                return;
+            }
+            
+            displayElement.textContent = formatNumber(currentInput);
+            expressionElement.textContent = expression;
+            
+            // 更新指示燈
+            memoryIndicator.classList.toggle('active', memory !== 0);
+            shiftIndicator.classList.toggle('active', isShiftMode);
+            degIndicator.classList.toggle('active', angleMode === 'DEG');
+        }
+
+        function formatNumber(num) {
+            if (num === 'Error') return 'Error';
+            if (num === '') return '';
+            
+            const number = parseFloat(num);
+            if (isNaN(number)) return num;
+            
+            // 科學記號處理
+            if (Math.abs(number) >= 1e10 || (Math.abs(number) < 1e-6 && number !== 0)) {
+                return number.toExponential(8).replace('e+', 'E').replace('e-', 'E-');
+            }
+            
+            // 一般數字格式化
+            let result = number.toString();
+            if (result.length > 12) {
+                if (result.includes('.')) {
+                    const parts = result.split('.');
+                    const integerLength = parts[0].length;
+                    if (integerLength < 8) {
+                        const decimalPlaces = 11 - integerLength;
+                        result = number.toFixed(decimalPlaces);
+                        result = parseFloat(result).toString();
+                    } else {
+                        return number.toExponential(6).replace('e+', 'E').replace('e-', 'E-');
+                    }
+                }
+            }
+            
+            return result;
+        }
+
+        function togglePower() {
+            isPowerOn = !isPowerOn;
+            if (isPowerOn) {
+                powerIndicator.classList.add('on');
+                currentInput = '0';
+                expression = '';
+                isShiftMode = false;
+                bracketCount = 0;
+                errorIndicator.classList.remove('active');
+            } else {
+                powerIndicator.classList.remove('on');
+                currentInput = '';
+                expression = '';
+                memoryIndicator.classList.remove('active');
+                shiftIndicator.classList.remove('active');
+                degIndicator.classList.remove('active');
+                errorIndicator.classList.remove('active');
+            }
+            updateDisplay();
+        }
+
+        function toggleShift() {
+            if (!isPowerOn) return;
+            isShiftMode = !isShiftMode;
+            updateDisplay();
+        }
+
+        function inputNumber(num) {
+            if (!isPowerOn) return;
+            
+            if (currentInput === '0' || currentInput === 'Error') {
+                currentInput = num;
+            } else {
+                if (currentInput.length < 12) {
+                    currentInput += num;
+                }
+            }
+            updateDisplay();
+        }
+
+        function inputDecimal() {
+            if (!isPowerOn) return;
+            
+            if (currentInput === 'Error') {
+                currentInput = '0.';
+            } else if (currentInput.indexOf('.') === -1) {
+                currentInput += '.';
+            }
+            updateDisplay();
+        }
+
+        function inputOperator(op) {
+            if (!isPowerOn || currentInput === 'Error') return;
+            
+            expression += currentInput + ' ' + (op === '*' ? '×' : op === '/' ? '÷' : op) + ' ';
+            currentInput = '0';
+            updateDisplay();
+        }
+
+        function inputBracket(bracket) {
+            if (!isPowerOn) return;
+            
+            if (bracket === '(') {
+                if (currentInput === '0') {
+                    expression += '(';
+                    bracketCount++;
+                } else {
+                    expression += currentInput + '×(';
+                    bracketCount++;
+                    currentInput = '0';
+                }
+            } else if (bracket === ')' && bracketCount > 0) {
+                expression += currentInput + ')';
+                bracketCount--;
+                currentInput = '0';
+            }
+            updateDisplay();
+        }
+
+        function inputTrig(func) {
+            if (!isPowerOn || currentInput === 'Error') return;
+            
+            const value = parseFloat(currentInput);
+            let result;
+            
+            if (isShiftMode) {
+                // 反三角函數
+                switch (func) {
+                    case 'sin':
+                        result = Math.asin(value);
+                        break;
+                    case 'cos':
+                        result = Math.acos(value);
+                        break;
+                    case 'tan':
+                        result = Math.atan(value);
+                        break;
+                }
+                if (angleMode === 'DEG') {
+                    result = result * 180 / Math.PI;
+                }
+                isShiftMode = false;
+            } else {
+                // 三角函數
+                let angle = value;
+                if (angleMode === 'DEG') {
+                    angle = value * Math.PI / 180;
+                }
+                
+                switch (func) {
+                    case 'sin':
+                        result = Math.sin(angle);
+                        break;
+                    case 'cos':
+                        result = Math.cos(angle);
+                        break;
+                    case 'tan':
+                        result = Math.tan(angle);
+                        break;
+                }
+            }
+            
+            if (isNaN(result) || !isFinite(result)) {
+                showError();
+                return;
+            }
+            
+            currentInput = result.toString();
+            updateDisplay();
+        }
+
+        function inputFunction(func) {
+            if (!isPowerOn || currentInput === 'Error') return;
+            
+            const value = parseFloat(currentInput);
+            let result;
+            
+            switch (func) {
+                case 'sqrt':
+                    if (value < 0) {
+                        showError();
+                        return;
+                    }
+                    result = Math.sqrt(value);
+                    break;
+                case 'square':
+                    result = value * value;
+                    break;
+                case 'reciprocal':
+                    if (value === 0) {
+                        showError();
+                        return;
+                    }
+                    result = 1 / value;
+                    break;
+                case 'percentage':
+                    result = value / 100;
+                    break;
+                case 'log':
+                    if (value <= 0) {
+                        showError();
+                        return;
+                    }
+                    result = Math.log10(value);
+                    break;
+                case 'ln':
+                    if (value <= 0) {
+                        showError();
+                        return;
+                    }
+                    result = Math.log(value);
+                    break;
+            }
+            
+            currentInput = result.toString();
+            updateDisplay();
+        }
+
+        function toggleSign() {
+            if (!isPowerOn || currentInput === 'Error' || currentInput === '0') return;
+            
+            if (currentInput.charAt(0) === '-') {
+                currentInput = currentInput.substring(1);
+            } else {
+                currentInput = '-' + currentInput;
+            }
+            updateDisplay();
+        }
+
+        function inputExp() {
+            if (!isPowerOn || currentInput === 'Error') return;
+            
+            if (currentInput.indexOf('E') === -1) {
+                currentInput += 'E';
+            }
+            updateDisplay();
+        }
+
+        function inputAns() {
+            if (!isPowerOn) return;
+            currentInput = lastResult.toString();
+            updateDisplay();
+        }
+
+        function memoryClear() {
+            if (!isPowerOn) return;
+            
+            if (isShiftMode) {
+                // MC功能
+                memory = 0;
+                isShiftMode = false;
+            } else {
+                // MR功能
+                currentInput = memory.toString();
+            }
+            updateDisplay();
+        }
+
+        function memoryAdd() {
+            if (!isPowerOn || currentInput === 'Error') return;
+            memory += parseFloat(currentInput);
+            updateDisplay();
+        }
+
+        function memorySubtract() {
+            if (!isPowerOn || currentInput === 'Error') return;
+            memory -= parseFloat(currentInput);
+            updateDisplay();
+        }
+
+        function calculate() {
+            if (!isPowerOn || currentInput === 'Error') return;
+            
+            try {
+                let fullExpression = expression + currentInput;
+                
+                // 處理括號未配對
+                while (bracketCount > 0) {
+                    fullExpression += ')';
+                    bracketCount--;
+                }
+                
+                // 替換顯示符號為計算符號
+                fullExpression = fullExpression.replace(/×/g, '*').replace(/÷/g, '/');
+                
+                // 安全的表達式評估
+                const result = evaluateExpression(fullExpression);
+                
+                if (isNaN(result) || !isFinite(result)) {
+                    showError();
+                    return;
+                }
+                
+                lastResult = result;
+                currentInput = result.toString();
+                expression = '';
+                bracketCount = 0;
+                
+            } catch (error) {
+                showError();
+                return;
+            }
+            
+            updateDisplay();
+        }
+
+        function evaluateExpression(expr) {
+            // 簡化的表達式評估（實際應用中建議使用更安全的數學表達式解析器）
+            try {
+                return Function('"use strict"; return (' + expr + ')')();
+            } catch (e) {
+                throw new Error('Invalid expression');
+            }
+        }
+
+        function clearAll() {
+            if (!isPowerOn) return;
+            
+            currentInput = '0';
+            expression = '';
+            bracketCount = 0;
+            isShiftMode = false;
+            errorIndicator.classList.remove('active');
+            updateDisplay();
+        }
+
+        function clearEntry() {
+            if (!isPowerOn) return;
+            currentInput = '0';
+            updateDisplay();
+        }
+
+        function showError() {
+            currentInput = 'Error';
+            expression = '';
+            bracketCount = 0;
+            isShiftMode = false;
+            errorIndicator.classList.add('active');
+            updateDisplay();
+            
+            setTimeout(() => {
+                if (isPowerOn) {
+                    errorIndicator.classList.remove('active');
+                    clearAll();
+                }
+            }, 2000);
+        }
+
+        function toggleScientificNotation() {
+            if (!isPowerOn || currentInput === 'Error') return;
+            
+            const value = parseFloat(currentInput);
+            if (value === 0) return;
+            
+            currentInput = value.toExponential(6).replace('e+', 'E').replace('e-', 'E-');
+            updateDisplay();
+        }
+
+        // 鍵盤支援
+        document.addEventListener('keydown', function(event) {
+            if (!isPowerOn) return;
+            
+            const key = event.key;
+            
+            if (key >= '0' && key <= '9') {
+                inputNumber(key);
+            } else if (key === '.') {
+                inputDecimal();
+            } else if (key === '+' || key === '-') {
+                inputOperator(key);
+            } else if (key === '*') {
+                inputOperator('*');
+            } else if (key === '/') {
+                event.preventDefault();
+                inputOperator('/');
+            } else if (key === '(') {
+                inputBracket('(');
+            } else if (key === ')') {
+                inputBracket(')');
+            } else if (key === 'Enter' || key === '=') {
+                event.preventDefault();
+                calculate();
+            } else if (key === 'Escape') {
+                clearAll();
+            } else if (key === 'Delete') {
+                clearEntry();
+            }
+        });
+
+        // 初始化
+        powerIndicator.classList.add('on');
+        degIndicator.classList.add('active');
+        updateDisplay();
+    </script>
+</body>
+</html>
