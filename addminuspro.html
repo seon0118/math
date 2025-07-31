@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>正負數加減法無限解題遊戲</title>
+    <title>正負數加減法競賽版本</title>
     <style>
         * {
             margin: 0;
@@ -73,6 +73,24 @@
             font-size: 1.1em;
         }
 
+        .competition-badge {
+            display: inline-block;
+            background: linear-gradient(45deg, #f56565, #e53e3e);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 1.2em;
+            font-weight: bold;
+            margin: 10px 0;
+            box-shadow: 0 4px 15px rgba(245, 101, 101, 0.3);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
         .welcome-text {
             color: #2c5282;
             font-size: 1.2em;
@@ -123,27 +141,15 @@
             align-items: center;
         }
 
-        .time-setting {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            background: rgba(66, 153, 225, 0.1);
-            padding: 10px 15px;
+        .competition-info {
+            background: linear-gradient(45deg, #f56565, #e53e3e);
+            color: white;
+            padding: 15px;
             border-radius: 10px;
-        }
-
-        .time-setting label {
-            font-weight: bold;
-            color: #2c5282;
-        }
-
-        .time-setting input {
-            padding: 8px 12px;
-            border: 2px solid #cbd5e0;
-            border-radius: 8px;
-            font-size: 16px;
-            width: 80px;
+            margin-bottom: 20px;
             text-align: center;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(245, 101, 101, 0.3);
         }
 
         .btn {
@@ -290,6 +296,12 @@
             transform: scale(1.05);
         }
 
+        .answer-input:disabled {
+            background-color: #f7fafc;
+            color: #a0aec0;
+            cursor: not-allowed;
+        }
+
         .feedback {
             margin-top: 20px;
             padding: 15px;
@@ -311,6 +323,12 @@
         }
 
         .feedback.incorrect {
+            background: linear-gradient(45deg, #f56565, #e53e3e);
+            color: white;
+            box-shadow: 0 4px 15px rgba(245, 101, 101, 0.3);
+        }
+
+        .timeout-warning {
             background: linear-gradient(45deg, #f56565, #e53e3e);
             color: white;
             box-shadow: 0 4px 15px rgba(245, 101, 101, 0.3);
@@ -359,25 +377,38 @@
         }
 
         .timer-display {
-            font-size: 1.5em;
+            font-size: 2em;
             font-weight: bold;
             color: #f56565;
             text-align: center;
             margin-bottom: 20px;
-            padding: 10px;
+            padding: 15px;
             background: rgba(245, 101, 101, 0.1);
-            border-radius: 10px;
+            border: 3px solid #f56565;
+            border-radius: 15px;
             display: none;
         }
 
         .timer-display.active {
             display: block;
-            animation: pulse 1s infinite;
+            animation: timerPulse 1s infinite;
         }
 
-        @keyframes pulse {
+        .timer-display.warning {
+            color: #e53e3e;
+            background: rgba(229, 62, 62, 0.2);
+            border-color: #e53e3e;
+            animation: timerWarning 0.5s infinite;
+        }
+
+        @keyframes timerPulse {
             0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
+            50% { transform: scale(1.02); }
+        }
+
+        @keyframes timerWarning {
+            0%, 100% { transform: scale(1); background: rgba(229, 62, 62, 0.2); }
+            50% { transform: scale(1.05); background: rgba(229, 62, 62, 0.4); }
         }
 
         @media (max-width: 768px) {
@@ -400,6 +431,11 @@
             .stats {
                 grid-template-columns: repeat(2, 1fr);
             }
+
+            .timer-display {
+                font-size: 1.5em;
+                padding: 10px;
+            }
         }
     </style>
 </head>
@@ -408,20 +444,21 @@
     <div class="login-container" id="loginContainer">
         <div class="header">
             <h1 class="title">正負數加減法遊戲</h1>
+            <div class="competition-badge">🏆 競賽版本 🏆</div>
             <p class="subtitle">挑戰您的數學技能！</p>
         </div>
         
         <div class="login-form">
-            <div class="welcome-text">請輸入您的姓名開始遊戲</div>
+            <div class="welcome-text">請輸入您的姓名開始競賽</div>
             <input type="text" class="login-input" id="usernameInput" placeholder="請輸入您的姓名" maxlength="20">
-            <button class="btn btn-primary" onclick="login()">開始遊戲</button>
+            <button class="btn btn-primary" onclick="login()">開始競賽</button>
         </div>
     </div>
 
     <!-- 遊戲畫面 -->
     <div class="game-container" id="gameContainer">
         <div class="header">
-            <h1 class="title">正負數加減法無限解題遊戲</h1>
+            <h1 class="title">正負數加減法競賽版本</h1>
             <p class="subtitle">包含加法交換律、結合律、去括號及數線距離</p>
         </div>
 
@@ -429,15 +466,13 @@
             <div class="username-display" id="usernameDisplay"></div>
         </div>
 
+        <div class="competition-info">
+            ⚡ 競賽規則：每題限時30秒，連續答錯3題即結束競賽 ⚡
+        </div>
+
         <div class="controls">
-            <div class="time-setting">
-                <label for="timeLimit">解題時間:</label>
-                <input type="number" id="timeLimit" value="30" min="10" max="300">
-                <span>秒</span>
-            </div>
-            <button class="btn btn-primary" onclick="startGame()" id="startBtn">開始遊戲</button>
-            <button class="btn btn-secondary" onclick="nextQuestion()" disabled id="nextBtn">下一題</button>
-            <button class="btn btn-danger" onclick="resetGame()">重置遊戲</button>
+            <button class="btn btn-primary" onclick="startGame()" id="startBtn">開始競賽</button>
+            <button class="btn btn-danger" onclick="resetGame()">重置競賽</button>
             <button class="btn btn-warning" onclick="logout()">登出</button>
         </div>
 
@@ -466,12 +501,13 @@
         </div>
 
         <div class="question-area">
-            <div class="question-type" id="questionType">點擊「開始遊戲」開始挑戰</div>
+            <div class="question-type" id="questionType">點擊「開始競賽」開始挑戰</div>
             <div class="question" id="questionText">準備好了嗎？</div>
             <div class="number-line" id="numberLine" style="display: none;"></div>
             <div class="answer-area">
                 <input type="number" class="answer-input" id="answerInput" placeholder="輸入答案" disabled>
                 <button class="btn btn-primary" onclick="checkAnswer()" disabled id="submitBtn">提交答案</button>
+                <button class="btn btn-secondary" onclick="nextQuestion()" disabled id="nextBtn">下一題</button>
             </div>
         </div>
 
@@ -490,11 +526,13 @@
             questionStartTime: 0,
             wrongStreak: 0,
             gameOver: false,
-            questionAnswered: false
+            questionAnswered: false,
+            timeUp: false
         };
 
         let currentQuestion = null;
         let currentUser = '';
+        const TIME_LIMIT = 30; // 競賽版本固定30秒
 
         const questionTypes = [
             '正負數加法',
@@ -513,13 +551,13 @@
             }
             
             currentUser = username;
-            document.getElementById('usernameDisplay').textContent = `歡迎，${currentUser}！`;
+            document.getElementById('usernameDisplay').textContent = `參賽者：${currentUser}`;
             document.getElementById('loginContainer').style.display = 'none';
             document.getElementById('gameContainer').style.display = 'block';
         }
 
         function logout() {
-            if (confirm('確定要登出嗎？這將重置您的遊戲進度。')) {
+            if (confirm('確定要登出嗎？這將重置您的競賽進度。')) {
                 resetGame();
                 document.getElementById('gameContainer').style.display = 'none';
                 document.getElementById('loginContainer').style.display = 'block';
@@ -668,8 +706,6 @@
             
             gameStats.gameActive = true;
             gameStats.wrongStreak = 0;
-            document.getElementById('answerInput').disabled = false;
-            document.getElementById('submitBtn').disabled = false;
             document.getElementById('startBtn').disabled = true;
             document.getElementById('wrongStreakDisplay').innerHTML = '';
             nextQuestion();
@@ -678,25 +714,29 @@
         function nextQuestion() {
             if (!gameStats.gameActive || gameStats.gameOver) return;
 
+            // 重置狀態
+            gameStats.questionAnswered = false;
+            gameStats.timeUp = false;
+            
             // 隱藏數線
             document.getElementById('numberLine').style.display = 'none';
             
             // 生成新題目
             currentQuestion = generateQuestion();
             gameStats.currentAnswer = currentQuestion.answer;
-            gameStats.questionAnswered = false;
             
             // 更新介面
             document.getElementById('questionType').textContent = currentQuestion.type;
             document.getElementById('questionText').textContent = currentQuestion.question;
             document.getElementById('answerInput').value = '';
+            document.getElementById('answerInput').disabled = false;
             document.getElementById('answerInput').focus();
             document.getElementById('submitBtn').disabled = false;
             document.getElementById('nextBtn').disabled = true;
             
             // 清除回饋
             const feedback = document.getElementById('feedback');
-            feedback.classList.remove('show', 'correct', 'incorrect');
+            feedback.classList.remove('show', 'correct', 'incorrect', 'timeout-warning');
             
             // 開始計時
             gameStats.questionStartTime = Date.now();
@@ -704,11 +744,11 @@
         }
 
         function startTimer() {
-            const timeLimit = parseInt(document.getElementById('timeLimit').value);
-            gameStats.timeRemaining = timeLimit;
+            gameStats.timeRemaining = TIME_LIMIT;
             
             const timerDisplay = document.getElementById('timerDisplay');
             timerDisplay.classList.add('active');
+            timerDisplay.classList.remove('warning');
             
             if (gameStats.timer) {
                 clearInterval(gameStats.timer);
@@ -716,20 +756,41 @@
             
             gameStats.timer = setInterval(() => {
                 gameStats.timeRemaining--;
-                timerDisplay.textContent = `剩餘時間: ${gameStats.timeRemaining} 秒`;
+                timerDisplay.textContent = `⏰ 剩餘時間: ${gameStats.timeRemaining} 秒`;
+                
+                // 最後10秒警告效果
+                if (gameStats.timeRemaining <= 10) {
+                    timerDisplay.classList.add('warning');
+                }
                 
                 if (gameStats.timeRemaining <= 0) {
                     clearInterval(gameStats.timer);
-                    timerDisplay.classList.remove('active');
+                    timerDisplay.classList.remove('active', 'warning');
                     if (!gameStats.questionAnswered) {
-                        handleWrongAnswer(`時間到！正確答案是 ${gameStats.currentAnswer}`);
+                        handleTimeout();
                     }
                 }
             }, 1000);
         }
 
+        function handleTimeout() {
+            gameStats.timeUp = true;
+            gameStats.questionAnswered = true;
+            
+            // 禁用輸入和提交按鈕
+            document.getElementById('answerInput').disabled = true;
+            document.getElementById('submitBtn').disabled = true;
+            document.getElementById('nextBtn').disabled = false;
+            
+            // 計算統計
+            gameStats.totalTime += TIME_LIMIT;
+            gameStats.totalQuestions++;
+            
+            handleWrongAnswer(`⏰ 時間到！正確答案是 ${gameStats.currentAnswer}`);
+        }
+
         function checkAnswer() {
-            if (!gameStats.gameActive || gameStats.questionAnswered) return;
+            if (!gameStats.gameActive || gameStats.questionAnswered || gameStats.timeUp) return;
             
             const userAnswer = parseFloat(document.getElementById('answerInput').value);
             if (isNaN(userAnswer)) {
@@ -743,7 +804,7 @@
             // 停止計時器
             if (gameStats.timer) {
                 clearInterval(gameStats.timer);
-                document.getElementById('timerDisplay').classList.remove('active');
+                document.getElementById('timerDisplay').classList.remove('active', 'warning');
             }
             
             // 計算用時
@@ -751,7 +812,8 @@
             gameStats.totalTime += timeUsed;
             gameStats.totalQuestions++;
             
-            // 禁用提交按鈕，啟用下一題按鈕
+            // 禁用輸入和提交按鈕，啟用下一題按鈕
+            document.getElementById('answerInput').disabled = true;
             document.getElementById('submitBtn').disabled = true;
             document.getElementById('nextBtn').disabled = false;
             
@@ -759,9 +821,9 @@
                 gameStats.correctAnswers++;
                 gameStats.wrongStreak = 0;
                 document.getElementById('wrongStreakDisplay').innerHTML = '';
-                showFeedback(true, '答對了！太棒了！');
+                showFeedback(true, '✅ 答對了！太棒了！');
             } else {
-                handleWrongAnswer(`答錯了！正確答案是 ${gameStats.currentAnswer}`);
+                handleWrongAnswer(`❌ 答錯了！正確答案是 ${gameStats.currentAnswer}`);
             }
             
             updateStats();
@@ -783,7 +845,7 @@
         function updateWrongStreakDisplay() {
             const display = document.getElementById('wrongStreakDisplay');
             if (gameStats.wrongStreak > 0 && gameStats.wrongStreak < 3) {
-                display.innerHTML = `<div class="wrong-streak">連續答錯 ${gameStats.wrongStreak} 題！再錯 ${3 - gameStats.wrongStreak} 題就結束遊戲！</div>`;
+                display.innerHTML = `<div class="wrong-streak">⚠️ 連續答錯 ${gameStats.wrongStreak} 題！再錯 ${3 - gameStats.wrongStreak} 題就結束競賽！</div>`;
             }
         }
 
@@ -794,14 +856,18 @@
             const display = document.getElementById('gameOverDisplay');
             const accuracy = gameStats.totalQuestions > 0 ? 
                 Math.round((gameStats.correctAnswers / gameStats.totalQuestions) * 100) : 0;
+            const avgTime = gameStats.totalQuestions > 0 ? 
+                Math.round(gameStats.totalTime / gameStats.totalQuestions * 10) / 10 : 0;
             
             display.innerHTML = `
                 <div class="game-over">
-                    🎮 遊戲結束！🎮<br>
-                    ${currentUser}，您連續答錯了3題！<br>
-                    本次成績：答對 ${gameStats.correctAnswers} 題，總共 ${gameStats.totalQuestions} 題<br>
+                    🏆 競賽結束！🏆<br>
+                    ${currentUser}，您連續答錯了3題！<br><br>
+                    📊 最終成績：<br>
+                    答對 ${gameStats.correctAnswers} 題，總共 ${gameStats.totalQuestions} 題<br>
                     正確率：${accuracy}%<br>
-                    再接再厲！點擊「開始遊戲」重新挑戰！
+                    平均答題時間：${avgTime} 秒<br><br>
+                    🎯 再接再厲！點擊「開始競賽」重新挑戰！
                 </div>
             `;
             
@@ -815,15 +881,22 @@
             // 停止計時器
             if (gameStats.timer) {
                 clearInterval(gameStats.timer);
-                document.getElementById('timerDisplay').classList.remove('active');
+                document.getElementById('timerDisplay').classList.remove('active', 'warning');
             }
         }
 
         function showFeedback(isCorrect, message) {
             const feedback = document.getElementById('feedback');
             feedback.textContent = message;
-            feedback.classList.remove('correct', 'incorrect');
-            feedback.classList.add(isCorrect ? 'correct' : 'incorrect', 'show');
+            feedback.classList.remove('correct', 'incorrect', 'timeout-warning');
+            
+            if (message.includes('時間到')) {
+                feedback.classList.add('timeout-warning');
+            } else {
+                feedback.classList.add(isCorrect ? 'correct' : 'incorrect');
+            }
+            
+            feedback.classList.add('show');
         }
 
         function updateStats() {
@@ -835,7 +908,7 @@
             document.getElementById('accuracy').textContent = accuracy + '%';
             
             const avgTime = gameStats.totalQuestions > 0 ? 
-                Math.round(gameStats.totalTime / gameStats.totalQuestions) : 0;
+                Math.round(gameStats.totalTime / gameStats.totalQuestions * 10) / 10 : 0;
             document.getElementById('averageTime').textContent = avgTime + '秒';
         }
 
@@ -855,30 +928,31 @@
                 questionStartTime: 0,
                 wrongStreak: 0,
                 gameOver: false,
-                questionAnswered: false
+                questionAnswered: false,
+                timeUp: false
             };
             
-            document.getElementById('timerDisplay').classList.remove('active');
+            document.getElementById('timerDisplay').classList.remove('active', 'warning');
             document.getElementById('answerInput').disabled = true;
             document.getElementById('submitBtn').disabled = true;
             document.getElementById('nextBtn').disabled = true;
             document.getElementById('startBtn').disabled = false;
             document.getElementById('answerInput').value = '';
-            document.getElementById('questionType').textContent = '點擊「開始遊戲」開始挑戰';
+            document.getElementById('questionType').textContent = '點擊「開始競賽」開始挑戰';
             document.getElementById('questionText').textContent = '準備好了嗎？';
             document.getElementById('numberLine').style.display = 'none';
             document.getElementById('wrongStreakDisplay').innerHTML = '';
             document.getElementById('gameOverDisplay').innerHTML = '';
             
             const feedback = document.getElementById('feedback');
-            feedback.classList.remove('show', 'correct', 'incorrect');
+            feedback.classList.remove('show', 'correct', 'incorrect', 'timeout-warning');
             
             updateStats();
         }
 
         // 按下 Enter 鍵提交答案或登入
         document.getElementById('answerInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter' && gameStats.gameActive && !gameStats.questionAnswered) {
+            if (e.key === 'Enter' && gameStats.gameActive && !gameStats.questionAnswered && !gameStats.timeUp) {
                 checkAnswer();
             }
         });
