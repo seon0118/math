@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>家用計算機</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+        }
+
+        .calculator {
+            background: #2d3748;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 360px;
+        }
+
+        .memory-indicator {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+
+        .indicator {
+            background: #1a202c;
+            color: #68d391;
+            padding: 5px 12px;
+            border-radius: 5px;
+            font-weight: 600;
+            opacity: 0.3;
+            transition: opacity 0.3s;
+        }
+
+        .indicator.active {
+            opacity: 1;
+        }
+
+        .display {
+            background: #1a202c;
+            color: #fff;
+            font-size: 2.5rem;
+            text-align: right;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            min-height: 80px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        button {
+            padding: 18px;
+            font-size: 1.3rem;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 600;
+        }
+
+        button:hover {
+            transform: scale(1.05);
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        .num-btn {
+            background: #4a5568;
+            color: #fff;
+        }
+
+        .num-btn:hover {
+            background: #5a6678;
+        }
+
+        .op-btn {
+            background: #ed8936;
+            color: #fff;
+        }
+
+        .op-btn:hover {
+            background: #f6ad55;
+        }
+
+        .clear-btn {
+            background: #fc8181;
+            color: #fff;
+        }
+
+        .clear-btn:hover {
+            background: #feb2b2;
+        }
+
+        .mem-btn {
+            background: #4299e1;
+            color: #fff;
+            font-size: 1.1rem;
+        }
+
+        .mem-btn:hover {
+            background: #63b3ed;
+        }
+
+        .equal-btn {
+            background: #48bb78;
+            color: #fff;
+            grid-column: span 2;
+        }
+
+        .equal-btn:hover {
+            background: #68d391;
+        }
+
+        .zero-btn {
+            grid-column: span 2;
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <div class="memory-indicator">
+            <span class="indicator" id="memIndicator">M</span>
+            <span class="indicator" id="gtIndicator">GT</span>
+        </div>
+        <div class="display" id="display">0</div>
+        <div class="buttons">
+            <button class="mem-btn" onclick="memoryAdd()">M+</button>
+            <button class="mem-btn" onclick="memorySubtract()">M−</button>
+            <button class="mem-btn" onclick="memoryRecall()">MR</button>
+            <button class="mem-btn" onclick="memoryClear()">MC</button>
+
+            <button class="clear-btn" onclick="clearDisplay()">C</button>
+            <button class="clear-btn" onclick="deleteLast()">←</button>
+            <button class="mem-btn" onclick="grandTotal()">GT</button>
+            <button class="op-btn" onclick="appendOperator('/')">÷</button>
+            
+            <button class="num-btn" onclick="appendNumber('7')">7</button>
+            <button class="num-btn" onclick="appendNumber('8')">8</button>
+            <button class="num-btn" onclick="appendNumber('9')">9</button>
+            <button class="op-btn" onclick="appendOperator('*')">×</button>
+            
+            <button class="num-btn" onclick="appendNumber('4')">4</button>
+            <button class="num-btn" onclick="appendNumber('5')">5</button>
+            <button class="num-btn" onclick="appendNumber('6')">6</button>
+            <button class="op-btn" onclick="appendOperator('-')">−</button>
+            
+            <button class="num-btn" onclick="appendNumber('1')">1</button>
+            <button class="num-btn" onclick="appendNumber('2')">2</button>
+            <button class="num-btn" onclick="appendNumber('3')">3</button>
+            <button class="op-btn" onclick="appendOperator('+')">+</button>
+            
+            <button class="num-btn zero-btn" onclick="appendNumber('0')">0</button>
+            <button class="num-btn" onclick="appendNumber('.')">.</button>
+            <button class="equal-btn" onclick="calculate()">=</button>
+        </div>
+    </div>
+
+    <script>
+        let display = document.getElementById('display');
+        let memIndicator = document.getElementById('memIndicator');
+        let gtIndicator = document.getElementById('gtIndicator');
+        
+        let currentInput = '0';
+        let operator = null;
+        let previousValue = null;
+        let shouldResetDisplay = false;
+        
+        // 記憶和總計變數
+        let memoryValue = 0;
+        let grandTotalValue = 0;
+
+        function updateDisplay() {
+            display.textContent = currentInput;
+        }
+
+        function updateIndicators() {
+            if (memoryValue !== 0) {
+                memIndicator.classList.add('active');
+            } else {
+                memIndicator.classList.remove('active');
+            }
+            
+            if (grandTotalValue !== 0) {
+                gtIndicator.classList.add('active');
+            } else {
+                gtIndicator.classList.remove('active');
+            }
+        }
+
+        function appendNumber(num) {
+            if (shouldResetDisplay) {
+                currentInput = num;
+                shouldResetDisplay = false;
+            } else {
+                if (currentInput === '0' && num !== '.') {
+                    currentInput = num;
+                } else if (num === '.' && currentInput.includes('.')) {
+                    return;
+                } else {
+                    currentInput += num;
+                }
+            }
+            updateDisplay();
+        }
+
+        function appendOperator(op) {
+            if (operator !== null && !shouldResetDisplay) {
+                calculate();
+            }
+            previousValue = parseFloat(currentInput);
+            operator = op;
+            shouldResetDisplay = true;
+        }
+
+        function calculate() {
+            if (operator === null || previousValue === null) return;
+            
+            let current = parseFloat(currentInput);
+            let result;
+
+            switch(operator) {
+                case '+':
+                    result = previousValue + current;
+                    break;
+                case '-':
+                    result = previousValue - current;
+                    break;
+                case '*':
+                    result = previousValue * current;
+                    break;
+                case '/':
+                    if (current === 0) {
+                        currentInput = '錯誤';
+                        updateDisplay();
+                        setTimeout(() => {
+                            clearDisplay();
+                        }, 1500);
+                        return;
+                    }
+                    result = previousValue / current;
+                    break;
+            }
+
+            // 將結果加入總計
+            grandTotalValue += result;
+            updateIndicators();
+
+            currentInput = result.toString();
+            if (currentInput.length > 12) {
+                currentInput = parseFloat(currentInput).toExponential(6);
+            }
+            operator = null;
+            previousValue = null;
+            shouldResetDisplay = true;
+            updateDisplay();
+        }
+
+        function clearDisplay() {
+            currentInput = '0';
+            operator = null;
+            previousValue = null;
+            shouldResetDisplay = false;
+            updateDisplay();
+        }
+
+        function deleteLast() {
+            if (currentInput.length > 1) {
+                currentInput = currentInput.slice(0, -1);
+            } else {
+                currentInput = '0';
+            }
+            updateDisplay();
+        }
+
+        // M+ 將目前顯示的數字加到記憶中
+        function memoryAdd() {
+            let value = parseFloat(currentInput);
+            if (!isNaN(value)) {
+                memoryValue += value;
+                updateIndicators();
+                shouldResetDisplay = true;
+            }
+        }
+
+        // M- 將目前顯示的數字從記憶中減去
+        function memorySubtract() {
+            let value = parseFloat(currentInput);
+            if (!isNaN(value)) {
+                memoryValue -= value;
+                updateIndicators();
+                shouldResetDisplay = true;
+            }
+        }
+
+        // MR 顯示記憶中的數字
+        function memoryRecall() {
+            if (memoryValue !== 0) {
+                currentInput = memoryValue.toString();
+                if (currentInput.length > 12) {
+                    currentInput = parseFloat(currentInput).toExponential(6);
+                }
+                updateDisplay();
+                shouldResetDisplay = true;
+            }
+        }
+
+        // MC 清除記憶
+        function memoryClear() {
+            memoryValue = 0;
+            updateIndicators();
+        }
+
+        // GT 顯示所有等於結果的總和
+        function grandTotal() {
+            currentInput = grandTotalValue.toString();
+            if (currentInput.length > 12) {
+                currentInput = parseFloat(currentInput).toExponential(6);
+            }
+            updateDisplay();
+            shouldResetDisplay = true;
+            // 顯示後清除GT
+            grandTotalValue = 0;
+            updateIndicators();
+        }
+
+        // 鍵盤支援
+        document.addEventListener('keydown', function(e) {
+            if (e.key >= '0' && e.key <= '9' || e.key === '.') {
+                appendNumber(e.key);
+            } else if (e.key === '+' || e.key === '-' || e.key === '*' || e.key === '/') {
+                appendOperator(e.key);
+            } else if (e.key === 'Enter' || e.key === '=') {
+                calculate();
+            } else if (e.key === 'Escape' || e.key === 'c' || e.key === 'C') {
+                clearDisplay();
+            } else if (e.key === 'Backspace') {
+                deleteLast();
+            }
+        });
+    </script>
+</body>
+</html>
