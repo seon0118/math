@@ -1,528 +1,471 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Trophy, Timer, Volume2, VolumeX, Zap, Flame } from 'lucide-react';
-
-const ExponentBattleGame = () => {
-  const [gameState, setGameState] = useState('ready');
-  const [timeLeft, setTimeLeft] = useState(60);
-  const [leftScore, setLeftScore] = useState(0);
-  const [rightScore, setRightScore] = useState(0);
-  const [leftWrong, setLeftWrong] = useState(0);
-  const [rightWrong, setRightWrong] = useState(0);
-  const [leftCombo, setLeftCombo] = useState(0);
-  const [rightCombo, setRightCombo] = useState(0);
-  const [leftQuestionTime, setLeftQuestionTime] = useState(10);
-  const [rightQuestionTime, setRightQuestionTime] = useState(10);
-  const [leftCompleted, setLeftCompleted] = useState(0);
-  const [rightCompleted, setRightCompleted] = useState(0);
-  const [leftQuestion, setLeftQuestion] = useState(null);
-  const [rightQuestion, setRightQuestion] = useState(null);
-  const [leftFeedback, setLeftFeedback] = useState('');
-  const [rightFeedback, setRightFeedback] = useState('');
-  const [isMuted, setIsMuted] = useState(false);
-  
-  const audioRef = useRef(null);
-
-  const generateQuestion = () => {
-    const types = [
-      () => {
-        const base = Math.floor(Math.random() * 5) + 2;
-        const m = Math.floor(Math.random() * 5) + 2;
-        const n = Math.floor(Math.random() * 5) + 2;
-        const answer = m + n;
-        const options = [answer, answer + 1, answer - 1, m * n].sort(() => Math.random() - 0.5);
-        return {
-          base: base,
-          exp1: m,
-          exp2: n,
-          operator: '×',
-          options: options,
-          answer: answer
-        };
-      },
-      () => {
-        const base = Math.floor(Math.random() * 5) + 2;
-        const m = Math.floor(Math.random() * 5) + 5;
-        const n = Math.floor(Math.random() * 3) + 2;
-        const answer = m - n;
-        const options = [answer, answer + 1, answer - 1, m + n].sort(() => Math.random() - 0.5);
-        return {
-          base: base,
-          exp1: m,
-          exp2: n,
-          operator: '÷',
-          options: options,
-          answer: answer
-        };
-      },
-      () => {
-        const base = Math.floor(Math.random() * 4) + 2;
-        const m = Math.floor(Math.random() * 4) + 2;
-        const n = Math.floor(Math.random() * 3) + 2;
-        const answer = m * n;
-        const options = [answer, m + n, answer + 1, answer - 1].sort(() => Math.random() - 0.5);
-        return {
-          base: base,
-          exp1: m,
-          exp2: n,
-          operator: 'power',
-          options: options,
-          answer: answer
-        };
-      },
-      () => {
-        const a = Math.floor(Math.random() * 4) + 2;
-        const b = Math.floor(Math.random() * 4) + 2;
-        const n = Math.floor(Math.random() * 3) + 2;
-        const answer = n;
-        const options = [n, n + 1, n - 1, n * 2].sort(() => Math.random() - 0.5);
-        return {
-          base: a,
-          base2: b,
-          exp1: n,
-          operator: 'product',
-          options: options,
-          answer: answer
-        };
-      }
-    ];
-    
-    const selectedType = types[Math.floor(Math.random() * types.length)];
-    return selectedType();
-  };
-
-  const startGame = () => {
-    setGameState('playing');
-    setTimeLeft(60);
-    setLeftScore(0);
-    setRightScore(0);
-    setLeftWrong(0);
-    setRightWrong(0);
-    setLeftCombo(0);
-    setRightCombo(0);
-    setLeftQuestionTime(10);
-    setRightQuestionTime(10);
-    setLeftCompleted(0);
-    setRightCompleted(0);
-    setLeftQuestion(generateQuestion());
-    setRightQuestion(generateQuestion());
-    setLeftFeedback('');
-    setRightFeedback('');
-    
-    if (audioRef.current) {
-      audioRef.current.currentTime = 0;
-      audioRef.current.play().catch(e => console.log('Audio play failed:', e));
-    }
-  };
-
-  const handleAnswer = (side, selectedAnswer) => {
-    if (gameState !== 'playing') return;
-
-    const isLeft = side === 'left';
-    const currentQuestion = isLeft ? leftQuestion : rightQuestion;
-    
-    if (selectedAnswer === currentQuestion.answer) {
-      if (isLeft) {
-        const newCombo = leftCombo + 1;
-        const bonusPoints = Math.floor(newCombo / 3);
-        const totalPoints = 1 + bonusPoints;
-        
-        setLeftCombo(newCombo);
-        setLeftScore(prev => prev + totalPoints);
-        setLeftQuestionTime(10);
-        setLeftCompleted(prev => prev + 1);
-        
-        let feedbackText = '✓ 正確! +' + totalPoints;
-        if (newCombo >= 3) {
-          feedbackText += ` 🔥 ${newCombo}連擊`;
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>指數律對戰</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: 'Arial Black', sans-serif;
         }
-        setLeftFeedback(feedbackText);
-        
-        setTimeout(() => {
-          setLeftQuestion(generateQuestion());
-          setLeftFeedback('');
-        }, 500);
-      } else {
-        const newCombo = rightCombo + 1;
-        const bonusPoints = Math.floor(newCombo / 3);
-        const totalPoints = 1 + bonusPoints;
-        
-        setRightCombo(newCombo);
-        setRightScore(prev => prev + totalPoints);
-        setRightQuestionTime(10);
-        setRightCompleted(prev => prev + 1);
-        
-        let feedbackText = '✓ 正確! +' + totalPoints;
-        if (newCombo >= 3) {
-          feedbackText += ` 🔥 ${newCombo}連擊`;
+        .grid-bg {
+            background-image: linear-gradient(rgba(255,255,255,0.1) 2px, transparent 2px), 
+                              linear-gradient(90deg, rgba(255,255,255,0.1) 2px, transparent 2px);
+            background-size: 50px 50px;
         }
-        setRightFeedback(feedbackText);
-        
-        setTimeout(() => {
-          setRightQuestion(generateQuestion());
-          setRightFeedback('');
-        }, 500);
-      }
-    } else {
-      if (isLeft) {
-        setLeftCombo(0);
-        setLeftScore(prev => prev - 1);
-        setLeftWrong(prev => prev + 1);
-        setLeftFeedback('✗ 答錯 -1');
-        setTimeout(() => setLeftFeedback(''), 800);
-      } else {
-        setRightCombo(0);
-        setRightScore(prev => prev - 1);
-        setRightWrong(prev => prev + 1);
-        setRightFeedback('✗ 答錯 -1');
-        setTimeout(() => setRightFeedback(''), 800);
-      }
-    }
-  };
+        .glow-text {
+            text-shadow: 0 0 20px rgba(255,255,255,0.8);
+        }
+        .glow-cyan {
+            box-shadow: 0 0 20px rgba(0,255,255,0.5);
+        }
+        .glow-orange {
+            box-shadow: 0 0 20px rgba(255,100,0,0.5);
+        }
+        .glow-yellow {
+            box-shadow: 0 0 40px rgba(255,215,0,0.8);
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .animate-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-25px); }
+        }
+        .animate-bounce {
+            animation: bounce 1s infinite;
+        }
+    </style>
+</head>
+<body class="bg-black">
+    <!-- 音訊 -->
+    <audio id="bgMusic" loop>
+        <source src="https://drive.google.com/uc?export=download&id=18QW0K3LaTPdrLHXsF_Xmq3Wj9X6bl3AE" type="audio/mpeg">
+    </audio>
 
-  const handleTimeout = (side) => {
-    if (gameState !== 'playing') return;
-    
-    const isLeft = side === 'left';
-    if (isLeft) {
-      setLeftCombo(0);
-      setLeftScore(prev => prev - 10);
-      setLeftWrong(prev => prev + 1);
-      setLeftQuestionTime(10);
-      setLeftFeedback('⏰ 超時! -10');
-      setLeftQuestion(generateQuestion());
-      setTimeout(() => setLeftFeedback(''), 1000);
-    } else {
-      setRightCombo(0);
-      setRightScore(prev => prev - 10);
-      setRightWrong(prev => prev + 1);
-      setRightQuestionTime(10);
-      setRightFeedback('⏰ 超時! -10');
-      setRightQuestion(generateQuestion());
-      setTimeout(() => setRightFeedback(''), 1000);
-    }
-  };
-
-  const calculateFinalScore = (score, completed) => {
-    if (completed >= 10) {
-      return score;
-    } else {
-      const penalty = (10 - completed) * 5;
-      return score - penalty;
-    }
-  };
-
-  useEffect(() => {
-    let timer;
-    if (gameState === 'playing' && timeLeft > 0) {
-      timer = setInterval(() => {
-        setTimeLeft(prev => {
-          if (prev <= 1) {
-            setGameState('finished');
-            if (audioRef.current) {
-              audioRef.current.pause();
-            }
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }
-    return () => clearInterval(timer);
-  }, [gameState, timeLeft]);
-
-  useEffect(() => {
-    let timer;
-    if (gameState === 'playing' && leftQuestion) {
-      timer = setInterval(() => {
-        setLeftQuestionTime(prev => {
-          if (prev <= 1) {
-            handleTimeout('left');
-            return 10;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }
-    return () => clearInterval(timer);
-  }, [gameState, leftQuestion]);
-
-  useEffect(() => {
-    let timer;
-    if (gameState === 'playing' && rightQuestion) {
-      timer = setInterval(() => {
-        setRightQuestionTime(prev => {
-          if (prev <= 1) {
-            handleTimeout('right');
-            return 10;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }
-    return () => clearInterval(timer);
-  }, [gameState, rightQuestion]);
-
-  const renderQuestion = (question) => {
-    if (!question) return null;
-    
-    if (question.operator === '×') {
-      return (
-        <span className="text-3xl font-bold text-white">
-          {question.base}<sup>{question.exp1}</sup> × {question.base}<sup>{question.exp2}</sup> = {question.base}<sup className="text-yellow-300">?</sup>
-        </span>
-      );
-    } else if (question.operator === '÷') {
-      return (
-        <span className="text-3xl font-bold text-white">
-          {question.base}<sup>{question.exp1}</sup> ÷ {question.base}<sup>{question.exp2}</sup> = {question.base}<sup className="text-yellow-300">?</sup>
-        </span>
-      );
-    } else if (question.operator === 'power') {
-      return (
-        <span className="text-3xl font-bold text-white">
-          ({question.base}<sup>{question.exp1}</sup>)<sup>{question.exp2}</sup> = {question.base}<sup className="text-yellow-300">?</sup>
-        </span>
-      );
-    } else if (question.operator === 'product') {
-      return (
-        <span className="text-3xl font-bold text-white">
-          ({question.base} × {question.base2})<sup>{question.exp1}</sup> = {question.base}<sup className="text-yellow-300">?</sup> × {question.base2}<sup>{question.exp1}</sup>
-        </span>
-      );
-    }
-  };
-
-  const PlayerSide = ({ side, question, score, feedback, onAnswer, wrongCount, combo, questionTime, completed }) => (
-    <div className={`flex-1 flex flex-col items-center justify-center p-8 relative overflow-hidden ${
-      side === 'left' ? 'bg-gradient-to-br from-cyan-900 via-blue-900 to-purple-900' : 'bg-gradient-to-br from-red-900 via-orange-900 to-yellow-900'
-    }`}>
-      {/* 電競網格背景 */}
-      <div className="absolute inset-0 opacity-10" style={{
-        backgroundImage: 'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)',
-        backgroundSize: '50px 50px'
-      }}></div>
-      
-      {/* 發光效果 */}
-      <div className={`absolute top-0 left-0 w-full h-2 ${side === 'left' ? 'bg-gradient-to-r from-cyan-400 to-blue-500' : 'bg-gradient-to-r from-red-500 to-orange-500'} shadow-lg`}></div>
-      
-      <div className="relative z-10">
-        <div className={`text-3xl font-black mb-4 tracking-wider ${
-          side === 'left' ? 'text-cyan-400' : 'text-orange-400'
-        } drop-shadow-[0_0_10px_rgba(0,0,0,0.5)]`}>
-          {side === 'left' ? '玩家 1' : '玩家 2'}
-        </div>
-        
-        <div className="text-8xl font-black mb-4 text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.5)]">
-          {score}
-        </div>
-        
-        {combo > 0 && (
-          <div className={`text-3xl font-black mb-3 ${combo >= 3 ? 'text-yellow-300 animate-pulse' : 'text-gray-300'} drop-shadow-[0_0_15px_rgba(255,255,0,0.8)]`}>
-            {combo >= 3 && <Flame className="inline mr-2" size={32} />}
-            {combo}連擊
-            {combo >= 3 && <Flame className="inline ml-2" size={32} />}
-          </div>
-        )}
-        
-        <div className="flex gap-6 mb-4 text-lg font-bold text-gray-300">
-          <div className="bg-black bg-opacity-50 px-4 py-2 rounded-lg backdrop-blur-sm border border-gray-600">
-            已完成: <span className={completed >= 10 ? 'text-green-400' : 'text-yellow-300'}>{completed}/10</span>
-          </div>
-          <div className="bg-black bg-opacity-50 px-4 py-2 rounded-lg backdrop-blur-sm border border-gray-600">
-            答錯: <span className="text-red-400">{wrongCount}</span>
-          </div>
-        </div>
-
-        {question && gameState === 'playing' && (
-          <>
-            <div className={`text-6xl font-black mb-6 ${
-              questionTime <= 3 ? 'text-red-500 animate-pulse' : 'text-white'
-            } drop-shadow-[0_0_20px_rgba(255,0,0,0.8)]`}>
-              <Timer className="inline mb-2" size={48} /> {questionTime}
-            </div>
-            
-            <div className="mb-8 p-6 bg-black bg-opacity-60 rounded-2xl backdrop-blur-md border-2 border-gray-600 shadow-2xl">
-              {renderQuestion(question)}
-            </div>
-            
-            <div className="grid grid-cols-2 gap-5 w-full max-w-lg">
-              {question.options.map((option, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => onAnswer(option)}
-                  className={`py-8 px-10 text-3xl font-black rounded-xl transition-all transform hover:scale-110 active:scale-95 shadow-2xl border-4 ${
-                    side === 'left' 
-                      ? 'bg-gradient-to-br from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 border-cyan-300 text-white' 
-                      : 'bg-gradient-to-br from-red-500 to-orange-600 hover:from-red-400 hover:to-orange-500 border-orange-300 text-white'
-                  }`}
-                  style={{
-                    textShadow: '0 0 10px rgba(0,0,0,0.5)',
-                    boxShadow: side === 'left' ? '0 0 20px rgba(0,255,255,0.5)' : '0 0 20px rgba(255,100,0,0.5)'
-                  }}
-                >
-                  {option}
-                </button>
-              ))}
-            </div>
-
-            {feedback && (
-              <div className={`mt-8 text-4xl font-black px-8 py-4 rounded-xl ${
-                feedback.includes('✓') ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
-              } shadow-2xl animate-pulse`}>
-                {feedback}
-              </div>
-            )}
-          </>
-        )}
-      </div>
-    </div>
-  );
-
-  const leftFinalScore = calculateFinalScore(leftScore, leftCompleted);
-  const rightFinalScore = calculateFinalScore(rightScore, rightCompleted);
-
-  return (
-    <div className="h-screen w-screen flex flex-col bg-black">
-      <audio 
-        ref={audioRef} 
-        loop 
-        muted={isMuted}
-        src="https://drive.google.com/uc?export=download&id=18QW0K3LaTPdrLHXsF_Xmq3Wj9X6bl3AE"
-      />
-      
-      <div className="bg-gradient-to-r from-purple-900 via-gray-900 to-red-900 shadow-2xl py-5 px-8 flex justify-between items-center border-b-4 border-yellow-400">
-        <button
-          onClick={() => setIsMuted(!isMuted)}
-          className="p-3 bg-gray-800 hover:bg-gray-700 rounded-full transition-all transform hover:scale-110 border-2 border-gray-600"
-        >
-          {isMuted ? <VolumeX size={28} className="text-red-400" /> : <Volume2 size={28} className="text-green-400" />}
+    <!-- 頂部控制列 -->
+    <div id="topBar" class="bg-gradient-to-r from-purple-900 via-gray-900 to-red-900 py-5 px-8 flex justify-between items-center border-b-4 border-yellow-400 shadow-2xl">
+        <button id="muteBtn" class="p-3 bg-gray-800 hover:bg-gray-700 rounded-full transition-all transform hover:scale-110 border-2 border-gray-600">
+            <span id="volumeIcon" class="text-2xl">🔊</span>
         </button>
         
-        <div className="flex items-center bg-black bg-opacity-60 px-8 py-3 rounded-full border-4 border-yellow-400 shadow-2xl">
-          <Zap className="mr-3 text-yellow-400" size={36} />
-          <span className="text-5xl font-black text-white drop-shadow-[0_0_10px_rgba(255,255,0,0.8)]">
-            {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
-          </span>
+        <div class="flex items-center bg-black bg-opacity-60 px-8 py-3 rounded-full border-4 border-yellow-400 shadow-2xl">
+            <span class="text-4xl mr-3">⚡</span>
+            <span id="timer" class="text-5xl font-black text-white glow-text">1:00</span>
         </div>
         
-        <div className="w-16"></div>
-      </div>
-
-      <div className="flex-1 flex">
-        {gameState === 'ready' && (
-          <div className="flex-1 flex flex-col items-center justify-center bg-gradient-to-br from-purple-900 via-black to-red-900 text-white relative overflow-hidden">
-            <div className="absolute inset-0 opacity-10" style={{
-              backgroundImage: 'linear-gradient(rgba(255,255,255,0.1) 2px, transparent 2px), linear-gradient(90deg, rgba(255,255,255,0.1) 2px, transparent 2px)',
-              backgroundSize: '50px 50px'
-            }}></div>
-            
-            <Trophy size={120} className="mb-8 text-yellow-400 drop-shadow-[0_0_30px_rgba(255,215,0,0.8)] animate-pulse" />
-            <h1 className="text-7xl font-black mb-6 tracking-wider drop-shadow-[0_0_30px_rgba(255,255,255,0.8)]">
-              指數律對戰
-            </h1>
-            <p className="text-3xl mb-3 font-bold text-cyan-300">雙人對戰 • 60秒挑戰</p>
-            <p className="text-2xl mb-10 font-bold text-yellow-300">⚠️ 基本完成10題，未完成每題扣5分</p>
-            <button
-              onClick={startGame}
-              className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black px-16 py-8 rounded-full text-4xl font-black hover:from-yellow-300 hover:to-orange-400 transition-all transform hover:scale-110 shadow-2xl border-4 border-yellow-300 animate-pulse"
-              style={{
-                textShadow: '0 2px 4px rgba(0,0,0,0.3)',
-                boxShadow: '0 0 40px rgba(255,215,0,0.8)'
-              }}
-            >
-              開始遊戲
-            </button>
-          </div>
-        )}
-
-        {gameState === 'playing' && (
-          <>
-            <PlayerSide
-              side="left"
-              question={leftQuestion}
-              score={leftScore}
-              wrongCount={leftWrong}
-              combo={leftCombo}
-              questionTime={leftQuestionTime}
-              completed={leftCompleted}
-              feedback={leftFeedback}
-              onAnswer={(answer) => handleAnswer('left', answer)}
-            />
-            
-            <div className="w-1 bg-gradient-to-b from-yellow-400 via-white to-yellow-400 shadow-[0_0_20px_rgba(255,215,0,0.8)]"></div>
-            
-            <PlayerSide
-              side="right"
-              question={rightQuestion}
-              score={rightScore}
-              wrongCount={rightWrong}
-              combo={rightCombo}
-              questionTime={rightQuestionTime}
-              completed={rightCompleted}
-              feedback={rightFeedback}
-              onAnswer={(answer) => handleAnswer('right', answer)}
-            />
-          </>
-        )}
-
-        {gameState === 'finished' && (
-          <div className="flex-1 flex flex-col items-center justify-center bg-gradient-to-br from-yellow-600 via-orange-600 to-red-600 text-white relative overflow-hidden">
-            <div className="absolute inset-0 opacity-20" style={{
-              backgroundImage: 'linear-gradient(rgba(255,255,255,0.2) 2px, transparent 2px), linear-gradient(90deg, rgba(255,255,255,0.2) 2px, transparent 2px)',
-              backgroundSize: '60px 60px'
-            }}></div>
-            
-            <Trophy size={140} className="mb-8 text-yellow-300 drop-shadow-[0_0_40px_rgba(255,215,0,1)] animate-bounce" />
-            <h1 className="text-7xl font-black mb-12 tracking-wider drop-shadow-[0_0_30px_rgba(0,0,0,0.8)]">遊戲結束!</h1>
-            
-            <div className="flex gap-20 mb-12">
-              <div className="text-center bg-black bg-opacity-40 p-8 rounded-3xl backdrop-blur-md border-4 border-cyan-400 shadow-2xl">
-                <div className="text-3xl mb-3 font-black text-cyan-300">玩家 1</div>
-                <div className="text-9xl font-black drop-shadow-[0_0_20px_rgba(0,255,255,0.8)]">{leftFinalScore}</div>
-                <div className="text-xl mt-4 font-bold">已完成: {leftCompleted}/10</div>
-                <div className="text-xl font-bold">答錯: {leftWrong}</div>
-                {leftCompleted < 10 && (
-                  <div className="text-lg text-red-300 mt-2 font-bold">
-                    懲罰: -{(10 - leftCompleted) * 5}
-                  </div>
-                )}
-              </div>
-              
-              <div className="text-8xl font-black self-center drop-shadow-[0_0_20px_rgba(255,255,255,0.8)]">VS</div>
-              
-              <div className="text-center bg-black bg-opacity-40 p-8 rounded-3xl backdrop-blur-md border-4 border-orange-400 shadow-2xl">
-                <div className="text-3xl mb-3 font-black text-orange-300">玩家 2</div>
-                <div className="text-9xl font-black drop-shadow-[0_0_20px_rgba(255,100,0,0.8)]">{rightFinalScore}</div>
-                <div className="text-xl mt-4 font-bold">已完成: {rightCompleted}/10</div>
-                <div className="text-xl font-bold">答錯: {rightWrong}</div>
-                {rightCompleted < 10 && (
-                  <div className="text-lg text-red-300 mt-2 font-bold">
-                    懲罰: -{(10 - rightCompleted) * 5}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="text-6xl font-black mb-12 px-12 py-6 bg-black bg-opacity-50 rounded-3xl backdrop-blur-md border-4 border-yellow-300 shadow-2xl animate-pulse">
-              {leftFinalScore > rightFinalScore ? '🎉 玩家 1 獲勝! 🎉' : 
-               rightFinalScore > leftFinalScore ? '🎉 玩家 2 獲勝! 🎉' : 
-               '🤝 平手! 🤝'}
-            </div>
-
-            <button
-              onClick={startGame}
-              className="bg-gradient-to-r from-green-400 to-blue-500 text-white px-16 py-8 rounded-full text-4xl font-black hover:from-green-300 hover:to-blue-400 transition-all transform hover:scale-110 shadow-2xl border-4 border-white"
-              style={{
-                boxShadow: '0 0 40px rgba(0,255,200,0.8)'
-              }}
-            >
-              再玩一次
-            </button>
-          </div>
-        )}
-      </div>
+        <div class="w-16"></div>
     </div>
-  );
-};
 
-export default ExponentBattleGame;
+    <!-- 遊戲區域 -->
+    <div id="gameArea" class="flex" style="height: calc(100vh - 90px);">
+        <!-- 開始畫面 -->
+        <div id="startScreen" class="flex-1 flex flex-col items-center justify-center bg-gradient-to-br from-purple-900 via-black to-red-900 text-white relative overflow-hidden grid-bg">
+            <div class="text-9xl mb-8 animate-pulse" style="text-shadow: 0 0 30px rgba(255,215,0,0.8);">🏆</div>
+            <h1 class="text-7xl font-black mb-6 tracking-wider glow-text">指數律對戰</h1>
+            <p class="text-3xl mb-3 font-bold text-cyan-300">雙人對戰 • 60秒挑戰</p>
+            <p class="text-2xl mb-10 font-bold text-yellow-300">⚠️ 基本完成10題，未完成每題扣5分</p>
+            <button id="startBtn" class="bg-gradient-to-r from-yellow-400 to-orange-500 text-black px-16 py-8 rounded-full text-4xl font-black hover:from-yellow-300 hover:to-orange-400 transition-all transform hover:scale-110 shadow-2xl border-4 border-yellow-300 animate-pulse glow-yellow">
+                開始遊戲
+            </button>
+        </div>
+
+        <!-- 玩家1區域 -->
+        <div id="player1Area" class="flex-1 hidden flex-col items-center justify-center p-8 relative overflow-hidden bg-gradient-to-br from-cyan-900 via-blue-900 to-purple-900">
+            <div class="absolute inset-0 opacity-10 grid-bg"></div>
+            <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-cyan-400 to-blue-500 shadow-lg"></div>
+            
+            <div class="relative z-10 text-center">
+                <div class="text-3xl font-black mb-4 tracking-wider text-cyan-400" style="text-shadow: 0 0 10px rgba(0,0,0,0.5);">玩家 1</div>
+                <div id="p1Score" class="text-8xl font-black mb-4 text-white glow-text">0</div>
+                <div id="p1Combo" class="text-3xl font-black mb-3 text-gray-300" style="display: none;">
+                    <span>🔥</span> <span id="p1ComboNum">0</span>連擊 <span>🔥</span>
+                </div>
+                <div class="flex gap-6 mb-4 text-lg font-bold text-gray-300">
+                    <div class="bg-black bg-opacity-50 px-4 py-2 rounded-lg backdrop-blur-sm border border-gray-600">
+                        已完成: <span id="p1Completed" class="text-yellow-300">0</span>/10
+                    </div>
+                    <div class="bg-black bg-opacity-50 px-4 py-2 rounded-lg backdrop-blur-sm border border-gray-600">
+                        答錯: <span id="p1Wrong" class="text-red-400">0</span>
+                    </div>
+                </div>
+                <div id="p1Timer" class="text-6xl font-black mb-6 text-white">⏱️ 10</div>
+                <div id="p1Question" class="mb-8 p-6 bg-black bg-opacity-60 rounded-2xl backdrop-blur-md border-2 border-gray-600 shadow-2xl">
+                    <span class="text-3xl font-bold text-white"></span>
+                </div>
+                <div id="p1Options" class="grid grid-cols-2 gap-5 w-full max-w-lg"></div>
+                <div id="p1Feedback" class="mt-8 text-4xl font-black px-8 py-4 rounded-xl shadow-2xl" style="display: none;"></div>
+            </div>
+        </div>
+
+        <!-- 分隔線 -->
+        <div id="divider" class="w-1 bg-gradient-to-b from-yellow-400 via-white to-yellow-400 hidden" style="box-shadow: 0 0 20px rgba(255,215,0,0.8);"></div>
+
+        <!-- 玩家2區域 -->
+        <div id="player2Area" class="flex-1 hidden flex-col items-center justify-center p-8 relative overflow-hidden bg-gradient-to-br from-red-900 via-orange-900 to-yellow-900">
+            <div class="absolute inset-0 opacity-10 grid-bg"></div>
+            <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-red-500 to-orange-500 shadow-lg"></div>
+            
+            <div class="relative z-10 text-center">
+                <div class="text-3xl font-black mb-4 tracking-wider text-orange-400" style="text-shadow: 0 0 10px rgba(0,0,0,0.5);">玩家 2</div>
+                <div id="p2Score" class="text-8xl font-black mb-4 text-white glow-text">0</div>
+                <div id="p2Combo" class="text-3xl font-black mb-3 text-gray-300" style="display: none;">
+                    <span>🔥</span> <span id="p2ComboNum">0</span>連擊 <span>🔥</span>
+                </div>
+                <div class="flex gap-6 mb-4 text-lg font-bold text-gray-300">
+                    <div class="bg-black bg-opacity-50 px-4 py-2 rounded-lg backdrop-blur-sm border border-gray-600">
+                        已完成: <span id="p2Completed" class="text-yellow-300">0</span>/10
+                    </div>
+                    <div class="bg-black bg-opacity-50 px-4 py-2 rounded-lg backdrop-blur-sm border border-gray-600">
+                        答錯: <span id="p2Wrong" class="text-red-400">0</span>
+                    </div>
+                </div>
+                <div id="p2Timer" class="text-6xl font-black mb-6 text-white">⏱️ 10</div>
+                <div id="p2Question" class="mb-8 p-6 bg-black bg-opacity-60 rounded-2xl backdrop-blur-md border-2 border-gray-600 shadow-2xl">
+                    <span class="text-3xl font-bold text-white"></span>
+                </div>
+                <div id="p2Options" class="grid grid-cols-2 gap-5 w-full max-w-lg"></div>
+                <div id="p2Feedback" class="mt-8 text-4xl font-black px-8 py-4 rounded-xl shadow-2xl" style="display: none;"></div>
+            </div>
+        </div>
+
+        <!-- 結束畫面 -->
+        <div id="endScreen" class="flex-1 hidden flex-col items-center justify-center bg-gradient-to-br from-yellow-600 via-orange-600 to-red-600 text-white relative overflow-hidden grid-bg">
+            <div class="text-9xl mb-8 animate-bounce" style="text-shadow: 0 0 40px rgba(255,215,0,1);">🏆</div>
+            <h1 class="text-7xl font-black mb-12 tracking-wider glow-text">遊戲結束!</h1>
+            
+            <div class="flex gap-20 mb-12">
+                <div class="text-center bg-black bg-opacity-40 p-8 rounded-3xl backdrop-blur-md border-4 border-cyan-400 shadow-2xl">
+                    <div class="text-3xl mb-3 font-black text-cyan-300">玩家 1</div>
+                    <div id="p1FinalScore" class="text-9xl font-black" style="text-shadow: 0 0 20px rgba(0,255,255,0.8);">0</div>
+                    <div class="text-xl mt-4 font-bold">已完成: <span id="p1FinalCompleted">0</span>/10</div>
+                    <div class="text-xl font-bold">答錯: <span id="p1FinalWrong">0</span></div>
+                    <div id="p1Penalty" class="text-lg text-red-300 mt-2 font-bold" style="display: none;">
+                        懲罰: -<span id="p1PenaltyNum">0</span>
+                    </div>
+                </div>
+                
+                <div class="text-8xl font-black self-center glow-text">VS</div>
+                
+                <div class="text-center bg-black bg-opacity-40 p-8 rounded-3xl backdrop-blur-md border-4 border-orange-400 shadow-2xl">
+                    <div class="text-3xl mb-3 font-black text-orange-300">玩家 2</div>
+                    <div id="p2FinalScore" class="text-9xl font-black" style="text-shadow: 0 0 20px rgba(255,100,0,0.8);">0</div>
+                    <div class="text-xl mt-4 font-bold">已完成: <span id="p2FinalCompleted">0</span>/10</div>
+                    <div class="text-xl font-bold">答錯: <span id="p2FinalWrong">0</span></div>
+                    <div id="p2Penalty" class="text-lg text-red-300 mt-2 font-bold" style="display: none;">
+                        懲罰: -<span id="p2PenaltyNum">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="winnerText" class="text-6xl font-black mb-12 px-12 py-6 bg-black bg-opacity-50 rounded-3xl backdrop-blur-md border-4 border-yellow-300 shadow-2xl animate-pulse">
+                🎉 玩家 1 獲勝! 🎉
+            </div>
+
+            <button id="restartBtn" class="bg-gradient-to-r from-green-400 to-blue-500 text-white px-16 py-8 rounded-full text-4xl font-black hover:from-green-300 hover:to-blue-400 transition-all transform hover:scale-110 shadow-2xl border-4 border-white" style="box-shadow: 0 0 40px rgba(0,255,200,0.8);">
+                再玩一次
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // 遊戲狀態
+        let gameState = {
+            state: 'ready',
+            timeLeft: 60,
+            isMuted: false,
+            player1: { score: 0, wrong: 0, combo: 0, completed: 0, questionTime: 10, question: null },
+            player2: { score: 0, wrong: 0, combo: 0, completed: 0, questionTime: 10, question: null }
+        };
+
+        let mainTimer, p1Timer, p2Timer;
+
+        // 產生題目
+        function generateQuestion() {
+            const types = [
+                () => {
+                    const base = Math.floor(Math.random() * 5) + 2;
+                    const m = Math.floor(Math.random() * 5) + 2;
+                    const n = Math.floor(Math.random() * 5) + 2;
+                    const answer = m + n;
+                    const options = [answer, answer + 1, answer - 1, m * n].sort(() => Math.random() - 0.5);
+                    return { base, exp1: m, exp2: n, operator: '×', options, answer };
+                },
+                () => {
+                    const base = Math.floor(Math.random() * 5) + 2;
+                    const m = Math.floor(Math.random() * 5) + 5;
+                    const n = Math.floor(Math.random() * 3) + 2;
+                    const answer = m - n;
+                    const options = [answer, answer + 1, answer - 1, m + n].sort(() => Math.random() - 0.5);
+                    return { base, exp1: m, exp2: n, operator: '÷', options, answer };
+                },
+                () => {
+                    const base = Math.floor(Math.random() * 4) + 2;
+                    const m = Math.floor(Math.random() * 4) + 2;
+                    const n = Math.floor(Math.random() * 3) + 2;
+                    const answer = m * n;
+                    const options = [answer, m + n, answer + 1, answer - 1].sort(() => Math.random() - 0.5);
+                    return { base, exp1: m, exp2: n, operator: 'power', options, answer };
+                },
+                () => {
+                    const a = Math.floor(Math.random() * 4) + 2;
+                    const b = Math.floor(Math.random() * 4) + 2;
+                    const n = Math.floor(Math.random() * 3) + 2;
+                    const answer = n;
+                    const options = [n, n + 1, n - 1, n * 2].sort(() => Math.random() - 0.5);
+                    return { base: a, base2: b, exp1: n, operator: 'product', options, answer };
+                }
+            ];
+            return types[Math.floor(Math.random() * types.length)]();
+        }
+
+        // 渲染題目
+        function renderQuestion(question, elementId) {
+            const el = document.querySelector(`#${elementId} span`);
+            let html = '';
+            if (question.operator === '×') {
+                html = `${question.base}<sup>${question.exp1}</sup> × ${question.base}<sup>${question.exp2}</sup> = ${question.base}<sup class="text-yellow-300">?</sup>`;
+            } else if (question.operator === '÷') {
+                html = `${question.base}<sup>${question.exp1}</sup> ÷ ${question.base}<sup>${question.exp2}</sup> = ${question.base}<sup class="text-yellow-300">?</sup>`;
+            } else if (question.operator === 'power') {
+                html = `(${question.base}<sup>${question.exp1}</sup>)<sup>${question.exp2}</sup> = ${question.base}<sup class="text-yellow-300">?</sup>`;
+            } else if (question.operator === 'product') {
+                html = `(${question.base} × ${question.base2})<sup>${question.exp1}</sup> = ${question.base}<sup class="text-yellow-300">?</sup> × ${question.base2}<sup>${question.exp1}</sup>`;
+            }
+            el.innerHTML = html;
+        }
+
+        // 渲染選項
+        function renderOptions(question, player) {
+            const optionsEl = document.getElementById(`p${player}Options`);
+            optionsEl.innerHTML = '';
+            question.options.forEach(option => {
+                const btn = document.createElement('button');
+                const colorClass = player === 1 ? 'bg-gradient-to-br from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 border-cyan-300 glow-cyan' : 'bg-gradient-to-br from-red-500 to-orange-600 hover:from-red-400 hover:to-orange-500 border-orange-300 glow-orange';
+                btn.className = 'py-8 px-10 text-3xl font-black rounded-xl transition-all transform hover:scale-110 active:scale-95 shadow-2xl border-4 text-white ' + colorClass;
+                btn.textContent = option;
+                btn.onclick = function() { handleAnswer(player, option); };
+                optionsEl.appendChild(btn);
+            });
+        }
+
+        // 處理答題
+        function handleAnswer(player, answer) {
+            const p = gameState[`player${player}`];
+            const isCorrect = answer === p.question.answer;
+            
+            if (isCorrect) {
+                p.combo++;
+                const bonusPoints = Math.floor(p.combo / 3);
+                const totalPoints = 1 + bonusPoints;
+                p.score += totalPoints;
+                p.completed++;
+                p.questionTime = 10;
+                
+                let feedback = `✓ 正確! +${totalPoints}`;
+                if (p.combo >= 3) feedback += ` 🔥 ${p.combo}連擊`;
+                showFeedback(player, feedback, true);
+                
+                setTimeout(() => {
+                    p.question = generateQuestion();
+                    updatePlayerUI(player);
+                    hideFeedback(player);
+                }, 500);
+            } else {
+                p.combo = 0;
+                p.score--;
+                p.wrong++;
+                showFeedback(player, '✗ 答錯 -1', false);
+                setTimeout(() => hideFeedback(player), 800);
+            }
+            
+            updatePlayerUI(player);
+        }
+
+        // 處理超時
+        function handleTimeout(player) {
+            const p = gameState[`player${player}`];
+            p.combo = 0;
+            p.score -= 10;
+            p.wrong++;
+            p.questionTime = 10;
+            p.question = generateQuestion();
+            
+            showFeedback(player, '⏰ 超時! -10', false);
+            setTimeout(() => hideFeedback(player), 1000);
+            updatePlayerUI(player);
+        }
+
+        // 顯示反饋
+        function showFeedback(player, text, isCorrect) {
+            const el = document.getElementById(`p${player}Feedback`);
+            el.textContent = text;
+            el.className = `mt-8 text-4xl font-black px-8 py-4 rounded-xl shadow-2xl ${isCorrect ? 'bg-green-500 text-white' : 'bg-red-500 text-white'} animate-pulse`;
+            el.style.display = 'block';
+        }
+
+        function hideFeedback(player) {
+            document.getElementById(`p${player}Feedback`).style.display = 'none';
+        }
+
+        // 更新玩家UI
+        function updatePlayerUI(player) {
+            const p = gameState[`player${player}`];
+            document.getElementById(`p${player}Score`).textContent = p.score;
+            document.getElementById(`p${player}Wrong`).textContent = p.wrong;
+            document.getElementById(`p${player}Completed`).textContent = p.completed;
+            
+            const comboEl = document.getElementById(`p${player}Combo`);
+            if (p.combo > 0) {
+                document.getElementById(`p${player}ComboNum`).textContent = p.combo;
+                comboEl.style.display = 'block';
+                if (p.combo >= 3) {
+                    comboEl.className = 'text-3xl font-black mb-3 text-yellow-300 animate-pulse';
+                } else {
+                    comboEl.className = 'text-3xl font-black mb-3 text-gray-300';
+                }
+            } else {
+                comboEl.style.display = 'none';
+            }
+            
+            if (p.question) {
+                renderQuestion(p.question, `p${player}Question`);
+                renderOptions(p.question, player);
+            }
+        }
+
+        // 開始遊戲
+        function startGame() {
+            gameState.state = 'playing';
+            gameState.timeLeft = 60;
+            gameState.player1 = { score: 0, wrong: 0, combo: 0, completed: 0, questionTime: 10, question: generateQuestion() };
+            gameState.player2 = { score: 0, wrong: 0, combo: 0, completed: 0, questionTime: 10, question: generateQuestion() };
+            
+            document.getElementById('startScreen').style.display = 'none';
+            document.getElementById('endScreen').style.display = 'none';
+            document.getElementById('player1Area').classList.remove('hidden');
+            document.getElementById('player1Area').classList.add('flex');
+            document.getElementById('player2Area').classList.remove('hidden');
+            document.getElementById('player2Area').classList.add('flex');
+            document.getElementById('divider').classList.remove('hidden');
+            
+            updatePlayerUI(1);
+            updatePlayerUI(2);
+            
+            const music = document.getElementById('bgMusic');
+            music.currentTime = 0;
+            music.play().catch(e => console.log('Audio play failed:', e));
+            
+            // 主計時器
+            mainTimer = setInterval(() => {
+                gameState.timeLeft--;
+                const mins = Math.floor(gameState.timeLeft / 60);
+                const secs = gameState.timeLeft % 60;
+                document.getElementById('timer').textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+                
+                if (gameState.timeLeft <= 0) {
+                    endGame();
+                }
+            }, 1000);
+            
+            // 玩家1計時器
+            p1Timer = setInterval(() => {
+                gameState.player1.questionTime--;
+                const el = document.getElementById('p1Timer');
+                el.textContent = `⏱️ ${gameState.player1.questionTime}`;
+                if (gameState.player1.questionTime <= 3) {
+                    el.className = 'text-6xl font-black mb-6 text-red-600 animate-pulse';
+                } else {
+                    el.className = 'text-6xl font-black mb-6 text-white';
+                }
+                
+                if (gameState.player1.questionTime <= 0) {
+                    handleTimeout(1);
+                }
+            }, 1000);
+            
+            // 玩家2計時器
+            p2Timer = setInterval(() => {
+                gameState.player2.questionTime--;
+                const el = document.getElementById('p2Timer');
+                el.textContent = `⏱️ ${gameState.player2.questionTime}`;
+                if (gameState.player2.questionTime <= 3) {
+                    el.className = 'text-6xl font-black mb-6 text-red-600 animate-pulse';
+                } else {
+                    el.className = 'text-6xl font-black mb-6 text-white';
+                }
+                
+                if (gameState.player2.questionTime <= 0) {
+                    handleTimeout(2);
+                }
+            }, 1000);
+        }
+
+        // 結束遊戲
+        function endGame() {
+            clearInterval(mainTimer);
+            clearInterval(p1Timer);
+            clearInterval(p2Timer);
+            
+            document.getElementById('bgMusic').pause();
+            
+            const p1Final = gameState.player1.completed >= 10 ? gameState.player1.score : gameState.player1.score - (10 - gameState.player1.completed) * 5;
+            const p2Final = gameState.player2.completed >= 10 ? gameState.player2.score : gameState.player2.score - (10 - gameState.player2.completed) * 5;
+            
+            document.getElementById('p1FinalScore').textContent = p1Final;
+            document.getElementById('p2FinalScore').textContent = p2Final;
+            document.getElementById('p1FinalCompleted').textContent = gameState.player1.completed;
+            document.getElementById('p2FinalCompleted').textContent = gameState.player2.completed;
+            document.getElementById('p1FinalWrong').textContent = gameState.player1.wrong;
+            document.getElementById('p2FinalWrong').textContent = gameState.player2.wrong;
+            
+            if (gameState.player1.completed < 10) {
+                document.getElementById('p1Penalty').style.display = 'block';
+                document.getElementById('p1PenaltyNum').textContent = (10 - gameState.player1.completed) * 5;
+            } else {
+                document.getElementById('p1Penalty').style.display = 'none';
+            }
+            
+            if (gameState.player2.completed < 10) {
+                document.getElementById('p2Penalty').style.display = 'block';
+                document.getElementById('p2PenaltyNum').textContent = (10 - gameState.player2.completed) * 5;
+            } else {
+                document.getElementById('p2Penalty').style.display = 'none';
+            }
+            
+            const winnerEl = document.getElementById('winnerText');
+            if (p1Final > p2Final) {
+                winnerEl.textContent = '🎉 玩家 1 獲勝! 🎉';
+            } else if (p2Final > p1Final) {
+                winnerEl.textContent = '🎉 玩家 2 獲勝! 🎉';
+            } else {
+                winnerEl.textContent = '🤝 平手! 🤝';
+            }
+            
+            document.getElementById('player1Area').classList.add('hidden');
+            document.getElementById('player2Area').classList.add('hidden');
+            document.getElementById('divider').classList.add('hidden');
+            document.getElementById('endScreen').classList.remove('hidden');
+            document.getElementById('endScreen').classList.add('flex');
+        }
+
+        // 事件監聽
+        document.getElementById('startBtn').addEventListener('click', startGame);
+        document.getElementById('restartBtn').addEventListener('click', startGame);
+        
+        document.getElementById('muteBtn').addEventListener('click', () => {
+            gameState.isMuted = !gameState.isMuted;
+            document.getElementById('bgMusic').muted = gameState.isMuted;
+            document.getElementById('volumeIcon').textContent = gameState.isMuted ? '🔇' : '🔊';
+        });
+    </script>
+</body>
+</html>
