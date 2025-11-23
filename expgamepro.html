@@ -63,7 +63,7 @@
         G.currentMusic = null;
         G.p1Number = '';
         G.p2Number = '';
-        G.apiUrl = 'https://script.google.com/macros/s/AKfycbzm62R6ZD9c2XnKNz3q82IUWp0TGuYNOXm5EaXsJ0SsBNWsU2CcdR4WwRchUwasE8mA/exec';
+        G.apiUrl = 'https://script.google.com/macros/s/AKfycby_ZS_YkwqPn4X5fXPCFwkevRHo4rH4J0sWrBAqQ7HOITBund9k5Lrs8p9kJy9DxoaG/exec';
 
         function rand(n) { return Math.floor(Math.random() * n); }
 
@@ -307,20 +307,31 @@
                 winner: winner
             };
             
+            var form = new FormData();
+            form.append('data', JSON.stringify(data));
+            
             fetch(G.apiUrl, {
                 method: 'POST',
-                mode: 'no-cors',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
+                body: form
             })
-            .then(function() {
+            .then(function(response) {
+                return response.text();
+            })
+            .then(function(result) {
                 var status = document.getElementById('uploadStatus');
-                if (status) status.textContent = '✅ 成績已上傳！';
+                if (status) {
+                    status.textContent = '✅ 成績已上傳！';
+                    status.className = 'text-2xl font-bold mb-6 text-green-300';
+                }
+                console.log('上傳成功:', result);
             })
             .catch(function(error) {
                 var status = document.getElementById('uploadStatus');
-                if (status) status.textContent = '⚠️ 上傳失敗，但遊戲已完成';
-                console.log(error);
+                if (status) {
+                    status.textContent = '⚠️ 上傳失敗';
+                    status.className = 'text-2xl font-bold mb-6 text-red-300';
+                }
+                console.log('上傳錯誤:', error);
             });
         }
 
