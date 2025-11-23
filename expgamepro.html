@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>指數律對戰</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        html { margin: 0; padding: 0; }
+        body { margin: 0; padding: 0; font-family: Arial, sans-serif; overflow: hidden; }
+        .hidden { display: none; }
+        .glow { text-shadow: 0 0 20px rgba(255, 255, 255, 0.8); }
+        @keyframes pulse { 
+            0% { opacity: 1; }
+            50% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+        .pulse { animation: pulse 2s infinite; }
+        @keyframes bounce { 
+            0% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+            100% { transform: translateY(0); }
+        }
+        .bounce { animation: bounce 1s infinite; }
+    </style>
+</head>
+<body class="bg-black text-white">
+    <audio id="music1" loop src="https://raw.githubusercontent.com/seon0118/math/48c5cd03d773ff339ea75ce96cbe7a90f97e1638/kahoot-music-60-second-count-down-13.mp3"></audio>
+    <audio id="music2" loop src="https://raw.githubusercontent.com/seon0118/math/6fc3f6edc0a88679035cd41863eb8ea8d201b092/Kahoot%20Music%2060%20Second%20Count%20Down%202_3.mp3"></audio>
+    <audio id="music3" loop src="https://raw.githubusercontent.com/seon0118/math/6fc3f6edc0a88679035cd41863eb8ea8d201b092/Kahoot%20Music%20(60%20Second%20Count%20Down)%203_3%20-%20Jason%20Beauchamp%20(youtube).mp3"></audio>
+    <audio id="endMusic" src="https://raw.githubusercontent.com/seon0118/math/eafc15b7716fdc5798cbfe2cc56f29c187340d3f/kahoot-in-game-music-5-second-count-down-23.mp3"></audio>
+
+    <div class="bg-gradient-to-r from-purple-900 via-gray-900 to-red-900 p-6 flex justify-between items-center border-b-4 border-yellow-400">
+        <button id="soundBtn" class="text-4xl p-2 hover:scale-110 transition">🔊</button>
+        <div class="bg-black bg-opacity-60 px-8 py-2 rounded-full border-4 border-yellow-400">
+            <span class="text-5xl font-black glow" id="mainTimer">1:00</span>
+        </div>
+        <div class="w-12"></div>
+    </div>
+
+    <div id="screens" style="height: calc(100vh - 100px);"></div>
+
+    <script>
+        var G = new Object();
+        G.screen = 'start';
+        G.time = 60;
+        G.muted = false;
+        G.p1Score = 0;
+        G.p1Wrong = 0;
+        G.p1Combo = 0;
+        G.p1Done = 0;
+        G.p1Time = 10;
+        G.p1Q = null;
+        G.p2Score = 0;
+        G.p2Wrong = 0;
+        G.p2Combo = 0;
+        G.p2Done = 0;
+        G.p2Time = 10;
+        G.p2Q = null;
+        G.timer1 = null;
+        G.timer2 = null;
+        G.timer3 = null;
+        G.currentMusic = null;
+        G.p1Number = '';
+        G.p2Number = '';
+        G.apiUrl = 'https://script.google.com/macros/s/AKfycbzm62R6ZD9c2XnKNz3q82IUWp0TGuYNOXm5EaXsJ0SsBNWsU2CcdR4WwRchUwasE8mA/exec';
+
+        function rand(n) { return Math.floor(Math.random() * n); }
+
+        function newQ() {
+            var t = rand(4);
+            var base, m, n, ans, opts, a, b;
+            if (t === 0) {
+                base = rand(5) + 2;
+                m = rand(5) + 2;
+                n = rand(5) + 2;
+                ans = m + n;
+                opts = [ans, ans+1, ans-1, m*n];
+                return { type: 0, base: base, m: m, n: n, ans: ans, opts: shuffle(opts) };
+            } else if (t === 1) {
+                base = rand(5) + 2;
+                m = rand(5) + 5;
+                n = rand(3) + 2;
+                ans = m - n;
+                opts = [ans, ans+1, ans-1, m+n];
+                return { type: 1, base: base, m: m, n: n, ans: ans, opts: shuffle(opts) };
+            } else if (t === 2) {
+                base = rand(4) + 2;
+                m = rand(4) + 2;
+                n = rand(3) + 2;
+                ans = m * n;
+                opts = [ans, m+n, ans+1, ans-1];
+                return { type: 2, base: base, m: m, n: n, ans: ans, opts: shuffle(opts) };
+            } else {
+                a = rand(4) + 2;
+                b = rand(4) + 2;
+                n = rand(3) + 2;
+                ans = n;
+                opts = [n, n+1, n-1, n*2];
+                return { type: 3, a: a, b: b, n: n, ans: ans, opts: shuffle(opts) };
+            }
+        }
+
+        function shuffle(arr) {
+            var i, j, tmp;
+            for (i = arr.length - 1; i > 0; i--) {
+                j = rand(i + 1);
+                tmp = arr[i];
+                arr[i] = arr[j];
+                arr[j] = tmp;
+            }
+            return arr;
+        }
+
+        function drawStart() {
+            var h = '<div class="flex items-center justify-center h-full bg-gradient-to-br from-purple-900 via-black to-red-900">';
+            h += '<div class="text-center">';
+            h += '<div class="text-9xl mb-6 pulse">🏆</div>';
+            h += '<h1 class="text-7xl font-black mb-4 glow">指數律對戰</h1>';
+            h += '<p class="text-3xl mb-2 text-cyan-300 font-bold">雙人對戰 • 60秒挑戰</p>';
+            h += '<p class="text-xl mb-8 text-yellow-300">⚠️ 基本完成10題，未完成每題扣5分</p>';
+            h += '<div class="flex gap-8 justify-center mb-8">';
+            h += '<div class="bg-cyan-900 bg-opacity-60 p-6 rounded-2xl border-4 border-cyan-400">';
+            h += '<div class="text-2xl font-black text-cyan-300 mb-3">玩家 1 座號</div>';
+            h += '<input type="number" id="p1Input" class="w-32 px-4 py-3 text-3xl font-black text-center rounded-xl bg-black bg-opacity-60 text-white border-4 border-cyan-500" placeholder="?" min="1" max="99">';
+            h += '</div>';
+            h += '<div class="bg-red-900 bg-opacity-60 p-6 rounded-2xl border-4 border-orange-400">';
+            h += '<div class="text-2xl font-black text-orange-300 mb-3">玩家 2 座號</div>';
+            h += '<input type="number" id="p2Input" class="w-32 px-4 py-3 text-3xl font-black text-center rounded-xl bg-black bg-opacity-60 text-white border-4 border-orange-500" placeholder="?" min="1" max="99">';
+            h += '</div></div>';
+            h += '<button onclick="checkAndStart()" class="bg-gradient-to-r from-yellow-400 to-orange-500 text-black px-20 py-6 rounded-full text-4xl font-black hover:scale-110 transition pulse border-4 border-yellow-300">開始遊戲</button>';
+            h += '</div></div>';
+            document.getElementById('screens').innerHTML = h;
+        }
+
+        function drawGame() {
+            var h = '<div class="flex h-full">';
+            h += '<div id="left" class="flex-1 bg-gradient-to-br from-cyan-900 via-blue-900 to-purple-900 p-6 relative">';
+            h += '<div class="text-center">';
+            h += '<div class="text-3xl font-black text-cyan-400 mb-3">玩家 1 (座號 ' + G.p1Number + ')</div>';
+            h += '<div class="text-7xl font-black mb-3 glow" id="s1">0</div>';
+            h += '<div id="c1" class="text-2xl font-black mb-2 hidden"></div>';
+            h += '<div class="text-sm mb-3"><span class="text-yellow-300" id="d1">0</span>/10 已完成 | 答錯: <span class="text-red-400" id="w1">0</span></div>';
+            h += '<div class="text-5xl font-black mb-4" id="t1">⏱️ 10</div>';
+            h += '<div class="bg-black bg-opacity-60 p-4 rounded-xl mb-6"><div class="text-2xl font-bold" id="q1"></div></div>';
+            h += '<div id="o1" class="grid grid-cols-2 gap-4 max-w-lg mx-auto"></div>';
+            h += '<div id="f1" class="mt-6 text-3xl font-black px-6 py-3 rounded-xl hidden"></div>';
+            h += '</div></div>';
+            h += '<div class="w-1 bg-gradient-to-b from-yellow-400 via-white to-yellow-400"></div>';
+            h += '<div id="right" class="flex-1 bg-gradient-to-br from-red-900 via-orange-900 to-yellow-900 p-6 relative">';
+            h += '<div class="text-center">';
+            h += '<div class="text-3xl font-black text-orange-400 mb-3">玩家 2 (座號 ' + G.p2Number + ')</div>';
+            h += '<div class="text-7xl font-black mb-3 glow" id="s2">0</div>';
+            h += '<div id="c2" class="text-2xl font-black mb-2 hidden"></div>';
+            h += '<div class="text-sm mb-3"><span class="text-yellow-300" id="d2">0</span>/10 已完成 | 答錯: <span class="text-red-400" id="w2">0</span></div>';
+            h += '<div class="text-5xl font-black mb-4" id="t2">⏱️ 10</div>';
+            h += '<div class="bg-black bg-opacity-60 p-4 rounded-xl mb-6"><div class="text-2xl font-bold" id="q2"></div></div>';
+            h += '<div id="o2" class="grid grid-cols-2 gap-4 max-w-lg mx-auto"></div>';
+            h += '<div id="f2" class="mt-6 text-3xl font-black px-6 py-3 rounded-xl hidden"></div>';
+            h += '</div></div>';
+            h += '</div>';
+            document.getElementById('screens').innerHTML = h;
+        }
+
+        function drawEnd() {
+            var s1 = G.p1Done >= 10 ? G.p1Score : G.p1Score - (10 - G.p1Done) * 5;
+            var s2 = G.p2Done >= 10 ? G.p2Score : G.p2Score - (10 - G.p2Done) * 5;
+            var winner = s1 > s2 ? '玩家 1 獲勝' : s2 > s1 ? '玩家 2 獲勝' : '平手';
+            
+            var h = '<div class="flex items-center justify-center h-full bg-gradient-to-br from-yellow-600 via-orange-600 to-red-600">';
+            h += '<div class="text-center">';
+            h += '<div class="text-9xl mb-6 bounce">🏆</div>';
+            h += '<h1 class="text-6xl font-black mb-8 glow">遊戲結束!</h1>';
+            h += '<div class="flex gap-16 mb-8">';
+            h += '<div class="bg-black bg-opacity-40 p-6 rounded-3xl border-4 border-cyan-400">';
+            h += '<div class="text-2xl font-black text-cyan-300 mb-2">玩家 1 (座號 ' + G.p1Number + ')</div>';
+            h += '<div class="text-8xl font-black">' + s1 + '</div>';
+            h += '<div class="text-lg mt-2">已完成: ' + G.p1Done + '/10</div>';
+            h += '<div class="text-lg">答錯: ' + G.p1Wrong + '</div>';
+            if (G.p1Done < 10) h += '<div class="text-sm text-red-300 mt-1">懲罰: -' + ((10-G.p1Done)*5) + '</div>';
+            h += '</div>';
+            h += '<div class="text-7xl font-black self-center">VS</div>';
+            h += '<div class="bg-black bg-opacity-40 p-6 rounded-3xl border-4 border-orange-400">';
+            h += '<div class="text-2xl font-black text-orange-300 mb-2">玩家 2 (座號 ' + G.p2Number + ')</div>';
+            h += '<div class="text-8xl font-black">' + s2 + '</div>';
+            h += '<div class="text-lg mt-2">已完成: ' + G.p2Done + '/10</div>';
+            h += '<div class="text-lg">答錯: ' + G.p2Wrong + '</div>';
+            if (G.p2Done < 10) h += '<div class="text-sm text-red-300 mt-1">懲罰: -' + ((10-G.p2Done)*5) + '</div>';
+            h += '</div></div>';
+            h += '<div class="text-5xl font-black mb-6 bg-black bg-opacity-50 px-10 py-4 rounded-3xl border-4 border-yellow-300 pulse">🎉 ' + winner + ' 🎉</div>';
+            h += '<div id="uploadStatus" class="text-2xl font-bold mb-6 text-white">📤 正在上傳成績...</div>';
+            h += '<button onclick="backToStart()" class="bg-gradient-to-r from-green-400 to-blue-500 px-16 py-6 rounded-full text-3xl font-black hover:scale-110 transition border-4 border-white">再玩一次</button>';
+            h += '</div></div>';
+            document.getElementById('screens').innerHTML = h;
+            
+            uploadData(s1, s2, winner);
+        }
+
+        function showQ(p) {
+            var q = p === 1 ? G.p1Q : G.p2Q;
+            var qEl = document.getElementById('q' + p);
+            var txt = '';
+            if (q.type === 0) txt = q.base + '<sup>' + q.m + '</sup> × ' + q.base + '<sup>' + q.n + '</sup> = ' + q.base + '<sup class="text-yellow-300">?</sup>';
+            else if (q.type === 1) txt = q.base + '<sup>' + q.m + '</sup> ÷ ' + q.base + '<sup>' + q.n + '</sup> = ' + q.base + '<sup class="text-yellow-300">?</sup>';
+            else if (q.type === 2) txt = '(' + q.base + '<sup>' + q.m + '</sup>)<sup>' + q.n + '</sup> = ' + q.base + '<sup class="text-yellow-300">?</sup>';
+            else txt = '(' + q.a + ' × ' + q.b + ')<sup>' + q.n + '</sup> = ' + q.a + '<sup class="text-yellow-300">?</sup> × ' + q.b + '<sup>' + q.n + '</sup>';
+            qEl.innerHTML = txt;
+            
+            var oEl = document.getElementById('o' + p);
+            var color = p === 1 ? 'from-cyan-500 to-blue-600 border-cyan-300' : 'from-red-500 to-orange-600 border-orange-300';
+            var html = '';
+            for (var i = 0; i < 4; i++) {
+                html += '<button onclick="ans(' + p + ',' + q.opts[i] + ')" class="bg-gradient-to-br ' + color + ' py-6 px-8 text-3xl font-black rounded-xl hover:scale-110 transition border-4">' + q.opts[i] + '</button>';
+            }
+            oEl.innerHTML = html;
+        }
+
+        function updateUI(p) {
+            document.getElementById('s' + p).textContent = p === 1 ? G.p1Score : G.p2Score;
+            document.getElementById('w' + p).textContent = p === 1 ? G.p1Wrong : G.p2Wrong;
+            document.getElementById('d' + p).textContent = p === 1 ? G.p1Done : G.p2Done;
+            
+            var combo = p === 1 ? G.p1Combo : G.p2Combo;
+            var cEl = document.getElementById('c' + p);
+            if (combo > 0) {
+                cEl.textContent = (combo >= 3 ? '🔥 ' : '') + combo + '連擊' + (combo >= 3 ? ' 🔥' : '');
+                cEl.className = combo >= 3 ? 'text-2xl font-black mb-2 text-yellow-300 pulse' : 'text-2xl font-black mb-2 text-gray-300';
+                cEl.classList.remove('hidden');
+            } else {
+                cEl.classList.add('hidden');
+            }
+        }
+
+        function fb(p, msg, ok) {
+            var el = document.getElementById('f' + p);
+            el.textContent = msg;
+            el.className = 'mt-6 text-3xl font-black px-6 py-3 rounded-xl ' + (ok ? 'bg-green-500' : 'bg-red-500');
+            setTimeout(function() { el.classList.add('hidden'); }, ok ? 500 : 800);
+        }
+
+        function ans(p, val) {
+            var q = p === 1 ? G.p1Q : G.p2Q;
+            if (val === q.ans) {
+                if (p === 1) {
+                    G.p1Combo++;
+                    var pts = 1 + Math.floor(G.p1Combo / 3);
+                    G.p1Score += pts;
+                    G.p1Done++;
+                    G.p1Time = 10;
+                    G.p1Q = newQ();
+                    fb(1, '✓ 正確! +' + pts + (G.p1Combo >= 3 ? ' 🔥' + G.p1Combo + '連擊' : ''), true);
+                } else {
+                    G.p2Combo++;
+                    var pts = 1 + Math.floor(G.p2Combo / 3);
+                    G.p2Score += pts;
+                    G.p2Done++;
+                    G.p2Time = 10;
+                    G.p2Q = newQ();
+                    fb(2, '✓ 正確! +' + pts + (G.p2Combo >= 3 ? ' 🔥' + G.p2Combo + '連擊' : ''), true);
+                }
+                setTimeout(function() { showQ(p); updateUI(p); }, 500);
+            } else {
+                if (p === 1) {
+                    G.p1Combo = 0;
+                    G.p1Score--;
+                    G.p1Wrong++;
+                    fb(1, '✗ 答錯 -1', false);
+                } else {
+                    G.p2Combo = 0;
+                    G.p2Score--;
+                    G.p2Wrong++;
+                    fb(2, '✗ 答錯 -1', false);
+                }
+            }
+            updateUI(p);
+        }
+
+        function checkAndStart() {
+            var p1 = document.getElementById('p1Input').value;
+            var p2 = document.getElementById('p2Input').value;
+            
+            if (!p1 || !p2) {
+                alert('請輸入兩位玩家的座號！');
+                return;
+            }
+            
+            if (p1 < 1 || p1 > 99 || p2 < 1 || p2 > 99) {
+                alert('座號必須在 1-99 之間！');
+                return;
+            }
+            
+            G.p1Number = p1;
+            G.p2Number = p2;
+            startGame();
+        }
+
+        function uploadData(s1, s2, winner) {
+            var data = {
+                p1Number: G.p1Number,
+                p1Score: s1,
+                p1Done: G.p1Done,
+                p1Wrong: G.p1Wrong,
+                p2Number: G.p2Number,
+                p2Score: s2,
+                p2Done: G.p2Done,
+                p2Wrong: G.p2Wrong,
+                winner: winner
+            };
+            
+            fetch(G.apiUrl, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(function() {
+                var status = document.getElementById('uploadStatus');
+                if (status) status.textContent = '✅ 成績已上傳！';
+            })
+            .catch(function(error) {
+                var status = document.getElementById('uploadStatus');
+                if (status) status.textContent = '⚠️ 上傳失敗，但遊戲已完成';
+                console.log(error);
+            });
+        }
+
+        function backToStart() {
+            G.p1Number = '';
+            G.p2Number = '';
+            drawStart();
+        }
+
+        function timeout(p) {
+            if (p === 1) {
+                G.p1Combo = 0;
+                G.p1Score -= 10;
+                G.p1Wrong++;
+                G.p1Time = 10;
+                G.p1Q = newQ();
+                fb(1, '⏰ 超時! -10', false);
+                setTimeout(function() { showQ(1); updateUI(1); }, 1000);
+            } else {
+                G.p2Combo = 0;
+                G.p2Score -= 10;
+                G.p2Wrong++;
+                G.p2Time = 10;
+                G.p2Q = newQ();
+                fb(2, '⏰ 超時! -10', false);
+                setTimeout(function() { showQ(2); updateUI(2); }, 1000);
+            }
+            updateUI(p);
+        }
+
+        function startGame() {
+            G.screen = 'game';
+            G.time = 60;
+            G.p1Score = 0; G.p1Wrong = 0; G.p1Combo = 0; G.p1Done = 0; G.p1Time = 10; G.p1Q = newQ();
+            G.p2Score = 0; G.p2Wrong = 0; G.p2Combo = 0; G.p2Done = 0; G.p2Time = 10; G.p2Q = newQ();
+            
+            drawGame();
+            showQ(1); showQ(2);
+            updateUI(1); updateUI(2);
+            
+            var musicNum = rand(3) + 1;
+            G.currentMusic = document.getElementById('music' + musicNum);
+            G.currentMusic.currentTime = 0;
+            G.currentMusic.muted = G.muted;
+            G.currentMusic.play().catch(function(e) { console.log(e); });
+            
+            G.timer1 = setInterval(function() {
+                G.time--;
+                var m = Math.floor(G.time / 60);
+                var s = G.time % 60;
+                document.getElementById('mainTimer').textContent = m + ':' + (s < 10 ? '0' : '') + s;
+                if (G.time <= 0) endGame();
+            }, 1000);
+            
+            G.timer2 = setInterval(function() {
+                G.p1Time--;
+                var el = document.getElementById('t1');
+                el.textContent = '⏱️ ' + G.p1Time;
+                el.className = G.p1Time <= 3 ? 'text-5xl font-black mb-4 text-red-600 pulse' : 'text-5xl font-black mb-4';
+                if (G.p1Time <= 0) timeout(1);
+            }, 1000);
+            
+            G.timer3 = setInterval(function() {
+                G.p2Time--;
+                var el = document.getElementById('t2');
+                el.textContent = '⏱️ ' + G.p2Time;
+                el.className = G.p2Time <= 3 ? 'text-5xl font-black mb-4 text-red-600 pulse' : 'text-5xl font-black mb-4';
+                if (G.p2Time <= 0) timeout(2);
+            }, 1000);
+        }
+
+        function endGame() {
+            clearInterval(G.timer1);
+            clearInterval(G.timer2);
+            clearInterval(G.timer3);
+            if (G.currentMusic) G.currentMusic.pause();
+            
+            var endMus = document.getElementById('endMusic');
+            endMus.currentTime = 0;
+            endMus.muted = G.muted;
+            endMus.play().catch(function(e) { console.log(e); });
+            
+            G.screen = 'end';
+            drawEnd();
+        }
+
+        document.getElementById('soundBtn').onclick = function() {
+            G.muted = !G.muted;
+            if (G.currentMusic) G.currentMusic.muted = G.muted;
+            this.textContent = G.muted ? '🔇' : '🔊';
+        };
+
+        drawStart();
+    </script>
+</body>
+</html>
