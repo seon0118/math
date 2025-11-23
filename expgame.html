@@ -28,6 +28,7 @@
     <audio id="music1" loop src="https://raw.githubusercontent.com/seon0118/math/48c5cd03d773ff339ea75ce96cbe7a90f97e1638/kahoot-music-60-second-count-down-13.mp3"></audio>
     <audio id="music2" loop src="https://raw.githubusercontent.com/seon0118/math/6fc3f6edc0a88679035cd41863eb8ea8d201b092/Kahoot%20Music%2060%20Second%20Count%20Down%202_3.mp3"></audio>
     <audio id="music3" loop src="https://raw.githubusercontent.com/seon0118/math/6fc3f6edc0a88679035cd41863eb8ea8d201b092/Kahoot%20Music%20(60%20Second%20Count%20Down)%203_3%20-%20Jason%20Beauchamp%20(youtube).mp3"></audio>
+    <audio id="endMusic" src="https://raw.githubusercontent.com/seon0118/math/eafc15b7716fdc5798cbfe2cc56f29c187340d3f/kahoot-in-game-music-5-second-count-down-23.mp3"></audio>
 
     <div class="bg-gradient-to-r from-purple-900 via-gray-900 to-red-900 p-6 flex justify-between items-center border-b-4 border-yellow-400">
         <button id="soundBtn" class="text-4xl p-2 hover:scale-110 transition">🔊</button>
@@ -326,6 +327,12 @@
             clearInterval(G.timer2);
             clearInterval(G.timer3);
             if (G.currentMusic) G.currentMusic.pause();
+            
+            var endMus = document.getElementById('endMusic');
+            endMus.currentTime = 0;
+            endMus.muted = G.muted;
+            endMus.play().catch(function(e) { console.log(e); });
+            
             G.screen = 'end';
             drawEnd();
         }
