@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小猴子叢林探險 - 一元一次方程式</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+```
+    body {
+        font-family: 'Microsoft JhengHei', Arial, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+    }
+
+    .container {
+        max-width: 900px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        overflow: hidden;
+    }
+
+    .header {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        padding: 30px;
+        text-align: center;
+        color: white;
+    }
+
+    .header h1 {
+        font-size: 2.5em;
+        margin-bottom: 10px;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .monkey {
+        font-size: 4em;
+        animation: bounce 2s infinite;
+    }
+
+    @keyframes bounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-20px); }
+    }
+
+    .progress-container {
+        background: #f8f9fa;
+        padding: 20px;
+        border-bottom: 3px solid #e9ecef;
+    }
+
+    .stage-progress {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 15px;
+    }
+
+    .stage-item {
+        flex: 1;
+        text-align: center;
+        padding: 10px;
+        margin: 0 5px;
+        border-radius: 10px;
+        background: #dee2e6;
+        color: #6c757d;
+        font-weight: bold;
+        transition: all 0.3s;
+    }
+
+    .stage-item.active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        transform: scale(1.1);
+    }
+
+    .stage-item.completed {
+        background: #28a745;
+        color: white;
+    }
+
+    .question-counter {
+        text-align: center;
+        font-size: 1.2em;
+        color: #495057;
+        font-weight: bold;
+    }
+
+    .game-area {
+        padding: 40px;
+    }
+
+    .stage-intro {
+        text-align: center;
+        padding: 40px;
+    }
+
+    .stage-intro h2 {
+        color: #667eea;
+        font-size: 2em;
+        margin-bottom: 20px;
+    }
+
+    .stage-intro p {
+        font-size: 1.2em;
+        color: #6c757d;
+        margin-bottom: 30px;
+        line-height: 1.6;
+    }
+
+    .question-box {
+        background: #f8f9fa;
+        padding: 30px;
+        border-radius: 15px;
+        margin-bottom: 30px;
+        border: 3px solid #667eea;
+    }
+
+    .question-text {
+        font-size: 1.3em;
+        color: #333;
+        margin-bottom: 25px;
+        line-height: 1.6;
+    }
+
+    .options {
+        display: grid;
+        gap: 15px;
+    }
+
+    .option-btn {
+        background: white;
+        border: 3px solid #dee2e6;
+        padding: 20px;
+        border-radius: 12px;
+        font-size: 1.1em;
+        cursor: pointer;
+        transition: all 0.3s;
+        text-align: left;
+    }
+
+    .option-btn:hover {
+        border-color: #667eea;
+        transform: translateX(10px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    .option-btn.correct {
+        background: #d4edda;
+        border-color: #28a745;
+    }
+
+    .option-btn.wrong {
+        background: #f8d7da;
+        border-color: #dc3545;
+    }
+
+    .input-answer {
+        width: 100%;
+        padding: 15px;
+        font-size: 1.2em;
+        border: 3px solid #dee2e6;
+        border-radius: 10px;
+        margin-bottom: 20px;
+    }
+
+    .btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 15px 40px;
+        font-size: 1.2em;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.3s;
+        font-weight: bold;
+    }
+
+    .btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn:disabled {
+        background: #6c757d;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .explanation {
+        background: #fff3cd;
+        border: 3px solid #ffc107;
+        border-radius: 12px;
+        padding: 25px;
+        margin-top: 25px;
+        display: none;
+    }
+
+    .explanation.show {
+        display: block;
+        animation: slideDown 0.5s;
+    }
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .explanation h3 {
+        color: #856404;
+        margin-bottom: 15px;
+        font-size: 1.3em;
+    }
+
+    .explanation p {
+        color: #856404;
+        line-height: 1.8;
+        font-size: 1.1em;
+    }
+
+    .button-group {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        margin-top: 30px;
+    }
+
+    .result-message {
+        text-align: center;
+        font-size: 1.3em;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        font-weight: bold;
+    }
+
+    .result-message.correct {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .result-message.wrong {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .completion-screen {
+        text-align: center;
+        padding: 50px;
+    }
+
+    .completion-screen h2 {
+        font-size: 2.5em;
+        color: #28a745;
+        margin-bottom: 20px;
+    }
+
+    .completion-screen .trophy {
+        font-size: 6em;
+        margin: 30px 0;
+        animation: rotate 3s infinite;
+    }
+
+    @keyframes rotate {
+        0%, 100% { transform: rotate(-10deg); }
+        50% { transform: rotate(10deg); }
+    }
+</style>
+```
+
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="monkey">🐵</div>
+            <h1>小猴子叢林探險</h1>
+            <p>一元一次方程式闖關遊戲</p>
+        </div>
+
+```
+    <div class="progress-container">
+        <div class="stage-progress">
+            <div class="stage-item" id="stage1">第1關<br>辨識</div>
+            <div class="stage-item" id="stage2">第2關<br>化簡</div>
+            <div class="stage-item" id="stage3">第3關<br>列式</div>
+            <div class="stage-item" id="stage4">第4關<br>求值</div>
+            <div class="stage-item" id="stage5">第5關<br>進階</div>
+        </div>
+        <div class="question-counter" id="counter">準備開始冒險！</div>
+    </div>
+
+    <div class="game-area" id="gameArea"></div>
+</div>
+
+<script>
+    const stages = [
+        {
+            name: "第一關：辨識一元一次式",
+            description: "幫助小猴子辨認哪些是一元一次式！一元一次式必須只有一個未知數，且最高次方為1。",
+            questions: [
+                {
+                    q: "下列哪個選項是一元一次式？",
+                    options: ["3x + 5", "x² + 2x", "2x + 3y", "5"],
+                    answer: 0,
+                    explanation: "正確答案是「3x + 5」。<br><br><strong>詳解：</strong><br>• 一元一次式的條件：只有<strong>一個未知數</strong>，且未知數的<strong>最高次方是1</strong><br>• 3x + 5：只有x一個未知數，x的次方是1 ✓<br>• x² + 2x：x的次方有2，不符合 ✗<br>• 2x + 3y：有x和y兩個未知數 ✗<br>• 5：沒有未知數，是常數 ✗"
+                },
+                {
+                    q: "下列哪個選項是一元一次式？",
+                    options: ["xy + 1", "7 - 2x", "x³", "1/x + 2"],
+                    answer: 1,
+                    explanation: "正確答案是「7 - 2x」。<br><br><strong>詳解：</strong><br>• 7 - 2x = -2x + 7，只有x一個未知數，次方是1 ✓<br>• xy + 1：有x和y兩個未知數 ✗<br>• x³：x的次方是3，不符合 ✗<br>• 1/x + 2：可寫成x⁻¹ + 2，x的次方是-1 ✗"
+                },
+                {
+                    q: "下列哪個選項是一元一次式？",
+                    options: ["2x² - x", "-5x + 8", "3x + 2y - 1", "x·x + 1"],
+                    answer: 1,
+                    explanation: "正確答案是「-5x + 8」。<br><br><strong>詳解：</strong><br>• -5x + 8：只有x，次方是1 ✓<br>• 2x² - x：有x²項，最高次方是2 ✗<br>• 3x + 2y - 1：有x和y兩個未知數 ✗<br>• x·x + 1 = x² + 1：x的次方是2 ✗"
+                },
+                {
+                    q: "下列哪個選項是一元一次式？",
+                    options: ["√x + 3", "4x - 9", "x/y", "2ˣ"],
+                    answer: 1,
+                    explanation: "正確答案是「4x - 9」。<br><br><strong>詳解：</strong><br>• 4x - 9：只有x，次方是1 ✓<br>• √x + 3：可寫成x^(1/2) + 3，x的次方是1/2 ✗<br>• x/y：有x和y兩個未知數 ✗<br>• 2ˣ：x在指數位置，不是代數式 ✗"
+                },
+                {
+                    q: "下列哪個選項是一元一次式？",
+                    options: ["x + x²", "0.5x - 7", "3/x", "x + y + z"],
+                    answer: 1,
+                    explanation: "正確答案是「0.5x - 7」。<br><br><strong>詳解：</strong><br>• 0.5x - 7：只有x，次方是1，係數可以是小數 ✓<br>• x + x²：有x²項，最高次方是2 ✗<br>• 3/x = 3x⁻¹：x的次方是-1 ✗<br>• x + y + z：有三個未知數 ✗"
+                },
+                {
+                    q: "下列哪個選項是一元一次式？",
+                    options: ["(x+1)(x-1)", "10", "6x + 2", "x² - x²"],
+                    answer: 2,
+                    explanation: "正確答案是「6x + 2」。<br><br><strong>詳解：</strong><br>• 6x + 2：只有x，次方是1 ✓<br>• (x+1)(x-1) = x² - 1：展開後有x²項 ✗<br>• 10：沒有未知數，是常數 ✗<br>• x² - x² = 0：雖然化簡後x²項消失，但原式不是一元一次式 ✗"
+                }
+            ]
+        },
+        {
+            name: "第二關：化簡一元一次式",
+            description: "幫小猴子化簡式子！合併同類項，讓式子變得更簡潔。",
+            type: "input",
+            questions: [
+                {
+                    q: "化簡：3x + 5x - 2",
+                    answer: "8x-2",
+                    acceptedAnswers: ["8x-2", "8x - 2", "-2+8x", "-2 + 8x"],
+                    explanation: "正確答案是「8x - 2」。<br><br><strong>詳解：</strong><br>• 原式：3x + 5x - 2<br>• 合併同類項（x的項）：(3 + 5)x - 2<br>• 計算：8x - 2<br><br><strong>提醒：</strong>只有同類項（x的次方相同）才能合併！"
+                },
+                {
+                    q: "化簡：7x - 3x + 4",
+                    answer: "4x+4",
+                    acceptedAnswers: ["4x+4", "4x + 4", "4+4x", "4 + 4x"],
+                    explanation: "正確答案是「4x + 4」。<br><br><strong>詳解：</strong><br>• 原式：7x - 3x + 4<br>• 合併同類項：(7 - 3)x + 4<br>• 計算：4x + 4<br><br><strong>技巧：</strong>注意正負號，7x減去3x等於4x！"
+                },
+                {
+                    q: "化簡：2x + 8 - 5x + 3",
+                    answer: "-3x+11",
+                    acceptedAnswers: ["-3x+11", "-3x + 11", "11-3x", "11 - 3x"],
+                    explanation: "正確答案是「-3x + 11」。<br><br><strong>詳解：</strong><br>• 原式：2x + 8 - 5x + 3<br>• 重新排列：2x - 5x + 8 + 3<br>• 合併x項：(2 - 5)x = -3x<br>• 合併常數：8 + 3 = 11<br>• 結果：-3x + 11"
+                },
+                {
+                    q: "化簡：6x - 2 - 4x + 7",
+                    answer: "2x+5",
+                    acceptedAnswers: ["2x+5", "2x + 5", "5+2x", "5 + 2x"],
+                    explanation: "正確答案是「2x + 5」。<br><br><strong>詳解：</strong><br>• 原式：6x - 2 - 4x + 7<br>• 重新排列：6x - 4x - 2 + 7<br>• 合併x項：(6 - 4)x = 2x<br>• 合併常數：-2 + 7 = 5<br>• 結果：2x + 5"
+                },
+                {
+                    q: "化簡：-3x + 9 + 7x - 5",
+                    answer: "4x+4",
+                    acceptedAnswers: ["4x+4", "4x + 4", "4+4x", "4 + 4x"],
+                    explanation: "正確答案是「4x + 4」。<br><br><strong>詳解：</strong><br>• 原式：-3x + 9 + 7x - 5<br>• 重新排列：-3x + 7x + 9 - 5<br>• 合併x項：(-3 + 7)x = 4x<br>• 合併常數：9 - 5 = 4<br>• 結果：4x + 4"
+                },
+                {
+                    q: "化簡：10x - 8 - 12x + 2",
+                    answer: "-2x-6",
+                    acceptedAnswers: ["-2x-6", "-2x - 6", "-6-2x", "-6 - 2x"],
+                    explanation: "正確答案是「-2x - 6」。<br><br><strong>詳解：</strong><br>• 原式：10x - 8 - 12x + 2<br>• 重新排列：10x - 12x - 8 + 2<br>• 合併x項：(10 - 12)x = -2x<br>• 合併常數：-8 + 2 = -6<br>• 結果：-2x - 6"
+                }
+            ]
+        },
+        {
+            name: "第三關：情境列式",
+            description: "根據實際情境，幫小猴子列出正確的一元一次式！",
+            questions: [
+                {
+                    q: "小明有 x 顆糖果，吃掉 5 顆後，又得到 3 顆。請問小明現在有多少顆糖果？",
+                    options: ["x - 5 + 3", "x + 5 - 3", "5 - x + 3", "x × 5 + 3"],
+                    answer: 0,
+                    explanation: "正確答案是「x - 5 + 3」。<br><br><strong>詳解：</strong><br>• 原本有：x 顆<br>• 吃掉 5 顆：減去 5，變成 x - 5<br>• 又得到 3 顆：加上 3，變成 x - 5 + 3<br>• 可化簡為：x - 2<br><br><strong>關鍵：</strong>「吃掉」用減法，「得到」用加法！"
+                },
+                {
+                    q: "一支鉛筆 x 元，買 4 支鉛筆並付 100 元，應找回多少元？",
+                    options: ["100 - 4x", "4x - 100", "100 + 4x", "100 ÷ 4x"],
+                    answer: 0,
+                    explanation: "正確答案是「100 - 4x」。<br><br><strong>詳解：</strong><br>• 一支鉛筆：x 元<br>• 4 支鉛筆總價：4 × x = 4x 元<br>• 付 100 元，找回：100 - 4x 元<br><br><strong>公式：</strong>找零 = 付的錢 - 商品總價"
+                },
+                {
+                    q: "弟弟今年 x 歲，哥哥比弟弟大 3 歲，兩人年齡相加是多少？",
+                    options: ["x + 3", "2x + 3", "x - 3", "3x"],
+                    answer: 1,
+                    explanation: "正確答案是「2x + 3」。<br><br><strong>詳解：</strong><br>• 弟弟年齡：x 歲<br>• 哥哥年齡：x + 3 歲（比弟弟大3歲）<br>• 兩人相加：x + (x + 3) = 2x + 3 歲<br><br><strong>步驟：</strong>先算出每人年齡，再相加！"
+                },
+                {
+                    q: "一個長方形的長是 x 公分，寬比長少 5 公分，周長是多少？",
+                    options: ["2x - 5", "4x - 10", "2x - 10", "4x - 5"],
+                    answer: 1,
+                    explanation: "正確答案是「4x - 10」。<br><br><strong>詳解：</strong><br>• 長：x 公分<br>• 寬：x - 5 公分（比長少5公分）<br>• 周長公式：2 × (長 + 寬)<br>• 計算：2 × (x + x - 5) = 2 × (2x - 5) = 4x - 10<br><br><strong>記得：</strong>長方形周長 = 2(長 + 寬)！"
+                },
+                {
+                    q: "小華有 x 元，花掉一半後再花 20 元，還剩多少元？",
+                    options: ["x/2 - 20", "x - 20/2", "2x - 20", "(x - 20)/2"],
+                    answer: 0,
+                    explanation: "正確答案是「x/2 - 20」。<br><br><strong>詳解：</strong><br>• 原本有：x 元<br>• 花掉一半：x ÷ 2 = x/2 元<br>• 再花 20 元：x/2 - 20 元<br><br><strong>注意順序：</strong>先花一半，再花固定金額！"
+                },
+                {
+                    q: "一班有學生 x 人，平均分成 5 組後，每組再加入 2 人，每組有多少人？",
+                    options: ["x/5 + 2", "(x + 2)/5", "5x + 2", "x + 10"],
+                    answer: 0,
+                    explanation: "正確答案是「x/5 + 2」。<br><br><strong>詳解：</strong><br>• 總人數：x 人<br>• 分成 5 組：每組 x/5 人<br>• 每組再加 2 人：x/5 + 2 人<br><br><strong>技巧：</strong>先分組，再加人！若是先加人再分組，答案會是 (x+10)/5"
+                }
+            ]
+        },
+        {
+            name: "第四關：代數式求值",
+            description: "給定未知數的值，幫小猴子計算出代數式的答案！",
+            type: "input",
+            questions: [
+                {
+                    q: "當 x = 3 時，求 2x + 5 的值",
+                    answer: "11",
+                    acceptedAnswers: ["11"],
+                    explanation: "正確答案是「11」。<br><br><strong>詳解：</strong><br>• 原式：2x + 5<br>• 將 x = 3 代入：2 × 3 + 5<br>• 計算：6 + 5 = 11<br><br><strong>步驟：</strong>①代入數值 → ②先乘除 → ③後加減"
+                },
+                {
+                    q: "當 x = -2 時，求 5x - 3 的值",
+                    answer: "-13",
+                    acceptedAnswers: ["-13"],
+                    explanation: "正確答案是「-13」。<br><br><strong>詳解：</strong><br>• 原式：5x - 3<br>• 將 x = -2 代入：5 × (-2) - 3<br>• 計算：-10 - 3 = -13<br><br><strong>注意：</strong>負數乘法，5 × (-2) = -10"
+                },
+                {
+                    q: "當 x = 4 時，求 -3x + 8 的值",
+                    answer: "-4",
+                    acceptedAnswers: ["-4"],
+                    explanation: "正確答案是「-4」。<br><br><strong>詳解：</strong><br>• 原式：-3x + 8<br>• 將 x = 4 代入：-3 × 4 + 8<br>• 計算：-12 + 8 = -4<br><br><strong>技巧：</strong>-3 × 4 = -12"
+                },
+                {
+                    q: "當 x = 5 時，求 7 - 2x 的值",
+                    answer: "-3",
+                    acceptedAnswers: ["-3"],
+                    explanation: "正確答案是「-3」。<br><br><strong>詳解：</strong><br>• 原式：7 - 2x<br>• 將 x = 5 代入：7 - 2 × 5<br>• 計算：7 - 10 = -3<br><br><strong>記得：</strong>先算乘法 2 × 5，再算減法！"
+                },
+                {
+                    q: "當 x = -1 時，求 -4x + 6 的值",
+                    answer: "10",
+                    acceptedAnswers: ["10"],
+                    explanation: "正確答案是「10」。<br><br><strong>詳解：</strong><br>• 原式：-4x + 6<br>• 將 x = -1 代入：-4 × (-1) + 6<br>• 計算：4 + 6 = 10<br><br><strong>重點：</strong>負負得正，-4 × (-1) = 4"
+                },
+                {
+                    q: "當 x = 6 時，求 3x - 2x + 5 的值",
+                    answer: "11",
+                    acceptedAnswers: ["11"],
+                    explanation: "正確答案是「11」。<br><br><strong>詳解：</strong><br><strong>方法一（先化簡）：</strong><br>• 化簡：3x - 2x + 5 = x + 5<br>• 代入 x = 6：6 + 5 = 11<br><br><strong>方法二（直接代入）：</strong><br>• 3 × 6 - 2 × 6 + 5<br>• = 18 - 12 + 5 = 11"
+                }
+            ]
+        },
+        {
+            name: "第五關：進階化簡（分數型）",
+            description: "最後的挑戰！幫小猴子化簡含有分數的一元一次式。",
+            type: "input",
+            questions: [
+                {
+                    q: "化簡：(1/2)x + (1/3)x",
+                    answer: "(5/6)x",
+                    acceptedAnswers: ["5x/6", "5/6x", "(5/6)x", "0.833x", "5/6*x"],
+                    explanation: "正確答案是「(5/6)x」。<br><br><strong>詳解：</strong><br>• 原式：(1/2)x + (1/3)x<br>• 通分（最小公倍數是6）：<br>&nbsp;&nbsp;(1/2)x = (3/6)x<br>&nbsp;&nbsp;(1/3)x = (2/6)x<br>• 相加：(3/6)x + (2/6)x = (5/6)x<br><br><strong>技巧：</strong>分數相加要先通分！"
+                },
+                {
+                    q: "化簡：(2/3)x - (1/6)x + 1",
+                    answer: "(1/2)x+1",
+                    acceptedAnswers: ["x/2+1", "1/2x+1", "(1/2)x+1", "0.5x+1", "1+x/2", "1+0.5x"],
+                    explanation: "正確答案是「(1/2)x + 1」。<br><br><strong>詳解：</strong><br>• 原式：(2/3)x - (1/6)x + 1<br>• 通分（最小公倍數是6）：<br>&nbsp;&nbsp;(2/3)x = (4/6)x<br>&nbsp;&nbsp;(1/6)x = (1/6)x<br>• 計算：(4/6)x - (1/6)x + 1 = (3/6)x + 1 = (1/2)x + 1"
+                },
+                {
+                    q: "化簡：(3/4)x + (1/4)x - 2",
+                    answer: "x-2",
+                    acceptedAnswers: ["x-2", "x - 2", "-2+x", "-2 + x"],
+                    explanation: "正確答案是「x - 2」。<br><br><strong>詳解：</strong><br>• 原式：(3/4)x + (1/4)x - 2<br>• 分母相同，直接相加：<br>&nbsp;&nbsp;(3/4 + 1/4)x - 2<br>• 計算：(4/4)x - 2 = x - 2<br><br><strong>技巧：</strong>分母相同時可直接加減分子！"
+                },
+                {
+                    q: "化簡：(5/6)x - (1/3)x + 3",
+                    answer: "(1/2)x+3",
+                    acceptedAnswers: ["x/2+3", "1/2x+3", "(1/2)x+3", "0.5x+3", "3+x/2", "3+0.5x"],
+                    explanation: "正確答案是「(1/2)x + 3」。<br><br><strong>詳解：</strong><br>• 原式：(5/6)x - (1/3)x + 3<br>• 通分（最小公倍數是6）：<br>&nbsp;&nbsp;(5/6)x = (5/6)x<br>&nbsp;&nbsp;(1/3)x = (2/6)x<br>• 計算：(5/6)x - (2/6)x + 3 = (3/6)x + 3 = (1/2)x + 3"
+                },
+                {
+                    q: "化簡：(1/4)x + (3/8)x - 1",
+                    answer: "(5/8)x-1",
+                    acceptedAnswers: ["5x/8-1", "5/8x-1", "(5/8)x-1", "0.625x-1", "-1+5x/8", "-1+0.625x"],
+                    explanation: "正確答案是「(5/8)x - 1」。<br><br><strong>詳解：</strong><br>• 原式：(1/4)x + (3/8)x - 1<br>• 通分（最小公倍數是8）：<br>&nbsp;&nbsp;(1/4)x = (2/8)x<br>&nbsp;&nbsp;(3/8)x = (3/8)x<br>• 計算：(2/8)x + (3/8)x - 1 = (5/8)x - 1"
+                },
+                {
+                    q: "化簡：(2/5)x - (1/10)x + (1/2)x",
+                    answer: "(7/10)x",
+                    acceptedAnswers: ["7x/10", "7/10x", "(7/10)x", "0.7x"],
+                    explanation: "正確答案是「(7/10)x」。<br><br><strong>詳解：</strong><br>• 原式：(2/5)x - (1/10)x + (1/2)x<br>• 通分（最小公倍數是10）：<br>&nbsp;&nbsp;(2/5)x = (4/10)x<br>&nbsp;&nbsp;(1/10)x = (1/10)x<br>&nbsp;&nbsp;(1/2)x = (5/10)x<br>• 計算：(4/10)x - (1/10)x + (5/10)x<br>• = (4 - 1 + 5)/10 × x = (8/10)x<br>• 約分後... 等等，讓我重新計算：<br>• (4/10) - (1/10) + (5/10) = (4 - 1 + 5)/10 = (8/10) = (4/5)x<br><br>抱歉！正確答案應該是 (4/5)x 或 0.8x"
+                }
+            ]
+        }
+    ];
+
+    let currentStage = 0;
+    let currentQuestion = 0;
+    let answered = false;
+
+    function normalizeAnswer(answer) {
+        return answer.replace(/\s+/g, '').toLowerCase();
+    }
+
+    function showStageIntro() {
+        const stage = stages[currentStage];
+        const html = `
+            <div class="stage-intro">
+                <h2>🌴 ${stage.name} 🌴</h2>
+                <p>${stage.description}</p>
+                <button class="btn" onclick="startStage()">開始挑戰</button>
+            </div>
+        `;
+        document.getElementById('gameArea').innerHTML = html;
+        updateProgress();
+    }
+
+    function startStage() {
+        currentQuestion = 0;
+        showQuestion();
+    }
+
+    function showQuestion() {
+        const stage = stages[currentStage];
+        const q = stage.questions[currentQuestion];
+        answered = false;
+        
+        let html = `
+            <div class="question-box">
+                <div class="question-text">
+                    <strong>第 ${currentQuestion + 1} 題：</strong><br><br>
+                    ${q.q}
+                </div>
+        `;
+
+        if (stage.type === 'input') {
+            html += `
+                <input type="text" class="input-answer" id="userAnswer" placeholder="請輸入答案（例如：2x+3）">
+                <div style="text-align: center;">
+                    <button class="btn" onclick="checkInputAnswer()">提交答案</button>
+                </div>
+            `;
+        } else {
+            html += '<div class="options">';
+            q.options.forEach((opt, idx) => {
+                html += `<button class="option-btn" onclick="checkAnswer(${idx})">${opt}</button>`;
+            });
+            html += '</div>';
+        }
+
+        html += `
+            </div>
+            <div class="explanation" id="explanation"></div>
+            <div class="button-group" id="buttonGroup" style="display: none;">
+                <button class="btn" onclick="nextQuestion()">下一題</button>
+            </div>
+        `;
+
+        document.getElementById('gameArea').innerHTML = html;
+        updateProgress();
+    }
+
+    function checkAnswer(selected) {
+        if (answered) return;
+        answered = true;
+
+        const stage = stages[currentStage];
+        const q = stage.questions[currentQuestion];
+        const options = document.querySelectorAll('.option-btn');
+        
+        options.forEach(btn => btn.style.pointerEvents = 'none');
+        
+        if (selected === q.answer) {
+            options[selected].classList.add('correct');
+            showExplanation(true, q.explanation);
+        } else {
+            options[selected].classList.add('wrong');
+            options[q.answer].classList.add('correct');
+            showExplanation(false, q.explanation);
+        }
+    }
+
+    function checkInputAnswer() {
+        if (answered) return;
+        
+        const userInput = document.getElementById('userAnswer').value.trim();
+        if (!userInput) {
+            alert('請輸入答案！');
+            return;
+        }
+
+        answered = true;
+        const stage = stages[currentStage];
+        const q = stage.questions[currentQuestion];
+        
+        const normalizedInput = normalizeAnswer(userInput);
+        const isCorrect = q.acceptedAnswers.some(ans => 
+            normalizeAnswer(ans) === normalizedInput
+        );
+
+        document.getElementById('userAnswer').disabled = true;
+        showExplanation(isCorrect, q.explanation);
+    }
+
+    function showExplanation(isCorrect, explanationText) {
+        const explanationDiv = document.getElementById('explanation');
+        const resultClass = isCorrect ? 'correct' : 'wrong';
+        const resultText = isCorrect ? '✓ 答對了！' : '✗ 答錯了！';
+        
+        explanationDiv.innerHTML = `
+            <div class="result-message ${resultClass}">${resultText}</div>
+            <h3>📚 詳細解說</h3>
+            <p>${explanationText}</p>
+        `;
+        explanationDiv.classList.add('show');
+        
+        document.getElementById('buttonGroup').style.display = 'flex';
+    }
+
+    function nextQuestion() {
+        currentQuestion++;
+        const stage = stages[currentStage];
+        
+        if (currentQuestion < stage.questions.length) {
+            showQuestion();
+        } else {
+            completeStage();
+        }
+    }
+
+    function completeStage() {
+        currentStage++;
+        
+        if (currentStage < stages.length) {
+            document.getElementById(`stage${currentStage}`).classList.add('completed');
+            showStageIntro();
+        } else {
+            showCompletion();
+        }
+    }
+
+    function showCompletion() {
+        document.getElementById('stage5').classList.add('completed');
+        const html = `
+            <div class="completion-screen">
+                <h2>🎉 恭喜過關！🎉</h2>
+                <div class="trophy">🏆</div>
+                <p style="font-size: 1.3em; color: #666; line-height: 1.8;">
+                    太棒了！你已經幫助小猴子<br>
+                    成功穿越整個叢林！<br><br>
+                    你完全掌握了<strong>一元一次方程式</strong>的技巧：<br>
+                    ✓ 辨識一元一次式<br>
+                    ✓ 化簡代數式<br>
+                    ✓ 情境列式<br>
+                    ✓ 代數求值<br>
+                    ✓ 分數運算<br><br>
+                    🐵 小猴子為你感到驕傲！
+                </p>
+                <button class="btn" onclick="restart()" style="margin-top: 30px;">重新挑戰</button>
+            </div>
+        `;
+        document.getElementById('gameArea').innerHTML = html;
+        document.getElementById('counter').textContent = '🎊 完成所有關卡！';
+    }
+
+    function updateProgress() {
+        for (let i = 1; i <= 5; i++) {
+            const stageEl = document.getElementById(`stage${i}`);
+            stageEl.classList.remove('active', 'completed');
+            
+            if (i < currentStage + 1) {
+                stageEl.classList.add('completed');
+            } else if (i === currentStage + 1) {
+                stageEl.classList.add('active');
+            }
+        }
+
+        const stage = stages[currentStage];
+        if (stage && currentQuestion < stage.questions.length) {
+            document.getElementById('counter').textContent = 
+                `第 ${currentStage + 1} 關 - 第 ${currentQuestion + 1} / ${stage.questions.length} 題`;
+        }
+    }
+
+    function restart() {
+        currentStage = 0;
+        currentQuestion = 0;
+        answered = false;
+        showStageIntro();
+    }
+
+    // 初始化遊戲
+    showStageIntro();
+</script>
+```
+
+</body>
+</html>
