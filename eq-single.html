@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>移項法則遊戲</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft JhengHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 650px;
+            width: 100%;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+        
+        .score-board {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            padding: 15px;
+            background: #f0f0f0;
+            border-radius: 10px;
+        }
+        
+        .score-item {
+            text-align: center;
+        }
+        
+        .score-label {
+            font-size: 0.9em;
+            color: #666;
+        }
+        
+        .score-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .equation-display {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #333;
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .question {
+            margin-bottom: 25px;
+            text-align: center;
+            font-size: 1.2em;
+            color: #555;
+            font-weight: 600;
+        }
+        
+        .options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .option-btn {
+            padding: 20px;
+            font-size: 1.3em;
+            border: 3px solid #ddd;
+            background: white;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .option-btn:hover {
+            border-color: #667eea;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        .option-btn.selected {
+            border-color: #667eea;
+            background: #e8ecff;
+        }
+        
+        .option-btn.correct {
+            border-color: #48bb78;
+            background: #c6f6d5;
+            color: #22543d;
+        }
+        
+        .option-btn.incorrect {
+            border-color: #f56565;
+            background: #fed7d7;
+            color: #742a2a;
+        }
+        
+        .option-btn:disabled {
+            cursor: not-allowed;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.1em;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+        
+        .btn-next {
+            background: #48bb78;
+            color: white;
+            display: none;
+        }
+        
+        .btn-next:hover {
+            background: #38a169;
+            transform: translateY(-2px);
+        }
+        
+        .feedback {
+            text-align: center;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+            font-weight: bold;
+            display: none;
+        }
+        
+        .feedback.correct {
+            background: #c6f6d5;
+            color: #22543d;
+            display: block;
+        }
+        
+        .feedback.incorrect {
+            background: #fed7d7;
+            color: #742a2a;
+            display: block;
+        }
+        
+        .hint {
+            background: #fef5e7;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border-left: 4px solid #f39c12;
+        }
+        
+        .hint-title {
+            font-weight: bold;
+            color: #f39c12;
+            margin-bottom: 5px;
+        }
+        
+        .difficulty {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .diff-btn {
+            padding: 10px 20px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .diff-btn.active {
+            background: #667eea;
+            color: white;
+        }
+        
+        .diff-btn:hover {
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 移項法則遊戲</h1>
+        
+        <div class="score-board">
+            <div class="score-item">
+                <div class="score-label">正確</div>
+                <div class="score-value" id="correct">0</div>
+            </div>
+            <div class="score-item">
+                <div class="score-label">錯誤</div>
+                <div class="score-value" id="incorrect">0</div>
+            </div>
+            <div class="score-item">
+                <div class="score-label">連勝</div>
+                <div class="score-value" id="streak">0</div>
+            </div>
+        </div>
+        
+        <div class="difficulty">
+            <button class="diff-btn active" onclick="setDifficulty('easy')">簡單</button>
+            <button class="diff-btn" onclick="setDifficulty('medium')">中等</button>
+            <button class="diff-btn" onclick="setDifficulty('hard')">困難</button>
+        </div>
+        
+        <div class="equation-display" id="equation"></div>
+        
+        <div class="question">求 x 的值</div>
+        
+        <div class="options" id="options"></div>
+        
+        <div class="feedback" id="feedback"></div>
+        
+        <button class="btn btn-next" id="nextBtn" onclick="nextQuestion()">下一題 →</button>
+        
+        <div class="hint">
+            <div class="hint-title">💡 移項法則提示：</div>
+            <div>加號移項變減號，減號移項變加號</div>
+            <div>乘號移項變除號，除號移項變乘號</div>
+        </div>
+    </div>
+
+    <script>
+        let correctCount = 0;
+        let incorrectCount = 0;
+        let streakCount = 0;
+        let currentAnswer = 0;
+        let difficulty = 'easy';
+        let answered = false;
+        
+        function setDifficulty(level) {
+            difficulty = level;
+            document.querySelectorAll('.diff-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            nextQuestion();
+        }
+        
+        function generateQuestion() {
+            const types = ['add', 'subtract', 'multiply', 'divide'];
+            const type = types[Math.floor(Math.random() * types.length)];
+            
+            let a, b, x, equation;
+            
+            const maxNum = difficulty === 'easy' ? 20 : difficulty === 'medium' ? 50 : 100;
+            const minNum = difficulty === 'hard' ? -50 : 1;
+            
+            switch(type) {
+                case 'add':
+                    x = Math.floor(Math.random() * maxNum) + minNum;
+                    b = Math.floor(Math.random() * maxNum) + 1;
+                    a = x + b;
+                    equation = `x + ${b} = ${a}`;
+                    currentAnswer = x;
+                    break;
+                    
+                case 'subtract':
+                    x = Math.floor(Math.random() * maxNum) + minNum;
+                    b = Math.floor(Math.random() * maxNum) + 1;
+                    a = x - b;
+                    equation = `x - ${b} = ${a}`;
+                    currentAnswer = x;
+                    break;
+                    
+                case 'multiply':
+                    x = Math.floor(Math.random() * 20) + minNum;
+                    b = Math.floor(Math.random() * 10) + 2;
+                    a = x * b;
+                    equation = `${b}x = ${a}`;
+                    currentAnswer = x;
+                    break;
+                    
+                case 'divide':
+                    x = Math.floor(Math.random() * 20) + 2;
+                    b = Math.floor(Math.random() * 10) + 2;
+                    a = x * b;
+                    equation = `x ÷ ${b} = ${x}`;
+                    currentAnswer = a;
+                    break;
+            }
+            
+            document.getElementById('equation').textContent = equation;
+            generateOptions();
+        }
+        
+        function generateOptions() {
+            const options = [currentAnswer];
+            
+            // 生成3個錯誤選項
+            while(options.length < 4) {
+                let wrongAnswer;
+                const offset = Math.floor(Math.random() * 20) - 10;
+                wrongAnswer = currentAnswer + offset;
+                
+                if (offset !== 0 && !options.includes(wrongAnswer)) {
+                    options.push(wrongAnswer);
+                }
+            }
+            
+            // 打亂選項順序
+            options.sort(() => Math.random() - 0.5);
+            
+            // 顯示選項
+            const optionsDiv = document.getElementById('options');
+            optionsDiv.innerHTML = '';
+            
+            options.forEach(option => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.textContent = option;
+                btn.onclick = () => selectOption(option, btn);
+                optionsDiv.appendChild(btn);
+            });
+        }
+        
+        function selectOption(selected, btnElement) {
+            if (answered) return;
+            
+            answered = true;
+            const feedback = document.getElementById('feedback');
+            const allButtons = document.querySelectorAll('.option-btn');
+            
+            // 禁用所有按鈕
+            allButtons.forEach(btn => {
+                btn.disabled = true;
+                // 標記正確答案
+                if (parseInt(btn.textContent) === currentAnswer) {
+                    btn.classList.add('correct');
+                }
+            });
+            
+            if (selected === currentAnswer) {
+                correctCount++;
+                streakCount++;
+                btnElement.classList.add('correct');
+                feedback.className = 'feedback correct';
+                feedback.textContent = `🎉 太棒了！答對了！`;
+            } else {
+                incorrectCount++;
+                streakCount = 0;
+                btnElement.classList.add('incorrect');
+                feedback.className = 'feedback incorrect';
+                feedback.textContent = `❌ 答錯了！正確答案是 ${currentAnswer}`;
+            }
+            
+            updateScore();
+            document.getElementById('nextBtn').style.display = 'block';
+        }
+        
+        function nextQuestion() {
+            answered = false;
+            document.getElementById('feedback').style.display = 'none';
+            document.getElementById('nextBtn').style.display = 'none';
+            generateQuestion();
+        }
+        
+        function updateScore() {
+            document.getElementById('correct').textContent = correctCount;
+            document.getElementById('incorrect').textContent = incorrectCount;
+            document.getElementById('streak').textContent = streakCount;
+        }
+        
+        generateQuestion();
+    </script>
+</body>
+</html>
