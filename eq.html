@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>移項法則對戰</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            font-family: 'Microsoft JhengHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            min-height: 100vh;
+            overflow: hidden;
+            touch-action: manipulation;
+        }
+        
+        .start-screen {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: white;
+        }
+        
+        .start-screen h1 {
+            font-size: 4em;
+            margin-bottom: 20px;
+            text-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            animation: bounce 1s infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        .start-btn {
+            padding: 25px 60px;
+            font-size: 2em;
+            background: white;
+            color: #6366f1;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            transition: all 0.3s;
+        }
+        
+        .start-btn:hover, .start-btn:active {
+            transform: scale(1.1);
+        }
+        
+        .game-container {
+            display: none;
+            height: 100vh;
+            padding: 15px;
+        }
+        
+        .game-container.active {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .top-bar {
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        }
+        
+        .timer {
+            font-size: 3em;
+            font-weight: bold;
+            color: #6366f1;
+            text-align: center;
+        }
+        
+        .timer.warning {
+            color: #ef4444;
+            animation: pulse 0.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        .players-area {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            flex: 1;
+        }
+        
+        .player-section {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .player-info {
+            background: white;
+            border-radius: 12px;
+            padding: 12px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        
+        .player1-info {
+            border: 4px solid #ef4444;
+        }
+        
+        .player2-info {
+            border: 4px solid #3b82f6;
+        }
+        
+        .player-name {
+            font-size: 1.4em;
+            font-weight: bold;
+        }
+        
+        .player1-name {
+            color: #ef4444;
+        }
+        
+        .player2-name {
+            color: #3b82f6;
+        }
+        
+        .player-score {
+            font-size: 1.8em;
+            font-weight: bold;
+        }
+        
+        .combo {
+            background: #fbbf24;
+            color: #78350f;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 0.9em;
+            margin-top: 4px;
+        }
+        
+        .equation-box {
+            background: white;
+            border-radius: 12px;
+            padding: 20px 12px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            margin-bottom: 10px;
+        }
+        
+        .equation {
+            font-size: 2em;
+            font-weight: bold;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+        
+        .question-text {
+            font-size: 1.1em;
+            color: #6b7280;
+        }
+        
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            flex: 1;
+        }
+        
+        .option {
+            border-radius: 12px;
+            font-size: 1.6em;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            color: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            position: relative;
+            overflow: hidden;
+            min-height: 100px;
+            padding: 10px;
+            gap: 3px;
+        }
+        
+        .option-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            width: 100%;
+        }
+        
+        .option-direction {
+            font-size: 0.7em;
+            opacity: 0.85;
+        }
+        
+        .option-keys {
+            font-size: 0.45em;
+            opacity: 0.75;
+            background: rgba(0,0,0,0.25);
+            padding: 3px 8px;
+            border-radius: 5px;
+            white-space: nowrap;
+        }
+        
+        .option:active {
+            transform: scale(0.95);
+        }
+        
+        .option-red { background: #ef4444; }
+        .option-blue { background: #3b82f6; }
+        .option-yellow { background: #f59e0b; }
+        .option-green { background: #10b981; }
+        
+        .option.correct {
+            animation: correctAnim 0.5s;
+        }
+        
+        .option.incorrect {
+            animation: incorrectAnim 0.5s;
+            opacity: 0.3;
+        }
+        
+        @keyframes correctAnim {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        @keyframes incorrectAnim {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+        
+        .result-screen {
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: white;
+            text-align: center;
+        }
+        
+        .result-screen.active {
+            display: flex;
+        }
+        
+        .result-screen h1 {
+            font-size: 4em;
+            margin-bottom: 30px;
+            text-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
+        
+        .winner {
+            font-size: 6em;
+            margin-bottom: 20px;
+            animation: bounce 1s infinite;
+        }
+        
+        .final-scores {
+            background: white;
+            color: #1f2937;
+            padding: 40px 80px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+        
+        .final-score {
+            font-size: 2.5em;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        
+        .instructions {
+            background: rgba(255,255,255,0.9);
+            padding: 20px 30px;
+            border-radius: 15px;
+            color: #1f2937;
+            font-size: 1.3em;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .start-screen h1 { font-size: 2.5em; }
+            .start-btn { font-size: 1.5em; padding: 20px 40px; }
+            .timer { font-size: 2em; }
+            .equation { font-size: 1.5em; }
+            .option { font-size: 1.3em; min-height: 80px; }
+            .player-name { font-size: 1.1em; }
+            .player-score { font-size: 1.5em; }
+            .control-hints { font-size: 0.65em; }
+            .option-keys { font-size: 0.4em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="start-screen" id="startScreen">
+        <h1>🎮 移項法則對戰</h1>
+        <p style="font-size: 1.5em; margin-bottom: 40px;">雙人對戰 • 2分鐘挑戰</p>
+        <button class="start-btn" onclick="startGame()">開始遊戲</button>
+        <div class="instructions">
+            <div>💡 每位玩家有獨立題目</div>
+            <div>✅ 答對 +10分 × 連擊 | ❌ 答錯 -5分</div>
+            <div>🎮 支援鍵盤、觸控與搖桿操控</div>
+        </div>
+    </div>
+    
+    <div class="game-container" id="gameContainer">
+        <div class="gamepad-status" id="gamepadStatus">
+            <div style="font-weight: bold; margin-bottom: 5px; color: #6366f1;">🎮 搖桿狀態</div>
+            <div class="gamepad-indicator player1" id="gamepad1Status">玩家1: 未連接</div>
+            <div class="gamepad-indicator player2" id="gamepad2Status">玩家2: 未連接</div>
+        </div>
+        
+        <div class="top-bar">
+            <div class="timer" id="timer">2:00</div>
+        </div>
+        
+        <div class="players-area">
+            <div class="player-section">
+                <div class="player-info player1-info">
+                    <div>
+                        <div class="player-name player1-name">玩家 1</div>
+                        <div class="combo" id="combo1" style="display: none;">🔥 x<span id="comboNum1">1</span></div>
+                    </div>
+                    <div class="player-score player1-name" id="score1">0</div>
+                </div>
+                
+                <div class="equation-box">
+                    <div class="equation" id="equation1"></div>
+                    <div class="question-text">求 x 的值</div>
+                </div>
+                
+                <div class="options-grid">
+                    <div class="option option-red" data-player="1" data-index="0" onclick="selectAnswer(1, 0)">
+                        <div class="option-content">
+                            <div class="option-direction">⬆️ 上</div>
+                            <span class="answer-text"></span>
+                            <div class="option-keys">W / 🅰️ / 👆</div>
+                        </div>
+                    </div>
+                    <div class="option option-blue" data-player="1" data-index="1" onclick="selectAnswer(1, 1)">
+                        <div class="option-content">
+                            <div class="option-direction">⬅️ 左</div>
+                            <span class="answer-text"></span>
+                            <div class="option-keys">A / ❌ / 👆</div>
+                        </div>
+                    </div>
+                    <div class="option option-yellow" data-player="1" data-index="2" onclick="selectAnswer(1, 2)">
+                        <div class="option-content">
+                            <div class="option-direction">⬇️ 下</div>
+                            <span class="answer-text"></span>
+                            <div class="option-keys">S / 🅱️ / 👆</div>
+                        </div>
+                    </div>
+                    <div class="option option-green" data-player="1" data-index="3" onclick="selectAnswer(1, 3)">
+                        <div class="option-content">
+                            <div class="option-direction">➡️ 右</div>
+                            <span class="answer-text"></span>
+                            <div class="option-keys">D / 🅾️ / 👆</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="control-hints left">
+                    <div class="control-icon">⌨️ W/A/S/D</div>
+                    <div class="control-icon">🎮 方向鍵/按鈕</div>
+                    <div class="control-icon">👆 觸控</div>
+                </div>
+            </div>
+            
+            <div class="player-section">
+                <div class="player-info player2-info">
+                    <div>
+                        <div class="player-name player2-name">玩家 2</div>
+                        <div class="combo" id="combo2" style="display: none;">🔥 x<span id="comboNum2">1</span></div>
+                    </div>
+                    <div class="player-score player2-name" id="score2">0</div>
+                </div>
+                
+                <div class="equation-box">
+                    <div class="equation" id="equation2"></div>
+                    <div class="question-text">求 x 的值</div>
+                </div>
+                
+                <div class="options-grid">
+                    <div class="option option-red" data-player="2" data-index="0" onclick="selectAnswer(2, 0)">
+                        <div class="option-content">
+                            <div class="option-direction">⬆️ 上</div>
+                            <span class="answer-text"></span>
+                            <div class="option-keys">↑ / 🅰️ / 👆</div>
+                        </div>
+                    </div>
+                    <div class="option option-blue" data-player="2" data-index="1" onclick="selectAnswer(2, 1)">
+                        <div class="option-content">
+                            <div class="option-direction">⬅️ 左</div>
+                            <span class="answer-text"></span>
+                            <div class="option-keys">← / ❌ / 👆</div>
+                        </div>
+                    </div>
+                    <div class="option option-yellow" data-player="2" data-index="2" onclick="selectAnswer(2, 2)">
+                        <div class="option-content">
+                            <div class="option-direction">⬇️ 下</div>
+                            <span class="answer-text"></span>
+                            <div class="option-keys">↓ / 🅱️ / 👆</div>
+                        </div>
+                    </div>
+                    <div class="option option-green" data-player="2" data-index="3" onclick="selectAnswer(2, 3)">
+                        <div class="option-content">
+                            <div class="option-direction">➡️ 右</div>
+                            <span class="answer-text"></span>
+                            <div class="option-keys">→ / 🅾️ / 👆</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="control-hints right">
+                    <div class="control-icon">⌨️ ↑←↓→</div>
+                    <div class="control-icon">🎮 方向鍵/按鈕</div>
+                    <div class="control-icon">👆 觸控</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="result-screen" id="resultScreen">
+        <div class="winner" id="winnerEmoji">🏆</div>
+        <h1 id="winnerText"></h1>
+        <div class="final-scores">
+            <div class="final-score" style="color: #ef4444;">玩家 1: <span id="finalScore1">0</span> 分</div>
+            <div class="final-score" style="color: #3b82f6;">玩家 2: <span id="finalScore2">0</span> 分</div>
+        </div>
+        <button class="start-btn" onclick="location.reload()">再玩一次</button>
+    </div>
+
+    <script>
+        let gameState = {
+            timeLeft: 120,
+            player1: { 
+                score: 0, 
+                combo: 0, 
+                currentAnswer: 0,
+                options: [],
+                canAnswer: true
+            },
+            player2: { 
+                score: 0, 
+                combo: 0, 
+                currentAnswer: 0,
+                options: [],
+                canAnswer: true
+            },
+            timerInterval: null
+        };
+        
+        function startGame() {
+            document.getElementById('startScreen').style.display = 'none';
+            document.getElementById('gameContainer').classList.add('active');
+            generateQuestion(1);
+            generateQuestion(2);
+            startTimer();
+            setupKeyboard();
+            setupGamepad();
+        }
+        
+        function startTimer() {
+            gameState.timerInterval = setInterval(() => {
+                gameState.timeLeft--;
+                updateTimerDisplay();
+                
+                if (gameState.timeLeft <= 0) {
+                    endGame();
+                }
+            }, 1000);
+        }
+        
+        function updateTimerDisplay() {
+            const minutes = Math.floor(gameState.timeLeft / 60);
+            const seconds = gameState.timeLeft % 60;
+            const timerEl = document.getElementById('timer');
+            timerEl.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            
+            if (gameState.timeLeft <= 10) {
+                timerEl.classList.add('warning');
+            }
+        }
+        
+        function generateQuestion(player) {
+            const types = ['add', 'subtract', 'multiply', 'divide'];
+            const type = types[Math.floor(Math.random() * types.length)];
+            
+            let a, b, x, equation;
+            
+            switch(type) {
+                case 'add':
+                    x = Math.floor(Math.random() * 50) + 1;
+                    b = Math.floor(Math.random() * 30) + 1;
+                    a = x + b;
+                    equation = `x + ${b} = ${a}`;
+                    break;
+                    
+                case 'subtract':
+                    x = Math.floor(Math.random() * 50) + 1;
+                    b = Math.floor(Math.random() * 30) + 1;
+                    a = x - b;
+                    equation = `x - ${b} = ${a}`;
+                    break;
+                    
+                case 'multiply':
+                    x = Math.floor(Math.random() * 20) + 1;
+                    b = Math.floor(Math.random() * 10) + 2;
+                    a = x * b;
+                    equation = `${b}x = ${a}`;
+                    break;
+                    
+                case 'divide':
+                    x = Math.floor(Math.random() * 20) + 2;
+                    b = Math.floor(Math.random() * 10) + 2;
+                    a = x * b;
+                    equation = `x ÷ ${b} = ${x}`;
+                    x = a;
+                    break;
+            }
+            
+            const playerData = gameState[`player${player}`];
+            playerData.currentAnswer = x;
+            
+            document.getElementById(`equation${player}`).textContent = equation;
+            generateOptions(player);
+        }
+        
+        function generateOptions(player) {
+            const playerData = gameState[`player${player}`];
+            playerData.options = [playerData.currentAnswer];
+            
+            while(playerData.options.length < 4) {
+                const offset = Math.floor(Math.random() * 30) - 15;
+                const wrongAnswer = playerData.currentAnswer + offset;
+                
+                if (offset !== 0 && !playerData.options.includes(wrongAnswer) && wrongAnswer > 0) {
+                    playerData.options.push(wrongAnswer);
+                }
+            }
+            
+            playerData.options.sort(() => Math.random() - 0.5);
+            
+            const options = document.querySelectorAll(`.option[data-player="${player}"] .answer-text`);
+            options.forEach((el, index) => {
+                el.textContent = playerData.options[index];
+            });
+            
+            document.querySelectorAll(`.option[data-player="${player}"]`).forEach(opt => {
+                opt.classList.remove('correct', 'incorrect');
+                opt.style.pointerEvents = 'auto';
+            });
+            
+            playerData.canAnswer = true;
+        }
+        
+        function setupKeyboard() {
+            const keyMap = {
+                'w': { player: 1, index: 0 },
+                'a': { player: 1, index: 1 },
+                's': { player: 1, index: 2 },
+                'd': { player: 1, index: 3 },
+                'ArrowUp': { player: 2, index: 0 },
+                'ArrowLeft': { player: 2, index: 1 },
+                'ArrowDown': { player: 2, index: 2 },
+                'ArrowRight': { player: 2, index: 3 }
+            };
+            
+            document.addEventListener('keydown', (e) => {
+                const key = keyMap[e.key.toLowerCase()] || keyMap[e.key];
+                if (!key) return;
+                
+                e.preventDefault();
+                selectAnswer(key.player, key.index);
+            });
+        }
+        
+        // 搖桿支援
+        let gamepads = {};
+        let gamepadCheckInterval = null;
+        
+        function setupGamepad() {
+            window.addEventListener('gamepadconnected', (e) => {
+                console.log('搖桿已連接:', e.gamepad.index);
+                gamepads[e.gamepad.index] = e.gamepad;
+                updateGamepadStatus();
+                
+                if (!gamepadCheckInterval) {
+                    gamepadCheckInterval = setInterval(pollGamepads, 100);
+                }
+            });
+            
+            window.addEventListener('gamepaddisconnected', (e) => {
+                console.log('搖桿已斷開:', e.gamepad.index);
+                delete gamepads[e.gamepad.index];
+                updateGamepadStatus();
+            });
+            
+            // 初始檢查
+            const existingGamepads = navigator.getGamepads ? navigator.getGamepads() : [];
+            for (let i = 0; i < existingGamepads.length; i++) {
+                if (existingGamepads[i]) {
+                    gamepads[i] = existingGamepads[i];
+                }
+            }
+            updateGamepadStatus();
+        }
+        
+        function updateGamepadStatus() {
+            const statusDiv = document.getElementById('gamepadStatus');
+            const gamepad1Status = document.getElementById('gamepad1Status');
+            const gamepad2Status = document.getElementById('gamepad2Status');
+            
+            const gamepadsArray = navigator.getGamepads ? navigator.getGamepads() : [];
+            const hasGamepad = gamepadsArray.some(gp => gp !== null);
+            
+            if (hasGamepad) {
+                statusDiv.classList.add('active');
+            } else {
+                statusDiv.classList.remove('active');
+            }
+            
+            if (gamepadsArray[0]) {
+                gamepad1Status.textContent = `玩家1: ✅ ${gamepadsArray[0].id.substring(0, 20)}...`;
+            } else {
+                gamepad1Status.textContent = '玩家1: ❌ 未連接';
+            }
+            
+            if (gamepadsArray[1]) {
+                gamepad2Status.textContent = `玩家2: ✅ ${gamepadsArray[1].id.substring(0, 20)}...`;
+            } else {
+                gamepad2Status.textContent = '玩家2: ❌ 未連接';
+            }
+        }
+        
+        let lastButtonStates = {};
+        
+        function pollGamepads() {
+            const gamepadsArray = navigator.getGamepads ? navigator.getGamepads() : [];
+            updateGamepadStatus();
+            
+            for (let i = 0; i < gamepadsArray.length; i++) {
+                const gamepad = gamepadsArray[i];
+                if (!gamepad) continue;
+                
+                const player = i + 1;
+                if (player > 2) continue;
+                
+                if (!lastButtonStates[i]) {
+                    lastButtonStates[i] = new Array(gamepad.buttons.length).fill(false);
+                }
+                
+                // 檢查按鈕（對應紅、藍、黃、綠）
+                // 按鈕 0-3 通常是 A, B, X, Y
+                const buttonMap = [0, 2, 1, 3]; // 對應紅(上)、藍(左)、黃(下)、綠(右)
+                
+                buttonMap.forEach((buttonIndex, optionIndex) => {
+                    if (gamepad.buttons[buttonIndex]) {
+                        const isPressed = gamepad.buttons[buttonIndex].pressed;
+                        const wasPressed = lastButtonStates[i][buttonIndex];
+                        
+                        if (isPressed && !wasPressed) {
+                            selectAnswer(player, optionIndex);
+                        }
+                        
+                        lastButtonStates[i][buttonIndex] = isPressed;
+                    }
+                });
+                
+                // 檢查方向鍵
+                const axes = gamepad.axes;
+                if (axes.length >= 2) {
+                    const horizontal = axes[0];
+                    const vertical = axes[1];
+                    
+                    const threshold = 0.5;
+                    
+                    // 上
+                    if (vertical < -threshold && !lastButtonStates[i]['up']) {
+                        selectAnswer(player, 0);
+                        lastButtonStates[i]['up'] = true;
+                    } else if (vertical > -threshold) {
+                        lastButtonStates[i]['up'] = false;
+                    }
+                    
+                    // 左
+                    if (horizontal < -threshold && !lastButtonStates[i]['left']) {
+                        selectAnswer(player, 1);
+                        lastButtonStates[i]['left'] = true;
+                    } else if (horizontal > -threshold) {
+                        lastButtonStates[i]['left'] = false;
+                    }
+                    
+                    // 下
+                    if (vertical > threshold && !lastButtonStates[i]['down']) {
+                        selectAnswer(player, 2);
+                        lastButtonStates[i]['down'] = true;
+                    } else if (vertical < threshold) {
+                        lastButtonStates[i]['down'] = false;
+                    }
+                    
+                    // 右
+                    if (horizontal > threshold && !lastButtonStates[i]['right']) {
+                        selectAnswer(player, 3);
+                        lastButtonStates[i]['right'] = true;
+                    } else if (horizontal < threshold) {
+                        lastButtonStates[i]['right'] = false;
+                    }
+                }
+            }
+        }
+        
+        function selectAnswer(player, index) {
+            const playerData = gameState[`player${player}`];
+            
+            if (!playerData.canAnswer) return;
+            
+            const answer = playerData.options[index];
+            const isCorrect = answer === playerData.currentAnswer;
+            
+            playerData.canAnswer = false;
+            
+            const selector = `.option[data-player="${player}"][data-index="${index}"]`;
+            const btn = document.querySelector(selector);
+            
+            if (isCorrect) {
+                playerData.combo++;
+                const points = 10 * playerData.combo;
+                playerData.score += points;
+                btn.classList.add('correct');
+                
+                document.getElementById(`combo${player}`).style.display = 'block';
+                document.getElementById(`comboNum${player}`).textContent = playerData.combo;
+            } else {
+                playerData.combo = 0;
+                playerData.score = Math.max(0, playerData.score - 5);
+                btn.classList.add('incorrect');
+                
+                document.getElementById(`combo${player}`).style.display = 'none';
+                
+                // 顯示正確答案
+                document.querySelectorAll(`.option[data-player="${player}"]`).forEach(opt => {
+                    const optAnswer = parseInt(opt.querySelector('.answer-text').textContent);
+                    if (optAnswer === playerData.currentAnswer) {
+                        opt.classList.add('correct');
+                    }
+                });
+            }
+            
+            document.getElementById(`score${player}`).textContent = playerData.score;
+            
+            // 禁用該玩家的所有選項
+            document.querySelectorAll(`.option[data-player="${player}"]`).forEach(opt => {
+                opt.style.pointerEvents = 'none';
+            });
+            
+            setTimeout(() => {
+                generateQuestion(player);
+            }, 1000);
+        }
+        
+        function endGame() {
+            clearInterval(gameState.timerInterval);
+            if (gamepadCheckInterval) {
+                clearInterval(gamepadCheckInterval);
+                gamepadCheckInterval = null;
+            }
+            document.getElementById('gameContainer').classList.remove('active');
+            document.getElementById('resultScreen').classList.add('active');
+            
+            document.getElementById('finalScore1').textContent = gameState.player1.score;
+            document.getElementById('finalScore2').textContent = gameState.player2.score;
+            
+            if (gameState.player1.score > gameState.player2.score) {
+                document.getElementById('winnerText').textContent = '玩家 1 獲勝！';
+                document.getElementById('winnerEmoji').textContent = '🔴';
+            } else if (gameState.player2.score > gameState.player1.score) {
+                document.getElementById('winnerText').textContent = '玩家 2 獲勝！';
+                document.getElementById('winnerEmoji').textContent = '🔵';
+            } else {
+                document.getElementById('winnerText').textContent = '平手！';
+                document.getElementById('winnerEmoji').textContent = '🤝';
+            }
+        }
+    </script>
+</body>
+</html>
