@@ -3,703 +3,692 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>數學花園 Pikmin Math Bloom</title>
-    <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
+    <title>皮克敏函數大進擊</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bloom-bg: #f5f7f9; /* 乾淨的灰白底 */
-            --bloom-ui: #ffffff;
-            --primary-green: #8bc34a;
-            --flower-pink: #f48fb1;
-            --pikmin-red: #e53935;
-            --pikmin-yellow: #fdd835;
-            --pikmin-blue: #1e88e5;
-            --text-dark: #37474f;
+            --pikmin-red: #ff3d00;
+            --pikmin-yellow: #ffea00;
+            --pikmin-blue: #2979ff;
+            --leaf-green: #64dd17;
+            --earth-brown: #5d4037;
+            --bg-top: #8d6e63;
+            --bg-bot: #33691e;
         }
+
+        * { box-sizing: border-box; }
 
         body {
-            font-family: 'Varela Round', sans-serif;
-            background-color: var(--bloom-bg);
+            font-family: 'Nunito', Arial, sans-serif;
+            background: linear-gradient(to bottom, var(--bg-top) 0%, var(--bg-bot) 100%);
             margin: 0;
             padding: 0;
-            color: var(--text-dark);
+            color: #333;
+            height: 100vh;
+            width: 100vw;
             overflow: hidden;
+            display: flex;
+            justify-content: center;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 600px;
+            height: 100%;
             display: flex;
             flex-direction: column;
             align-items: center;
-            height: 100vh;
-            touch-action: none;
+            position: relative;
         }
 
-        /* === 頂部計步器風格 HUD === */
-        .header {
-            width: 100%;
-            background: var(--bloom-ui);
-            padding: 15px 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        /* HUD */
+        .hud {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            box-sizing: border-box;
+            width: 95%;
+            padding: 10px 0;
             z-index: 10;
         }
+        .hud-item {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 5px 10px;
+            border-radius: 20px;
+            text-align: center;
+            font-weight: 900;
+            box-shadow: 0 4px rgba(0,0,0,0.2);
+            border: 2px solid #aed581;
+            flex: 1;
+            margin: 0 5px;
+            font-size: 14px;
+        }
+        .hud-item span { display: block; font-size: 18px; color: var(--pikmin-red); }
         
-        .step-counter {
+        /* 關卡標籤 */
+        .level-badge {
+            position: absolute;
+            top: 60px;
+            background: var(--pikmin-yellow);
+            color: #333;
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-weight: 900;
+            box-shadow: 0 3px rgba(0,0,0,0.2);
+            z-index: 5;
+            font-size: 14px;
+            border: 2px solid #fff;
+        }
+
+        /* 題目區 */
+        .question-box {
+            background: #dcedc8;
+            border: 4px solid #fff;
+            border-radius: 20px;
+            padding: 10px;
+            margin-top: 35px;
+            margin-bottom: 5px;
+            text-align: center;
+            width: 95%;
+            font-weight: 900;
+            color: #33691e;
+            box-shadow: 0 4px rgba(0,0,0,0.1);
             display: flex;
             flex-direction: column;
+            justify-content: center;
+            align-items: center;
         }
-        .step-label { font-size: 12px; color: #90a4ae; font-weight: bold; letter-spacing: 1px;}
-        .step-value { font-size: 28px; font-weight: 900; color: var(--text-dark); }
-        .step-icon { color: var(--flower-pink); margin-right: 5px; }
-
-        .timer-badge {
-            background: #eceff1;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-weight: bold;
-            color: #546e7a;
+        .highlight {
+            background: #fff;
+            padding: 2px 8px;
+            border-radius: 10px;
+            color: var(--pikmin-blue);
+            border: 2px solid #aed581;
+            font-size: 20px;
+            margin: 0 5px;
         }
 
-        /* === 遊戲畫布區 === */
-        .map-container {
+        /* 畫布 */
+        .game-area {
             position: relative;
-            flex-grow: 1;
-            width: 100%;
-            background: #fff; /* 地圖底色 */
-            /* 模擬地圖網格 */
-            background-image: 
-                linear-gradient(#f0f0f0 1px, transparent 1px),
-                linear-gradient(90deg, #f0f0f0 1px, transparent 1px);
-            background-size: 20px 20px;
+            background: #fff;
+            border: 5px solid #fff;
+            border-radius: 0 0 25px 25px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            width: 95%;
+            flex-shrink: 1;
+            margin-bottom: 10px;
             overflow: hidden;
             display: flex;
             justify-content: center;
             align-items: center;
         }
-        
         canvas {
-            background: transparent;
-        }
-
-        /* === 底部操作面板 (模仿 App 下方選單) === */
-        .control-dock {
+            background-color: #f1f8e9; /* 淺色草地 */
+            display: block;
             width: 100%;
-            background: var(--bloom-ui);
+        }
+
+        /* 控制區 */
+        .control-panel {
+            flex-grow: 1;
+            width: 100%;
+            background-color: rgba(255,255,255,0.95);
+            padding: 10px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border-top: 6px solid var(--earth-brown);
             border-radius: 30px 30px 0 0;
-            box-shadow: 0 -5px 20px rgba(0,0,0,0.05);
-            padding: 20px;
-            box-sizing: border-box;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            position: relative;
-            z-index: 20;
+            overflow-y: auto;
         }
 
-        /* 題目指示卡片 */
-        .task-bubble {
-            background: var(--primary-green);
-            color: white;
-            padding: 8px 20px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: bold;
-            position: absolute;
-            top: -20px;
-            box-shadow: 0 4px 10px rgba(139, 195, 74, 0.4);
-        }
-
-        .equation-display {
-            font-size: 24px;
+        /* 按鈕樣式 */
+        .key {
+            background: #fff;
+            border: none;
+            box-shadow: 0 4px #b0bec5;
+            font-size: 20px;
             font-weight: 900;
-            margin: 15px 0;
-            color: var(--text-dark);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .var-highlight {
-            background: #e3f2fd;
-            color: #1565c0;
-            padding: 2px 10px;
-            border-radius: 8px;
-            border: 2px dashed #90caf9;
-        }
-
-        /* LEVEL 1: 花瓣按鈕鍵盤 */
-        #level1-controls { display: none; width: 100%; max-width: 400px; }
-        
-        .flower-keypad {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-        }
-        
-        .petal-btn {
-            background: #fce4ec; /* 淺粉紅 */
-            border: none;
-            height: 50px;
-            border-radius: 25px;
-            font-size: 18px;
-            font-weight: bold;
-            color: #d81b60;
-            cursor: pointer;
-            transition: transform 0.1s;
-        }
-        .petal-btn:active { transform: scale(0.95); background: #f8bbd0; }
-        
-        .btn-plant {
-            grid-column: span 2;
-            background: var(--primary-green);
-            color: white;
-            box-shadow: 0 4px #689f38;
-        }
-        .btn-plant:active { box-shadow: 0 0 #689f38; transform: translateY(4px); }
-
-        /* LEVEL 2: 戰鬥卡片 */
-        #level2-controls { display: none; width: 100%; flex-direction: column; gap: 10px;}
-        
-        .squad-card {
-            background: white;
-            border: 2px solid #eceff1;
-            border-radius: 15px;
-            padding: 15px;
-            display: flex;
-            align-items: center;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .squad-card:active { transform: scale(0.98); border-color: var(--text-dark); }
-        .squad-icon {
-            width: 40px; height: 40px;
             border-radius: 50%;
-            display: flex; justify-content: center; align-items: center;
-            font-size: 20px;
-            margin-right: 15px;
-            color: white;
-            font-weight: bold;
-        }
-        .squad-red { background: var(--pikmin-red); }
-        .squad-yellow { background: var(--pikmin-yellow); }
-        .squad-blue { background: var(--pikmin-blue); }
-        
-        .squad-info { font-size: 18px; font-weight: bold; color: var(--text-dark); }
-
-        /* 遮罩畫面 (模仿 App 啟動) */
-        #overlay {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255, 255, 255, 0.98);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-            text-align: center;
-        }
-        
-        .app-logo {
-            width: 100px; height: 100px;
-            background: var(--flower-pink);
-            border-radius: 30px;
-            display: flex; justify-content: center; align-items: center;
-            font-size: 50px; color: white;
-            margin-bottom: 20px;
-            box-shadow: 0 10px 20px rgba(244, 143, 177, 0.4);
-        }
-
-        .btn-start {
-            margin-top: 30px;
-            padding: 15px 50px;
-            font-size: 20px;
-            font-weight: bold;
-            color: white;
-            background: var(--primary-green);
-            border: none;
-            border-radius: 50px;
-            box-shadow: 0 5px 15px rgba(139, 195, 74, 0.4);
             cursor: pointer;
+            color: #455a64;
+            width: 100%; height: 100%;
+        }
+        .key:active { transform: translateY(2px); box-shadow: 0 1px #b0bec5; }
+        .key-enter { grid-column: span 2; background: var(--pikmin-red); color: white; border-radius: 30px; box-shadow: 0 4px #d50000;}
+        .key-enter:active { box-shadow: 0 2px #d50000; }
+
+        /* Level 1 */
+        #level1-controls { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; }
+        #displayInput {
+            width: 60%; height: 50px;
+            background: #fff; color: var(--pikmin-red);
+            font-size: 28px; font-weight: 900;
+            border: 3px solid var(--pikmin-yellow);
+            border-radius: 25px; margin-bottom: 10px;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .keypad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; width: 90%; height: 100%; max-height: 280px; }
+
+        /* Level 2 */
+        #level2-controls { display: none; width: 100%; flex-direction: column; align-items: center; padding: 10px; height: 100%; }
+        .option-btn {
+            width: 95%; margin-bottom: 12px; padding: 15px;
+            font-size: 18px; font-weight: 900; color: white;
+            border: none; border-radius: 25px; cursor: pointer;
+            box-shadow: 0 4px rgba(0,0,0,0.2);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .opt-red { background-color: var(--pikmin-red); }
+        .opt-yellow { background-color: var(--pikmin-yellow); color: #333; }
+        .opt-blue { background-color: var(--pikmin-blue); }
+
+        /* 遮罩 */
+        #overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(51, 105, 30, 0.98);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 100; text-align: center; color: white;
+        }
+        .btn-start {
+            margin-top: 25px; padding: 15px 40px;
+            font-size: 22px; font-weight: 900;
+            background: var(--pikmin-yellow); color: #333;
+            border: 4px solid #fff; border-radius: 40px; cursor: pointer;
+            box-shadow: 0 5px rgba(0,0,0,0.3);
         }
 
-        /* 浮動訊息 */
-        .toast {
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0,0,0,0.8);
-            color: white;
-            padding: 15px 30px;
-            border-radius: 30px;
-            font-weight: bold;
-            display: none;
-            z-index: 50;
+        #message {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 24px; font-weight: 900; color: #fff;
+            padding: 15px 30px; border-radius: 20px; display: none; z-index: 50;
+            white-space: nowrap; box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            border: 3px solid #fff;
         }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <div class="step-counter">
-            <span class="step-label">TOTAL FLOWERS</span>
-            <div style="display:flex; align-items:center;">
-                <span class="step-icon">🌸</span>
-                <span class="step-value" id="scoreDisplay">0</span>
-            </div>
-        </div>
-        <div class="timer-badge">
-            ⏱ <span id="timeDisplay">--:--</span>
-        </div>
+<div class="app-container">
+    <div class="hud">
+        <div class="hud-item score">Poko<br><span id="scoreDisplay">0</span></div>
+        <div class="hud-item">失誤<br><span id="strikeDisplay">0</span>/3</div>
+        <div class="hud-item">時間<br><span id="timeDisplay">--</span></div>
     </div>
 
-    <div class="map-container">
-        <canvas id="gameCanvas" width="340" height="340"></canvas> <div class="toast" id="message"></div>
+    <div id="levelBadge" class="level-badge">LEVEL 1</div>
+
+    <div class="question-box">
+        <div id="qText" style="font-size:12px; margin-bottom:2px; opacity:0.8;"></div>
+        <div id="qContent"></div>
     </div>
 
-    <div class="control-dock">
-        <div class="task-bubble" id="levelLabel">準備開始...</div>
+    <div class="game-area" id="canvasContainer">
+        <canvas id="gameCanvas"></canvas>
+        <div id="message"></div>
+    </div>
 
-        <div class="equation-display" id="questionArea">
-            </div>
-
+    <div class="control-panel">
         <div id="level1-controls">
-            <div class="flower-keypad">
-                <button class="petal-btn" onclick="inputL1('1')">1</button>
-                <button class="petal-btn" onclick="inputL1('2')">2</button>
-                <button class="petal-btn" onclick="inputL1('3')">3</button>
-                <button class="petal-btn" onclick="inputL1('-')">-</button>
-                
-                <button class="petal-btn" onclick="inputL1('4')">4</button>
-                <button class="petal-btn" onclick="inputL1('5')">5</button>
-                <button class="petal-btn" onclick="inputL1('6')">6</button>
-                <button class="petal-btn" onclick="inputL1('C')">C</button>
-                
-                <button class="petal-btn" onclick="inputL1('7')">7</button>
-                <button class="petal-btn" onclick="inputL1('8')">8</button>
-                <button class="petal-btn" onclick="inputL1('9')">9</button>
-                <button class="petal-btn" onclick="inputL1('0')">0</button>
-                
-                <button class="petal-btn btn-plant" id="btnPlant" onclick="submitL1()">種花 Plant</button>
-                <button class="petal-btn btn-plant" id="btnNextL1" onclick="nextQ1()" style="display:none; background:#29b6f6;">繼續 Continue</button>
+            <div id="displayInput">?</div>
+            <div class="keypad">
+                <button class="key" onclick="inputNum('1')">1</button>
+                <button class="key" onclick="inputNum('2')">2</button>
+                <button class="key" onclick="inputNum('3')">3</button>
+                <button class="key" style="background:var(--pikmin-blue); color:white;" onclick="inputNum('-')">-</button>
+                <button class="key" onclick="inputNum('4')">4</button>
+                <button class="key" onclick="inputNum('5')">5</button>
+                <button class="key" onclick="inputNum('6')">6</button>
+                <button class="key" style="background:#546e7a; color:white;" onclick="inputNum('C')">←</button>
+                <button class="key" onclick="inputNum('7')">7</button>
+                <button class="key" onclick="inputNum('8')">8</button>
+                <button class="key" onclick="inputNum('9')">9</button>
+                <button class="key" onclick="inputNum('0')">0</button>
+                <button class="key key-enter" id="l1-submit" onclick="submitLevel1()">呼叫皮克敏</button>
+                <button class="key key-enter" id="l1-next" onclick="nextLevel1Question()" style="display:none; background:var(--pikmin-blue);">尋找下隻怪物</button>
             </div>
         </div>
 
         <div id="level2-controls">
-            <div style="font-size:14px; color:#78909c; margin-bottom:5px;">Select Squad (Equation)</div>
-            <div class="squad-card" onclick="checkL2(0)">
-                <div class="squad-icon squad-red">R</div>
-                <div class="squad-info" id="opt0">y = 2x</div>
-            </div>
-            <div class="squad-card" onclick="checkL2(1)">
-                <div class="squad-icon squad-yellow">Y</div>
-                <div class="squad-info" id="opt1">y = x + 1</div>
-            </div>
-            <div class="squad-card" onclick="checkL2(2)">
-                <div class="squad-icon squad-blue">B</div>
-                <div class="squad-info" id="opt2">y = -x</div>
-            </div>
-            <button class="btn-start" id="btnNextL2" onclick="nextQ2()" style="display:none; width:100%; margin-top:0;">尋找下一個蘑菇</button>
+            <div style="font-size:16px; margin-bottom:15px; color:#33691e; font-weight:bold;">選擇正確的路徑進攻：</div>
+            <button class="option-btn opt-red" onclick="checkLevel2(0)">
+                <span class="opt-icon">🔴</span> <span id="opt-0-text">Option A</span>
+            </button>
+            <button class="option-btn opt-yellow" onclick="checkLevel2(1)">
+                <span class="opt-icon">🟡</span> <span id="opt-1-text">Option B</span>
+            </button>
+            <button class="option-btn opt-blue" onclick="checkLevel2(2)">
+                <span class="opt-icon">🔵</span> <span id="opt-2-text">Option C</span>
+            </button>
+            <button class="option-btn" id="l2-next" onclick="nextLevel2Question()" style="display:none; background:#558b2f; justify-content:center;">下一關 ▶</button>
         </div>
     </div>
+</div>
 
-    <div id="overlay">
-        <div class="app-logo">P</div>
-        <h1 style="color:#455a64; margin:0;">Pikmin<br>Math Bloom</h1>
-        <p id="ov-desc" style="color:#90a4ae; margin-top:10px;">一起散步種花學函數吧！</p>
-        <button class="btn-start" id="startBtn" onclick="startLevel1()">Let's Walk!</button>
-    </div>
+<div id="overlay">
+    <h1 id="ov-title" style="color:#ffea00; margin-bottom:10px; font-size:36px; text-shadow: 2px 2px #33691e;">皮克敏<br>函數大進擊</h1>
+    <p id="ov-desc" style="font-size:18px; margin-bottom:20px;">用數學來指揮皮克敏戰鬥吧！</p>
+    <button id="ov-btn" class="btn-start" onclick="initLevel1()">開始探險</button>
+</div>
 
 <script>
-    // --- 變數與設定 ---
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
-    const msg = document.getElementById('message');
+    const canvasContainer = document.getElementById('canvasContainer');
+    const msgDiv = document.getElementById('message');
+    const overlay = document.getElementById('overlay');
     
-    let scale = 20;
-    let centerX = canvas.width / 2;
-    let centerY = canvas.height / 2;
-    
-    let score = 0; // 花朵數量
-    let timeLeft = 0;
-    let timer = null;
-    let level = 1;
-    let isPlaying = false;
+    // 遊戲狀態
+    let currentLevel = 1; 
+    let score = 0;
     let strikes = 0;
-
-    // L1 Data
-    let l1_m, l1_b, l1_x, l1_ans, l1_input = "";
+    let timeLeft = 0;
+    let timerInterval = null;
+    let isGameActive = false;
     
-    // L2 Data
-    let l2_m, l2_b, l2_opts = [], l2_ansIdx = 0;
+    // 繪圖參數
+    let scale = 15;
+    let centerX = 170;
+    let centerY = 120;
+    
+    // 題目資料
+    let l1_slope, l1_intercept, l1_targetX, l1_correctY, l1_input = "";
+    let l2_slope, l2_intercept, l2_options = [], l2_correctIndex = 0;
 
-    // --- 核心邏輯 ---
+    // RWD
+    function resizeCanvas() {
+        const containerWidth = canvasContainer.clientWidth;
+        canvas.width = containerWidth;
+        canvas.height = containerWidth * 0.75;
+        centerX = canvas.width / 2;
+        centerY = canvas.height / 2;
+        scale = canvas.width / 22; 
+        
+        if (currentLevel === 1 && isGameActive) drawLevel1Scene(null);
+        else if (currentLevel === 2 && isGameActive) drawLevel2Scene(false);
+    }
+    window.addEventListener('resize', resizeCanvas);
 
-    function startLevel1() {
-        level = 1;
-        score = 0;
-        strikes = 0;
-        timeLeft = 120; // 2分鐘
-        
-        document.getElementById('overlay').style.display = 'none';
-        document.getElementById('levelLabel').innerText = "LEVEL 1: 散步種花";
-        document.getElementById('level1-controls').style.display = 'block';
-        document.getElementById('level2-controls').style.display = 'none';
-        
-        isPlaying = true;
-        startTimer(finishLevel1);
-        nextQ1();
+    // --- 輔助函式 ---
+    function showMsg(text, color) {
+        msgDiv.innerText = text;
+        msgDiv.style.backgroundColor = color;
+        msgDiv.style.display = 'block';
     }
 
-    function finishLevel1() {
-        isPlaying = false;
-        clearInterval(timer);
-        showOverlay("散步結束", `種植了 ${score} 朵花！\n準備好去打蘑菇了嗎？`, "Go Expedition", startLevel2);
+    function updateHUD() {
+        document.getElementById('scoreDisplay').innerText = score;
+        document.getElementById('strikeDisplay').innerText = strikes;
+        document.getElementById('timeDisplay').innerText = timeLeft;
     }
 
-    function startLevel2() {
-        level = 2;
-        strikes = 0; // 重置失誤
-        timeLeft = 180; // 3分鐘
-        
-        document.getElementById('overlay').style.display = 'none';
-        document.getElementById('levelLabel').innerText = "LEVEL 2: 蘑菇挑戰";
-        document.getElementById('levelLabel').style.background = "#9c27b0"; // 紫色
-        document.getElementById('level1-controls').style.display = 'none';
-        document.getElementById('level2-controls').style.display = 'flex';
-        
-        isPlaying = true;
-        startTimer(finishLevel2);
-        nextQ2();
-    }
-
-    function finishLevel2() {
-        isPlaying = false;
-        clearInterval(timer);
-        showOverlay("每日回顧", `你今天種了 ${score} 朵花！\n真是充實的一天。`, "明天見 (Restart)", () => location.reload());
-    }
-
-    function startTimer(callback) {
-        if(timer) clearInterval(timer);
-        updateUI();
-        timer = setInterval(() => {
-            if(!isPlaying) return;
+    function startTimer(seconds, onFinish) {
+        if (timerInterval) clearInterval(timerInterval);
+        timeLeft = seconds;
+        updateHUD();
+        timerInterval = setInterval(() => {
+            if(!isGameActive) return;
             timeLeft--;
-            updateUI();
-            if(timeLeft <= 0) {
-                callback();
+            updateHUD();
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                onFinish();
             }
         }, 1000);
     }
 
-    function showOverlay(title, desc, btnText, action) {
-        document.getElementById('overlay').style.display = 'flex';
-        document.querySelector('#overlay h1').innerText = title;
-        document.querySelector('#ov-desc').innerText = desc;
-        let btn = document.getElementById('startBtn');
-        btn.innerText = btnText;
-        btn.onclick = action;
+    function gameOver(reason) {
+        isGameActive = false;
+        clearInterval(timerInterval);
+        overlay.style.display = 'flex';
+        document.getElementById('ov-title').innerText = "任務結束";
+        document.getElementById('ov-desc').innerText = reason + "\n最終 Poko: " + score;
+        document.getElementById('ov-btn').innerText = "重新挑戰";
+        document.getElementById('ov-btn').onclick = initLevel1;
     }
 
-    function updateUI() {
-        document.getElementById('scoreDisplay').innerText = score;
-        let m = Math.floor(timeLeft / 60);
-        let s = timeLeft % 60;
-        document.getElementById('timeDisplay').innerText = `${m}:${s<10?'0':''}${s}`;
-    }
+    // --- 繪圖精靈 (Sprites) ---
+    
+    // 畫皮克敏
+    function drawPikminSprite(x, y, color, type) {
+        ctx.save();
+        ctx.translate(x, y);
 
-    function showToast(text, color) {
-        msg.innerText = text;
-        msg.style.display = 'block';
-        msg.style.background = color;
-        setTimeout(() => msg.style.display = 'none', 1500);
-    }
+        // 葉子/花梗
+        ctx.beginPath();
+        ctx.moveTo(0, -6); ctx.lineTo(0, -14);
+        ctx.strokeStyle = "#64dd17"; ctx.lineWidth = 2; ctx.stroke();
 
-    // --- Level 1 Logic ---
-
-    function nextQ1() {
-        l1_input = "";
-        document.getElementById('btnPlant').style.display = 'grid'; // span 2
-        document.getElementById('btnNextL1').style.display = 'none';
-        
-        l1_m = Math.floor(Math.random() * 5) - 2; 
-        if(l1_m===0) l1_m = 1; // 避免常數函數太無聊
-        l1_b = Math.floor(Math.random() * 7) - 3;
-        l1_x = Math.floor(Math.random() * 7) - 3;
-        l1_ans = l1_m * l1_x + l1_b;
-
-        // 格式化顯示
-        let sign = l1_b >= 0 ? "+" : "-";
-        let eq = `y = ${l1_m}x ${sign} ${Math.abs(l1_b)}`;
-        if(l1_m===0) eq = `y = ${l1_b}`;
-        else if(l1_m===1) eq = `y = x ${sign} ${Math.abs(l1_b)}`;
-        else if(l1_m===-1) eq = `y = -x ${sign} ${Math.abs(l1_b)}`;
-        else if(l1_b===0) eq = `y = ${l1_m}x`;
-
-        document.getElementById('questionArea').innerHTML = 
-            `<span>${eq}</span> <span style="font-size:16px; color:#aaa;">|</span> <span>x = ${l1_x}</span> <span style="font-size:16px; color:#aaa;">→</span> <div class="var-highlight" id="inputDisplay">?</div>`;
-
-        drawL1Scene(null);
-    }
-
-    function inputL1(key) {
-        if(!isPlaying || level !== 1) return;
-        if(key === 'C') l1_input = "";
-        else if(key === '-') {
-            if(l1_input === "") l1_input = "-";
-            else if(l1_input === "-") l1_input = "";
-        } else {
-            if(l1_input.length < 4) l1_input += key;
-        }
-        document.getElementById('inputDisplay').innerText = l1_input === "" ? "?" : l1_input;
-    }
-
-    function submitL1() {
-        if(l1_input === "" || l1_input === "-") return;
-        let val = parseInt(l1_input);
-        
-        let correct = (val === l1_ans);
-        drawL1Scene(val, correct);
-
-        if(correct) {
-            score += 50; // 種花獎勵
-            showToast("Big Flower Bloomed!", "#8bc34a");
-        } else {
-            strikes++;
-            showToast("Missed...", "#e53935");
-            if(strikes >= 3) {
-                isPlaying = false;
-                setTimeout(() => showOverlay("體力耗盡", "皮克敏累壞了...", "重試", startLevel1), 1000);
-                return;
+        // 葉子/花
+        if(type === 'flower') {
+            ctx.fillStyle = "#fff";
+            for(let i=0; i<5; i++) {
+                ctx.beginPath();
+                ctx.ellipse(0, -14, 3, 5, i*(Math.PI*2/5), 0, Math.PI*2);
+                ctx.fill();
             }
+            ctx.fillStyle = "#ffea00"; ctx.beginPath(); ctx.arc(0, -14, 2, 0, Math.PI*2); ctx.fill();
+        } else {
+            // 葉子
+            ctx.fillStyle = "#64dd17";
+            ctx.beginPath(); ctx.ellipse(0, -14, 4, 2, Math.PI/4, 0, Math.PI*2); ctx.fill();
         }
-        updateUI();
+
+        // 頭
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        // 皮克敏的頭有點像水滴型
+        ctx.ellipse(0, 0, 7, 8, 0, 0, Math.PI*2); 
+        ctx.fill();
         
-        document.getElementById('btnPlant').style.display = 'none';
-        document.getElementById('btnNextL1').style.display = 'grid';
+        // 眼睛
+        ctx.fillStyle = "white";
+        ctx.beginPath(); ctx.arc(-2.5, -1, 2.5, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(2.5, -1, 2.5, 0, Math.PI*2); ctx.fill();
+        
+        // 眼珠
+        ctx.fillStyle = "black";
+        ctx.beginPath(); ctx.arc(-2.5, -1, 1, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(2.5, -1, 1, 0, Math.PI*2); ctx.fill();
+
+        // 鼻子/嘴巴 (根據顏色不同)
+        if(color === '#ffea00') { // 黃色有耳朵
+            ctx.fillStyle = color;
+            ctx.beginPath(); ctx.ellipse(-8, 0, 2, 3, -0.2, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.ellipse(8, 0, 2, 3, 0.2, 0, Math.PI*2); ctx.fill();
+        } else if (color === '#ff3d00') { // 紅色有鼻子
+            ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(4, 2); ctx.stroke();
+        } else if (color === '#2979ff') { // 藍色有嘴巴
+             ctx.strokeStyle = "#pink"; ctx.beginPath(); ctx.arc(0, 2, 2, 0, Math.PI); ctx.stroke();
+        }
+
+        ctx.restore();
     }
 
-    function drawL1Scene(userY, isCorrect) {
-        ctx.clearRect(0,0,canvas.width, canvas.height);
-        drawAxes();
+    // 畫原生生物 (恰比 Bulborb)
+    function drawBulborb(x, y) {
+        ctx.save();
+        ctx.translate(x, y);
 
-        // 畫出目標 X 線
-        let px = centerX + l1_x * scale;
-        ctx.strokeStyle = "rgba(0,0,0,0.1)";
-        ctx.setLineDash([5,5]); ctx.beginPath(); ctx.moveTo(px, 0); ctx.lineTo(px, canvas.height); ctx.stroke(); ctx.setLineDash([]);
+        // 身體 (紅色背部)
+        ctx.fillStyle = "#d50000";
+        ctx.beginPath(); ctx.arc(0, 0, 14, 0, Math.PI*2); ctx.fill();
+        
+        // 白斑
+        ctx.fillStyle = "white";
+        ctx.beginPath(); ctx.arc(-5, -6, 3, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(6, -2, 4, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(-2, 6, 2, 0, Math.PI*2); ctx.fill();
 
-        // 畫出皮克敏種子/圖示
-        drawSeedling(px, centerY);
+        // 臉 (米色)
+        ctx.fillStyle = "#ffe0b2";
+        ctx.beginPath(); ctx.arc(-8, 5, 8, 0, Math.PI*2); ctx.fill();
 
-        if(userY !== null) {
-            // 畫線
+        // 眼睛 (凸出來)
+        ctx.fillStyle = "white";
+        ctx.beginPath(); ctx.arc(-6, -6, 4, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(4, -6, 4, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = "black";
+        ctx.beginPath(); ctx.arc(-6, -6, 1.5, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(4, -6, 1.5, 0, Math.PI*2); ctx.fill();
+
+        ctx.restore();
+    }
+
+    function drawGrid() {
+        ctx.strokeStyle = "rgba(0,0,0,0.1)"; ctx.lineWidth=1;
+        for(let x=centerX; x<=canvas.width; x+=scale) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,canvas.height); ctx.stroke(); }
+        for(let x=centerX; x>=0; x-=scale) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,canvas.height); ctx.stroke(); }
+        for(let y=centerY; y<=canvas.height; y+=scale) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(canvas.width,y); ctx.stroke(); }
+        for(let y=centerY; y>=0; y-=scale) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(canvas.width,y); ctx.stroke(); }
+        
+        ctx.strokeStyle = "#5d4037"; ctx.lineWidth=2;
+        ctx.beginPath(); ctx.moveTo(0,centerY); ctx.lineTo(canvas.width,centerY); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(centerX,0); ctx.lineTo(centerX,canvas.height); ctx.stroke();
+    }
+
+    // --- Level 1 ---
+    function initLevel1() {
+        currentLevel = 1; score = 0; strikes = 0;
+        overlay.style.display = 'none';
+        document.getElementById('levelBadge').innerText = "LEVEL 1: 瞄準恰比";
+        document.getElementById('levelBadge').style.background = "#ffea00";
+        document.getElementById('level1-controls').style.display = 'flex';
+        document.getElementById('level2-controls').style.display = 'none';
+        resizeCanvas();
+        isGameActive = true;
+        startTimer(120, finishLevel1);
+        nextLevel1Question();
+    }
+
+    function finishLevel1() {
+        isGameActive = false; clearInterval(timerInterval);
+        overlay.style.display = 'flex';
+        document.getElementById('ov-title').innerText = "第一關 通過!";
+        document.getElementById('ov-desc').innerText = "目前 Poko: " + score;
+        document.getElementById('ov-btn').innerText = "前往蘑菇戰場";
+        document.getElementById('ov-btn').onclick = initLevel2;
+    }
+
+    function nextLevel1Question() {
+        isGameActive = true; l1_input = "";
+        document.getElementById('displayInput').innerText = "?";
+        msgDiv.style.display = 'none';
+        document.getElementById('l1-submit').style.display = 'grid';
+        document.getElementById('l1-next').style.display = 'none';
+
+        l1_slope = Math.floor(Math.random() * 5) - 2; if(l1_slope===0) l1_slope=1;
+        l1_intercept = Math.floor(Math.random() * 9) - 4;
+        l1_targetX = Math.floor(Math.random() * 9) - 4;
+        l1_correctY = l1_slope * l1_targetX + l1_intercept;
+
+        let sign = l1_intercept >= 0 ? "+ " : "- ";
+        let eq = `y = ${l1_slope}x ${sign} ${Math.abs(l1_intercept)}`;
+        if(l1_slope===0) eq=`y=${l1_intercept}`;
+        else if(l1_slope===1) eq=`y=x ${sign} ${Math.abs(l1_intercept)}`;
+        else if(l1_slope===-1) eq=`y=-x ${sign} ${Math.abs(l1_intercept)}`;
+        else if(l1_intercept===0) eq=`y=${l1_slope}x`;
+
+        document.getElementById('qText').innerText = "發現原生生物！";
+        document.getElementById('qContent').innerHTML = `<span class="highlight">${eq}</span> 目標 <span class="highlight">x=${l1_targetX}</span>`;
+        drawLevel1Scene(null);
+    }
+
+    function inputNum(key) {
+        if(!isGameActive || currentLevel !== 1) return;
+        if (key === 'C') l1_input = l1_input.slice(0, -1);
+        else if (key === '-') {
+            if (l1_input === "") l1_input = "-"; else if (l1_input === "-") l1_input = "";
+        } else { if (l1_input.length < 4) l1_input += key; }
+        document.getElementById('displayInput').innerText = l1_input === "" ? "?" : l1_input;
+    }
+
+    function submitLevel1() {
+        if (l1_input === "" || l1_input === "-") return;
+        isGameActive = false;
+        let val = parseInt(l1_input);
+        drawLevel1Scene(val);
+
+        if (val === l1_correctY) {
+            score += 100; showMsg("命中! 開花了!", "#64dd17");
+        } else {
+            strikes++; showMsg("沒丟中...", "#d50000");
+        }
+        updateHUD();
+
+        if (strikes >= 3) {
+            setTimeout(() => gameOver("皮克敏受傷過多撤退"), 1000);
+        } else {
+            document.getElementById('l1-submit').style.display = 'none';
+            document.getElementById('l1-next').style.display = 'grid';
+        }
+    }
+
+    function drawLevel1Scene(userY) {
+        ctx.fillStyle = "#f1f8e9"; ctx.fillRect(0,0,canvas.width,canvas.height);
+        drawGrid();
+
+        let px = centerX + l1_targetX * scale;
+        
+        // 目標線
+        ctx.strokeStyle = "rgba(213, 0, 0, 0.3)";
+        ctx.setLineDash([5,5]); ctx.beginPath(); ctx.moveTo(px,0); ctx.lineTo(px,canvas.height); ctx.stroke(); ctx.setLineDash([]);
+        
+        // 畫原生生物 (目標)
+        drawBulborb(px, centerY);
+
+        if (userY !== null) {
+            let py = centerY - userY * scale;
+            let isCorrect = (userY === l1_correctY);
+            
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = isCorrect ? "#64dd17" : "#b0bec5";
             ctx.beginPath();
-            let x1 = -10, y1 = l1_m*x1+l1_b;
-            let x2 = 10, y2 = l1_m*x2+l1_b;
+            let xStart = -20; let yStart = l1_slope*xStart + l1_intercept;
+            let xEnd = 20; let yEnd = l1_slope*xEnd + l1_intercept;
             
             if(isCorrect) {
-                // 答對：畫出種滿花的路徑
-                ctx.strokeStyle = "rgba(139, 195, 74, 0.5)"; ctx.lineWidth = 10;
-                ctx.moveTo(centerX+x1*scale, centerY-y1*scale);
-                ctx.lineTo(centerX+x2*scale, centerY-y2*scale);
+                // 畫正確的拋物線或直線軌跡
+                ctx.moveTo(centerX+xStart*scale, centerY-yStart*scale);
+                ctx.lineTo(centerX+xEnd*scale, centerY-yEnd*scale);
                 ctx.stroke();
                 
-                // 在正確點畫大花
-                let py = centerY - l1_ans * scale;
-                drawBigFlower(px, py);
-                
-                // 沿途畫小花
-                for(let i=0.2; i<0.8; i+=0.2) {
-                    let mx = centerX + (x1 + (x2-x1)*i) * scale;
-                    let my = centerY - (y1 + (y2-y1)*i) * scale;
-                    drawSmallFlower(mx, my);
-                }
-
+                // 皮克敏黏在敵人身上攻擊
+                drawPikminSprite(px, py, "#ff3d00", "flower");
             } else {
-                // 答錯：畫出錯誤路徑
-                let py = centerY - userY * scale;
-                ctx.strokeStyle = "#bdbdbd"; ctx.lineWidth = 2;
-                ctx.beginPath(); ctx.moveTo(0, py); ctx.lineTo(px, py); ctx.stroke();
-                // 失敗標記
-                ctx.fillStyle = "#546e7a"; ctx.beginPath(); ctx.arc(px, py, 5, 0, Math.PI*2); ctx.fill();
+                ctx.moveTo(0, py); ctx.lineTo(px, py); ctx.stroke();
+                // 失敗的藍色皮克敏
+                drawPikminSprite(px, py, "#2979ff", "leaf");
+                
+                // 正確位置提示 (半透明皮克敏)
+                ctx.globalAlpha = 0.4;
+                drawPikminSprite(px, centerY - l1_correctY * scale, "#64dd17", "flower");
+                ctx.globalAlpha = 1.0;
             }
         }
     }
 
-    // --- Level 2 Logic ---
+    // --- Level 2 ---
+    function initLevel2() {
+        currentLevel = 2; strikes = 0;
+        overlay.style.display = 'none';
+        document.getElementById('levelBadge').innerText = "LEVEL 2: 蘑菇討伐戰";
+        document.getElementById('levelBadge').style.background = "#9c27b0";
+        document.getElementById('levelBadge').style.color = "#fff";
+        document.getElementById('level1-controls').style.display = 'none';
+        document.getElementById('level2-controls').style.display = 'flex';
+        resizeCanvas();
+        isGameActive = true;
+        startTimer(180, finishLevel2);
+        nextLevel2Question();
+    }
 
-    function nextQ2() {
-        document.getElementById('questionArea').innerHTML = `<span>觀察圖形 ⚔️</span>`;
-        document.getElementById('btnNextL2').style.display = 'none';
-        let cards = document.querySelectorAll('.squad-card');
-        cards.forEach(c => {
-            c.style.opacity = "1";
-            c.style.pointerEvents = "auto";
-            c.style.borderColor = "#eceff1";
-        });
+    function finishLevel2() {
+        isGameActive = false; clearInterval(timerInterval);
+        gameOver("完全通關！");
+        document.getElementById('ov-title').innerText = "任務大成功!";
+        document.getElementById('ov-desc').innerText = "你是數學大師！\n最終 Poko: " + score;
+    }
 
-        // 題目生成
-        l2_m = Math.floor(Math.random() * 5) - 2; 
-        l2_b = Math.floor(Math.random() * 5) - 2;
-        
-        let correctEq = formatEq(l2_m, l2_b);
-        let w1, w2;
-        
-        do { w1 = formatEq(Math.floor(Math.random()*5)-2, Math.floor(Math.random()*5)-2); } while(w1===correctEq);
-        do { w2 = formatEq(Math.floor(Math.random()*5)-2, Math.floor(Math.random()*5)-2); } while(w2===correctEq || w2===w1);
+    function nextLevel2Question() {
+        isGameActive = true; msgDiv.style.display = 'none';
+        let btns = document.querySelectorAll('.option-btn');
+        btns.forEach(b => { b.style.display = 'flex'; b.disabled = false; b.style.opacity = "1"; });
+        document.getElementById('l2-next').style.display = 'none';
 
-        l2_opts = [correctEq, w1, w2];
-        l2_ansIdx = Math.floor(Math.random()*3);
-        [l2_opts[0], l2_opts[l2_ansIdx]] = [l2_opts[l2_ansIdx], l2_opts[0]];
+        l2_slope = Math.floor(Math.random() * 5) - 2; 
+        l2_intercept = Math.floor(Math.random() * 7) - 3; 
 
-        // 更新卡片文字
-        document.getElementById('opt0').innerText = l2_opts[0];
-        document.getElementById('opt1').innerText = l2_opts[1];
-        document.getElementById('opt2').innerText = l2_opts[2];
+        let correctEq = formatEq(l2_slope, l2_intercept);
+        let wrong1, wrong2;
+        do { wrong1 = formatEq(Math.floor(Math.random()*5)-2, Math.floor(Math.random()*7)-3); } while (wrong1 === correctEq);
+        do { wrong2 = formatEq(Math.floor(Math.random()*5)-2, Math.floor(Math.random()*7)-3); } while (wrong2 === correctEq || wrong2 === wrong1);
 
-        drawL2Scene(false);
+        l2_options = [correctEq, wrong1, wrong2];
+        l2_correctIndex = Math.floor(Math.random() * 3);
+        [l2_options[0], l2_options[l2_correctIndex]] = [l2_options[l2_correctIndex], l2_options[0]];
+
+        document.getElementById('opt-0-text').innerText = l2_options[0];
+        document.getElementById('opt-1-text').innerText = l2_options[1];
+        document.getElementById('opt-2-text').innerText = l2_options[2];
+
+        document.getElementById('qText').innerText = "巨大蘑菇出現！";
+        document.getElementById('qContent').innerHTML = "觀察路徑，選擇正確的皮克敏隊伍！";
+
+        drawLevel2Scene(false);
     }
 
     function formatEq(m, b) {
-        let sign = b >= 0 ? "+" : "-";
-        if(m===0) return `y = ${b}`;
-        if(m===1) return `y = x ${sign} ${Math.abs(b)}`;
-        if(m===-1) return `y = -x ${sign} ${Math.abs(b)}`;
-        if(b===0) return `y = ${m}x`;
-        return `y = ${m}x ${sign} ${Math.abs(b)}`;
+        let sign = b >= 0 ? "+ " : "- ";
+        let txt = `y = ${m}x ${sign} ${Math.abs(b)}`;
+        if(m===0) txt = `y = ${b}`;
+        else if(m===1) txt = `y = x ${sign} ${Math.abs(b)}`;
+        else if(m===-1) txt = `y = -x ${sign} ${Math.abs(b)}`;
+        else if(b===0) txt = `y = ${m}x`;
+        return txt;
     }
 
-    function checkL2(idx) {
-        if(!isPlaying || level !== 2) return;
-        
-        let isCorrect = (idx === l2_ansIdx);
-        drawL2Scene(true, isCorrect);
-
-        // UI 反饋
-        let cards = document.querySelectorAll('.squad-card');
-        cards.forEach((c, i) => {
-            c.style.pointerEvents = "none";
-            if(i === idx) {
-                c.style.borderColor = isCorrect ? "#8bc34a" : "#e53935";
-                c.style.background = isCorrect ? "#f1f8e9" : "#ffebee";
-            } else {
-                c.style.opacity = "0.4";
-            }
-        });
+    function checkLevel2(idx) {
+        if(!isGameActive) return; isGameActive = false;
+        let isCorrect = (idx === l2_correctIndex);
+        drawLevel2Scene(true, isCorrect); 
 
         if(isCorrect) {
-            score += 100; // 蘑菇高分
-            showToast("Mushroom Destroyed!", "#9c27b0");
+            score += 150; showMsg("大成功! (+150)", "#9c27b0");
         } else {
-            strikes++;
-            showToast("Defeated...", "#e53935");
-            if(strikes >= 3) {
-                isPlaying = false;
-                setTimeout(() => showOverlay("任務失敗", "需要更多皮克敏...", "重試", startLevel2), 1000);
-                return;
-            }
+            strikes++; showMsg("路徑錯誤...", "#d50000");
         }
-        updateUI();
-        document.getElementById('btnNextL2').style.display = 'block';
+        updateHUD();
+
+        let btns = document.querySelectorAll('.option-btn');
+        btns.forEach((b, i) => { 
+            if(i !== 3) { b.disabled = true; if(i !== idx) b.style.opacity = "0.3"; }
+        });
+
+        if (strikes >= 3) {
+            setTimeout(() => gameOver("任務失敗..."), 1000);
+        } else {
+            document.getElementById('l2-next').style.display = 'flex';
+        }
     }
 
-    function drawL2Scene(showResult, isCorrect) {
-        ctx.clearRect(0,0,canvas.width, canvas.height);
-        drawAxes();
+    function drawLevel2Scene(showResult, isCorrect) {
+        ctx.fillStyle = "#f3e5f5"; ctx.fillRect(0,0,canvas.width,canvas.height);
+        drawGrid();
 
-        // 畫蘑菇 (目標)
-        let mx = 3; 
-        let my = l2_m * mx + l2_b;
-        if(Math.abs(my) > 7) { mx = -3; my = l2_m * mx + l2_b; } // 確保在畫面內
-        
-        let px = centerX + mx * scale;
-        let py = centerY - my * scale;
-
-        // 畫線 (題目)
+        // 題目線
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = "#558b2f";
         ctx.beginPath();
-        let x1 = -10, y1 = l2_m*x1+l2_b;
-        let x2 = 10, y2 = l2_m*x2+l2_b;
-        ctx.strokeStyle = "#455a64"; ctx.lineWidth = 4;
+        let x1 = -15; let y1 = l2_slope*x1 + l2_intercept;
+        let x2 = 15; let y2 = l2_slope*x2 + l2_intercept;
         ctx.moveTo(centerX+x1*scale, centerY-y1*scale);
         ctx.lineTo(centerX+x2*scale, centerY-y2*scale);
         ctx.stroke();
 
         // 畫蘑菇
-        if(showResult && isCorrect) {
-            // 蘑菇被打敗 (星星)
-            drawStars(px, py);
-        } else {
-            drawMushroom(px, py);
-        }
+        let mushX = 3; let mushY = l2_slope * mushX + l2_intercept;
+        if(Math.abs(mushY) > 6) { mushX = -3; mushY = l2_slope * mushX + l2_intercept; }
+        let px = centerX + mushX * scale;
+        let py = centerY - mushY * scale;
 
-        if(showResult && !isCorrect) {
-            // 顯示問號在選錯的地方 (這裡簡單示意)
-        }
-    }
-
-
-    // --- 繪圖元件 ---
-
-    function drawAxes() {
-        ctx.beginPath();
-        ctx.strokeStyle = "#cfd8dc"; ctx.lineWidth = 2;
-        ctx.moveTo(0, centerY); ctx.lineTo(canvas.width, centerY);
-        ctx.moveTo(centerX, 0); ctx.lineTo(centerX, canvas.height);
-        ctx.stroke();
-    }
-
-    function drawSeedling(x, y) {
-        ctx.fillStyle = "#8bc34a"; // 苗的顏色
-        ctx.beginPath(); ctx.arc(x, y, 6, 0, Math.PI*2); ctx.fill();
-        ctx.beginPath(); ctx.moveTo(x, y-6); ctx.lineTo(x, y-12); ctx.stroke();
-    }
-
-    function drawBigFlower(x, y) {
-        ctx.save();
-        ctx.translate(x, y-15);
-        // 花瓣
-        ctx.fillStyle = "#f48fb1";
-        for(let i=0; i<5; i++) {
-            ctx.beginPath();
-            ctx.ellipse(0, 0, 8, 15, i*(Math.PI*2/5), 0, Math.PI*2);
-            ctx.fill();
-        }
-        // 花蕊
-        ctx.fillStyle = "#fdd835";
-        ctx.beginPath(); ctx.arc(0, 0, 6, 0, Math.PI*2); ctx.fill();
-        // 莖
-        ctx.restore();
-        ctx.strokeStyle = "#8bc34a"; ctx.lineWidth=3;
-        ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y-15); ctx.stroke();
-    }
-
-    function drawSmallFlower(x, y) {
-        ctx.fillStyle = "#ffcdd2";
-        ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI*2); ctx.fill();
-    }
-
-    function drawMushroom(x, y) {
-        ctx.save();
-        ctx.translate(x, y);
-        // 身體
-        ctx.fillStyle = "#eee";
-        ctx.fillRect(-10, 0, 20, 20);
-        // 頭
-        ctx.fillStyle = "#ab47bc"; // 紫色蘑菇
-        ctx.beginPath(); ctx.arc(0, 0, 25, Math.PI, 0); ctx.fill();
-        // 點點
-        ctx.fillStyle = "#e1bee7";
+        // 畫蘑菇圖案
+        ctx.save(); ctx.translate(px, py);
+        if(showResult && isCorrect) ctx.globalAlpha = 0.5; // 被打敗
+        ctx.fillStyle = "#eee"; ctx.fillRect(-8, 0, 16, 25);
+        ctx.fillStyle = "#9c27b0"; ctx.beginPath(); ctx.arc(0, 0, 25, Math.PI, 0); ctx.fill();
+        ctx.fillStyle = "#e1bee7"; 
         ctx.beginPath(); ctx.arc(-10, -10, 5, 0, Math.PI*2); ctx.fill();
         ctx.beginPath(); ctx.arc(10, -5, 4, 0, Math.PI*2); ctx.fill();
         ctx.restore();
+
+        if(showResult && isCorrect) {
+            // 正確時，皮克敏出現在線上搬運
+            drawPikminSprite(px-20, py+10, "#ff3d00", "flower");
+            drawPikminSprite(px+20, py+10, "#ffea00", "flower");
+        }
     }
 
-    function drawStars(x, y) {
-        ctx.fillStyle = "#fdd835";
-        ctx.font = "20px Arial";
-        ctx.fillText("✨", x-10, y);
-        ctx.fillText("✨", x+10, y-10);
-        ctx.fillText("✨", x, y-20);
-    }
-
+    resizeCanvas();
 </script>
 </body>
 </html>
