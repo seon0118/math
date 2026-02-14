@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>函數大戰：戰情中心完全版</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    <style>
+        :root {
+            --red: #E52521; --green: #43B047; --blue: #5C94FC;
+            --brown: #944200; --gold: #ffd700; --dark: #111;
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body {
+            font-family: 'Press Start 2P', cursive;
+            margin: 0; padding: 0; background: #222; color: white;
+            height: 100vh; overflow: hidden; display: flex; flex-direction: column;
+        }
+
+        /* === 共用登入區 === */
+        #login-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--blue); z-index: 500;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .login-card {
+            background: rgba(0,0,0,0.8); padding: 20px; border-radius: 10px;
+            text-align: center; width: 90%; max-width: 450px;
+            border: 4px solid #fff; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        input {
+            width: 100%; padding: 12px; margin: 8px 0;
+            font-family: inherit; text-align: center; font-size: 16px;
+        }
+        .role-tabs { display: flex; gap: 10px; margin-bottom: 20px; justify-content: center; }
+        .tab-btn {
+            background: #555; border: 2px solid #fff; color: #fff; padding: 10px; cursor: pointer; flex: 1;
+        }
+        .tab-btn.active { background: var(--gold); color: #000; }
+        
+        .seat-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-top: 10px; }
+        .seat-btn { padding: 8px 0; font-size: 10px; cursor: pointer; background: var(--brown); color: white; border: 1px solid #fff; }
+        .seat-btn:hover { background: var(--green); }
+        .seat-btn.selected { background: var(--gold); color: #000; transform: scale(1.1); border-color: red;}
+        .seat-btn.disabled { background: #555; color: #888; cursor: not-allowed; border-color: #555; pointer-events: none; }
+
+        .btn { background: #fff; padding: 10px; border: 3px solid #555; cursor: pointer; font-family: inherit; }
+        .btn:active { transform: translateY(2px); background: #ccc; }
+
+        /* === 學生遊戲區 === */
+        #waiting-room {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95); z-index: 400;
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+            text-align: center; color: var(--gold);
+        }
+        #game-interface { display: none; height: 100%; flex-direction: column; background: var(--blue); }
+        .hud { background: #000; padding: 5px 10px; display: flex; justify-content: space-between; font-size: 10px; }
+        .q-box { background: var(--brown); border: 2px solid #000; margin: 5px; padding: 10px; text-align: center; font-size: 10px; line-height: 1.5; }
+        .main-canvas-area { flex-grow: 1; background: #fff; position: relative; margin: 0 5px; border: 2px solid #000;}
+        canvas { width: 100%; height: 100%; display: block; }
+        .controls { background: #000; padding: 10px; }
+        .numpad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
+        .btn-pad { background: #fff; padding: 15px 0; font-family: inherit; cursor: pointer; border: 3px solid #555; font-size: 14px; }
+        .btn-pad:active { transform: translateY(2px); background: #ccc; }
+        #input-display { background: #fff; color: #000; text-align: center; padding: 10px; margin-bottom: 5px; font-size: 20px; }
+
+        /* === 老師戰情室 Layout === */
+        #teacher-dashboard { display: none; height: 100%; flex-direction: column; background: #1a1a1a; }
+        .dashboard-header {
+            padding: 8px 15px; background: #000; display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 3px solid var(--gold);
+        }
+        .view-switch { display: flex; gap: 5px; }
+        .view-btn { padding: 8px 12px; border: 2px solid #555; background: #333; color: #fff; font-size: 10px; cursor: pointer;}
+        .view-btn.active { border-color: var(--gold); background: #555; color: var(--gold);}
+        
+        .start-btn {
+            background: var(--red); color: white; padding: 8px 15px; font-size: 12px; border: 2px solid #fff; 
+            animation: pulse 1.5s infinite; cursor: pointer; font-family: inherit;
+        }
+        .stop-btn { background: #555; color: white; padding: 8px 15px; font-size: 12px; border: 2px solid #fff; cursor: pointer; font-family: inherit;}
+
+        /* VIEW A: 全景監控 */
+        #view-screens { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; padding: 10px; overflow-y: auto; height: 100%; }
+        .student-card { background: #333; border: 2px solid #555; padding: 5px; font-size: 10px; display: flex; flex-direction: column; height: 120px; }
+        .student-card.active { border-color: var(--green); box-shadow: 0 0 5px var(--green); }
+        .mini-canvas { background: #fff; width: 100%; flex-grow: 1; margin-top: 5px; }
+
+        /* VIEW B: 對決模式 */
+        #view-versus { display: none; height: 100%; padding: 10px; background: radial-gradient(circle, #222, #000); }
+        .versus-container { display: flex; height: 100%; align-items: center; justify-content: space-around; }
+        .vs-card { width: 48%; height: 95%; background: #222; border: 4px solid #fff; display: flex; flex-direction: column; padding: 10px; position: relative; }
+        .vs-card.p1 { border-color: var(--red); }
+        .vs-card.p2 { border-color: var(--blue); }
+        .vs-header { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px;}
+        .vs-canvas { flex-grow: 1; background: #fff; border: 2px solid #555; width: 100%; }
+        .vs-selector { background: #000; color: #fff; font-family: inherit; padding: 5px; border: 1px solid #555; font-size: 14px;}
+        .vs-center { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font-size: 40px; color: var(--gold); z-index: 10; text-shadow: 4px 4px #000; font-style: italic;}
+
+        /* VIEW C: 排行榜 */
+        #view-leaderboard { display: none; flex-direction: column; padding: 20px; overflow-y: auto; height: 100%; }
+        .leader-row { display: flex; align-items: center; margin-bottom: 8px; background: #333; padding: 10px; border-radius: 5px; transition: top 0.5s; }
+        .rank-num { width: 40px; text-align: center; color: var(--gold); font-size: 16px; }
+        .rank-bar-container { flex-grow: 1; margin: 0 15px; height: 15px; background: #000; border-radius: 10px; overflow: hidden; }
+        .rank-bar { height: 100%; background: var(--green); width: 0%; transition: width 1s; }
+
+        /* VIEW D: 檢討模式 */
+        #view-review { display: none; flex-direction: column; padding: 20px; overflow-y: auto; height: 100%; background: #1a1a1a; }
+        .error-card { background: #333; border-left: 5px solid var(--red); padding: 15px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .error-info { flex-grow: 1; }
+        .error-stat { text-align: right; min-width: 80px; }
+        .bar-bg { width: 100%; height: 6px; background: #555; margin-top: 5px; border-radius: 3px; }
+        .bar-fill { height: 100%; background: var(--red); border-radius: 3px; }
+
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+    </style>
+</head>
+<body>
+
+    <div id="login-screen">
+        <div class="login-card">
+            <h1 style="font-size: 20px; color: var(--gold); margin-bottom: 20px;">MATH WAR ROOM</h1>
+            <div class="role-tabs">
+                <div class="tab-btn active" onclick="switchRole('student')">學生 Student</div>
+                <div class="tab-btn" onclick="switchRole('teacher')">老師 Teacher</div>
+            </div>
+            
+            <div id="form-student">
+                <input type="text" id="s-code" placeholder="教室代碼" onkeyup="this.value = this.value.toUpperCase();">
+                <input type="text" id="s-name" placeholder="你的暱稱" maxlength="8">
+                <p style="font-size: 10px; margin-top:15px; color:#ccc;">選擇座號:</p>
+                <div class="seat-grid" id="seat-container"></div>
+                <button class="btn" style="width:100%; margin-top:20px; background:var(--green); color:white; border-color:white;" onclick="studentLogin()">準備戰鬥</button>
+            </div>
+
+            <div id="form-teacher" style="display:none;">
+                <input type="text" id="t-code" placeholder="設定教室代碼" onkeyup="this.value = this.value.toUpperCase();">
+                <input type="password" id="t-pass" placeholder="輸入密碼 (8888)">
+                <div style="display:flex; align-items:center; justify-content:center; margin-top:10px;">
+                    <label style="font-size:12px; margin-right:10px;">人數上限:</label>
+                    <input type="number" id="t-limit" value="35" min="1" max="35" style="width:60px;">
+                </div>
+                <button class="btn" style="width:100%; margin-top:20px; background:var(--red); color:white; border-color:white;" onclick="teacherLogin()">開啟戰情室</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="waiting-room">
+        <h1 style="font-size: 24px; color:var(--green);">READY?</h1>
+        <p style="margin-top:10px;">等待老師開始...</p>
+        <p id="wait-info" style="font-size: 10px; margin-top: 30px; color: #aaa;"></p>
+    </div>
+
+    <div id="game-interface">
+        <div class="hud">
+            <span><span id="g-name">P</span> (#<span id="g-seat">?</span>)</span>
+            <span>SCORE: <span id="g-score">0</span></span>
+        </div>
+        <div class="q-box" id="q-text">Loading...</div>
+        <div class="main-canvas-area" id="s-canvas-wrap">
+            <canvas id="s-canvas"></canvas>
+            <div id="feedback" style="position:absolute; bottom:5px; left:5px; font-size:12px; font-weight:bold; color:black;"></div>
+        </div>
+        <div class="controls">
+            <div id="input-display">?</div>
+            <div class="numpad">
+                <button class="btn-pad" onclick="inputNum('1')">1</button>
+                <button class="btn-pad" onclick="inputNum('2')">2</button>
+                <button class="btn-pad" onclick="inputNum('3')">3</button>
+                <button class="btn-pad" onclick="inputNum('C')" style="background:#ddd;">C</button>
+                <button class="btn-pad" onclick="inputNum('4')">4</button>
+                <button class="btn-pad" onclick="inputNum('5')">5</button>
+                <button class="btn-pad" onclick="inputNum('6')">6</button>
+                <button class="btn-pad" onclick="inputNum('-')" style="background:var(--blue); color:#fff;">-</button>
+                <button class="btn-pad" onclick="inputNum('7')">7</button>
+                <button class="btn-pad" onclick="inputNum('8')">8</button>
+                <button class="btn-pad" onclick="inputNum('9')">9</button>
+                <button class="btn-pad" onclick="inputNum('0')">0</button>
+                <button class="btn-pad" onclick="submitAnswer()" style="grid-column: span 4; background: var(--red); color: white;">FIRE!</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="teacher-dashboard">
+        <div class="dashboard-header">
+            <div style="font-size: 12px;">ROOM: <span id="dash-code" style="color:var(--gold)">--</span></div>
+            <div class="view-switch">
+                <div class="view-btn active" id="btn-screens" onclick="switchView('screens')">📺 全景</div>
+                <div class="view-btn" id="btn-versus" onclick="switchView('versus')">⚔️ 對決</div>
+                <div class="view-btn" id="btn-leaderboard" onclick="switchView('leaderboard')">🏆 戰況</div>
+                <div class="view-btn" id="btn-review" onclick="switchView('review')">📊 檢討</div>
+            </div>
+            <button id="start-btn" class="start-btn" onclick="toggleGameStatus()">START GAME</button>
+        </div>
+        
+        <div id="view-screens"></div>
+        
+        <div id="view-versus">
+            <div class="versus-container">
+                <div class="vs-card p1">
+                    <div class="vs-header">
+                        <select id="sel-p1" class="vs-selector" onchange="updateVersusSelection()"></select>
+                        <span id="score-p1" style="color:var(--gold)">0</span>
+                    </div>
+                    <canvas class="vs-canvas" id="canvas-p1"></canvas>
+                </div>
+                <div class="vs-center">VS</div>
+                <div class="vs-card p2">
+                    <div class="vs-header">
+                        <select id="sel-p2" class="vs-selector" onchange="updateVersusSelection()"></select>
+                        <span id="score-p2" style="color:var(--gold)">0</span>
+                    </div>
+                    <canvas class="vs-canvas" id="canvas-p2"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-leaderboard"></div>
+
+        <div id="view-review">
+            <div style="text-align:center; color:#ccc; margin-top:20px;">尚未收集到數據，請先開始遊戲。</div>
+        </div>
+    </div>
+
+<script>
+    const MQTT_BROKER = 'wss://broker.hivemq.com:8884/mqtt';
+    let client = null, myRole = '', classCode = '', selectedSeat = null, maxSeats = 35;
+    
+    // 數據結構
+    let playerData = { name: '', score: 0, currentInput: '', q: {}, lastLine: null, qStr: '' };
+    let classState = {}; // { 1: {name, score, q, input...}, ... }
+    let questionStats = {}; // { "y=2x+1": {correct:0, wrong:0, ...} }
+    
+    // 老師端狀態
+    let currentView = 'screens';
+    let gameRunning = false;
+    let versusP1 = 1, versusP2 = 2;
+
+    // === 初始化座號按鈕 ===
+    const seatContainer = document.getElementById('seat-container');
+    for(let i=1; i<=35; i++){
+        let b = document.createElement('div');
+        b.id = `seat-btn-${i}`; b.className = 'seat-btn'; b.innerText = i;
+        b.onclick = () => {
+            if(b.classList.contains('disabled')) return;
+            document.querySelectorAll('.seat-btn').forEach(el=>el.classList.remove('selected'));
+            b.classList.add('selected'); selectedSeat = i;
+        }
+        seatContainer.appendChild(b);
+    }
+
+    function switchRole(role) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        event.target.classList.add('active');
+        document.getElementById('form-student').style.display = role === 'student' ? 'block' : 'none';
+        document.getElementById('form-teacher').style.display = role === 'teacher' ? 'block' : 'none';
+    }
+
+    // === MQTT 連線 ===
+    function connectMQTT(code, onConnect) {
+        client = mqtt.connect(MQTT_BROKER);
+        client.on('connect', onConnect);
+        client.on('message', (topic, msg) => handleMessage(topic, msg.toString()));
+    }
+
+    function handleMessage(topic, payload) {
+        const parts = topic.split('/'); 
+        const type = parts[2];
+        if (myRole === 'student') {
+            if (type === 'config') updateSeatLimit(JSON.parse(payload).maxSeats);
+            if (type === 'status') {
+                if(payload === 'START') {
+                    document.getElementById('waiting-room').style.display = 'none';
+                    document.getElementById('game-interface').style.display = 'flex';
+                    resizeStudentCanvas(); newQuestion();
+                } else if (payload === 'STOP') {
+                    document.getElementById('game-interface').style.display = 'none';
+                    document.getElementById('waiting-room').style.display = 'flex';
+                    document.getElementById('waiting-room').innerHTML = "<h1 style='color:red'>GAME OVER</h1><p>請看大螢幕檢討</p>";
+                }
+            }
+        } 
+        else if (myRole === 'teacher') {
+            if (type === 'data') updateClassState(parts[3], JSON.parse(payload));
+            if (type === 'log') recordAnswerLog(JSON.parse(payload));
+        }
+    }
+
+    // === 老師端邏輯 ===
+    function teacherLogin() {
+        const code = document.getElementById('t-code').value.trim().toUpperCase();
+        const pass = document.getElementById('t-pass').value.trim();
+        maxSeats = parseInt(document.getElementById('t-limit').value);
+        if (!code) return alert("請設定代碼");
+        if (pass !== "8888") return alert("密碼錯誤");
+
+        myRole = 'teacher'; classCode = code;
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('teacher-dashboard').style.display = 'flex';
+        document.getElementById('dash-code').innerText = code;
+
+        initTeacherUI();
+        connectMQTT(code, () => {
+            client.subscribe(`game/${code}/data/+`);
+            client.subscribe(`game/${code}/log`);
+            setInterval(() => client.publish(`game/${code}/config`, JSON.stringify({ maxSeats })), 2000);
+        });
+    }
+
+    function initTeacherUI() {
+        // Init Monitor Grid
+        const screenDiv = document.getElementById('view-screens');
+        const leaderDiv = document.getElementById('view-leaderboard');
+        const s1 = document.getElementById('sel-p1'), s2 = document.getElementById('sel-p2');
+        screenDiv.innerHTML = ""; leaderDiv.innerHTML = ""; s1.innerHTML = ""; s2.innerHTML = "";
+
+        for(let i=1; i<=maxSeats; i++){
+            // Screen Card
+            let card = document.createElement('div');
+            card.className = 'student-card'; card.id = `card-${i}`;
+            card.innerHTML = `<div style="display:flex;justify-content:space-between;"><span style="color:var(--gold)">#${i}</span><span id="name-${i}">...</span></div><div>SCR: <span id="score-${i}">0</span></div><canvas class="mini-canvas" id="mini-${i}"></canvas>`;
+            screenDiv.appendChild(card);
+            
+            // Leaderboard Row
+            let row = document.createElement('div');
+            row.className = 'leader-row'; row.id = `rank-row-${i}`; row.style.display = 'none';
+            row.innerHTML = `<div class="rank-num" id="rank-pos-${i}">-</div><div style="width:100px;font-size:12px;white-space:nowrap;overflow:hidden;" id="rank-name-${i}">...</div><div class="rank-bar-container"><div class="rank-bar" id="rank-bar-${i}"></div></div><div style="width:50px;text-align:right;color:var(--gold)" id="rank-score-${i}">0</div>`;
+            leaderDiv.appendChild(row);
+
+            // Versus Select
+            let op1 = document.createElement('option'); op1.value=i; op1.innerText=`#${i}`; s1.appendChild(op1);
+            let op2 = document.createElement('option'); op2.value=i; op2.innerText=`#${i}`; s2.appendChild(op2);
+        }
+        s1.value=1; s2.value=2; updateVersusSelection();
+    }
+
+    function toggleGameStatus() {
+        gameRunning = !gameRunning;
+        const btn = document.getElementById('start-btn');
+        if(gameRunning) {
+            btn.innerText = "STOP & REVIEW"; btn.className = "stop-btn";
+            client.publish(`game/${classCode}/status`, 'START');
+        } else {
+            btn.innerText = "START GAME"; btn.className = "start-btn";
+            client.publish(`game/${classCode}/status`, 'STOP');
+            switchView('review'); // 自動跳轉
+        }
+    }
+
+    function switchView(mode) {
+        currentView = mode;
+        ['screens', 'versus', 'leaderboard', 'review'].forEach(v => {
+            document.getElementById(`view-${v}`).style.display = (v === mode) ? (v==='screens'?'grid':'flex') : 'none';
+            if(document.getElementById(`btn-${v}`)) 
+                document.getElementById(`btn-${v}`).classList.toggle('active', v === mode);
+        });
+        if(mode === 'versus') updateVersusSelection();
+        if(mode === 'review') renderReview();
+    }
+
+    function updateClassState(id, data) {
+        if(id > maxSeats) return;
+        classState[id] = data; 
+        
+        // 1. Screens
+        if(currentView === 'screens') {
+            document.getElementById(`card-${id}`).classList.add('active');
+            document.getElementById(`name-${id}`).innerText = data.name;
+            document.getElementById(`score-${id}`).innerText = data.score;
+            const cvs = document.getElementById(`mini-${id}`);
+            if(cvs && cvs.width > 0) drawScene(cvs.getContext('2d'), cvs.width, cvs.height, data.q, data.input, null);
+        }
+        // 2. Versus
+        if(currentView === 'versus' && (parseInt(id)===versusP1 || parseInt(id)===versusP2)) updateVersusSelection();
+        
+        // 3. Leaderboard (Always update logic)
+        updateLeaderboard();
+    }
+
+    function updateVersusSelection() {
+        versusP1 = parseInt(document.getElementById('sel-p1').value);
+        versusP2 = parseInt(document.getElementById('sel-p2').value);
+        [versusP1, versusP2].forEach((pid, idx) => {
+            const data = classState[pid];
+            if(data) {
+                const slot = idx+1;
+                document.getElementById(`sel-p${slot}`).options[document.getElementById(`sel-p${slot}`).selectedIndex].text = `#${pid} ${data.name}`;
+                document.getElementById(`score-p${slot}`).innerText = data.score;
+                const cvs = document.getElementById(`canvas-p${slot}`);
+                if(cvs) {
+                    cvs.width = cvs.clientWidth; cvs.height = cvs.clientHeight;
+                    drawScene(cvs.getContext('2d'), cvs.width, cvs.height, data.q, data.input, null);
+                }
+            }
+        });
+    }
+
+    function updateLeaderboard() {
+        let players = [];
+        for(let id in classState) players.push({id:id, ...classState[id]});
+        players.sort((a,b) => b.score - a.score);
+        const max = players.length > 0 ? Math.max(players[0].score, 100) : 100;
+        
+        players.forEach((p, index) => {
+            const row = document.getElementById(`rank-row-${p.id}`);
+            if(row) {
+                row.style.display = 'flex'; row.style.order = index;
+                document.getElementById(`rank-pos-${p.id}`).innerText = index+1;
+                document.getElementById(`rank-name-${p.id}`).innerText = `#${p.id} ${p.name}`;
+                document.getElementById(`rank-score-${p.id}`).innerText = p.score;
+                document.getElementById(`rank-bar-${p.id}`).style.width = Math.min((p.score/max)*100, 100) + "%";
+            }
+        });
+    }
+
+    // --- 檢討系統 ---
+    function recordAnswerLog(data) {
+        // data = { qId, qText, ans, input, isCorrect }
+        if (!questionStats[data.qId]) {
+            questionStats[data.qId] = { text: data.qText, ans: data.ans, correct: 0, wrong: 0, wrongAns: {} };
+        }
+        if (data.isCorrect) questionStats[data.qId].correct++;
+        else {
+            questionStats[data.qId].wrong++;
+            const w = data.input;
+            if(!questionStats[data.qId].wrongAns[w]) questionStats[data.qId].wrongAns[w]=0;
+            questionStats[data.qId].wrongAns[w]++;
+        }
+    }
+
+    function renderReview() {
+        const container = document.getElementById('view-review');
+        container.innerHTML = "<h2 style='text-align:center;color:var(--gold)'>MISSION DEBRIEF</h2>";
+        
+        let arr = [];
+        for(let k in questionStats) {
+            let item = questionStats[k];
+            let total = item.correct + item.wrong;
+            if(total>0) {
+                item.errRate = (item.wrong/total)*100;
+                arr.push(item);
+            }
+        }
+        arr.sort((a,b) => b.errRate - a.errRate);
+
+        if(arr.length === 0) {
+            container.innerHTML += "<p style='text-align:center'>暫無數據</p>";
+            return;
+        }
+
+        arr.forEach((item, idx) => {
+            // 找出最多人錯的答案
+            let wList = Object.entries(item.wrongAns).sort((a,b)=>b[1]-a[1]);
+            let wText = wList.length > 0 ? `(常見誤答: ${wList[0][0]})` : "";
+            
+            let div = document.createElement('div');
+            div.className = 'error-card';
+            div.innerHTML = `
+                <div class="error-info">
+                    <div style="color:var(--gold); margin-bottom:5px;">NO.${idx+1}: ${item.text}</div>
+                    <div style="font-size:12px; color:#ccc;">
+                        正解: <span style="color:var(--green)">${item.ans}</span> 
+                        <span style="color:var(--red); margin-left:10px;">${wText}</span>
+                    </div>
+                    <div class="bar-bg"><div class="bar-fill" style="width:${item.errRate}%"></div></div>
+                </div>
+                <div class="error-stat">
+                    <div style="font-size:18px; color:var(--red)">${Math.round(item.errRate)}%</div>
+                    <div style="font-size:10px">錯誤率</div>
+                </div>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    // === 學生端 ===
+    function studentLogin() {
+        const code = document.getElementById('s-code').value.trim().toUpperCase();
+        const name = document.getElementById('s-name').value.trim();
+        if(!code || !name || !selectedSeat) return alert("請填寫完整");
+        myRole='student'; classCode=code; playerData.name=name;
+        document.getElementById('login-screen').style.display='none';
+        document.getElementById('waiting-room').style.display='flex';
+        document.getElementById('wait-info').innerText = `${name} | #${selectedSeat}`;
+        document.getElementById('g-name').innerText=name; document.getElementById('g-seat').innerText=selectedSeat;
+        connectMQTT(code, ()=>{
+            client.subscribe(`game/${code}/status`);
+            client.subscribe(`game/${code}/config`);
+            setInterval(sendStudentData, 800);
+        });
+    }
+    
+    function updateSeatLimit(limit) {
+        for(let i=1; i<=35; i++) {
+            const btn = document.getElementById(`seat-btn-${i}`);
+            if(i>limit) btn.classList.add('disabled'); else btn.classList.remove('disabled');
+        }
+    }
+
+    function sendStudentData() {
+        if(myRole!=='student'||!client) return;
+        client.publish(`game/${classCode}/data/${selectedSeat}`, JSON.stringify({
+            name:playerData.name, score:playerData.score, q:playerData.q, input:playerData.currentInput
+        }));
+    }
+
+    function newQuestion() {
+        const isC = Math.random() < 0.2;
+        let s, b, x, qStr, uId;
+        if(isC) { 
+            s=0; b=Math.floor(Math.random()*9)-4; x=Math.floor(Math.random()*9)-4; 
+            qStr=`常數函數 y=${b}, x=${x}`; uId=`y=${b}|x=${x}`;
+            playerData.q={slope:0,b,x,ans:b};
+        } else { 
+            s=Math.floor(Math.random()*5)-2||1; b=Math.floor(Math.random()*9)-4; x=Math.floor(Math.random()*9)-4;
+            let sign = b>=0?'+':'';
+            qStr=`y=${s}x${sign}${b}, x=${x}`; uId=`y=${s}x${sign}${b}|x=${x}`;
+            playerData.q={slope:s,b,x,ans:s*x+b}; 
+        }
+        playerData.qStr = qStr; playerData.qId = uId;
+        document.getElementById('q-text').innerHTML = `${qStr} <br> y = ?`;
+        playerData.currentInput=""; document.getElementById('input-display').innerText="?";
+        drawStudentScene();
+    }
+
+    function inputNum(v) {
+        if(v==='C') playerData.currentInput=""; else if(playerData.currentInput.length<5) playerData.currentInput+=v;
+        document.getElementById('input-display').innerText = playerData.currentInput||"?";
+        drawStudentScene(); sendStudentData();
+    }
+
+    function submitAnswer() {
+        let v = parseInt(playerData.currentInput); if(isNaN(v)) return;
+        const isCorrect = (v===playerData.q.ans);
+        
+        if(client) {
+            client.publish(`game/${classCode}/log`, JSON.stringify({
+                qId: playerData.qId, qText: playerData.qStr, ans: playerData.q.ans, input: v, isCorrect: isCorrect
+            }));
+        }
+
+        if(isCorrect) { 
+            playerData.score+=100; playerData.lastLine={slope:playerData.q.slope,b:playerData.q.b,color:"green"};
+            document.getElementById('feedback').innerText="BINGO!"; document.getElementById('feedback').style.color="green";
+            setTimeout(newQuestion,1000); 
+        } else {
+            playerData.score=Math.max(0,playerData.score-50); playerData.lastLine={slope:playerData.q.slope,b:playerData.q.b,color:"red",errY:v};
+            document.getElementById('feedback').innerText="MISS!"; document.getElementById('feedback').style.color="red";
+        }
+        document.getElementById('g-score').innerText = playerData.score;
+        drawStudentScene(); sendStudentData();
+    }
+
+    function drawScene(ctx, w, h, q, input, lastLine) {
+        const cx=w/2, cy=h/2, scale=w/18;
+        ctx.clearRect(0,0,w,h);
+        ctx.strokeStyle="#ccc"; ctx.lineWidth=1;
+        ctx.beginPath(); ctx.moveTo(0,cy); ctx.lineTo(w,cy); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(cx,0); ctx.lineTo(cx,h); ctx.stroke();
+        
+        if(q && q.x !== undefined) {
+            const tx=cx+q.x*scale, ty=cy-q.ans*scale;
+            ctx.fillStyle="red"; ctx.beginPath(); ctx.arc(tx,ty,w/40,0,Math.PI*2); ctx.fill();
+            if(input && !isNaN(input)) {
+                let v = parseInt(input); let tb = v - q.slope*q.x;
+                ctx.strokeStyle="blue"; ctx.lineWidth=1; ctx.setLineDash([4,2]);
+                ctx.beginPath(); 
+                let x1=-10, y1=q.slope*x1+tb, x2=10, y2=q.slope*x2+tb;
+                ctx.moveTo(cx+x1*scale, cy-y1*scale); ctx.lineTo(cx+x2*scale, cy-y2*scale); ctx.stroke();
+                ctx.setLineDash([]);
+            }
+        }
+        if(lastLine) {
+            ctx.strokeStyle=lastLine.color; ctx.lineWidth=3;
+            ctx.beginPath();
+            let x1=-10, y1=lastLine.slope*x1+lastLine.b, x2=10, y2=lastLine.slope*x2+lastLine.b;
+            ctx.moveTo(cx+x1*scale, cy-y1*scale); ctx.lineTo(cx+x2*scale, cy-y2*scale); ctx.stroke();
+            if(lastLine.color==="red") {
+                ctx.fillStyle="black"; ctx.beginPath(); ctx.arc(cx+q.x*scale, cy-lastLine.errY*scale, 4,0,Math.PI*2); ctx.fill();
+            }
+        }
+    }
+    function drawStudentScene() {
+        const cvs=document.getElementById('s-canvas');
+        drawScene(cvs.getContext('2d'),cvs.width,cvs.height,playerData.q,playerData.currentInput,playerData.lastLine);
+    }
+    function resizeStudentCanvas() {
+        const w = document.getElementById('s-canvas-wrap'); const c = document.getElementById('s-canvas');
+        c.width=w.clientWidth; c.height=w.clientHeight; drawStudentScene();
+    }
+    window.addEventListener('resize', resizeStudentCanvas);
+    window.addEventListener('keydown', (e)=>{ if(e.key==='F2') document.getElementById('teacher-dashboard').style.display='flex'; });
+
+</script>
+</body>
+</html>
