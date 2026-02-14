@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>函數大冒險 - 8-bit Edition</title>
+    <title>函數狙擊手 - 菁英版</title>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #5c94fc; /* Mario Sky Blue */
-            --ground-color: #c84c0c; /* Ground Brick */
-            --pipe-green: #00aa00;
-            --box-yellow: #f8b800;
+            --bg-color: #222; 
+            --hud-color: #00e5ff;
+            --scope-bg: rgba(0, 20, 0, 0.3);
         }
 
         body {
@@ -19,113 +18,146 @@
             margin: 0;
             padding: 0;
             color: white;
-            overflow: hidden; /* 禁止捲動 */
+            overflow: hidden;
             display: flex;
             flex-direction: column;
             align-items: center;
             height: 100vh;
+            touch-action: none; /* 防止平板雙擊縮放 */
         }
 
-        /* 頂部資訊列 (HUD) */
+        /* 震動特效動畫 */
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+
+        .shake-effect {
+            animation: shake 0.3s;
+            animation-iteration-count: 1;
+        }
+
+        /* 槍火閃光 */
+        #flash-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: white;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 200;
+            transition: opacity 0.1s;
+        }
+
+        /* 頂部資訊列 */
         .hud {
             display: flex;
             justify-content: space-between;
             width: 95%;
             padding: 10px 0;
-            font-size: 12px; /* 平板上字體調整 */
-            text-shadow: 2px 2px #000;
+            font-size: 12px;
+            color: var(--hud-color);
+            text-shadow: 0 0 5px var(--hud-color);
+            z-index: 10;
         }
-        .hud-item span { color: #ffeb3b; }
 
-        /* 遊戲主畫面容器 */
-        .game-area {
+        /* 遊戲區域 */
+        .game-wrapper {
             position: relative;
-            background: #fff;
-            border: 4px solid #000;
-            box-shadow: 5px 5px 0px rgba(0,0,0,0.5);
-            margin-bottom: 10px;
+            margin-bottom: 5px;
+            border: 4px solid #444;
+            box-shadow: 0 0 15px rgba(0, 229, 255, 0.2);
         }
-        
+
         canvas {
-            background-color: #f8f9fa; /* 讓格線清楚的白底 */
+            background-color: #000;
             display: block;
         }
 
-        /* 題目顯示區 (像磚塊) */
-        .question-box {
-            background-color: #e86a17;
-            border: 4px solid #000;
-            padding: 10px;
+        /* 題目顯示 (像抬頭顯示器) */
+        .info-panel {
+            background: rgba(0, 50, 50, 0.8);
+            border: 2px solid var(--hud-color);
+            color: #fff;
+            padding: 8px;
             margin-bottom: 5px;
             text-align: center;
-            box-shadow: inset -4px -4px rgba(0,0,0,0.3);
-            text-shadow: 2px 2px #000;
             width: 90%;
             font-size: 14px;
-            line-height: 1.5;
+            text-shadow: 2px 2px #000;
         }
-        .highlight { color: #fff; background: #000; padding: 2px 5px; }
+        .target-hl { color: #ffeb3b; }
 
-        /* 虛擬鍵盤區 */
+        /* 虛擬鍵盤 */
         .keypad-container {
             flex-grow: 1;
             width: 100%;
-            background-color: #000;
+            background-color: #111;
             padding-top: 10px;
             display: flex;
             flex-direction: column;
             align-items: center;
+            border-top: 2px solid #444;
         }
 
-        /* 輸入顯示框 */
+        /* 輸入框 */
         #displayInput {
             width: 80%;
-            height: 40px;
+            height: 50px;
             background-color: #000;
-            color: #00e5ff;
+            color: #ff4444; /* 雷射紅 */
             font-family: 'Press Start 2P', cursive;
-            font-size: 20px;
-            text-align: center;
-            border: 4px solid #fff;
+            font-size: 24px;
+            border: 2px solid #555;
             margin-bottom: 10px;
-            pointer-events: none; /* 禁止跳出原生鍵盤 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-shadow: 0 0 8px red;
+            letter-spacing: 5px;
         }
 
-        /* 按鈕網格 */
         .keypad {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 8px;
+            gap: 6px;
             width: 95%;
             max-width: 500px;
         }
 
         .key {
-            background-color: #fff;
-            color: #000;
-            border: 4px solid #555;
-            box-shadow: 0 4px #222;
-            height: 50px;
+            background: #333;
+            color: #fff;
+            border: 1px solid #555;
+            box-shadow: 0 3px #000;
+            height: 45px;
             font-family: 'Press Start 2P';
-            font-size: 18px;
+            font-size: 16px;
             cursor: pointer;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            user-select: none;
+            border-radius: 4px;
         }
-        .key:active { transform: translateY(4px); box-shadow: 0 0 #222; }
+        .key:active { transform: translateY(2px); box-shadow: 0 1px #000; background: #555;}
         
         .key-enter {
             grid-column: span 2;
-            background-color: var(--pipe-green);
+            background: #b71c1c; /* 暗紅色發射鈕 */
             color: white;
-            border-color: #004400;
+            border-color: #d32f2f;
         }
-        .key-del { background-color: #d32f2f; color: white; border-color: #8b0000; }
-        .key-minus { background-color: #ffeb3b; color: black; }
+        .key-next {
+            background: #2e7d32; /* 綠色下一關 */
+            grid-column: span 2;
+        }
 
-        /* Game Over 遮罩 */
+        /* 遮罩層 */
         #overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -134,50 +166,41 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            z-index: 100;
+            z-index: 300;
             text-align: center;
         }
         .btn-start {
             margin-top: 20px;
-            padding: 15px 20px;
+            padding: 15px 30px;
             font-family: 'Press Start 2P';
-            background: var(--box-yellow);
-            border: 4px solid #fff;
+            background: var(--hud-color);
+            border: none;
+            color: #000;
             cursor: pointer;
             font-size: 16px;
-            animation: blink 1s infinite;
+            animation: pulse 1s infinite;
         }
-        @keyframes blink { 0% {opacity: 1;} 50% {opacity: 0.5;} 100% {opacity: 1;} }
+        @keyframes pulse { 0% {transform: scale(1);} 50% {transform: scale(1.05);} 100% {transform: scale(1);} }
 
-        /* 訊息提示 */
-        #message {
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 24px;
-            text-shadow: 3px 3px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
-            pointer-events: none;
-            display: none;
-            z-index: 50;
-        }
     </style>
 </head>
 <body>
 
+    <div id="flash-overlay"></div>
+
     <div class="hud">
-        <div class="hud-item">MARIO<br><span id="scoreDisplay">000000</span></div>
-        <div class="hud-item">STRIKES<br><span id="strikeDisplay">0</span>/3</div>
-        <div class="hud-item">TIME<br><span id="timeDisplay">180</span></div>
+        <div>SCORE: <span id="scoreDisplay">0</span></div>
+        <div>STRIKES: <span id="strikeDisplay">0</span>/3</div>
+        <div>TIME: <span id="timeDisplay">180</span></div>
     </div>
 
-    <div class="question-box">
-        武器: <span id="eqDisplay" class="highlight">y = 2x + 1</span> <br>
-        敵人: <span id="targetDisplay" class="highlight">x = 3</span>
+    <div class="info-panel">
+        MISSION: <span id="eqDisplay" class="target-hl">y = 2x + 1</span> <br>
+        TARGET X: <span id="targetDisplay" class="target-hl">3</span>
     </div>
 
-    <div class="game-area">
-        <canvas id="gameCanvas" width="340" height="240"></canvas>
-        <div id="message"></div>
+    <div class="game-wrapper" id="gameWrapper">
+        <canvas id="gameCanvas" width="350" height="250"></canvas>
     </div>
 
     <div class="keypad-container">
@@ -187,116 +210,318 @@
             <button class="key" onclick="pressKey('1')">1</button>
             <button class="key" onclick="pressKey('2')">2</button>
             <button class="key" onclick="pressKey('3')">3</button>
-            <button class="key key-minus" onclick="pressKey('-')">-</button>
+            <button class="key" onclick="pressKey('-')">-</button>
 
             <button class="key" onclick="pressKey('4')">4</button>
             <button class="key" onclick="pressKey('5')">5</button>
             <button class="key" onclick="pressKey('6')">6</button>
-            <button class="key key-del" onclick="pressKey('C')">⬅</button>
+            <button class="key" onclick="pressKey('C')">C</button>
 
             <button class="key" onclick="pressKey('7')">7</button>
             <button class="key" onclick="pressKey('8')">8</button>
             <button class="key" onclick="pressKey('9')">9</button>
             <button class="key" onclick="pressKey('0')">0</button>
             
-            <button class="key key-enter" onclick="submitAnswer()">FIRE!</button>
-            <button class="key" id="nextBtn" onclick="nextLevel()" style="display:none; background:#5c94fc; color:white;">NEXT</button>
+            <button class="key key-enter" id="fireBtn" onclick="initiateAiming()">LOCK & FIRE</button>
+            <button class="key key-next" id="nextBtn" onclick="nextLevel()" style="display:none;">NEXT TARGET</button>
         </div>
     </div>
 
     <div id="overlay">
-        <h1 style="color: #ffeb3b; text-shadow: 4px 4px #c84c0c;">WORLD 1-1</h1>
-        <p>FUNCTION SNIPER</p>
-        <br>
-        <p style="font-size: 10px; color: #ccc;">3 MINS TIME LIMIT</p>
-        <button class="btn-start" onclick="startGame()">PRESS START</button>
+        <h1 style="color: var(--hud-color); line-height: 1.5;">SNIPER MATH<br>ELITE</h1>
+        <p style="font-size: 10px; color: #888;">CALCULATE Y TO ELIMINATE TARGET</p>
+        <button class="btn-start" onclick="startGame()">START MISSION</button>
     </div>
 
 <script>
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     const displayInput = document.getElementById('displayInput');
-    const msgDiv = document.getElementById('message');
-    
-    // 遊戲變數
-    let scale = 15; // 縮放比例
+    const gameWrapper = document.getElementById('gameWrapper');
+    const flashOverlay = document.getElementById('flash-overlay');
+
+    // 遊戲參數
+    let scale = 15; 
     let centerX = canvas.width / 2;
     let centerY = canvas.height / 2;
-    let slope = 0, intercept = 0, targetX = 0, correctY = 0;
     
+    // 狀態
+    let gameState = 'IDLE'; // IDLE, AIMING, FIRED, GAMEOVER
+    let slope = 0, intercept = 0, targetX = 0, correctY = 0;
+    let currentInput = "";
+    
+    // 狙擊鏡動畫參數
+    let scopeX = centerX;
+    let scopeY = centerY;
+    let targetScopeY = 0;
+    let scopeRadius = 60;
+    let aimProgress = 0; // 0 到 1
+
+    // 積分與時間
     let score = 0;
     let strikes = 0;
     let timeLeft = 180;
     let timerInterval = null;
-    let isGameActive = false;
-    let currentInput = "";
 
-    // === 鍵盤邏輯 ===
-    function pressKey(key) {
-        if (!isGameActive) return;
+    // === 主循環 (Animation Loop) ===
+    function gameLoop() {
+        // 清除畫布
+        ctx.fillStyle = "#000";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        if (key === 'C') {
-            currentInput = currentInput.slice(0, -1);
-        } else if (key === '-') {
-            // 負號只能在第一位
-            if (currentInput === "") currentInput = "-";
-            else if (currentInput === "-") currentInput = ""; // 切換
-        } else {
-            // 限制長度
-            if (currentInput.length < 5) currentInput += key;
+        // 1. 繪製背景 (普通視圖)
+        drawGrid(ctx, scale, 0.3); // 暗淡的網格
+        drawTargetLine(ctx, scale);
+        
+        // 2. 狀態處理
+        if (gameState === 'AIMING') {
+            // 平滑移動狙擊鏡
+            aimProgress += 0.05;
+            if (aimProgress >= 1) {
+                aimProgress = 1;
+                fireShot(); // 移動到位後自動擊發
+            }
+            // 插值計算目前鏡頭位置
+            let startY = -50; // 從上面飛進來
+            let destY = centerY - parseInt(currentInput) * scale;
+            let destX = centerX + targetX * scale;
+            
+            // 使用 Ease Out 效果
+            let ease = 1 - Math.pow(1 - aimProgress, 3);
+            scopeY = startY + (destY - startY) * ease;
+            scopeX = centerX + (destX - centerX) * ease; // 如果要讓鏡頭從中間移過去
+            
+            drawScope(scopeX, scopeY);
+            
+        } else if (gameState === 'FIRED') {
+            // 停留在射擊位置
+            let destY = centerY - parseInt(currentInput) * scale;
+            let destX = centerX + targetX * scale;
+            drawScope(destX, destY);
+            drawBulletHole(destX, destY);
+            drawFunctionLine(); // 畫出綠色軌跡線
         }
-        updateInputDisplay();
+
+        requestAnimationFrame(gameLoop);
     }
 
-    function updateInputDisplay() {
+    // === 繪圖函數 ===
+
+    // 畫網格
+    function drawGrid(context, gridSize, opacity) {
+        context.strokeStyle = `rgba(0, 229, 255, ${opacity})`; // Cyberpunk blue
+        context.lineWidth = 1;
+        context.beginPath();
+        for(let x=0; x<=canvas.width; x+=gridSize) {
+            context.moveTo(x,0); context.lineTo(x,canvas.height);
+        }
+        for(let y=0; y<=canvas.height; y+=gridSize) {
+            context.moveTo(0,y); context.lineTo(canvas.width,y);
+        }
+        context.stroke();
+
+        // 畫軸
+        context.strokeStyle = `rgba(255, 255, 255, ${opacity + 0.3})`;
+        context.lineWidth = 2;
+        context.beginPath();
+        context.moveTo(0, centerY); context.lineTo(canvas.width, centerY);
+        context.moveTo(centerX, 0); context.lineTo(centerX, canvas.height);
+        context.stroke();
+    }
+
+    // 畫目標線 (紅色虛線)
+    function drawTargetLine(context, gridSize) {
+        let px = centerX + targetX * gridSize;
+        context.strokeStyle = "rgba(255, 0, 0, 0.5)";
+        context.setLineDash([5, 5]);
+        context.lineWidth = 2;
+        context.beginPath();
+        context.moveTo(px, 0); context.lineTo(px, canvas.height);
+        context.stroke();
+        context.setLineDash([]);
+        
+        // 畫目標圖標
+        context.fillStyle = "red";
+        context.font = "10px Arial";
+        context.fillText("TARGET", px - 20, 20);
+    }
+
+    // 畫狙擊鏡 (核心功能：放大效果)
+    function drawScope(x, y) {
+        ctx.save();
+        
+        // 1. 建立圓形剪裁區域 (鏡頭內部)
+        ctx.beginPath();
+        ctx.arc(x, y, scopeRadius, 0, Math.PI * 2);
+        ctx.clip();
+
+        // 2. 填滿鏡頭背景 (略亮)
+        ctx.fillStyle = "#001100";
+        ctx.fill();
+
+        // 3. 繪製「放大版」的網格與內容
+        // 技巧：移動原點到鏡頭中心 -> 放大 -> 移回反向位置
+        ctx.translate(x, y);
+        ctx.scale(2.0, 2.0); // 放大 2 倍
+        ctx.translate(-x, -y);
+
+        // 在鏡頭內重畫清晰的網格
+        drawGrid(ctx, scale, 0.8); 
+        drawTargetLine(ctx, scale);
+
+        // 如果是射擊後，在鏡頭內也要畫出線
+        if (gameState === 'FIRED') {
+            drawFunctionLine();
+        }
+
+        ctx.restore(); // 結束剪裁與變形
+
+        // 4. 畫鏡頭的邊框與十字準心 (在剪裁區之外)
+        ctx.strokeStyle = "#000";
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        ctx.arc(x, y, scopeRadius, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // 鏡頭玻璃反光感
+        ctx.strokeStyle = "rgba(100, 255, 100, 0.5)";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // 十字準心
+        ctx.strokeStyle = "red";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(x - scopeRadius, y); ctx.lineTo(x + scopeRadius, y);
+        ctx.moveTo(x, y - scopeRadius); ctx.lineTo(x, y + scopeRadius);
+        ctx.stroke();
+        
+        // 距離數據 (裝飾)
+        ctx.fillStyle = "#00e5ff";
+        ctx.font = "10px Arial";
+        ctx.fillText(`Y:${parseInt(currentInput)}`, x + 10, y + scopeRadius + 15);
+    }
+
+    function drawFunctionLine() {
+        let userY = parseInt(currentInput);
+        let isCorrect = (userY === correctY);
+        
+        ctx.strokeStyle = isCorrect ? "#00ff00" : "#555";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        
+        // 為了讓線在放大鏡裡看起來正確，我們畫整條長線
+        let x1 = -20; let y1 = slope * x1 + intercept;
+        let x2 = 20; let y2 = slope * x2 + intercept;
+        
+        // 如果答錯，畫一條歪掉的線穿過彈孔
+        if (!isCorrect) {
+            // 這裡簡單處理：只畫射擊點
+        } else {
+            ctx.moveTo(centerX + x1 * scale, centerY - y1 * scale);
+            ctx.lineTo(centerX + x2 * scale, centerY - y2 * scale);
+            ctx.stroke();
+        }
+    }
+
+    function drawBulletHole(x, y) {
+        ctx.beginPath();
+        ctx.arc(x, y, 5, 0, Math.PI*2);
+        ctx.fillStyle = "#fff";
+        ctx.fill();
+        
+        // 如果答錯，標記正確位置
+        if (parseInt(currentInput) !== correctY) {
+             let trueY = centerY - correctY * scale;
+             ctx.beginPath();
+             ctx.arc(x, trueY, 5, 0, Math.PI*2);
+             ctx.strokeStyle = "#00ff00";
+             ctx.lineWidth = 2;
+             ctx.stroke();
+        }
+    }
+
+    // === 遊戲邏輯控制 ===
+
+    function pressKey(key) {
+        if (gameState !== 'IDLE') return;
+
+        if (key === 'C') currentInput = "";
+        else if (key === '-') {
+            if (currentInput === "") currentInput = "-";
+            else if (currentInput === "-") currentInput = "";
+        } else {
+            if (currentInput.length < 4) currentInput += key;
+        }
         displayInput.innerText = currentInput === "" ? "?" : currentInput;
     }
 
-    // === 遊戲核心 ===
-    function startGame() {
-        document.getElementById('overlay').style.display = 'none';
-        score = 0;
-        strikes = 0;
-        timeLeft = 180;
-        isGameActive = true;
+    function initiateAiming() {
+        if (currentInput === "" || currentInput === "-" || gameState !== 'IDLE') return;
         
-        updateHUD();
+        // 進入瞄準狀態
+        gameState = 'AIMING';
+        aimProgress = 0;
         
-        if(timerInterval) clearInterval(timerInterval);
-        timerInterval = setInterval(() => {
-            timeLeft--;
-            updateHUD();
-            if(timeLeft <= 0) gameOver("TIME UP");
-        }, 1000);
+        // 鎖定按鈕
+        document.getElementById('fireBtn').style.display = 'none';
+    }
 
-        nextLevel();
+    function fireShot() {
+        gameState = 'FIRED';
+        let userVal = parseInt(currentInput);
+        let isCorrect = (userVal === correctY);
+
+        // 1. 視覺特效：槍火閃光
+        flashOverlay.style.opacity = 0.8;
+        setTimeout(() => { flashOverlay.style.opacity = 0; }, 100);
+
+        // 2. 視覺特效：震動
+        gameWrapper.classList.add('shake-effect');
+        setTimeout(() => { gameWrapper.classList.remove('shake-effect'); }, 500);
+
+        // 3. 結算
+        if (isCorrect) {
+            score += 100;
+            displayInput.style.color = "#00ff00";
+            displayInput.style.borderColor = "#00ff00";
+            displayInput.innerText = "HIT!";
+        } else {
+            strikes++;
+            displayInput.style.color = "#ff0000";
+            displayInput.innerText = "MISS";
+        }
+        updateHUD();
+
+        // 4. 顯示下一關按鈕
+        if (strikes >= 3) {
+            setTimeout(() => { endGame("MISSION FAILED"); }, 1500);
+        } else {
+            document.getElementById('nextBtn').style.display = 'grid'; // 顯示綠色按鈕
+        }
     }
 
     function nextLevel() {
-        isGameActive = true;
+        gameState = 'IDLE';
         currentInput = "";
-        updateInputDisplay();
-        msgDiv.style.display = 'none';
+        displayInput.innerText = "?";
+        displayInput.style.color = "#ff4444";
+        displayInput.style.borderColor = "#555";
         
-        // 切換按鈕
-        document.querySelector('.key-enter').style.display = 'flex';
+        document.getElementById('fireBtn').style.display = 'grid';
         document.getElementById('nextBtn').style.display = 'none';
 
         generateQuestion();
-        drawScene(null); // null 代表還沒射擊
     }
 
     function generateQuestion() {
-        slope = Math.floor(Math.random() * 5) - 2; // -2 ~ 2
-        intercept = Math.floor(Math.random() * 9) - 4; // -4 ~ 4
-        targetX = Math.floor(Math.random() * 11) - 5; // -5 ~ 5
+        slope = Math.floor(Math.random() * 5) - 2; 
+        intercept = Math.floor(Math.random() * 9) - 4;
+        targetX = Math.floor(Math.random() * 9) - 4; // -4 ~ 4
         
-        // 避免太簡單
         if(slope === 0 && Math.random() > 0.5) slope = 1;
-
         correctY = slope * targetX + intercept;
         
-        // 顯示算式
         let sign = intercept >= 0 ? "+ " : "- ";
         let txt = `y = ${slope}x ${sign} ${Math.abs(intercept)}`;
         if (slope === 0) txt = `y = ${intercept}`;
@@ -308,135 +533,39 @@
         document.getElementById('targetDisplay').innerText = `x = ${targetX}`;
     }
 
-    function submitAnswer() {
-        if (currentInput === "" || currentInput === "-") return;
-        
-        let userVal = parseInt(currentInput);
-        isGameActive = false; // 鎖定輸入
-
-        drawScene(userVal); // 畫出結果
-
-        if (userVal === correctY) {
-            score += 100;
-            strikes = 0; // 連續錯誤重置? 題目說「連續打錯」才算，所以這裡歸零
-            showMsg("100 PTS!", "#ffeb3b");
-        } else {
-            strikes++;
-            showMsg("MISS!", "#d32f2f");
-        }
-        
+    function startGame() {
+        document.getElementById('overlay').style.display = 'none';
+        score = 0; strikes = 0; timeLeft = 180;
         updateHUD();
+        
+        if(timerInterval) clearInterval(timerInterval);
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            updateHUD();
+            if(timeLeft <= 0) endGame("TIME EXPIRED");
+        }, 1000);
 
-        if (strikes >= 3) {
-            setTimeout(() => gameOver("GAME OVER"), 1000);
-        } else {
-            // 切換成 Next 按鈕
-            document.querySelector('.key-enter').style.display = 'none';
-            document.getElementById('nextBtn').style.display = 'flex';
-        }
-    }
-
-    function showMsg(text, color) {
-        msgDiv.innerText = text;
-        msgDiv.style.color = color;
-        msgDiv.style.display = 'block';
+        nextLevel();
+        requestAnimationFrame(gameLoop); // 啟動繪圖循環
     }
 
     function updateHUD() {
-        document.getElementById('scoreDisplay').innerText = score.toString().padStart(6, '0');
-        document.getElementById('timeDisplay').innerText = timeLeft;
+        document.getElementById('scoreDisplay').innerText = score;
         document.getElementById('strikeDisplay').innerText = strikes;
+        document.getElementById('timeDisplay').innerText = timeLeft;
     }
 
-    function gameOver(reason) {
+    function endGame(reason) {
         clearInterval(timerInterval);
-        document.querySelector('#overlay h1').innerText = reason;
-        document.querySelector('#overlay p').innerText = `SCORE: ${score}`;
-        document.querySelector('.btn-start').innerText = "TRY AGAIN";
+        gameState = 'GAMEOVER';
+        document.querySelector('#overlay h1').innerHTML = reason;
+        document.querySelector('#overlay button').innerText = "RETRY MISSION";
         document.getElementById('overlay').style.display = 'flex';
     }
 
-    // === 繪圖 ===
-    function drawScene(userY) {
-        // 清空
-        ctx.fillStyle = "#fff"; // 畫布背景
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
-        // 畫網格
-        ctx.strokeStyle = "#e0e0e0";
-        ctx.lineWidth = 1;
-        for(let x=0; x<=canvas.width; x+=scale) {
-            ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,canvas.height); ctx.stroke();
-        }
-        for(let y=0; y<=canvas.height; y+=scale) {
-            ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(canvas.width,y); ctx.stroke();
-        }
-
-        // 畫軸
-        ctx.strokeStyle = "#000"; // 黑色粗線
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(0, centerY); ctx.lineTo(canvas.width, centerY);
-        ctx.moveTo(centerX, 0); ctx.lineTo(centerX, canvas.height);
-        ctx.stroke();
-
-        // 畫敵人 (目標線)
-        let pixelTargetX = centerX + targetX * scale;
-        ctx.strokeStyle = "rgba(255,0,0,0.5)";
-        ctx.setLineDash([4, 4]);
-        ctx.beginPath(); ctx.moveTo(pixelTargetX, 0); ctx.lineTo(pixelTargetX, canvas.height); ctx.stroke();
-        ctx.setLineDash([]);
-
-        // 畫敵人圖示 (Goomba 風格的方塊)
-        // 我們不知道高度在哪，所以只能在 X 軸上標記
-        ctx.fillStyle = "#8b4513"; // Brown
-        ctx.fillRect(pixelTargetX - 6, centerY - 6, 12, 12);
-
-        // 如果已經射擊，畫出軌跡
-        if (userY !== null) {
-            let isCorrect = (userY === correctY);
-            let pixelY = centerY - userY * scale;
-
-            // 函數線
-            ctx.strokeStyle = isCorrect ? "#00aa00" : "#888"; // 對是綠色，錯是灰色
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            let x1 = -15, y1 = slope*x1+intercept;
-            let x2 = 15, y2 = slope*x2+intercept;
-            
-            // 錯的時候畫射歪的線
-            if(!isCorrect) {
-                // 為了視覺簡單，錯的時候我們只畫"子彈軌跡"到那個錯誤點
-                ctx.strokeStyle = "#d32f2f";
-                ctx.beginPath();
-                ctx.moveTo(0, pixelY); // 簡單從左邊射入
-                ctx.lineTo(pixelTargetX, pixelY);
-            } else {
-                ctx.moveTo(centerX+x1*scale, centerY-y1*scale);
-                ctx.lineTo(centerX+x2*scale, centerY-y2*scale);
-            }
-            ctx.stroke();
-
-            // 爆炸點 / 命中點
-            ctx.beginPath();
-            ctx.arc(pixelTargetX, pixelY, 8, 0, Math.PI*2);
-            ctx.fillStyle = isCorrect ? "#ffeb3b" : "#555"; // 對是金色(金幣)，錯是深色
-            ctx.fill();
-            
-            // 如果錯了，顯示正確位置的綠色圈圈
-            if (!isCorrect) {
-                let trueY = centerY - correctY * scale;
-                ctx.beginPath();
-                ctx.arc(pixelTargetX, trueY, 8, 0, Math.PI*2);
-                ctx.strokeStyle = "#00aa00";
-                ctx.stroke();
-            }
-        }
-    }
-
-    // 初始化
-    drawScene(null);
-
+    // 啟動繪圖 (先畫一次靜態背景)
+    drawGrid(ctx, scale, 0.3);
+    
 </script>
 </body>
 </html>
