@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>瑪利歐函數大亂鬥 (1v1)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --p1-color: #ff0000; /* Mario Red */
+            --p1-bg: #ffebee;
+            --p2-color: #00c853; /* Luigi Green */
+            --p2-bg: #e8f5e9;
+            --brick-color: #795548;
+        }
+
+        * { box-sizing: border-box; user-select: none; }
+
+        body {
+            margin: 0; padding: 0;
+            width: 100vw; height: 100vh;
+            overflow: hidden;
+            background-color: #333;
+            font-family: 'Press Start 2P', cursive;
+            display: flex;
+            justify-content: center;
+        }
+
+        /* 主戰場容器 */
+        .battle-arena {
+            display: flex;
+            width: 100%; height: 100%;
+            position: relative;
+        }
+
+        /* 分割線 */
+        .divider {
+            width: 8px;
+            background: repeating-linear-gradient(
+                45deg,
+                #000,
+                #000 10px,
+                #ffd700 10px,
+                #ffd700 20px
+            );
+            z-index: 10;
+        }
+
+        /* 玩家區域 */
+        .player-zone {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            padding: 10px;
+        }
+
+        #zone-p1 { background-color: var(--p1-bg); border-right: 4px solid #000; }
+        #zone-p2 { background-color: var(--p2-bg); border-left: 4px solid #000; }
+
+        /* 血條與狀態 */
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: #000;
+            color: #fff;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            box-shadow: 0 4px rgba(0,0,0,0.3);
+        }
+        .hp-container { display: flex; gap: 5px; }
+        .heart { color: red; font-size: 20px; }
+        .heart.lost { color: #555; }
+        .player-name { font-size: 16px; }
+        .p1-name { color: var(--p1-color); }
+        .p2-name { color: var(--p2-color); }
+
+        /* 題目顯示 (磚塊風格) */
+        .question-brick {
+            background-color: var(--brick-color);
+            background-image: 
+                linear-gradient(335deg, rgba(0,0,0,0.3) 23px, transparent 23px),
+                linear-gradient(155deg, rgba(0,0,0,0.3) 23px, transparent 23px);
+            background-size: 58px 58px;
+            border: 4px solid #000;
+            color: #fff;
+            padding: 15px;
+            text-align: center;
+            font-size: 18px; /* 題目字體大一點 */
+            margin-bottom: 10px;
+            box-shadow: 0 6px #3e2723;
+            line-height: 1.5;
+        }
+        .highlight { color: #ffd700; text-shadow: 2px 2px #000; }
+
+        /* 戰鬥畫面 (Canvas) */
+        .canvas-container {
+            flex-grow: 1;
+            background: #5c94fc; /* Sky Blue */
+            border: 4px solid #000;
+            margin-bottom: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+        canvas { width: 100%; height: 100%; display: block; }
+        
+        /* 懲罰遮罩 */
+        .stun-overlay {
+            position: absolute; top:0; left:0; right:0; bottom:0;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+            z-index: 5;
+            font-size: 24px;
+        }
+
+        /* 鍵盤區 */
+        .keypad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            height: 220px; /* 固定高度 */
+        }
+
+        .btn {
+            background: #fff;
+            border: 4px solid #000;
+            font-family: 'Press Start 2P';
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 4px #999;
+            color: #333;
+        }
+        .btn:active { transform: translateY(4px); box-shadow: 0 0 #999; }
+        
+        /* 玩家1 按鈕色系 */
+        #zone-p1 .btn-action { background: var(--p1-color); color: white; border-color: #b71c1c; }
+        #zone-p1 .btn-del { background: #ffcdd2; }
+        
+        /* 玩家2 按鈕色系 */
+        #zone-p2 .btn-action { background: var(--p2-color); color: white; border-color: #1b5e20; }
+        #zone-p2 .btn-del { background: #c8e6c9; }
+
+        /* 輸入框顯示 */
+        .input-display {
+            background: #000;
+            color: #fff;
+            padding: 10px;
+            text-align: center;
+            font-size: 24px;
+            border: 4px solid #fff;
+            margin-bottom: 10px;
+            height: 50px;
+        }
+
+        /* 開始/結算遮罩 */
+        #main-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9);
+            display: flex; flex-direction: column; 
+            justify-content: center; align-items: center;
+            z-index: 100; color: white; text-align: center;
+        }
+        #main-overlay h1 { font-size: 40px; color: #ffd700; text-shadow: 4px 4px #c62828; margin-bottom: 20px;}
+        .big-btn {
+            padding: 20px 40px; font-size: 24px; font-family: 'Press Start 2P';
+            background: #ffd700; border: 4px solid #fff; cursor: pointer;
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse { 0% {transform: scale(1);} 50% {transform: scale(1.05);} 100% {transform: scale(1);} }
+
+        /* 攻擊動畫元素 */
+        .projectile {
+            position: absolute;
+            width: 30px; height: 30px;
+            border-radius: 50%;
+            display: none;
+            transition: all 0.5s linear;
+        }
+        .fireball { background: radial-gradient(circle, yellow, red); border: 2px solid #fff; box-shadow: 0 0 10px orange; }
+        .shell { background: green; border: 2px solid white; }
+
+        /* 角色站位 */
+        .char {
+            position: absolute; bottom: 10px; width: 50px; height: 50px;
+        }
+        .char-p1 { left: 20px; background: red; box-shadow: 4px 4px 0 #800000; }
+        .char-p2 { right: 20px; background: green; box-shadow: -4px 4px 0 #004d40; }
+        /* 簡單的像素眼睛 */
+        .eye { position: absolute; top: 10px; width: 5px; height: 5px; background: black; }
+        .char-p1 .eye { right: 5px; }
+        .char-p2 .eye { left: 5px; }
+
+    </style>
+</head>
+<body>
+
+    <div class="battle-arena">
+        
+        <div class="player-zone" id="zone-p1">
+            <div class="status-bar">
+                <div class="player-name p1-name">MARIO</div>
+                <div class="hp-container" id="p1-hp">
+                    <span class="heart">♥</span><span class="heart">♥</span><span class="heart">♥</span><span class="heart">♥</span><span class="heart">♥</span>
+                </div>
+            </div>
+            
+            <div class="question-brick">
+                <div>WEAPON: <span id="p1-eq" class="highlight">y = 2x</span></div>
+                <div>TARGET: <span id="p1-target" class="highlight">x = 3</span></div>
+            </div>
+
+            <div class="canvas-container">
+                <canvas id="canvas-p1"></canvas>
+                <div class="char char-p1"><div class="eye"></div></div>
+                <div id="p1-stun" class="stun-overlay">
+                    <div>DIZZY!</div>
+                    <div id="p1-timer">2.0</div>
+                </div>
+            </div>
+
+            <div class="input-display" id="p1-input">?</div>
+
+            <div class="keypad">
+                <button class="btn" ontouchstart="input(1, '1')" onclick="input(1, '1')">1</button>
+                <button class="btn" ontouchstart="input(1, '2')" onclick="input(1, '2')">2</button>
+                <button class="btn" ontouchstart="input(1, '3')" onclick="input(1, '3')">3</button>
+                <button class="btn" ontouchstart="input(1, '4')" onclick="input(1, '4')">4</button>
+                <button class="btn" ontouchstart="input(1, '5')" onclick="input(1, '5')">5</button>
+                <button class="btn" ontouchstart="input(1, '6')" onclick="input(1, '6')">6</button>
+                <button class="btn" ontouchstart="input(1, '7')" onclick="input(1, '7')">7</button>
+                <button class="btn" ontouchstart="input(1, '8')" onclick="input(1, '8')">8</button>
+                <button class="btn" ontouchstart="input(1, '9')" onclick="input(1, '9')">9</button>
+                <button class="btn btn-action" style="background:#ffcdd2; color:black;" ontouchstart="input(1, '-')" onclick="input(1, '-')">-</button>
+                <button class="btn" ontouchstart="input(1, '0')" onclick="input(1, '0')">0</button>
+                <button class="btn btn-action" ontouchstart="fire(1)" onclick="fire(1)">FIRE</button>
+                <button class="btn btn-del" style="grid-column: span 3; height: 40px; margin-top:5px;" ontouchstart="input(1, 'C')" onclick="input(1, 'C')">CLEAR</button>
+            </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="player-zone" id="zone-p2">
+            <div class="status-bar">
+                <div class="hp-container" id="p2-hp">
+                    <span class="heart">♥</span><span class="heart">♥</span><span class="heart">♥</span><span class="heart">♥</span><span class="heart">♥</span>
+                </div>
+                <div class="player-name p2-name">LUIGI</div>
+            </div>
+
+            <div class="question-brick">
+                <div>WEAPON: <span id="p2-eq" class="highlight">y = ?</span></div>
+                <div>TARGET: <span id="p2-target" class="highlight">x = ?</span></div>
+            </div>
+
+            <div class="canvas-container">
+                <canvas id="canvas-p2"></canvas>
+                <div class="char char-p2"><div class="eye"></div></div>
+                <div id="p2-stun" class="stun-overlay">
+                    <div>DIZZY!</div>
+                    <div id="p2-timer">2.0</div>
+                </div>
+            </div>
+
+            <div class="input-display" id="p2-input">?</div>
+
+            <div class="keypad">
+                <button class="btn" ontouchstart="input(2, '1')" onclick="input(2, '1')">1</button>
+                <button class="btn" ontouchstart="input(2, '2')" onclick="input(2, '2')">2</button>
+                <button class="btn" ontouchstart="input(2, '3')" onclick="input(2, '3')">3</button>
+                <button class="btn" ontouchstart="input(2, '4')" onclick="input(2, '4')">4</button>
+                <button class="btn" ontouchstart="input(2, '5')" onclick="input(2, '5')">5</button>
+                <button class="btn" ontouchstart="input(2, '6')" onclick="input(2, '6')">6</button>
+                <button class="btn" ontouchstart="input(2, '7')" onclick="input(2, '7')">7</button>
+                <button class="btn" ontouchstart="input(2, '8')" onclick="input(2, '8')">8</button>
+                <button class="btn" ontouchstart="input(2, '9')" onclick="input(2, '9')">9</button>
+                <button class="btn btn-action" style="background:#c8e6c9; color:black;" ontouchstart="input(2, '-')" onclick="input(2, '-')">-</button>
+                <button class="btn" ontouchstart="input(2, '0')" onclick="input(2, '0')">0</button>
+                <button class="btn btn-action" ontouchstart="fire(2)" onclick="fire(2)">FIRE</button>
+                <button class="btn btn-del" style="grid-column: span 3; height: 40px; margin-top:5px;" ontouchstart="input(2, 'C')" onclick="input(2, 'C')">CLEAR</button>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="main-overlay">
+        <h1 id="ov-title">MATH BATTLE</h1>
+        <p style="margin-bottom:30px; color:#ddd;">函數對決：先扣光對方血量者勝！</p>
+        <button class="big-btn" onclick="startGame()">START</button>
+    </div>
+
+<script>
+    // 遊戲參數
+    const MAX_HP = 5;
+    
+    // 玩家狀態物件
+    const p1 = {
+        id: 1,
+        hp: MAX_HP,
+        input: "",
+        slope: 0, intercept: 0, targetX: 0, correctY: 0,
+        isStunned: false,
+        ctx: document.getElementById('canvas-p1').getContext('2d'),
+        canvas: document.getElementById('canvas-p1')
+    };
+
+    const p2 = {
+        id: 2,
+        hp: MAX_HP,
+        input: "",
+        slope: 0, intercept: 0, targetX: 0, correctY: 0,
+        isStunned: false,
+        ctx: document.getElementById('canvas-p2').getContext('2d'),
+        canvas: document.getElementById('canvas-p2')
+    };
+
+    // RWD Canvas
+    function resizeCanvases() {
+        const w = document.querySelector('.canvas-container').clientWidth;
+        const h = document.querySelector('.canvas-container').clientHeight;
+        p1.canvas.width = w; p1.canvas.height = h;
+        p2.canvas.width = w; p2.canvas.height = h;
+        drawScene(p1);
+        drawScene(p2);
+    }
+    window.addEventListener('resize', resizeCanvases);
+
+    // 遊戲流程
+    function startGame() {
+        document.getElementById('main-overlay').style.display = 'none';
+        
+        // 重置狀態
+        p1.hp = MAX_HP; p2.hp = MAX_HP;
+        p1.isStunned = false; p2.isStunned = false;
+        
+        updateHP(p1); updateHP(p2);
+        
+        resizeCanvases();
+        
+        nextQuestion(p1);
+        nextQuestion(p2);
+    }
+
+    function nextQuestion(p) {
+        p.input = "";
+        updateInputDisplay(p);
+        
+        // 出題
+        p.slope = Math.floor(Math.random() * 5) - 2; 
+        if(p.slope === 0) p.slope = 1;
+        p.intercept = Math.floor(Math.random() * 9) - 4;
+        p.targetX = Math.floor(Math.random() * 9) - 4;
+        p.correctY = p.slope * p.targetX + p.intercept;
+
+        // 顯示
+        let sign = p.intercept >= 0 ? "+ " : "- ";
+        let txt = `y = ${p.slope}x ${sign} ${Math.abs(p.intercept)}`;
+        if(p.slope===1) txt=`y=x ${sign} ${Math.abs(p.intercept)}`;
+        else if(p.slope===-1) txt=`y=-x ${sign} ${Math.abs(p.intercept)}`;
+        else if(p.intercept===0) txt=`y=${p.slope}x`;
+
+        document.getElementById(`p${p.id}-eq`).innerText = txt;
+        document.getElementById(`p${p.id}-target`).innerText = `x = ${p.targetX}`;
+        
+        drawScene(p);
+    }
+
+    function input(pid, key) {
+        // 防止 click 和 touchstart 重複觸發
+        event.preventDefault(); 
+
+        const p = pid === 1 ? p1 : p2;
+        if (p.isStunned) return;
+
+        if (key === 'C') {
+            p.input = "";
+        } else if (key === '-') {
+            if (p.input === "") p.input = "-";
+            else if (p.input === "-") p.input = "";
+        } else {
+            if (p.input.length < 4) p.input += key;
+        }
+        updateInputDisplay(p);
+    }
+
+    function updateInputDisplay(p) {
+        document.getElementById(`p${p.id}-input`).innerText = p.input === "" ? "?" : p.input;
+    }
+
+    function fire(pid) {
+        event.preventDefault();
+        const p = pid === 1 ? p1 : p2;
+        const opponent = pid === 1 ? p2 : p1;
+        
+        if (p.isStunned || p.input === "" || p.input === "-") return;
+
+        let val = parseInt(p.input);
+
+        // 視覺回饋：畫出軌跡
+        animateShot(p, val, opponent);
+    }
+
+    function resolveShot(p, val, opponent) {
+        if (val === p.correctY) {
+            // 答對：扣對方血
+            opponent.hp--;
+            updateHP(opponent);
+            
+            // 檢查勝利
+            if(opponent.hp <= 0) {
+                endGame(p.id === 1 ? "MARIO WINS!" : "LUIGI WINS!");
+            } else {
+                nextQuestion(p);
+            }
+        } else {
+            // 答錯：自己暈眩
+            stunPlayer(p);
+        }
+    }
+
+    function stunPlayer(p) {
+        p.isStunned = true;
+        const overlay = document.getElementById(`p${p.id}-stun`);
+        const timer = document.getElementById(`p${p.id}-timer`);
+        overlay.style.display = 'flex';
+        
+        let timeLeft = 2.0;
+        timer.innerText = timeLeft.toFixed(1);
+        
+        let interval = setInterval(() => {
+            timeLeft -= 0.1;
+            timer.innerText = timeLeft.toFixed(1);
+            if (timeLeft <= 0) {
+                clearInterval(interval);
+                overlay.style.display = 'none';
+                p.isStunned = false;
+                p.input = "";
+                updateInputDisplay(p);
+                drawScene(p); // 重畫以清除錯誤軌跡
+            }
+        }, 100);
+    }
+
+    function updateHP(p) {
+        const container = document.getElementById(`p${p.id}-hp`);
+        container.innerHTML = "";
+        for(let i=0; i<MAX_HP; i++) {
+            let span = document.createElement('span');
+            span.className = "heart" + (i < p.hp ? "" : " lost");
+            span.innerHTML = "♥";
+            container.appendChild(span);
+        }
+    }
+
+    function endGame(msg) {
+        document.getElementById('main-overlay').style.display = 'flex';
+        document.querySelector('#main-overlay h1').innerText = msg;
+        document.querySelector('.big-btn').innerText = "REMATCH";
+    }
+
+    // --- 繪圖與動畫 ---
+
+    function drawScene(p) {
+        const ctx = p.ctx;
+        const w = p.canvas.width;
+        const h = p.canvas.height;
+        const cx = w/2; 
+        const cy = h/2;
+        const scale = w / 20;
+
+        // 清空
+        ctx.fillStyle = "#5c94fc";
+        ctx.fillRect(0,0,w,h);
+
+        // 畫座標軸
+        ctx.strokeStyle = "rgba(0,0,0,0.3)"; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(0, cy); ctx.lineTo(w, cy); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(cx, 0); ctx.lineTo(cx, h); ctx.stroke();
+
+        // 畫目標線 (敵人位置)
+        let px = cx + p.targetX * scale;
+        ctx.strokeStyle = "rgba(255,0,0,0.5)"; ctx.setLineDash([5,5]);
+        ctx.beginPath(); ctx.moveTo(px, 0); ctx.lineTo(px, h); ctx.stroke(); ctx.setLineDash([]);
+        
+        // 畫目標 (Goomba/Turtle)
+        ctx.fillStyle = "#8d6e63";
+        ctx.beginPath(); ctx.arc(px, cy, 10, 0, Math.PI*2); ctx.fill();
+    }
+
+    function animateShot(p, val, opponent) {
+        const ctx = p.ctx;
+        const w = p.canvas.width;
+        const h = p.canvas.height;
+        const cx = w/2; 
+        const cy = h/2;
+        const scale = w / 20;
+        
+        let startX = p.id === 1 ? 20 : w - 20; // 從角色發射
+        let startY = h - 20;
+
+        let targetPixelX = cx + p.targetX * scale;
+        let targetPixelY = cy - val * scale;
+        
+        // 簡單動畫：畫出火球飛過去
+        let progress = 0;
+        
+        function loop() {
+            progress += 0.1;
+            if(progress > 1) progress = 1;
+            
+            // 重畫背景
+            drawScene(p);
+
+            // 當前火球位置
+            let currX = startX + (targetPixelX - startX) * progress;
+            let currY = startY + (targetPixelY - startY) * progress;
+
+            // 畫軌跡線
+            ctx.strokeStyle = p.id===1 ? "red" : "green";
+            ctx.lineWidth = 3;
+            ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(currX, currY); ctx.stroke();
+
+            // 畫火球
+            ctx.fillStyle = p.id===1 ? "orange" : "lightgreen";
+            ctx.beginPath(); ctx.arc(currX, currY, 8, 0, Math.PI*2); ctx.fill();
+
+            if (progress < 1) {
+                requestAnimationFrame(loop);
+            } else {
+                // 動畫結束，顯示結果
+                if (val === p.correctY) {
+                    // 畫爆炸
+                    ctx.fillStyle = "yellow";
+                    ctx.beginPath(); ctx.arc(targetPixelX, targetPixelY, 20, 0, Math.PI*2); ctx.fill();
+                }
+                setTimeout(() => resolveShot(p, val, opponent), 200);
+            }
+        }
+        loop();
+    }
+    
+    // 初始化
+    resizeCanvases();
+
+</script>
+</body>
+</html>
