@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>函數大戰</title>
+    <title>函數大戰：動態排名版</title>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
     <style>
@@ -46,7 +46,6 @@
         .seat-btn.selected { background: var(--gold); color: #000; border-color: red; transform: scale(1.1); }
         .seat-btn.disabled { background: #555; color: #888; cursor: not-allowed; border-color: #555; pointer-events: none; }
         
-        /* 連線狀態燈 */
         .status-dot { width: 15px; height: 15px; border-radius: 50%; background: red; margin: 10px auto; border: 2px solid #fff; transition: background 0.3s; }
         .status-connected { background: #00ff00; box-shadow: 0 0 10px #00ff00; }
 
@@ -68,35 +67,25 @@
         .analysis-item { border-bottom: 1px solid #555; padding: 10px 0; font-size: 12px; line-height: 1.6; color: #fff; }
         .tag-correct { color: var(--green); } .tag-wrong { color: var(--red); }
 
-        /* === 老師戰情室 (新佈局：Grid 3欄) === */
+        /* === 老師戰情室 === */
         #teacher-dashboard { display: none; height: 100%; flex-direction: column; background: #1a1a1a; }
         
         .dashboard-header { 
             background: #000; border-bottom: 4px solid var(--gold); padding: 10px 20px;
-            display: grid; 
-            grid-template-columns: 1fr auto 1fr; /* 左-中-右 佈局 */
-            align-items: center; gap: 10px;
+            display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px;
         }
         
-        /* 左側區塊 */
         .header-left { justify-self: start; display: flex; align-items: center; gap: 15px; }
         .room-info { font-size: 16px; color: var(--gold); white-space: nowrap; }
         .view-switch { display: flex; gap: 5px; }
         .view-btn { padding: 8px 12px; border: 2px solid #555; background: #333; color: #fff; font-size: 12px; cursor: pointer; }
         .view-btn.active { border-color: var(--gold); background: #555; color: var(--gold);}
 
-        /* 中間區塊 (時間顯示) */
         .header-center { justify-self: center; text-align: center; }
         .timer-input-group { display: flex; align-items: center; gap: 5px; font-size: 12px; color: #aaa; background: #222; padding: 5px 10px; border-radius: 5px; border:1px solid #555;}
         .timer-input { width: 50px; padding: 5px; font-size: 14px; text-align: center; color: white; background: #000; border: 1px solid #555;}
-        /* 計時器樣式優化 */
-        .live-timer { 
-            font-size: 40px; color: var(--red); font-weight: bold; 
-            text-shadow: 0 0 10px rgba(255,0,0,0.5); letter-spacing: 2px;
-            display: none; /* 預設隱藏 */
-        }
+        .live-timer { font-size: 40px; color: var(--red); font-weight: bold; text-shadow: 0 0 10px rgba(255,0,0,0.5); display: none; }
 
-        /* 右側區塊 (按鈕) */
         .header-right { justify-self: end; }
         .btn-ctrl { padding: 10px 20px; font-size: 14px; border: 2px solid #fff; color: white; cursor: pointer; display: none; }
         .btn-start { background: var(--green); display: block; font-size: 16px;} 
@@ -104,42 +93,41 @@
         .btn-resume { background: #2196f3; }
         .btn-end { background: var(--red); }
         
-        /* 全景監控 */
         #view-screens { display: flex; height: 100%; overflow: hidden; padding: 10px; gap: 10px; }
-        .monitor-wall { 
-            flex: 3; display: grid; grid-template-columns: repeat(4, 1fr); 
-            gap: 10px; overflow-y: auto; align-content: start; 
-        }
-        .student-card { 
-            background: #333; border: 3px solid #555; padding: 5px; 
-            display: flex; flex-direction: column; aspect-ratio: 1/1; 
-        }
+        .monitor-wall { flex: 3; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; overflow-y: auto; align-content: start; }
+        .student-card { background: #333; border: 3px solid #555; padding: 5px; display: flex; flex-direction: column; aspect-ratio: 1/1; }
         .student-card.active { border: 3px solid var(--green); box-shadow: 0 0 10px var(--green); }
         .mini-hud { color: var(--gold); font-size: 18px; margin-bottom: 5px; font-weight: bold; display: flex; justify-content: space-between;}
         .mini-input-preview { background: #000; color: #fff; text-align: center; font-size: 16px; margin-top: 2px; }
         .mini-canvas { background: #fff; width: 100%; flex-grow: 1; display: block; border: 1px solid #999;}
 
-        /* 排行榜 */
+        /* ★★★ 動態排行榜 (絕對定位) ★★★ */
         .leaderboard-sidebar { 
             flex: 1; min-width: 280px;
-            background: #222; border: 4px solid #fff; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; 
+            background: #222; border: 4px solid #fff; padding: 15px; 
+            overflow-y: auto; position: relative; /* 重要：給內部 absolute 定位用 */
         }
-        .lb-title { text-align: center; color: var(--gold); border-bottom: 4px solid #555; padding-bottom: 10px; margin-bottom: 15px; font-size: 20px;}
+        .lb-title { text-align: center; color: var(--gold); border-bottom: 4px solid #555; padding-bottom: 10px; margin-bottom: 15px; font-size: 20px; position:sticky; top:0; background:#222; z-index:10;}
+        
+        /* 容器撐開高度，讓捲軸出現 */
+        #lb-content { position: relative; width: 100%; } 
+
         .lb-row { 
-            display: flex; align-items: center; margin-bottom: 10px; background: #333; padding: 10px; 
+            display: flex; align-items: center; background: #333; padding: 10px; 
             font-size: 18px; border: 1px solid #555; 
+            /* 動態位移關鍵 */
+            position: absolute; left: 0; right: 0; height: 50px;
+            transition: top 0.5s ease-in-out; /* 滑動動畫 */
         }
         .lb-bar-bg { flex-grow: 1; height: 12px; background: #000; margin: 0 10px; border-radius: 5px; }
         .lb-bar { height: 100%; background: var(--green); width: 0%; border-radius: 5px; transition: width 0.5s; }
 
-        /* 對決模式 */
         #view-versus { display: none; height: 100%; padding: 20px; background: radial-gradient(circle, #222, #000); }
         .versus-container { display: flex; height: 100%; align-items: center; justify-content: center; gap: 40px;}
         .vs-card { width: 45%; height: 90%; background: #222; border: 4px solid #fff; display: flex; flex-direction: column; padding: 15px; position: relative; }
         .hp-bar { height: 100%; width: 0%; transition: width 0.5s; }
         .vs-canvas { flex-grow: 1; background: #fff; width: 100%; border: 4px solid #555; }
 
-        /* 檢討模式 */
         #view-review { display: none; height: 100%; flex-direction: column; padding: 20px; overflow-y: auto; background: #1a1a1a; }
         .error-card { background: #333; border-left: 8px solid var(--red); padding: 20px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; color: #fff;}
         .bar-fill { height: 100%; background: var(--red); border-radius: 5px; }
@@ -167,7 +155,7 @@
 
             <div id="form-teacher" style="display:none;">
                 <input type="text" id="t-code" placeholder="設定教室代碼" oninput="this.value = this.value.toUpperCase();">
-                <input type="password" id="t-pass" placeholder="輸入密碼">
+                <input type="password" id="t-pass" placeholder="輸入密碼 (0118)">
                 <div style="display:flex; align-items:center; justify-content:center; margin-top:20px; font-size:16px;">
                     <label style="margin-right:10px; color:#ffd700;">遊戲人數:</label>
                     <input type="number" id="t-limit" value="35" min="1" max="35" style="width:80px; padding:5px; font-size:16px;">
@@ -186,7 +174,7 @@
 
     <div id="paused-overlay">
         <h1 style="font-size: 32px; color: #ff9800; animation: blink 1s infinite;">PAUSED</h1>
-        <p>老師講解中，請看大螢幕</p>
+        <p>老師講解中</p>
     </div>
 
     <div id="game-interface">
@@ -238,7 +226,7 @@
             
             <div class="header-center">
                 <div class="timer-input-group" id="t-timer-setup">
-                    倒數設定: <input type="number" id="t-input-min" class="timer-input" value="5"> 分
+                    設定: <input type="number" id="t-input-min" class="timer-input" value="5"> 分
                 </div>
                 <div class="live-timer" id="t-live-timer">05:00</div>
             </div>
@@ -274,16 +262,11 @@
 
 <script>
     // ======================================================
-    // 您的 Google Apps Script 網址
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwfhsDnhuEOcot-1nVxTKNxES0RJOorsnvYWeOZtuCzGyXBxbHnT82KzEXmD1WEj0I5Eg/exec";
     // ======================================================
 
-    // 0118 Hash
     const PASSWORD_HASH = "94cd2e23b72c91350a5170cfd037a342372c3d9050d26989439c2794776b9777";
-    async function checkPassword(input) {
-        // 直接比對避免瀏覽器限制
-        return input === "0118";
-    }
+    async function checkPassword(input) { return input === "0118"; }
 
     const MQTT_BROKER = 'wss://broker.hivemq.com:8884/mqtt';
     const TARGET_SCORE = 2000;
@@ -292,10 +275,7 @@
     let playerData = { name: '', score: 0, currentInput: '', q: {}, lastLine: null, history: [] };
     let classState = {}, questionStats = {}, gameState = 'WAITING';
     let currentView = 'screens', versusP1 = 1, versusP2 = 2;
-    
-    // 計時器
-    let timerInterval = null;
-    let remainingTime = 300; 
+    let timerInterval = null, remainingTime = 300;
 
     const seatContainer = document.getElementById('seat-container');
     for(let i=1; i<=35; i++){
@@ -314,9 +294,7 @@
     function connectMQTT(code, onConnect) {
         const clientId = 'math_' + Math.random().toString(16).substr(2, 8);
         client = mqtt.connect(MQTT_BROKER, { clientId: clientId });
-        
         client.on('connect', () => {
-            console.log("MQTT Connected");
             if(myRole === 'student') {
                 document.getElementById('s-status-dot').classList.add('status-connected');
                 document.getElementById('s-status-text').innerText = "已連線，準備就緒";
@@ -324,18 +302,14 @@
             }
             onConnect();
         });
-        
         client.on('message', (topic, msg) => handleMessage(topic, msg.toString()));
     }
 
     function handleMessage(topic, payload) {
         const parts = topic.split('/'); const type = parts[2];
-        
         if (myRole === 'student') {
             if (type === 'status') {
-                let cmd = {};
-                try { cmd = JSON.parse(payload); } catch(e) { cmd = { action: payload }; }
-
+                let cmd = {}; try { cmd = JSON.parse(payload); } catch(e) { cmd = { action: payload }; }
                 if(cmd.action === 'START') {
                     if(cmd.duration) remainingTime = cmd.duration;
                     document.getElementById('waiting-room').style.display = 'none'; 
@@ -353,11 +327,8 @@
                     clearInterval(timerInterval);
                     endGameForStudent(); 
                 }
-            } else if (type === 'config') {
-                updateSeatLimit(JSON.parse(payload).maxSeats);
-            }
-        } 
-        else if (myRole === 'teacher') {
+            } else if (type === 'config') { updateSeatLimit(JSON.parse(payload).maxSeats); }
+        } else if (myRole === 'teacher') {
             if (type === 'data') updateTeacherScreen(parts[3], JSON.parse(payload));
             if (type === 'log') recordAnswerLog(JSON.parse(payload));
         }
@@ -365,15 +336,10 @@
 
     function startLocalTimer() {
         if(timerInterval) clearInterval(timerInterval);
-        updateTimerDisplay(); 
+        updateTimerDisplay();
         timerInterval = setInterval(() => {
-            if(remainingTime > 0) {
-                remainingTime--;
-                updateTimerDisplay();
-            } else {
-                clearInterval(timerInterval);
-                if(myRole === 'teacher') sendSignal('STOP'); // 時間到自動結束
-            }
+            if(remainingTime > 0) { remainingTime--; updateTimerDisplay(); }
+            else { clearInterval(timerInterval); if(myRole === 'teacher') sendSignal('STOP'); }
         }, 1000);
     }
 
@@ -402,8 +368,7 @@
 
         initTeacherUI();
         connectMQTT(code, () => {
-            client.subscribe(`game/${code}/data/+`); 
-            client.subscribe(`game/${code}/log`);
+            client.subscribe(`game/${code}/data/+`); client.subscribe(`game/${code}/log`);
             setInterval(() => client.publish(`game/${code}/config`, JSON.stringify({ maxSeats }), {retain: true}), 2000);
         });
         updateControlButtons('WAITING');
@@ -412,15 +377,25 @@
     function initTeacherUI() {
         const wall = document.getElementById('monitor-wall'); wall.innerHTML = "";
         const lbContent = document.getElementById('lb-content'); lbContent.innerHTML = "";
+        
+        // 確保排行榜容器高度足夠，讓捲軸出現 (55px 是每列高度 + 邊距)
+        lbContent.style.height = (maxSeats * 55) + "px";
+
         const s1 = document.getElementById('sel-p1'), s2 = document.getElementById('sel-p2'); s1.innerHTML=""; s2.innerHTML="";
 
         for(let i=1; i<=maxSeats; i++){
+            // 監控牆
             let card = document.createElement('div'); card.className = 'student-card'; card.id = `card-${i}`;
             card.innerHTML = `<div class="mini-hud"><span style="color:var(--gold)">#${i}</span><span id="name-${i}" style="overflow:hidden; white-space:nowrap; max-width:60px;">...</span><span id="score-${i}">0</span></div><canvas class="mini-canvas" id="mini-${i}"></canvas><div class="mini-input-preview" id="input-${i}">?</div>`;
             wall.appendChild(card);
             
-            let row = document.createElement('div'); row.className = 'lb-row'; row.id = `lb-row-${i}`; row.style.display = 'none';
-            row.innerHTML = `<span style="width:30px;color:var(--gold);font-weight:bold;" id="lb-pos-${i}">-</span><span style="width:80px;overflow:hidden;white-space:nowrap" id="lb-name-${i}">...</span><div class="lb-bar-bg"><div class="lb-bar" id="lb-bar-${i}"></div></div><span id="lb-score-${i}">0</span>`;
+            // 排行榜條目 (使用 Absolute 定位)
+            let row = document.createElement('div'); 
+            row.className = 'lb-row'; 
+            row.id = `lb-row-${i}`; 
+            // 初始位置，全部堆在上面或按順序排
+            row.style.top = ((i-1) * 55) + "px"; 
+            row.innerHTML = `<span style="width:30px;color:var(--gold);font-weight:bold;" id="lb-pos-${i}">${i}</span><span style="width:80px;overflow:hidden;white-space:nowrap" id="lb-name-${i}">...</span><div class="lb-bar-bg"><div class="lb-bar" id="lb-bar-${i}"></div></div><span id="lb-score-${i}">0</span>`;
             lbContent.appendChild(row);
 
             let op1 = document.createElement('option'); op1.value=i; op1.innerText=`#${i}`; s1.appendChild(op1);
@@ -431,19 +406,13 @@
 
     function sendSignal(action) {
         let payload = { action: action };
-        
         if(action === 'START') {
             const mins = parseInt(document.getElementById('t-input-min').value) || 5;
-            remainingTime = mins * 60;
-            payload.duration = remainingTime;
-            
-            gameState = 'RUNNING';
-            document.getElementById('t-timer-setup').style.display = 'none';
-            document.getElementById('t-live-timer').style.display = 'block';
-            startLocalTimer();
+            remainingTime = mins * 60; payload.duration = remainingTime;
+            gameState = 'RUNNING'; startLocalTimer();
         } 
-        else if (action === 'PAUSE') { gameState = 'PAUSED'; clearInterval(timerInterval); } 
-        else if (action === 'RESUME') { gameState = 'RUNNING'; startLocalTimer(); } 
+        else if (action === 'PAUSE') { gameState = 'PAUSED'; clearInterval(timerInterval); }
+        else if (action === 'RESUME') { gameState = 'RUNNING'; startLocalTimer(); }
         else if (action === 'STOP') { gameState = 'ENDED'; clearInterval(timerInterval); switchView('review'); }
 
         client.publish(`game/${classCode}/status`, JSON.stringify(payload), { retain: true });
@@ -455,21 +424,17 @@
         const runningGroup = document.getElementById('running-controls');
         const btnPause = document.getElementById('btn-c-pause');
         const btnResume = document.getElementById('btn-c-resume');
+        const timerSetup = document.getElementById('t-timer-setup');
+        const liveTimer = document.getElementById('t-live-timer');
 
         if(state === 'WAITING') {
-            btnStart.style.display = 'block';
-            runningGroup.style.display = 'none';
+            btnStart.style.display = 'block'; runningGroup.style.display = 'none';
+            timerSetup.style.display = 'flex'; liveTimer.style.display = 'none';
         } else {
-            btnStart.style.display = 'none';
-            runningGroup.style.display = 'flex';
-            
-            if(state === 'RUNNING') {
-                btnPause.style.display = 'block';
-                btnResume.style.display = 'none';
-            } else if (state === 'PAUSED') {
-                btnPause.style.display = 'none';
-                btnResume.style.display = 'block';
-            }
+            btnStart.style.display = 'none'; runningGroup.style.display = 'flex';
+            timerSetup.style.display = 'none'; liveTimer.style.display = 'block';
+            if(state === 'RUNNING') { btnPause.style.display = 'block'; btnResume.style.display = 'none'; } 
+            else if (state === 'PAUSED') { btnPause.style.display = 'none'; btnResume.style.display = 'block'; }
         }
     }
     function confirmEnd() { if(confirm("確定結束並結算？")) sendSignal('STOP'); }
@@ -492,7 +457,10 @@
         document.getElementById(`score-${id}`).innerText = data.score;
         document.getElementById(`input-${id}`).innerText = data.input || "?";
         const cvs = document.getElementById(`mini-${id}`);
-        if(cvs && cvs.offsetParent !== null) { if(cvs.width !== cvs.clientWidth) { cvs.width = cvs.clientWidth; cvs.height = cvs.clientHeight; } drawScene(cvs.getContext('2d'), cvs.width, cvs.height, data.q, data.input, null); }
+        if(cvs && cvs.offsetParent !== null) { 
+            if(cvs.width !== cvs.clientWidth) { cvs.width = cvs.clientWidth; cvs.height = cvs.clientHeight; } 
+            drawScene(cvs.getContext('2d'), cvs.width, cvs.height, data.q, data.input, null); 
+        }
         if(currentView === 'versus' && (parseInt(id)===versusP1 || parseInt(id)===versusP2)) updateVersusSelection();
         updateLeaderboard();
     }
@@ -515,18 +483,38 @@
     }
 
     function updateLeaderboard() {
-        let players = []; for(let id in classState) players.push({id:id, ...classState[id]});
+        // 1. 轉成陣列
+        let players = [];
+        for(let id in classState) {
+            // 只顯示有分數或有名字的
+            if(classState[id].score > 0 || classState[id].name) {
+                players.push({id:id, ...classState[id]});
+            }
+        }
+        // 2. 排序 (分數高 -> 低)
         players.sort((a,b) => b.score - a.score);
+        
+        // 3. 更新 DOM 位置
+        // 我們不刪除元素，而是移動它們的 top 屬性
+        
+        // 先處理有資料的玩家
         players.forEach((p, index) => {
             const row = document.getElementById(`lb-row-${p.id}`);
             if(row) {
-                row.style.display = 'flex'; row.style.order = index;
-                document.getElementById(`lb-pos-${p.id}`).innerText = index+1;
+                row.style.display = 'flex'; // 確保顯示
+                row.style.top = (index * 55) + 'px'; // 移動位置 (55px 是高度+間距)
+                row.style.zIndex = 100 - index; // 排名高的在上面
+                
+                // 更新內容
+                document.getElementById(`lb-pos-${p.id}`).innerText = index + 1;
                 document.getElementById(`lb-name-${p.id}`).innerText = p.name;
                 document.getElementById(`lb-score-${p.id}`).innerText = p.score;
                 document.getElementById(`lb-bar-${p.id}`).style.width = Math.min((p.score/TARGET_SCORE)*100, 100) + "%";
             }
         });
+
+        // 處理還沒上榜的 (移到最下面或隱藏)
+        // 這裡簡單處理：只要不在 players 列表裡的，就保持原位或隱藏
     }
 
     function recordAnswerLog(data) {
@@ -626,10 +614,29 @@
     }
 
     function drawScene(ctx, w, h, q, input, lastLine) {
-        const cx=w/2, cy=h/2, scale=w/18; ctx.clearRect(0,0,w,h); ctx.strokeStyle="#ccc"; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(0,cy); ctx.lineTo(w,cy); ctx.stroke(); ctx.beginPath(); ctx.moveTo(cx,0); ctx.lineTo(cx,h); ctx.stroke();
+        const cx=w/2, cy=h/2, scale=w/18; 
+        ctx.clearRect(0,0,w,h); 
+        
+        // ★★★ 繪製格線 (Grid) ★★★
+        ctx.strokeStyle = "#eee"; // 淺灰色網格
+        ctx.lineWidth = 1;
+        // 垂直線
+        for (let x = cx % scale; x < w; x += scale) {
+            ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+        }
+        // 水平線
+        for (let y = cy % scale; y < h; y += scale) {
+            ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+        }
+
+        // 座標軸 (加粗)
+        ctx.strokeStyle="#ccc"; ctx.lineWidth=2; 
+        ctx.beginPath(); ctx.moveTo(0,cy); ctx.lineTo(w,cy); ctx.stroke(); 
+        ctx.beginPath(); ctx.moveTo(cx,0); ctx.lineTo(cx,h); ctx.stroke();
+        
         if(q && q.x !== undefined) {
             const tx=cx+q.x*scale, ty=cy-q.ans*scale; ctx.fillStyle="red"; ctx.beginPath(); ctx.arc(tx,ty,w/40,0,Math.PI*2); ctx.fill();
-            if(input && !isNaN(input)) { let v = parseInt(input); let tb = v - q.slope*q.x; ctx.strokeStyle="blue"; ctx.lineWidth=1; ctx.setLineDash([4,2]); ctx.beginPath(); let x1=-10, y1=q.slope*x1+tb, x2=10, y2=q.slope*x2+tb; ctx.moveTo(cx+x1*scale, cy-y1*scale); ctx.lineTo(cx+x2*scale, cy-y2*scale); ctx.stroke(); ctx.setLineDash([]); }
+            if(input && !isNaN(input)) { let v = parseInt(input); let tb = v - q.slope*q.x; ctx.strokeStyle="blue"; ctx.lineWidth=2; ctx.setLineDash([4,2]); ctx.beginPath(); let x1=-10, y1=q.slope*x1+tb, x2=10, y2=q.slope*x2+tb; ctx.moveTo(cx+x1*scale, cy-y1*scale); ctx.lineTo(cx+x2*scale, cy-y2*scale); ctx.stroke(); ctx.setLineDash([]); }
         }
         if(lastLine) {
             ctx.strokeStyle=lastLine.color; ctx.lineWidth=3; ctx.beginPath(); let x1=-10, y1=lastLine.slope*x1+lastLine.b, x2=10, y2=lastLine.slope*x2+lastLine.b; ctx.moveTo(cx+x1*scale, cy-y1*scale); ctx.lineTo(cx+x2*scale, cy-y2*scale); ctx.stroke();
