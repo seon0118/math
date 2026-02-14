@@ -66,6 +66,19 @@
         .btn-pad:active { transform: translateY(2px); background: #ccc; }
         #input-display { background: #fff; color: #000; text-align: center; padding: 10px; margin-bottom: 5px; font-size: 20px; }
 
+        /* 學生結算區 */
+        #analysis-room {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(20, 20, 20, 0.98); z-index: 600;
+            display: none; flex-direction: column; padding: 20px; overflow-y: auto; align-items: center;
+        }
+        .analysis-container {
+            width: 100%; max-width: 500px; max-height: 60vh; overflow-y: auto;
+            background: #222; border: 2px solid #fff; margin-top: 20px; padding: 10px; text-align: left;
+        }
+        .analysis-item { border-bottom: 1px solid #555; padding: 8px 0; font-size: 10px; line-height: 1.6; color: #fff; }
+        .tag-correct { color: var(--green); } .tag-wrong { color: var(--red); }
+
         /* === 老師戰情室 Layout === */
         #teacher-dashboard { display: none; height: 100%; flex-direction: column; background: #1a1a1a; }
         .dashboard-header {
@@ -183,6 +196,15 @@
         </div>
     </div>
 
+    <div id="analysis-room">
+        <h2 style="color:var(--green)">MISSION REPORT</h2>
+        <p>最終分數: <span id="final-score" style="color:var(--gold); font-size:24px;">0</span></p>
+        <p id="upload-status" style="font-size:10px; color:#aaa; margin-top:5px;">資料上傳中...</p>
+        
+        <div class="analysis-container" id="student-error-list"></div>
+        <button class="btn" style="margin-top:20px; width:200px;" onclick="location.reload()">重新登入</button>
+    </div>
+
     <div id="teacher-dashboard">
         <div class="dashboard-header">
             <div style="font-size: 12px;">ROOM: <span id="dash-code" style="color:var(--gold)">--</span></div>
@@ -220,16 +242,21 @@
         <div id="view-leaderboard"></div>
 
         <div id="view-review">
-            <div style="text-align:center; color:#ccc; margin-top:20px;">尚未收集到數據，請先開始遊戲。</div>
+            <div style="text-align:center; color:#ccc; margin-top:20px;">等待數據收集...</div>
         </div>
     </div>
 
 <script>
+    // ======================================================
+    // 您的 Google Apps Script 網址
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxFX1w8BJXdPE9Ac4IpiNNLcJp5qQaMO3p7ZUEoEL8FgnxhAm3pr99_YEFkCdQ9ypXQKQ/exec";
+    // ======================================================
+
     const MQTT_BROKER = 'wss://broker.hivemq.com:8884/mqtt';
     let client = null, myRole = '', classCode = '', selectedSeat = null, maxSeats = 35;
     
     // 數據結構
-    let playerData = { name: '', score: 0, currentInput: '', q: {}, lastLine: null, qStr: '' };
+    let playerData = { name: '', score: 0, currentInput: '', q: {}, lastLine: null, qStr: '', history: [] };
     let classState = {}; // { 1: {name, score, q, input...}, ... }
     let questionStats = {}; // { "y=2x+1": {correct:0, wrong:0, ...} }
     
@@ -261,7 +288,7 @@
     // === MQTT 連線 ===
     function connectMQTT(code, onConnect) {
         client = mqtt.connect(MQTT_BROKER);
-        client.on('connect', onConnect);
+        client.on('connect', () => onConnect());
         client.on('message', (topic, msg) => handleMessage(topic, msg.toString()));
     }
 
@@ -276,9 +303,8 @@
                     document.getElementById('game-interface').style.display = 'flex';
                     resizeStudentCanvas(); newQuestion();
                 } else if (payload === 'STOP') {
-                    document.getElementById('game-interface').style.display = 'none';
-                    document.getElementById('waiting-room').style.display = 'flex';
-                    document.getElementById('waiting-room').innerHTML = "<h1 style='color:red'>GAME OVER</h1><p>請看大螢幕檢討</p>";
+                    // 進入結算
+                    endGameForStudent();
                 }
             }
         } 
@@ -294,7 +320,7 @@
         const pass = document.getElementById('t-pass').value.trim();
         maxSeats = parseInt(document.getElementById('t-limit').value);
         if (!code) return alert("請設定代碼");
-        if (pass !== "8888") return alert("密碼錯誤");
+        if (pass !== "8888") return alert("密碼錯誤 (預設 8888)");
 
         myRole = 'teacher'; classCode = code;
         document.getElementById('login-screen').style.display = 'none';
@@ -310,7 +336,6 @@
     }
 
     function initTeacherUI() {
-        // Init Monitor Grid
         const screenDiv = document.getElementById('view-screens');
         const leaderDiv = document.getElementById('view-leaderboard');
         const s1 = document.getElementById('sel-p1'), s2 = document.getElementById('sel-p2');
@@ -345,7 +370,7 @@
         } else {
             btn.innerText = "START GAME"; btn.className = "start-btn";
             client.publish(`game/${classCode}/status`, 'STOP');
-            switchView('review'); // 自動跳轉
+            switchView('review'); 
         }
     }
 
@@ -364,7 +389,6 @@
         if(id > maxSeats) return;
         classState[id] = data; 
         
-        // 1. Screens
         if(currentView === 'screens') {
             document.getElementById(`card-${id}`).classList.add('active');
             document.getElementById(`name-${id}`).innerText = data.name;
@@ -372,10 +396,7 @@
             const cvs = document.getElementById(`mini-${id}`);
             if(cvs && cvs.width > 0) drawScene(cvs.getContext('2d'), cvs.width, cvs.height, data.q, data.input, null);
         }
-        // 2. Versus
         if(currentView === 'versus' && (parseInt(id)===versusP1 || parseInt(id)===versusP2)) updateVersusSelection();
-        
-        // 3. Leaderboard (Always update logic)
         updateLeaderboard();
     }
 
@@ -415,9 +436,8 @@
         });
     }
 
-    // --- 檢討系統 ---
+    // 老師檢討統計
     function recordAnswerLog(data) {
-        // data = { qId, qText, ans, input, isCorrect }
         if (!questionStats[data.qId]) {
             questionStats[data.qId] = { text: data.qText, ans: data.ans, correct: 0, wrong: 0, wrongAns: {} };
         }
@@ -451,7 +471,6 @@
         }
 
         arr.forEach((item, idx) => {
-            // 找出最多人錯的答案
             let wList = Object.entries(item.wrongAns).sort((a,b)=>b[1]-a[1]);
             let wText = wList.length > 0 ? `(常見誤答: ${wList[0][0]})` : "";
             
@@ -506,6 +525,59 @@
         }));
     }
 
+    // 學生結算與上傳
+    function endGameForStudent() {
+        document.getElementById('game-interface').style.display = 'none';
+        document.getElementById('analysis-room').style.display = 'flex';
+        document.getElementById('final-score').innerText = playerData.score;
+
+        const listContainer = document.getElementById('student-error-list');
+        listContainer.innerHTML = "";
+        
+        const wrongOnes = playerData.history.filter(h => !h.isCorrect);
+        
+        if (wrongOnes.length === 0) {
+            listContainer.innerHTML = "<div style='color:#4caf50; text-align:center;'>全對！太棒了！</div>";
+        } else {
+            wrongOnes.forEach(w => {
+                let item = document.createElement('div');
+                item.className = 'analysis-item';
+                item.innerHTML = `
+                    <div style="color:#aaa; margin-bottom:3px;">題目: ${w.qText}</div>
+                    <div>
+                        <span class="tag-wrong">你的答案: ${w.input}</span> | 
+                        <span class="tag-correct">正確答案: ${w.ans}</span>
+                    </div>
+                `;
+                listContainer.appendChild(item);
+            });
+        }
+
+        // 上傳到 Google Sheet
+        const mistakes = wrongOnes.map(h => ({ q: h.qText, input: h.input, ans: h.ans }));
+        const payload = {
+            name: playerData.name,
+            seat: selectedSeat,
+            score: playerData.score,
+            mistakes: mistakes
+        };
+
+        fetch(GOOGLE_SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+        .then(() => {
+            document.getElementById('upload-status').innerText = "✅ 成績已上傳至雲端";
+            document.getElementById('upload-status').style.color = "#4caf50";
+        })
+        .catch(err => {
+            document.getElementById('upload-status').innerText = "上傳失敗";
+        });
+    }
+
+    // 遊戲邏輯
     function newQuestion() {
         const isC = Math.random() < 0.2;
         let s, b, x, qStr, uId;
@@ -535,6 +607,9 @@
         let v = parseInt(playerData.currentInput); if(isNaN(v)) return;
         const isCorrect = (v===playerData.q.ans);
         
+        // 記錄
+        playerData.history.push({ qText: playerData.qStr, ans: playerData.q.ans, input: v, isCorrect: isCorrect });
+
         if(client) {
             client.publish(`game/${classCode}/log`, JSON.stringify({
                 qId: playerData.qId, qText: playerData.qStr, ans: playerData.q.ans, input: v, isCorrect: isCorrect
@@ -553,6 +628,7 @@
         drawStudentScene(); sendStudentData();
     }
 
+    // 繪圖
     function drawScene(ctx, w, h, q, input, lastLine) {
         const cx=w/2, cy=h/2, scale=w/18;
         ctx.clearRect(0,0,w,h);
