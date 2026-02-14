@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>函數大戰：戰情中心完全版</title>
+    <title>函數大戰：大螢幕監控版</title>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
     <style>
@@ -18,53 +18,76 @@
             height: 100vh; overflow: hidden; display: flex; flex-direction: column;
         }
 
-        /* === 共用登入區 === */
+        /* === 1. 登入介面 === */
         #login-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: var(--blue); z-index: 500;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
         .login-card {
-            background: rgba(0,0,0,0.8); padding: 20px; border-radius: 10px;
-            text-align: center; width: 90%; max-width: 450px;
-            border: 4px solid #fff; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            background: rgba(0,0,0,0.8); padding: 30px; border-radius: 15px;
+            text-align: center; width: 90%; max-width: 500px;
+            border: 5px solid #fff; box-shadow: 0 15px 40px rgba(0,0,0,0.6);
         }
         input {
-            width: 100%; padding: 12px; margin: 8px 0;
-            font-family: inherit; text-align: center; font-size: 16px;
+            width: 100%; padding: 15px; margin: 10px 0;
+            font-family: inherit; text-align: center; font-size: 18px;
         }
         .role-tabs { display: flex; gap: 10px; margin-bottom: 20px; justify-content: center; }
         .tab-btn {
-            background: #555; border: 2px solid #fff; color: #fff; padding: 10px; cursor: pointer; flex: 1;
+            background: #555; border: 2px solid #fff; color: #fff; padding: 12px; cursor: pointer; flex: 1; font-size: 12px;
         }
         .tab-btn.active { background: var(--gold); color: #000; }
         
-        .seat-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-top: 10px; }
-        .seat-btn { padding: 8px 0; font-size: 10px; cursor: pointer; background: var(--brown); color: white; border: 1px solid #fff; }
-        .seat-btn:hover { background: var(--green); }
-        .seat-btn.selected { background: var(--gold); color: #000; transform: scale(1.1); border-color: red;}
+        .seat-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-top: 15px; }
+        .seat-btn { padding: 10px 0; font-size: 12px; cursor: pointer; background: var(--brown); color: white; border: 2px solid #fff; }
+        .seat-btn:hover { background: var(--green); transform: scale(1.1); }
+        .seat-btn.selected { background: var(--gold); color: #000; border-color: red; transform: scale(1.1); }
         .seat-btn.disabled { background: #555; color: #888; cursor: not-allowed; border-color: #555; pointer-events: none; }
 
-        .btn { background: #fff; padding: 10px; border: 3px solid #555; cursor: pointer; font-family: inherit; }
+        .btn { background: #fff; padding: 12px; border: 3px solid #555; cursor: pointer; font-family: inherit; font-size: 14px; }
         .btn:active { transform: translateY(2px); background: #ccc; }
 
-        /* === 學生遊戲區 === */
+        /* === 2. 學生遊戲區 (放大版) === */
         #waiting-room {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.95); z-index: 400;
             display: none; flex-direction: column; align-items: center; justify-content: center;
             text-align: center; color: var(--gold);
         }
-        #game-interface { display: none; height: 100%; flex-direction: column; background: var(--blue); }
-        .hud { background: #000; padding: 5px 10px; display: flex; justify-content: space-between; font-size: 10px; }
-        .q-box { background: var(--brown); border: 2px solid #000; margin: 5px; padding: 10px; text-align: center; font-size: 10px; line-height: 1.5; }
-        .main-canvas-area { flex-grow: 1; background: #fff; position: relative; margin: 0 5px; border: 2px solid #000;}
+        #game-interface { display: none; height: 100%; flex-direction: column; background: var(--blue); align-items: center; }
+        
+        /* 遊戲容器放大至 800px，高度佔滿，但在大螢幕上置中 */
+        .app-container {
+            width: 100%; max-width: 800px; height: 100%; 
+            display: flex; flex-direction: column; 
+            border-left: 5px solid #000; border-right: 5px solid #000;
+            background: var(--blue);
+        }
+
+        .hud { background: #000; padding: 10px 20px; display: flex; justify-content: space-between; font-size: 12px; }
+        .q-box { 
+            background: var(--brown); border: 4px solid #000; margin: 10px; padding: 15px; 
+            text-align: center; font-size: 14px; line-height: 1.6; color: #fff; text-shadow: 2px 2px #000;
+        }
+        .main-canvas-area { 
+            flex-grow: 1; background: #fff; position: relative; margin: 0 10px; border: 4px solid #000;
+            /* 讓畫布區域更大 */
+            min-height: 300px; 
+        }
         canvas { width: 100%; height: 100%; display: block; }
-        .controls { background: #000; padding: 10px; }
-        .numpad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
-        .btn-pad { background: #fff; padding: 15px 0; font-family: inherit; cursor: pointer; border: 3px solid #555; font-size: 14px; }
-        .btn-pad:active { transform: translateY(2px); background: #ccc; }
-        #input-display { background: #fff; color: #000; text-align: center; padding: 10px; margin-bottom: 5px; font-size: 20px; }
+        
+        .controls { background: #000; padding: 15px; border-top: 4px solid #fff; }
+        .numpad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+        .btn-pad { 
+            background: #fff; padding: 20px 0; font-family: inherit; cursor: pointer; 
+            border: 4px solid #555; font-size: 18px; border-radius: 8px;
+        }
+        .btn-pad:active { transform: translateY(3px); background: #ddd; box-shadow: none; }
+        #input-display { 
+            background: #fff; color: #000; text-align: center; padding: 15px; 
+            margin-bottom: 10px; font-size: 24px; border: 4px solid var(--gold);
+        }
 
         /* 學生結算區 */
         #analysis-room {
@@ -73,59 +96,81 @@
             display: none; flex-direction: column; padding: 20px; overflow-y: auto; align-items: center;
         }
         .analysis-container {
-            width: 100%; max-width: 500px; max-height: 60vh; overflow-y: auto;
-            background: #222; border: 2px solid #fff; margin-top: 20px; padding: 10px; text-align: left;
+            width: 100%; max-width: 600px; max-height: 70vh; overflow-y: auto;
+            background: #222; border: 2px solid #fff; margin-top: 20px; padding: 15px; text-align: left;
         }
-        .analysis-item { border-bottom: 1px solid #555; padding: 8px 0; font-size: 10px; line-height: 1.6; color: #fff; }
+        .analysis-item { border-bottom: 1px solid #555; padding: 10px 0; font-size: 12px; line-height: 1.6; color: #fff; }
         .tag-correct { color: var(--green); } .tag-wrong { color: var(--red); }
 
-        /* === 老師戰情室 Layout === */
+        /* === 3. 老師戰情室 Layout === */
         #teacher-dashboard { display: none; height: 100%; flex-direction: column; background: #1a1a1a; }
         .dashboard-header {
-            padding: 8px 15px; background: #000; display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 3px solid var(--gold);
+            padding: 10px 20px; background: #000; display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 4px solid var(--gold);
         }
-        .view-switch { display: flex; gap: 5px; }
-        .view-btn { padding: 8px 12px; border: 2px solid #555; background: #333; color: #fff; font-size: 10px; cursor: pointer;}
+        .view-switch { display: flex; gap: 10px; }
+        .view-btn { 
+            padding: 10px 20px; border: 2px solid #555; background: #333; color: #fff; font-size: 12px; cursor: pointer;
+        }
         .view-btn.active { border-color: var(--gold); background: #555; color: var(--gold);}
         
+        .ctrl-group { display: flex; gap: 10px; }
         .start-btn {
-            background: var(--red); color: white; padding: 8px 15px; font-size: 12px; border: 2px solid #fff; 
-            animation: pulse 1.5s infinite; cursor: pointer; font-family: inherit;
+            background: var(--green); color: white; padding: 10px 20px; font-size: 14px; border: 2px solid #fff; 
+            cursor: pointer; font-family: inherit;
         }
-        .stop-btn { background: #555; color: white; padding: 8px 15px; font-size: 12px; border: 2px solid #fff; cursor: pointer; font-family: inherit;}
+        .end-btn {
+            background: var(--red); color: white; padding: 10px 20px; font-size: 14px; border: 2px solid #fff; 
+            cursor: pointer; font-family: inherit; 
+        }
 
-        /* VIEW A: 全景監控 */
-        #view-screens { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; padding: 10px; overflow-y: auto; height: 100%; }
-        .student-card { background: #333; border: 2px solid #555; padding: 5px; font-size: 10px; display: flex; flex-direction: column; height: 120px; }
-        .student-card.active { border-color: var(--green); box-shadow: 0 0 5px var(--green); }
-        .mini-canvas { background: #fff; width: 100%; flex-grow: 1; margin-top: 5px; }
+        /* VIEW A: 全景監控 (一列6格) */
+        #view-screens { 
+            display: grid; 
+            grid-template-columns: repeat(6, 1fr); /* 強制 6 列 */
+            gap: 10px; padding: 15px; overflow-y: auto; height: 100%; 
+        }
+        /* 響應式調整：螢幕太小時自動變少列，以免卡片太小 */
+        @media (max-width: 1200px) { #view-screens { grid-template-columns: repeat(5, 1fr); } }
+        @media (max-width: 900px) { #view-screens { grid-template-columns: repeat(4, 1fr); } }
 
-        /* VIEW B: 對決模式 */
-        #view-versus { display: none; height: 100%; padding: 10px; background: radial-gradient(circle, #222, #000); }
-        .versus-container { display: flex; height: 100%; align-items: center; justify-content: space-around; }
-        .vs-card { width: 48%; height: 95%; background: #222; border: 4px solid #fff; display: flex; flex-direction: column; padding: 10px; position: relative; }
-        .vs-card.p1 { border-color: var(--red); }
-        .vs-card.p2 { border-color: var(--blue); }
-        .vs-header { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px;}
+        .student-card { 
+            background: #333; border: 2px solid #555; padding: 5px; font-size: 10px; 
+            display: flex; flex-direction: column; 
+            aspect-ratio: 3/4; /* 固定比例讓它像手機畫面 */
+        }
+        .student-card.active { border-color: var(--green); box-shadow: 0 0 8px var(--green); }
+        .card-header { display: flex; justify-content: space-between; margin-bottom: 2px; }
+        .mini-canvas { background: #fff; width: 100%; flex-grow: 1; border: 1px solid #999; }
+
+        /* VIEW B: 對決模式 (全螢幕顯示) */
+        #view-versus { display: none; height: 100%; padding: 20px; background: radial-gradient(circle, #222, #000); }
+        .versus-container { display: flex; height: 100%; align-items: center; justify-content: space-around; gap: 20px;}
+        .vs-card { 
+            width: 48%; height: 95%; background: #222; border: 4px solid #fff; 
+            display: flex; flex-direction: column; padding: 15px; position: relative; 
+        }
+        .vs-card.p1 { border-color: var(--red); box-shadow: 0 0 20px var(--red); }
+        .vs-card.p2 { border-color: var(--blue); box-shadow: 0 0 20px var(--blue); }
+        .vs-header { display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 20px;}
         .vs-canvas { flex-grow: 1; background: #fff; border: 2px solid #555; width: 100%; }
-        .vs-selector { background: #000; color: #fff; font-family: inherit; padding: 5px; border: 1px solid #555; font-size: 14px;}
-        .vs-center { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font-size: 40px; color: var(--gold); z-index: 10; text-shadow: 4px 4px #000; font-style: italic;}
+        .vs-selector { background: #000; color: #fff; font-family: inherit; padding: 10px; border: 1px solid #555; font-size: 18px;}
+        .vs-center { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font-size: 60px; color: var(--gold); z-index: 10; text-shadow: 5px 5px #000; font-style: italic;}
 
         /* VIEW C: 排行榜 */
         #view-leaderboard { display: none; flex-direction: column; padding: 20px; overflow-y: auto; height: 100%; }
-        .leader-row { display: flex; align-items: center; margin-bottom: 8px; background: #333; padding: 10px; border-radius: 5px; transition: top 0.5s; }
-        .rank-num { width: 40px; text-align: center; color: var(--gold); font-size: 16px; }
-        .rank-bar-container { flex-grow: 1; margin: 0 15px; height: 15px; background: #000; border-radius: 10px; overflow: hidden; }
+        .leader-row { display: flex; align-items: center; margin-bottom: 10px; background: #333; padding: 15px; border-radius: 8px; transition: top 0.5s; }
+        .rank-num { width: 50px; text-align: center; color: var(--gold); font-size: 20px; }
+        .rank-bar-container { flex-grow: 1; margin: 0 20px; height: 25px; background: #000; border-radius: 12px; overflow: hidden; }
         .rank-bar { height: 100%; background: var(--green); width: 0%; transition: width 1s; }
 
         /* VIEW D: 檢討模式 */
         #view-review { display: none; flex-direction: column; padding: 20px; overflow-y: auto; height: 100%; background: #1a1a1a; }
-        .error-card { background: #333; border-left: 5px solid var(--red); padding: 15px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
-        .error-info { flex-grow: 1; }
-        .error-stat { text-align: right; min-width: 80px; }
-        .bar-bg { width: 100%; height: 6px; background: #555; margin-top: 5px; border-radius: 3px; }
-        .bar-fill { height: 100%; background: var(--red); border-radius: 3px; }
+        .error-card { background: #333; border-left: 8px solid var(--red); padding: 20px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .error-info { flex-grow: 1; font-size: 14px; }
+        .error-stat { text-align: right; min-width: 100px; }
+        .bar-bg { width: 100%; height: 10px; background: #555; margin-top: 8px; border-radius: 5px; }
+        .bar-fill { height: 100%; background: var(--red); border-radius: 5px; }
 
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
     </style>
@@ -134,7 +179,7 @@
 
     <div id="login-screen">
         <div class="login-card">
-            <h1 style="font-size: 20px; color: var(--gold); margin-bottom: 20px;">MATH WAR ROOM</h1>
+            <h1 style="font-size: 24px; color: var(--gold); margin-bottom: 30px;">MATH WAR ROOM</h1>
             <div class="role-tabs">
                 <div class="tab-btn active" onclick="switchRole('student')">學生 Student</div>
                 <div class="tab-btn" onclick="switchRole('teacher')">老師 Teacher</div>
@@ -143,78 +188,82 @@
             <div id="form-student">
                 <input type="text" id="s-code" placeholder="教室代碼" onkeyup="this.value = this.value.toUpperCase();">
                 <input type="text" id="s-name" placeholder="你的暱稱" maxlength="8">
-                <p style="font-size: 10px; margin-top:15px; color:#ccc;">選擇座號:</p>
+                <p style="font-size: 12px; margin-top:20px; color:#ccc;">選擇座號:</p>
                 <div class="seat-grid" id="seat-container"></div>
-                <button class="btn" style="width:100%; margin-top:20px; background:var(--green); color:white; border-color:white;" onclick="studentLogin()">準備戰鬥</button>
+                <button class="btn" style="width:100%; margin-top:30px; background:var(--green); color:white; border-color:white; padding: 15px;" onclick="studentLogin()">準備戰鬥</button>
             </div>
 
             <div id="form-teacher" style="display:none;">
                 <input type="text" id="t-code" placeholder="設定教室代碼" onkeyup="this.value = this.value.toUpperCase();">
                 <input type="password" id="t-pass" placeholder="輸入密碼">
-                <div style="display:flex; align-items:center; justify-content:center; margin-top:10px;">
-                    <label style="font-size:12px; margin-right:10px;">人數上限:</label>
-                    <input type="number" id="t-limit" value="35" min="1" max="35" style="width:60px;">
+                <div style="display:flex; align-items:center; justify-content:center; margin-top:20px;">
+                    <label style="font-size:14px; margin-right:10px;">人數上限:</label>
+                    <input type="number" id="t-limit" value="35" min="1" max="35" style="width:80px;">
                 </div>
-                <button class="btn" style="width:100%; margin-top:20px; background:var(--red); color:white; border-color:white;" onclick="teacherLogin()">開啟戰情室</button>
+                <button class="btn" style="width:100%; margin-top:30px; background:var(--red); color:white; border-color:white; padding: 15px;" onclick="teacherLogin()">開啟戰情室</button>
             </div>
         </div>
     </div>
 
     <div id="waiting-room">
-        <h1 style="font-size: 24px; color:var(--green);">READY?</h1>
-        <p style="margin-top:10px;">等待老師開始...</p>
-        <p id="wait-info" style="font-size: 10px; margin-top: 30px; color: #aaa;"></p>
+        <h1 style="font-size: 32px; color:var(--green);">READY?</h1>
+        <p style="margin-top:15px;">等待老師開始...</p>
+        <p id="wait-info" style="font-size: 12px; margin-top: 30px; color: #aaa;"></p>
     </div>
 
     <div id="game-interface">
-        <div class="hud">
-            <span><span id="g-name">P</span> (#<span id="g-seat">?</span>)</span>
-            <span>SCORE: <span id="g-score">0</span></span>
-        </div>
-        <div class="q-box" id="q-text">Loading...</div>
-        <div class="main-canvas-area" id="s-canvas-wrap">
-            <canvas id="s-canvas"></canvas>
-            <div id="feedback" style="position:absolute; bottom:5px; left:5px; font-size:12px; font-weight:bold; color:black;"></div>
-        </div>
-        <div class="controls">
-            <div id="input-display">?</div>
-            <div class="numpad">
-                <button class="btn-pad" onclick="inputNum('1')">1</button>
-                <button class="btn-pad" onclick="inputNum('2')">2</button>
-                <button class="btn-pad" onclick="inputNum('3')">3</button>
-                <button class="btn-pad" onclick="inputNum('C')" style="background:#ddd;">C</button>
-                <button class="btn-pad" onclick="inputNum('4')">4</button>
-                <button class="btn-pad" onclick="inputNum('5')">5</button>
-                <button class="btn-pad" onclick="inputNum('6')">6</button>
-                <button class="btn-pad" onclick="inputNum('-')" style="background:var(--blue); color:#fff;">-</button>
-                <button class="btn-pad" onclick="inputNum('7')">7</button>
-                <button class="btn-pad" onclick="inputNum('8')">8</button>
-                <button class="btn-pad" onclick="inputNum('9')">9</button>
-                <button class="btn-pad" onclick="inputNum('0')">0</button>
-                <button class="btn-pad" onclick="submitAnswer()" style="grid-column: span 4; background: var(--red); color: white;">FIRE!</button>
+        <div class="app-container">
+            <div class="hud">
+                <span><span id="g-name">P</span> (#<span id="g-seat">?</span>)</span>
+                <span>SCORE: <span id="g-score">0</span></span>
+            </div>
+            <div class="q-box" id="q-text">Loading...</div>
+            <div class="main-canvas-area" id="s-canvas-wrap">
+                <canvas id="s-canvas"></canvas>
+                <div id="feedback" style="position:absolute; bottom:10px; left:10px; font-size:16px; font-weight:bold; color:black;"></div>
+            </div>
+            <div class="controls">
+                <div id="input-display">?</div>
+                <div class="numpad">
+                    <button class="btn-pad" onclick="inputNum('1')">1</button>
+                    <button class="btn-pad" onclick="inputNum('2')">2</button>
+                    <button class="btn-pad" onclick="inputNum('3')">3</button>
+                    <button class="btn-pad" onclick="inputNum('C')" style="background:#ddd;">C</button>
+                    <button class="btn-pad" onclick="inputNum('4')">4</button>
+                    <button class="btn-pad" onclick="inputNum('5')">5</button>
+                    <button class="btn-pad" onclick="inputNum('6')">6</button>
+                    <button class="btn-pad" onclick="inputNum('-')" style="background:var(--blue); color:#fff;">-</button>
+                    <button class="btn-pad" onclick="inputNum('7')">7</button>
+                    <button class="btn-pad" onclick="inputNum('8')">8</button>
+                    <button class="btn-pad" onclick="inputNum('9')">9</button>
+                    <button class="btn-pad" onclick="inputNum('0')">0</button>
+                    <button class="btn-pad" onclick="submitAnswer()" style="grid-column: span 4; background: var(--red); color: white;">FIRE!</button>
+                </div>
             </div>
         </div>
     </div>
 
     <div id="analysis-room">
-        <h2 style="color:var(--green)">MISSION REPORT</h2>
-        <p>最終分數: <span id="final-score" style="color:var(--gold); font-size:24px;">0</span></p>
-        <p id="upload-status" style="font-size:10px; color:#aaa; margin-top:5px;">資料上傳中...</p>
-        
+        <h2 style="color:var(--green); font-size:24px;">MISSION REPORT</h2>
+        <p>最終分數: <span id="final-score" style="color:var(--gold); font-size:32px;">0</span></p>
+        <p id="upload-status" style="font-size:12px; color:#aaa; margin-top:10px;">資料上傳中...</p>
         <div class="analysis-container" id="student-error-list"></div>
-        <button class="btn" style="margin-top:20px; width:200px;" onclick="location.reload()">重新登入</button>
+        <button class="btn" style="margin-top:30px; width:250px;" onclick="location.reload()">重新登入</button>
     </div>
 
     <div id="teacher-dashboard">
         <div class="dashboard-header">
-            <div style="font-size: 12px;">ROOM: <span id="dash-code" style="color:var(--gold)">--</span></div>
+            <div style="font-size: 14px;">ROOM: <span id="dash-code" style="color:var(--gold)">--</span></div>
             <div class="view-switch">
-                <div class="view-btn active" id="btn-screens" onclick="switchView('screens')">📺 全景</div>
+                <div class="view-btn active" id="btn-screens" onclick="switchView('screens')">📺 全景(6)</div>
                 <div class="view-btn" id="btn-versus" onclick="switchView('versus')">⚔️ 對決</div>
                 <div class="view-btn" id="btn-leaderboard" onclick="switchView('leaderboard')">🏆 戰況</div>
                 <div class="view-btn" id="btn-review" onclick="switchView('review')">📊 檢討</div>
             </div>
-            <button id="start-btn" class="start-btn" onclick="toggleGameStatus()">START GAME</button>
+            <div class="ctrl-group">
+                <button id="start-btn" class="start-btn" onclick="startGameCmd()">開始遊戲</button>
+                <button class="end-btn" onclick="endGameCmd()">強制結束</button>
+            </div>
         </div>
         
         <div id="view-screens"></div>
@@ -257,12 +306,11 @@
     
     // 數據結構
     let playerData = { name: '', score: 0, currentInput: '', q: {}, lastLine: null, qStr: '', history: [] };
-    let classState = {}; // { 1: {name, score, q, input...}, ... }
-    let questionStats = {}; // { "y=2x+1": {correct:0, wrong:0, ...} }
+    let classState = {}; 
+    let questionStats = {}; 
     
     // 老師端狀態
     let currentView = 'screens';
-    let gameRunning = false;
     let versusP1 = 1, versusP2 = 2;
 
     // === 初始化座號按鈕 ===
@@ -342,35 +390,40 @@
         screenDiv.innerHTML = ""; leaderDiv.innerHTML = ""; s1.innerHTML = ""; s2.innerHTML = "";
 
         for(let i=1; i<=maxSeats; i++){
-            // Screen Card
+            // A. 全景監控 (一列6格)
             let card = document.createElement('div');
             card.className = 'student-card'; card.id = `card-${i}`;
-            card.innerHTML = `<div style="display:flex;justify-content:space-between;"><span style="color:var(--gold)">#${i}</span><span id="name-${i}">...</span></div><div>SCR: <span id="score-${i}">0</span></div><canvas class="mini-canvas" id="mini-${i}"></canvas>`;
+            card.innerHTML = `
+                <div class="card-header">
+                    <span style="color:var(--gold)">#${i}</span> 
+                    <span id="name-${i}" style="white-space:nowrap; overflow:hidden;">...</span>
+                </div>
+                <div style="font-size:8px;">分: <span id="score-${i}">0</span></div>
+                <canvas class="mini-canvas" id="mini-${i}"></canvas>
+            `;
             screenDiv.appendChild(card);
             
-            // Leaderboard Row
+            // C. 排行榜條目
             let row = document.createElement('div');
             row.className = 'leader-row'; row.id = `rank-row-${i}`; row.style.display = 'none';
             row.innerHTML = `<div class="rank-num" id="rank-pos-${i}">-</div><div style="width:100px;font-size:12px;white-space:nowrap;overflow:hidden;" id="rank-name-${i}">...</div><div class="rank-bar-container"><div class="rank-bar" id="rank-bar-${i}"></div></div><div style="width:50px;text-align:right;color:var(--gold)" id="rank-score-${i}">0</div>`;
             leaderDiv.appendChild(row);
 
-            // Versus Select
+            // B. 對決選單
             let op1 = document.createElement('option'); op1.value=i; op1.innerText=`#${i}`; s1.appendChild(op1);
             let op2 = document.createElement('option'); op2.value=i; op2.innerText=`#${i}`; s2.appendChild(op2);
         }
         s1.value=1; s2.value=2; updateVersusSelection();
     }
 
-    function toggleGameStatus() {
-        gameRunning = !gameRunning;
-        const btn = document.getElementById('start-btn');
-        if(gameRunning) {
-            btn.innerText = "STOP & REVIEW"; btn.className = "stop-btn";
-            client.publish(`game/${classCode}/status`, 'START');
-        } else {
-            btn.innerText = "START GAME"; btn.className = "start-btn";
+    function startGameCmd() {
+        client.publish(`game/${classCode}/status`, 'START');
+    }
+
+    function endGameCmd() {
+        if(confirm("確定要結束遊戲並進入結算嗎？")) {
             client.publish(`game/${classCode}/status`, 'STOP');
-            switchView('review'); 
+            switchView('review'); // 老師端自動跳到檢討
         }
     }
 
@@ -436,7 +489,6 @@
         });
     }
 
-    // 老師檢討統計
     function recordAnswerLog(data) {
         if (!questionStats[data.qId]) {
             questionStats[data.qId] = { text: data.qText, ans: data.ans, correct: 0, wrong: 0, wrongAns: {} };
@@ -453,32 +505,24 @@
     function renderReview() {
         const container = document.getElementById('view-review');
         container.innerHTML = "<h2 style='text-align:center;color:var(--gold)'>MISSION DEBRIEF</h2>";
-        
         let arr = [];
         for(let k in questionStats) {
             let item = questionStats[k];
             let total = item.correct + item.wrong;
-            if(total>0) {
-                item.errRate = (item.wrong/total)*100;
-                arr.push(item);
-            }
+            if(total>0) { item.errRate = (item.wrong/total)*100; arr.push(item); }
         }
         arr.sort((a,b) => b.errRate - a.errRate);
 
-        if(arr.length === 0) {
-            container.innerHTML += "<p style='text-align:center'>暫無數據</p>";
-            return;
-        }
+        if(arr.length === 0) { container.innerHTML += "<p style='text-align:center'>暫無數據</p>"; return; }
 
         arr.forEach((item, idx) => {
             let wList = Object.entries(item.wrongAns).sort((a,b)=>b[1]-a[1]);
             let wText = wList.length > 0 ? `(常見誤答: ${wList[0][0]})` : "";
-            
             let div = document.createElement('div');
             div.className = 'error-card';
             div.innerHTML = `
                 <div class="error-info">
-                    <div style="color:var(--gold); margin-bottom:5px;">NO.${idx+1}: ${item.text}</div>
+                    <div style="color:var(--gold); margin-bottom:5px;">TOP ${idx+1}: ${item.text}</div>
                     <div style="font-size:12px; color:#ccc;">
                         正解: <span style="color:var(--green)">${item.ans}</span> 
                         <span style="color:var(--red); margin-left:10px;">${wText}</span>
@@ -494,7 +538,7 @@
         });
     }
 
-    // === 學生端 ===
+    // === 學生端邏輯 ===
     function studentLogin() {
         const code = document.getElementById('s-code').value.trim().toUpperCase();
         const name = document.getElementById('s-name').value.trim();
@@ -525,7 +569,7 @@
         }));
     }
 
-    // 學生結算與上傳
+    // 學生結算
     function endGameForStudent() {
         document.getElementById('game-interface').style.display = 'none';
         document.getElementById('analysis-room').style.display = 'flex';
@@ -544,22 +588,15 @@
                 item.className = 'analysis-item';
                 item.innerHTML = `
                     <div style="color:#aaa; margin-bottom:3px;">題目: ${w.qText}</div>
-                    <div>
-                        <span class="tag-wrong">你的答案: ${w.input}</span> | 
-                        <span class="tag-correct">正確答案: ${w.ans}</span>
-                    </div>
+                    <div><span class="tag-wrong">你答: ${w.input}</span> | <span class="tag-correct">正解: ${w.ans}</span></div>
                 `;
                 listContainer.appendChild(item);
             });
         }
 
-        // 上傳到 Google Sheet
         const mistakes = wrongOnes.map(h => ({ q: h.qText, input: h.input, ans: h.ans }));
         const payload = {
-            name: playerData.name,
-            seat: selectedSeat,
-            score: playerData.score,
-            mistakes: mistakes
+            name: playerData.name, seat: selectedSeat, score: playerData.score, mistakes: mistakes
         };
 
         fetch(GOOGLE_SCRIPT_URL, {
@@ -607,7 +644,6 @@
         let v = parseInt(playerData.currentInput); if(isNaN(v)) return;
         const isCorrect = (v===playerData.q.ans);
         
-        // 記錄
         playerData.history.push({ qText: playerData.qStr, ans: playerData.q.ans, input: v, isCorrect: isCorrect });
 
         if(client) {
