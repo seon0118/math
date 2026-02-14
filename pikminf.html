@@ -3,35 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>皮克敏函數探險隊</title>
+    <title>皮克敏函數探險隊：雙重挑戰</title>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;900&display=swap" rel="stylesheet">
     <style>
         :root {
             --pikmin-red: #e53935;
             --pikmin-yellow: #fdd835;
             --pikmin-blue: #1e88e5;
+            --mushroom-purple: #9c27b0;
             --earth-brown: #795548;
             --grass-green: #558b2f;
-            --ui-light: #f1f8e9;
         }
 
-        /* === 基礎設定 === */
         body {
             font-family: 'Nunito', Arial, sans-serif;
-            /* 背景：從泥土到草地的漸層 */
             background: linear-gradient(to bottom, var(--earth-brown) 20%, var(--grass-green) 100%);
             margin: 0;
             padding: 0;
             color: #333;
-            overflow: hidden; /* 禁止捲動 */
+            overflow: hidden;
             display: flex;
             flex-direction: column;
             align-items: center;
             height: 100vh;
-            touch-action: none; /* 優化觸控 */
+            touch-action: none;
         }
 
-        /* === 頂部資訊列 (HUD) === */
+        /* HUD */
         .hud {
             display: flex;
             justify-content: space-between;
@@ -41,29 +39,47 @@
         }
         .hud-item {
             background: rgba(255, 255, 255, 0.95);
-            padding: 8px 15px;
-            border-radius: 25px; /* 圓潤造型 */
+            padding: 5px 12px;
+            border-radius: 20px;
             text-align: center;
-            font-size: 14px;
             font-weight: 900;
             box-shadow: 0 4px rgba(0,0,0,0.1);
             border: 2px solid var(--grass-green);
+            min-width: 70px;
         }
-        .hud-item span { display: block; font-size: 20px; color: var(--pikmin-red); }
-        .hud-item.score span { color: var(--pikmin-yellow); text-shadow: 1px 1px 0 #f57f17;}
+        .hud-item span { display: block; font-size: 18px; color: var(--pikmin-red); }
+        
+        /* 關卡指示器 */
+        .level-badge {
+            position: absolute;
+            top: 50px;
+            background: var(--pikmin-yellow);
+            color: #333;
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-weight: 900;
+            box-shadow: 0 3px rgba(0,0,0,0.2);
+            z-index: 5;
+        }
 
-        /* === 題目區 === */
+        /* 題目區 */
         .question-box {
-            background: #c5e1a5; /* 嫩葉綠 */
+            background: #c5e1a5;
             border: 4px solid #fff;
             border-radius: 20px;
-            padding: 12px;
-            margin: 5px 0;
+            padding: 10px;
+            margin-top: 35px; /* 為了避開 Level Badge */
+            margin-bottom: 5px;
             text-align: center;
             width: 90%;
             font-weight: 900;
             color: #33691e;
             box-shadow: 0 4px rgba(0,0,0,0.1);
+            min-height: 50px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
         }
         .highlight {
             background: #fff;
@@ -72,9 +88,10 @@
             color: var(--pikmin-blue);
             display: inline-block;
             border: 2px solid #aed581;
+            font-size: 18px;
         }
 
-        /* === 遊戲畫布區 === */
+        /* 畫布 */
         .game-area {
             position: relative;
             background: #fff;
@@ -85,16 +102,16 @@
             overflow: hidden;
         }
         canvas {
-            background-color: #fbe9e7; /* 淡淡的泥土底色 */
+            background-color: #fbe9e7;
             display: block;
         }
 
-        /* === 底部鍵盤區 === */
-        .keypad-container {
+        /* 底部控制區 */
+        .control-panel {
             flex-grow: 1;
             width: 100%;
             background-color: rgba(255,255,255,0.9);
-            padding-top: 15px;
+            padding-top: 10px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -102,65 +119,86 @@
             border-radius: 30px 30px 0 0;
         }
 
-        /* 輸入框：氣泡造型 */
+        /* LEVEL 1: 數字鍵盤 */
+        #level1-controls {
+            display: none; /* 預設隱藏 */
+            width: 100%;
+            flex-direction: column;
+            align-items: center;
+        }
         #displayInput {
-            width: 220px;
-            height: 50px;
+            width: 180px;
+            height: 45px;
             background: #fff;
             color: var(--pikmin-red);
-            font-size: 28px;
+            font-size: 24px;
             font-weight: 900;
-            border: 4px solid var(--pikmin-yellow);
-            border-radius: 30px;
-            margin-bottom: 15px;
+            border: 3px solid var(--pikmin-yellow);
+            border-radius: 25px;
+            margin-bottom: 10px;
             display: flex;
             justify-content: center;
             align-items: center;
-            box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);
         }
-
-        /* 按鈕網格 */
         .keypad {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
+            gap: 8px;
             width: 92%;
-            max-width: 450px;
+            max-width: 400px;
         }
-        /* 按鈕：像果實一樣的圓形 */
         .key {
             background: #fff;
             border: none;
-            box-shadow: 0 5px #cfd8dc;
-            height: 55px;
-            font-size: 22px;
-            font-family: 'Nunito', sans-serif;
+            box-shadow: 0 4px #cfd8dc;
+            height: 50px;
+            font-size: 20px;
             font-weight: 900;
-            border-radius: 50%; 
+            border-radius: 50%;
             cursor: pointer;
             color: #546e7a;
-            transition: all 0.1s;
         }
-        .key:active { transform: translateY(3px); box-shadow: 0 2px #cfd8dc; }
-        
-        /* 功能鍵 */
-        .key-enter {
-            grid-column: span 2;
-            border-radius: 30px;
-            background: var(--pikmin-red); /* 紅色負責戰鬥 */
-            color: white;
-            box-shadow: 0 5px #c62828;
-        }
+        .key:active { transform: translateY(2px); box-shadow: 0 1px #cfd8dc; }
+        .key-enter { grid-column: span 2; border-radius: 30px; background: var(--pikmin-red); color: white; box-shadow: 0 4px #c62828;}
         .key-enter:active { box-shadow: 0 2px #c62828; }
+        .key-del { background: #546e7a; color: white; }
+        .key-minus { background: var(--pikmin-blue); color: white; }
 
-        .key-del { background: #546e7a; color: white; box-shadow: 0 5px #37474f; }
-        .key-minus { background: var(--pikmin-blue); color: white; box-shadow: 0 5px #1565c0; }
+        /* LEVEL 2: 蘑菇戰鬥選項 */
+        #level2-controls {
+            display: none; /* 預設隱藏 */
+            width: 100%;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 20px;
+        }
+        .option-btn {
+            width: 90%;
+            max-width: 350px;
+            margin-bottom: 15px;
+            padding: 15px;
+            font-size: 20px;
+            font-weight: 900;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 5px rgba(0,0,0,0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: transform 0.1s;
+        }
+        .option-btn:active { transform: scale(0.98); }
+        .opt-red { background-color: var(--pikmin-red); }
+        .opt-yellow { background-color: var(--pikmin-yellow); color: #333; }
+        .opt-blue { background-color: var(--pikmin-blue); }
 
-        /* === 遮罩與開始按鈕 === */
+        /* 遮罩 */
         #overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(85, 139, 47, 0.95); /* 深綠色半透明 */
+            background: rgba(85, 139, 47, 0.98);
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -169,58 +207,47 @@
             text-align: center;
             color: white;
         }
-        #overlay h1 {
-            color: var(--pikmin-yellow);
-            font-size: 36px;
-            text-shadow: 2px 2px 0 #33691e;
-            margin-bottom: 10px;
-        }
         .btn-start {
-            margin-top: 25px;
+            margin-top: 20px;
             padding: 15px 40px;
             font-size: 22px;
             font-weight: 900;
-            font-family: 'Nunito', sans-serif;
-            background: var(--pikmin-red);
-            color: #fff;
+            background: var(--pikmin-yellow);
+            color: #333;
             border: 4px solid #fff;
             border-radius: 40px;
             cursor: pointer;
-            box-shadow: 0 6px rgba(0,0,0,0.2);
         }
-        .btn-start:active { transform: translateY(3px); box-shadow: 0 3px rgba(0,0,0,0.2); }
 
         /* 訊息提示 */
         #message {
             position: absolute;
             top: 50%; left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 24px;
+            font-size: 20px;
             font-weight: 900;
             color: #fff;
-            padding: 12px 25px;
+            padding: 10px 20px;
             border-radius: 15px;
-            pointer-events: none;
             display: none;
             z-index: 50;
             white-space: nowrap;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
         }
     </style>
 </head>
 <body>
 
     <div class="hud">
-        <div class="hud-item score">波可(Poko)<br><span id="scoreDisplay">0</span></div>
+        <div class="hud-item score">分數<br><span id="scoreDisplay">0</span></div>
         <div class="hud-item">失誤<br><span id="strikeDisplay">0</span>/3</div>
-        <div class="hud-item">時間<br><span id="timeDisplay">180</span></div>
+        <div class="hud-item">時間<br><span id="timeDisplay">--</span></div>
     </div>
 
+    <div id="levelBadge" class="level-badge">LEVEL 1</div>
+
     <div class="question-box">
-        <div style="font-size:14px; margin-bottom:5px; opacity:0.8;">隊長指令</div>
-        <span id="eqDisplay" class="highlight">y = ?</span>
-        <span style="margin: 0 10px;">目標位置</span>
-        <span id="targetDisplay" class="highlight">x = ?</span>
+        <div id="qText" style="font-size:14px; margin-bottom:5px; opacity:0.8;"></div>
+        <div id="qContent"></div>
     </div>
 
     <div class="game-area">
@@ -228,287 +255,465 @@
         <div id="message"></div>
     </div>
 
-    <div class="keypad-container">
-        <div id="displayInput">?</div>
-        <div class="keypad">
-            <button class="key" onclick="inputNum('1')">1</button>
-            <button class="key" onclick="inputNum('2')">2</button>
-            <button class="key" onclick="inputNum('3')">3</button>
-            <button class="key key-minus" onclick="inputNum('-')">-</button>
-
-            <button class="key" onclick="inputNum('4')">4</button>
-            <button class="key" onclick="inputNum('5')">5</button>
-            <button class="key" onclick="inputNum('6')">6</button>
-            <button class="key key-del" onclick="inputNum('C')">←</button>
-
-            <button class="key" onclick="inputNum('7')">7</button>
-            <button class="key" onclick="inputNum('8')">8</button>
-            <button class="key" onclick="inputNum('9')">9</button>
-            <button class="key" onclick="inputNum('0')">0</button>
-            
-            <button class="key key-enter" id="actionBtn" onclick="submitAnswer()">投擲皮克敏!</button>
-            <button class="key key-enter" id="nextBtn" onclick="nextLevel()" style="display:none; background:var(--pikmin-blue); box-shadow: 0 5px #1565c0;">尋找下個目標</button>
+    <div class="control-panel">
+        
+        <div id="level1-controls">
+            <div id="displayInput">?</div>
+            <div class="keypad">
+                <button class="key" onclick="inputNum('1')">1</button>
+                <button class="key" onclick="inputNum('2')">2</button>
+                <button class="key" onclick="inputNum('3')">3</button>
+                <button class="key key-minus" onclick="inputNum('-')">-</button>
+                <button class="key" onclick="inputNum('4')">4</button>
+                <button class="key" onclick="inputNum('5')">5</button>
+                <button class="key" onclick="inputNum('6')">6</button>
+                <button class="key key-del" onclick="inputNum('C')">←</button>
+                <button class="key" onclick="inputNum('7')">7</button>
+                <button class="key" onclick="inputNum('8')">8</button>
+                <button class="key" onclick="inputNum('9')">9</button>
+                <button class="key" onclick="inputNum('0')">0</button>
+                
+                <button class="key key-enter" id="l1-submit" onclick="submitLevel1()">投擲!</button>
+                <button class="key key-enter" id="l1-next" onclick="nextLevel1Question()" style="display:none; background:var(--pikmin-blue);">下一題</button>
+            </div>
         </div>
+
+        <div id="level2-controls">
+            <div style="font-size:16px; margin-bottom:10px; color:#558b2f; font-weight:bold;">派出哪一隊皮克敏去打蘑菇？</div>
+            <button class="option-btn opt-red" onclick="checkLevel2(0)">
+                <span class="opt-icon">🔴</span> <span id="opt-0-text">y = 2x</span>
+            </button>
+            <button class="option-btn opt-yellow" onclick="checkLevel2(1)">
+                <span class="opt-icon">🟡</span> <span id="opt-1-text">y = x + 1</span>
+            </button>
+            <button class="option-btn opt-blue" onclick="checkLevel2(2)">
+                <span class="opt-icon">🔵</span> <span id="opt-2-text">y = -x</span>
+            </button>
+            <button class="option-btn" id="l2-next" onclick="nextLevel2Question()" style="display:none; background:#558b2f; justify-content:center;">尋找下個蘑菇 ▶</button>
+        </div>
+
     </div>
 
     <div id="overlay">
-        <h1>皮克敏<br>函數探險隊</h1>
-        <p style="font-size:18px; font-weight:bold;">計算高度，指揮皮克敏進攻！</p>
-        <p style="opacity: 0.8; margin-top: 5px;">(限時3分鐘，連續失誤3次結束)</p>
-        <button class="btn-start" onclick="startGame()">開始探險</button>
+        <h1 id="ov-title" style="color:#fdd835; margin-bottom:10px;">皮克敏<br>函數探險隊</h1>
+        <p id="ov-desc" style="font-size:16px;">準備好你的數學腦袋了嗎？</p>
+        <button id="ov-btn" class="btn-start" onclick="initLevel1()">開始第一關</button>
     </div>
 
 <script>
-    // 取得元素
+    // --- 核心變數 ---
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
-    const displayInput = document.getElementById('displayInput');
     const msgDiv = document.getElementById('message');
-    const scoreDisplay = document.getElementById('scoreDisplay');
-    const strikeDisplay = document.getElementById('strikeDisplay');
-    const timeDisplay = document.getElementById('timeDisplay');
     
-    // 遊戲參數
-    let scale = 15;
-    let centerX = 170; // 340 / 2
-    let centerY = 120; // 240 / 2
+    // UI 元素
+    const overlay = document.getElementById('overlay');
+    const ovTitle = document.getElementById('ov-title');
+    const ovDesc = document.getElementById('ov-desc');
+    const ovBtn = document.getElementById('ov-btn');
+    const levelBadge = document.getElementById('levelBadge');
     
     // 遊戲狀態
+    let currentLevel = 1; 
     let score = 0;
     let strikes = 0;
-    let timeLeft = 180;
+    let timeLeft = 0;
     let timerInterval = null;
     let isGameActive = false;
     
-    // 題目參數
-    let currentInput = "";
-    let slope = 0, intercept = 0, targetX = 0, correctY = 0;
+    // 繪圖參數
+    let scale = 15;
+    let centerX = 170;
+    let centerY = 120;
 
-    // --- 遊戲流程 ---
+    // Level 1 題目數據
+    let l1_slope, l1_intercept, l1_targetX, l1_correctY, l1_input = "";
 
-    function startGame() {
-        document.getElementById('overlay').style.display = 'none';
-        score = 0;
-        strikes = 0;
-        timeLeft = 180;
-        isGameActive = true;
-        
-        updateUI();
-        
-        // 計時器
-        if(timerInterval) clearInterval(timerInterval);
-        timerInterval = setInterval(function() {
-            if(!isGameActive) return;
-            timeLeft--;
-            timeDisplay.innerText = timeLeft;
-            if(timeLeft <= 0) gameOver("探險時間結束");
-        }, 1000);
+    // Level 2 題目數據
+    let l2_slope, l2_intercept;
+    let l2_options = []; // 存放3個方程式字串
+    let l2_correctIndex = 0;
 
-        nextLevel();
-    }
+    // --- 通用功能 ---
 
-    function nextLevel() {
-        isGameActive = true;
-        currentInput = "";
-        displayInput.innerText = "?";
-        msgDiv.style.display = 'none';
-        
-        // 按鈕狀態重置
-        document.getElementById('actionBtn').style.display = 'block';
-        document.getElementById('nextBtn').style.display = 'none';
-
-        generateQuestion();
-        drawScene(null);
-    }
-
-    function generateQuestion() {
-        // 隨機出題
-        slope = Math.floor(Math.random() * 5) - 2; // -2 ~ 2
-        intercept = Math.floor(Math.random() * 9) - 4; // -4 ~ 4
-        targetX = Math.floor(Math.random() * 9) - 4; // -4 ~ 4
-        
-        // 避免太無聊的題目 (y=0)
-        if(slope === 0 && Math.random() > 0.5) slope = 1;
-
-        correctY = slope * targetX + intercept;
-        
-        // 組合字串
-        let sign = intercept >= 0 ? "+ " : "- ";
-        let txt = "y = " + slope + "x " + sign + Math.abs(intercept);
-        
-        if (slope === 0) txt = "y = " + intercept;
-        else if (slope === 1) txt = "y = x " + sign + Math.abs(intercept);
-        else if (slope === -1) txt = "y = -x " + sign + Math.abs(intercept);
-        else if (intercept === 0) txt = "y = " + slope + "x";
-
-        document.getElementById('eqDisplay').innerText = txt;
-        document.getElementById('targetDisplay').innerText = "x = " + targetX;
-    }
-
-    function inputNum(key) {
-        if (!isGameActive) return;
-        
-        if (key === 'C') {
-            currentInput = currentInput.slice(0, -1);
-        } else if (key === '-') {
-            if (currentInput === "") currentInput = "-";
-            else if (currentInput === "-") currentInput = "";
-        } else {
-            if (currentInput.length < 4) currentInput += key;
-        }
-        displayInput.innerText = currentInput === "" ? "?" : currentInput;
-    }
-
-    function submitAnswer() {
-        if (currentInput === "" || currentInput === "-") return;
-        
-        let userVal = parseInt(currentInput);
-        isGameActive = false; // 鎖定操作
-        
-        drawScene(userVal); // 繪製結果
-
-        if (userVal === correctY) {
-            score += 100;
-            showMsg("命中! 開花啦!", "#558b2f"); // 綠色背景提示
-        } else {
-            strikes++;
-            showMsg("沒丟中...嗚嗚", "#c62828"); // 紅色背景提示
-        }
-        updateUI();
-
-        // 判斷是否遊戲結束
-        if (strikes >= 3) {
-            setTimeout(function() { gameOver("皮克敏全軍覆沒..."); }, 1000);
-        } else {
-            document.getElementById('actionBtn').style.display = 'none';
-            document.getElementById('nextBtn').style.display = 'block';
-        }
-    }
-
-    function showMsg(text, bgColor) {
+    function showMsg(text, color) {
         msgDiv.innerText = text;
-        msgDiv.style.backgroundColor = bgColor;
+        msgDiv.style.backgroundColor = color;
         msgDiv.style.display = 'block';
     }
 
-    function updateUI() {
-        scoreDisplay.innerText = score;
-        strikeDisplay.innerText = strikes;
-        timeDisplay.innerText = timeLeft;
+    function updateHUD() {
+        document.getElementById('scoreDisplay').innerText = score;
+        document.getElementById('strikeDisplay').innerText = strikes;
+        document.getElementById('timeDisplay').innerText = timeLeft;
+    }
+
+    function startTimer(seconds, onFinish) {
+        if (timerInterval) clearInterval(timerInterval);
+        timeLeft = seconds;
+        updateHUD();
+        timerInterval = setInterval(() => {
+            if(!isGameActive) return;
+            timeLeft--;
+            updateHUD();
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                onFinish();
+            }
+        }, 1000);
     }
 
     function gameOver(reason) {
         isGameActive = false;
         clearInterval(timerInterval);
-        document.querySelector('#overlay h1').innerText = reason;
-        document.querySelector('#overlay p').innerHTML = "最終波可數: " + score;
-        document.querySelector('.btn-start').innerText = "再次挑戰";
-        document.getElementById('overlay').style.display = 'flex';
+        overlay.style.display = 'flex';
+        ovTitle.innerText = "任務結束";
+        ovDesc.innerText = reason + "\n最終分數: " + score;
+        ovBtn.innerText = "重新挑戰";
+        ovBtn.onclick = initLevel1;
     }
 
-    // --- 繪圖功能 (穩定版：只用基礎圖形組合) ---
+    // --- 第一關：發射器 (120秒) ---
 
-    function drawScene(userY) {
-        // 清空背景
-        ctx.fillStyle = "#fbe9e7";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    function initLevel1() {
+        currentLevel = 1;
+        score = 0;
+        strikes = 0;
+        
+        // UI 切換
+        overlay.style.display = 'none';
+        levelBadge.innerText = "LEVEL 1: 瞄準射擊";
+        levelBadge.style.backgroundColor = "#fdd835"; // 黃色
+        document.getElementById('level1-controls').style.display = 'flex';
+        document.getElementById('level2-controls').style.display = 'none';
+        
+        isGameActive = true;
+        startTimer(120, finishLevel1); // 2分鐘
+        nextLevel1Question();
+    }
 
-        // 畫淡色網格
-        ctx.strokeStyle = "rgba(121, 85, 72, 0.2)"; // 淡棕色
-        ctx.lineWidth = 1;
-        for(let x = 0; x <= canvas.width; x += scale) {
-            ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+    function finishLevel1() {
+        isGameActive = false;
+        clearInterval(timerInterval);
+        // 結算畫面
+        overlay.style.display = 'flex';
+        ovTitle.innerText = "第一關 通過!";
+        ovDesc.innerText = "得分: " + score + "\n準備好打蘑菇了嗎？";
+        ovBtn.innerText = "進入第二關";
+        ovBtn.onclick = initLevel2;
+    }
+
+    function nextLevel1Question() {
+        isGameActive = true;
+        l1_input = "";
+        document.getElementById('displayInput').innerText = "?";
+        msgDiv.style.display = 'none';
+        
+        // 按鈕重置
+        document.getElementById('l1-submit').style.display = 'grid'; // grid for span 2
+        document.getElementById('l1-next').style.display = 'none';
+
+        // 出題
+        l1_slope = Math.floor(Math.random() * 5) - 2; 
+        if(l1_slope===0) l1_slope=1;
+        l1_intercept = Math.floor(Math.random() * 9) - 4;
+        l1_targetX = Math.floor(Math.random() * 9) - 4;
+        l1_correctY = l1_slope * l1_targetX + l1_intercept;
+
+        // 顯示
+        document.getElementById('qText').innerText = "隊長指令 (算出 y 值)";
+        let sign = l1_intercept >= 0 ? "+ " : "- ";
+        let eq = `y = ${l1_slope}x ${sign} ${Math.abs(l1_intercept)}`;
+        if(l1_slope===0) eq=`y=${l1_intercept}`;
+        else if(l1_slope===1) eq=`y=x ${sign} ${Math.abs(l1_intercept)}`;
+        else if(l1_slope===-1) eq=`y=-x ${sign} ${Math.abs(l1_intercept)}`;
+        else if(l1_intercept===0) eq=`y=${l1_slope}x`;
+
+        document.getElementById('qContent').innerHTML = 
+            `<span class="highlight">${eq}</span> 目標 <span class="highlight">x=${l1_targetX}</span>`;
+
+        drawLevel1Scene(null);
+    }
+
+    function inputNum(key) {
+        if(!isGameActive || currentLevel !== 1) return;
+        if (key === 'C') l1_input = l1_input.slice(0, -1);
+        else if (key === '-') {
+            if (l1_input === "") l1_input = "-";
+            else if (l1_input === "-") l1_input = "";
+        } else {
+            if (l1_input.length < 4) l1_input += key;
         }
-        for(let y = 0; y <= canvas.height; y += scale) {
-            ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+        document.getElementById('displayInput').innerText = l1_input === "" ? "?" : l1_input;
+    }
+
+    function submitLevel1() {
+        if (l1_input === "" || l1_input === "-") return;
+        isGameActive = false; // 暫停操作
+        let val = parseInt(l1_input);
+        
+        drawLevel1Scene(val);
+
+        if (val === l1_correctY) {
+            score += 100;
+            showMsg("命中! (+100)", "#558b2f");
+        } else {
+            strikes++;
+            showMsg("失誤!", "#c62828");
         }
+        updateHUD();
 
-        // 畫座標軸 (深棕色)
-        ctx.strokeStyle = "#5d4037";
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(0, centerY); ctx.lineTo(canvas.width, centerY); // X軸
-        ctx.moveTo(centerX, 0); ctx.lineTo(centerX, canvas.height); // Y軸
-        ctx.stroke();
+        if (strikes >= 3) {
+            setTimeout(() => gameOver("皮克敏全數陣亡..."), 1000);
+        } else {
+            document.getElementById('l1-submit').style.display = 'none';
+            document.getElementById('l1-next').style.display = 'grid';
+        }
+    }
 
-        // 畫目標掃描線
-        let px = centerX + targetX * scale;
-        ctx.strokeStyle = "rgba(229, 57, 53, 0.5)"; // 紅色半透明
-        ctx.setLineDash([5, 5]);
-        ctx.beginPath(); ctx.moveTo(px, 0); ctx.lineTo(px, canvas.height); ctx.stroke();
-        ctx.setLineDash([]);
+    function drawLevel1Scene(userY) {
+        ctx.fillStyle = "#fbe9e7"; ctx.fillRect(0,0,340,240);
+        drawGridAndAxes();
 
-        // 畫敵人 (簡化版紅色恰比 - 用基礎圓形組合)
-        ctx.fillStyle = "#d32f2f"; // 身體紅
-        ctx.beginPath(); ctx.arc(px, centerY, 12, 0, Math.PI*2); ctx.fill();
-        ctx.fillStyle = "#fff"; // 眼睛白
-        ctx.beginPath(); ctx.arc(px-5, centerY-4, 4, 0, Math.PI*2); ctx.fill();
-        ctx.beginPath(); ctx.arc(px+5, centerY-4, 4, 0, Math.PI*2); ctx.fill();
-        ctx.fillStyle = "#000"; // 眼珠黑
-        ctx.beginPath(); ctx.arc(px-5, centerY-4, 2, 0, Math.PI*2); ctx.fill();
-        ctx.beginPath(); ctx.arc(px+5, centerY-4, 2, 0, Math.PI*2); ctx.fill();
+        // 目標線
+        let px = centerX + l1_targetX * scale;
+        ctx.strokeStyle = "rgba(229, 57, 53, 0.5)";
+        ctx.setLineDash([5,5]); ctx.beginPath(); ctx.moveTo(px,0); ctx.lineTo(px,240); ctx.stroke(); ctx.setLineDash([]);
 
+        // 敵人 (小圓點)
+        ctx.fillStyle = "#d32f2f"; ctx.beginPath(); ctx.arc(px, centerY, 8, 0, Math.PI*2); ctx.fill();
 
-        // 如果玩家已經輸入答案
         if (userY !== null) {
             let py = centerY - userY * scale;
-            let isCorrect = (userY === correctY);
-
-            // 畫軌跡線
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            let x1 = -20; let y1 = slope * x1 + intercept;
-            let x2 = 20; let y2 = slope * x2 + intercept;
+            let isCorrect = (userY === l1_correctY);
             
-            if (isCorrect) {
-                // 答對：畫出綠色藤蔓軌跡
-                ctx.strokeStyle = "#558b2f"; 
-                ctx.moveTo(centerX + x1 * scale, centerY - y1 * scale);
-                ctx.lineTo(centerX + x2 * scale, centerY - y2 * scale);
+            // 畫線
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = isCorrect ? "#558b2f" : "#90a4ae";
+            ctx.beginPath();
+            let x1 = -20; let y1 = l1_slope*x1 + l1_intercept;
+            let x2 = 20; let y2 = l1_slope*x2 + l1_intercept;
+            if(isCorrect) {
+                ctx.moveTo(centerX+x1*scale, centerY-y1*scale);
+                ctx.lineTo(centerX+x2*scale, centerY-y2*scale);
                 ctx.stroke();
-                
-                // 畫命中點：紅色皮克敏 + 黃色花朵
-                // 皮克敏頭
-                ctx.fillStyle = "#e53935"; 
-                ctx.beginPath(); ctx.arc(px, py, 7, 0, Math.PI*2); ctx.fill();
-                // 眼睛
-                ctx.fillStyle = "#fff";
-                ctx.beginPath(); ctx.arc(px-2, py-1, 2, 0, Math.PI*2); ctx.fill();
-                ctx.beginPath(); ctx.arc(px+2, py-1, 2, 0, Math.PI*2); ctx.fill();
-                
-                // 頭上的花 (黃色圓形)
-                ctx.fillStyle = "#fdd835";
-                ctx.beginPath(); ctx.arc(px, py-12, 5, 0, Math.PI*2); ctx.fill();
-                // 花梗
-                ctx.strokeStyle = "#558b2f"; ctx.lineWidth=2;
-                ctx.beginPath(); ctx.moveTo(px, py-7); ctx.lineTo(px, py-12); ctx.stroke();
-
+                // 畫皮克敏
+                drawPikminHead(px, py, "#e53935");
             } else {
-                // 答錯：畫出灰色虛線軌跡
-                ctx.strokeStyle = "#90a4ae";
-                ctx.setLineDash([3, 3]);
-                ctx.beginPath(); ctx.moveTo(0, py); ctx.lineTo(px, py); ctx.stroke();
-                ctx.setLineDash([]);
-
-                // 畫失敗點：藍色皮克敏 (憂鬱)
-                ctx.fillStyle = "#1e88e5";
-                ctx.beginPath(); ctx.arc(px, py, 7, 0, Math.PI*2); ctx.fill();
-                // 眼睛 (瞇瞇眼表示難過)
-                ctx.strokeStyle = "#fff"; ctx.lineWidth = 2;
-                ctx.beginPath(); ctx.moveTo(px-4, py); ctx.lineTo(px-1, py); ctx.stroke();
-                ctx.beginPath(); ctx.moveTo(px+1, py); ctx.lineTo(px+4, py); ctx.stroke();
-                
-                // 標記正確位置 (綠色發光圈)
-                let trueY = centerY - correctY * scale;
-                ctx.strokeStyle = "#76ff03";
-                ctx.lineWidth = 3;
-                ctx.beginPath(); ctx.arc(px, trueY, 10, 0, Math.PI*2); ctx.stroke();
+                ctx.moveTo(0, py); ctx.lineTo(px, py); ctx.stroke(); // 錯誤軌跡
+                drawPikminHead(px, py, "#1e88e5"); // 藍色失敗
+                // 正確提示
+                ctx.strokeStyle="#76ff03"; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(px, centerY-l1_correctY*scale, 10, 0, Math.PI*2); ctx.stroke();
             }
         }
     }
 
-    // 初始化畫面
-    drawScene(null);
+    // --- 第二關：蘑菇戰鬥 (180秒) ---
+
+    function initLevel2() {
+        currentLevel = 2;
+        strikes = 0; // 重置失誤次數 (或者可以選擇繼承)
+        
+        overlay.style.display = 'none';
+        levelBadge.innerText = "LEVEL 2: 蘑菇討伐戰";
+        levelBadge.style.backgroundColor = "#9c27b0"; // 紫色
+        levelBadge.style.color = "#fff";
+        
+        document.getElementById('level1-controls').style.display = 'none';
+        document.getElementById('level2-controls').style.display = 'flex';
+
+        isGameActive = true;
+        startTimer(180, finishLevel2); // 3分鐘
+        nextLevel2Question();
+    }
+
+    function finishLevel2() {
+        isGameActive = false;
+        clearInterval(timerInterval);
+        gameOver("恭喜通關！"); // 使用 Game Over 畫面但顯示勝利
+        ovTitle.innerText = "全數通關!";
+        ovDesc.innerText = "你是數學大師！\n最終分數: " + score;
+        ovBtn.innerText = "重新開始";
+    }
+
+    function nextLevel2Question() {
+        isGameActive = true;
+        msgDiv.style.display = 'none';
+        
+        // 顯示選項按鈕，隱藏 Next 按鈕
+        let btns = document.querySelectorAll('.option-btn');
+        btns.forEach(b => { b.style.display = 'flex'; b.disabled = false; b.style.opacity = "1"; });
+        document.getElementById('l2-next').style.display = 'none';
+
+        // 1. 生成正確線段 (限制在畫面內比較好觀察的斜率)
+        l2_slope = Math.floor(Math.random() * 5) - 2; // -2, -1, 0, 1, 2
+        l2_intercept = Math.floor(Math.random() * 7) - 3; // -3 ~ 3
+
+        // 2. 生成選項
+        let correctEq = formatEq(l2_slope, l2_intercept);
+        let wrong1, wrong2;
+        
+        // 簡單的錯誤選項生成邏輯
+        do {
+            let fakeM = Math.floor(Math.random() * 5) - 2;
+            let fakeB = Math.floor(Math.random() * 7) - 3;
+            wrong1 = formatEq(fakeM, fakeB);
+        } while (wrong1 === correctEq);
+
+        do {
+            let fakeM = Math.floor(Math.random() * 5) - 2;
+            let fakeB = Math.floor(Math.random() * 7) - 3;
+            wrong2 = formatEq(fakeM, fakeB);
+        } while (wrong2 === correctEq || wrong2 === wrong1);
+
+        // 3. 隨機排列
+        l2_options = [correctEq, wrong1, wrong2];
+        l2_correctIndex = Math.floor(Math.random() * 3);
+        // 交換
+        [l2_options[0], l2_options[l2_correctIndex]] = [l2_options[l2_correctIndex], l2_options[0]];
+
+        // 4. 更新 UI
+        document.getElementById('qText').innerText = "觀察圖形";
+        document.getElementById('qContent').innerHTML = "找出對應的方程式來攻擊蘑菇！";
+        
+        document.getElementById('opt-0-text').innerText = l2_options[0];
+        document.getElementById('opt-1-text').innerText = l2_options[1];
+        document.getElementById('opt-2-text').innerText = l2_options[2];
+
+        drawLevel2Scene(false);
+    }
+
+    function formatEq(m, b) {
+        let sign = b >= 0 ? "+ " : "- ";
+        let txt = `y = ${m}x ${sign} ${Math.abs(b)}`;
+        if(m===0) txt = `y = ${b}`;
+        else if(m===1) txt = `y = x ${sign} ${Math.abs(b)}`;
+        else if(m===-1) txt = `y = -x ${sign} ${Math.abs(b)}`;
+        else if(b===0) txt = `y = ${m}x`;
+        return txt;
+    }
+
+    function checkLevel2(idx) {
+        if(!isGameActive) return;
+        isGameActive = false;
+        
+        let isCorrect = (idx === l2_correctIndex);
+        
+        drawLevel2Scene(true, isCorrect); // 這裡 true 代表顯示結果動畫
+
+        if(isCorrect) {
+            score += 150; // 第二關分數較高
+            showMsg("蘑菇擊破! (+150)", "#9c27b0");
+        } else {
+            strikes++;
+            showMsg("選錯隊伍了...", "#c62828");
+        }
+        updateHUD();
+
+        // 鎖定按鈕
+        let btns = document.querySelectorAll('.option-btn');
+        btns.forEach((b, i) => { 
+            if(i !== 3) { // 不包含 next 按鈕
+                b.disabled = true; 
+                if(i !== idx) b.style.opacity = "0.3"; // 淡化沒選的
+            }
+        });
+
+        if (strikes >= 3) {
+            setTimeout(() => gameOver("任務失敗..."), 1000);
+        } else {
+            document.getElementById('l2-next').style.display = 'flex';
+        }
+    }
+
+    function drawLevel2Scene(showResult, isCorrect) {
+        ctx.fillStyle = "#f3e5f5"; // 淡紫色背景
+        ctx.fillRect(0,0,340,240);
+        drawGridAndAxes();
+
+        // 1. 畫出正確的函數線 (作為題目)
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = "#558b2f"; // 線條是題目，給明顯顏色
+        ctx.beginPath();
+        let x1 = -20; let y1 = l2_slope*x1 + l2_intercept;
+        let x2 = 20; let y2 = l2_slope*x2 + l2_intercept;
+        ctx.moveTo(centerX+x1*scale, centerY-y1*scale);
+        ctx.lineTo(centerX+x2*scale, centerY-y2*scale);
+        ctx.stroke();
+
+        // 2. 畫蘑菇 (在線的某個位置)
+        let mushX = 4; 
+        let mushY = l2_slope * mushX + l2_intercept;
+        // 確保蘑菇在畫面內，如果在外面就換個位置
+        if(Math.abs(mushY) > 7) { mushX = -4; mushY = l2_slope * mushX + l2_intercept; }
+        
+        let px = centerX + mushX * scale;
+        let py = centerY - mushY * scale;
+
+        drawMushroom(px, py, showResult && isCorrect); // 如果答對，蘑菇會受傷?
+
+        if(showResult) {
+            if(isCorrect) {
+                // 畫一群皮克敏攻擊
+                drawPikminHead(px-15, py+10, "#e53935");
+                drawPikminHead(px+15, py+10, "#fdd835");
+            } else {
+                // 畫問號
+                ctx.fillStyle = "#333";
+                ctx.font = "30px Arial";
+                ctx.fillText("?", px, py-20);
+            }
+        }
+    }
+
+    function drawMushroom(x, y, isDead) {
+        ctx.save();
+        ctx.translate(x, y);
+        if(isDead) ctx.globalAlpha = 0.5; // 半透明代表被打敗
+
+        // 梗
+        ctx.fillStyle = "#f0f0f0";
+        ctx.fillRect(-6, 0, 12, 20);
+        
+        // 傘蓋
+        ctx.fillStyle = "#9c27b0";
+        ctx.beginPath();
+        ctx.arc(0, 0, 20, Math.PI, 0); // 半圓
+        ctx.fill();
+        
+        // 斑點
+        ctx.fillStyle = "#e1bee7";
+        ctx.beginPath(); ctx.arc(-10, -8, 4, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(8, -5, 3, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(0, -12, 5, 0, Math.PI*2); ctx.fill();
+
+        ctx.restore();
+    }
+
+    // --- 共用繪圖小工具 ---
+
+    function drawGridAndAxes() {
+        ctx.strokeStyle = "rgba(0,0,0,0.1)"; ctx.lineWidth=1;
+        for(let x=0; x<=340; x+=scale) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,240); ctx.stroke(); }
+        for(let y=0; y<=240; y+=scale) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(340,y); ctx.stroke(); }
+        ctx.strokeStyle = "#5d4037"; ctx.lineWidth=2;
+        ctx.beginPath(); ctx.moveTo(0,centerY); ctx.lineTo(340,centerY); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(centerX,0); ctx.lineTo(centerX,240); ctx.stroke();
+    }
+
+    function drawPikminHead(x, y, color) {
+        ctx.fillStyle = color;
+        ctx.beginPath(); ctx.arc(x, y, 6, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = "#fff";
+        ctx.beginPath(); ctx.arc(x-2, y-1, 2, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(x+2, y-1, 2, 0, Math.PI*2); ctx.fill();
+        // 葉子
+        ctx.strokeStyle = "#558b2f"; ctx.lineWidth=2;
+        ctx.beginPath(); ctx.moveTo(x, y-6); ctx.lineTo(x, y-10); ctx.stroke();
+    }
+
+    // 初始化顯示主選單
+    // 不做任何事，等待使用者按按鈕
 
 </script>
 </body>
