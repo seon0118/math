@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>神秘函數狙擊手 - 國中數學版</title>
+    <style>
+        body {
+            font-family: '微軟正黑體', sans-serif;
+            text-align: center;
+            background-color: #222;
+            color: white;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 { margin-bottom: 10px; color: #ffcc00; }
+        .game-container {
+            display: inline-block;
+            background-color: #fff;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+        canvas {
+            background-color: #f0f0f0;
+            border: 2px solid #333;
+            cursor: crosshair;
+        }
+        .controls {
+            margin-top: 15px;
+            font-size: 1.2em;
+            color: #333;
+        }
+        .hud {
+            display: flex;
+            justify-content: space-between;
+            width: 600px;
+            margin: 0 auto 10px auto;
+            color: #fff;
+            font-size: 1.2em;
+        }
+        input {
+            font-size: 1.2em;
+            width: 80px;
+            padding: 5px;
+            text-align: center;
+        }
+        button {
+            font-size: 1.2em;
+            padding: 5px 20px;
+            background-color: #ff4444;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        button:hover { background-color: #cc0000; }
+        button:disabled { background-color: #888; cursor: not-allowed; }
+        #message {
+            margin-top: 10px;
+            font-weight: bold;
+            height: 30px;
+            color: #333;
+        }
+        .math-expr { font-family: 'Times New Roman', serif; font-style: italic; font-weight: bold; color: blue;}
+    </style>
+</head>
+<body>
+
+    <h1>🎯 神秘函數狙擊手</h1>
+    
+    <div class="hud">
+        <div id="equation-display">武器函數: y = ?</div>
+        <div id="target-display">敵人位置: x = ?</div>
+    </div>
+
+    <div class="game-container">
+        <canvas id="gameCanvas" width="600" height="400"></canvas>
+        
+        <div class="controls">
+            <span>輸入射擊高度 (y)：</span>
+            <input type="number" id="inputY" placeholder="?" step="1">
+            <button id="fireBtn" onclick="fire()">發射砲彈!</button>
+            <button id="nextBtn" onclick="initGame()" style="display:none; background-color: #4CAF50;">下一關</button>
+        </div>
+        <div id="message">準備就緒...</div>
+    </div>
+
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const inputY = document.getElementById('inputY');
+    const messageDiv = document.getElementById('message');
+    const nextBtn = document.getElementById('nextBtn');
+    const fireBtn = document.getElementById('fireBtn');
+    
+    // 遊戲參數
+    let scale = 20; // 1單位 = 20像素
+    let centerX = canvas.width / 2;
+    let centerY = canvas.height / 2;
+    
+    // 當前題目變數
+    let slope = 0; // 斜率 a
+    let intercept = 0; // 截距 b
+    let targetX = 0; // 題目給的 x
+    let correctY = 0; // 正確答案 y
+    let isFired = false;
+
+    // 初始化遊戲
+    function initGame() {
+        // 重置狀態
+        isFired = false;
+        inputY.value = '';
+        inputY.disabled = false;
+        fireBtn.disabled = false;
+        fireBtn.style.display = 'inline-block';
+        nextBtn.style.display = 'none';
+        messageDiv.innerHTML = "請計算 y 值並輸入...";
+        messageDiv.style.color = "#333";
+
+        // 隨機產生題目 (限制範圍以免太難或超出畫面)
+        // 斜率 a: -3 到 3
+        slope = Math.floor(Math.random() * 7) - 3; 
+        if(slope === 0 && Math.random() > 0.5) slope = 1; // 減少出現常數函數的機率，但也保留可能性
+
+        // 截距 b: -5 到 5
+        intercept = Math.floor(Math.random() * 11) - 5;
+
+        // 目標 x: -8 到 8 (避開 0)
+        targetX = Math.floor(Math.random() * 17) - 8;
+        
+        // 計算正確答案
+        correctY = slope * targetX + intercept;
+
+        // 顯示題目
+        let sign = intercept >= 0 ? "+ " : "- ";
+        let bVal = Math.abs(intercept);
+        let equationText = `y = ${slope}x ${sign} ${bVal}`;
+        if (slope === 0) equationText = `y = ${intercept}`; // 常數函數
+        if (slope === 1) equationText = `y = x ${sign} ${bVal}`;
+        if (slope === -1) equationText = `y = -x ${sign} ${bVal}`;
+        if (intercept === 0) equationText = slope === 0 ? "y = 0" : `y = ${slope}x`;
+
+        document.getElementById('equation-display').innerHTML = `武器: <span class="math-expr">${equationText}</span>`;
+        document.getElementById('target-display').innerHTML = `敵人位置: <span class="math-expr">x = ${targetX}</span>`;
+
+        drawScene();
+    }
+
+    // 繪製座標系
+    function drawGrid() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        ctx.strokeStyle = "#ddd";
+        ctx.lineWidth = 1;
+
+        // 畫網格
+        for(let x = 0; x <= canvas.width; x += scale) {
+            ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+        }
+        for(let y = 0; y <= canvas.height; y += scale) {
+            ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+        }
+
+        // 畫 X, Y 軸
+        ctx.strokeStyle = "#000";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(0, centerY); ctx.lineTo(canvas.width, centerY); // X軸
+        ctx.moveTo(centerX, 0); ctx.lineTo(centerX, canvas.height); // Y軸
+        ctx.stroke();
+
+        // 標記原點與方向
+        ctx.fillStyle = "black";
+        ctx.font = "14px Arial";
+        ctx.fillText("O", centerX + 2, centerY + 15);
+        ctx.fillText("x", canvas.width - 15, centerY - 5);
+        ctx.fillText("y", centerX + 5, 15);
+    }
+
+    // 繪製場景 (敵人)
+    function drawScene() {
+        drawGrid();
+
+        // 畫出敵人所在的垂直線 (提示線)
+        ctx.strokeStyle = "rgba(255, 0, 0, 0.3)";
+        ctx.setLineDash([5, 5]);
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        let pixelTargetX = centerX + targetX * scale;
+        ctx.moveTo(pixelTargetX, 0);
+        ctx.lineTo(pixelTargetX, canvas.height);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // 在 x 軸上標記敵人位置
+        ctx.fillStyle = "red";
+        ctx.fillText(`x=${targetX}`, pixelTargetX - 10, centerY + 20);
+    }
+
+    // 發射邏輯
+    function fire() {
+        let userVal = parseFloat(inputY.value);
+        if (isNaN(userVal)) {
+            alert("請輸入數字！");
+            return;
+        }
+
+        isFired = true;
+        inputY.disabled = true;
+        fireBtn.disabled = true;
+
+        // 動畫：畫出砲彈
+        let startX = centerX; // 假設從原點發射...不，為了視覺效果，我們畫出點的位置
+        let pixelX = centerX + targetX * scale;
+        let pixelY = centerY - userVal * scale; // Y軸向上是負的 (Canvas座標系)
+        
+        // 畫出使用者的打擊點
+        drawScene();
+        
+        // 畫出正確的函數線 (如果是對的，畫綠色；錯的畫灰色)
+        ctx.strokeStyle = (userVal === correctY) ? "#4CAF50" : "#888";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        // 找兩個點來畫線：x=-10 和 x=10
+        let x1 = -20; let y1 = slope * x1 + intercept;
+        let x2 = 20; let y2 = slope * x2 + intercept;
+        ctx.moveTo(centerX + x1 * scale, centerY - y1 * scale);
+        ctx.lineTo(centerX + x2 * scale, centerY - y2 * scale);
+        ctx.stroke();
+
+        // 畫出玩家的彈著點
+        ctx.beginPath();
+        ctx.arc(pixelX, pixelY, 8, 0, Math.PI * 2);
+        
+        if (userVal === correctY) {
+            ctx.fillStyle = "#4CAF50"; // Green
+            ctx.fill();
+            messageDiv.innerHTML = "🎉 命中目標！太神啦！";
+            messageDiv.style.color = "green";
+        } else {
+            ctx.fillStyle = "#ff4444"; // Red
+            ctx.fill();
+            
+            // 標示正確位置
+            let correctPixelY = centerY - correctY * scale;
+            ctx.beginPath();
+            ctx.arc(pixelX, correctPixelY, 8, 0, Math.PI * 2);
+            ctx.strokeStyle = "#4CAF50";
+            ctx.lineWidth = 2;
+            ctx.stroke(); // 空心圓表示正確位置
+
+            messageDiv.innerHTML = `💥 沒打中... 正確答案是 y = ${correctY}`;
+            messageDiv.style.color = "red";
+        }
+        
+        fireBtn.style.display = 'none';
+        nextBtn.style.display = 'inline-block';
+    }
+
+    // 啟動第一關
+    initGame();
+
+    // 支援按 Enter 發射
+    inputY.addEventListener("keyup", function(event) {
+        if (event.key === "Enter") {
+            if(!isFired) fire();
+            else initGame();
+        }
+    });
+
+</script>
+</body>
+</html>
