@@ -3,210 +3,153 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>函數大冒險：35人教室互動版</title>
+    <title>函數堡壘：老師遠端監控版</title>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
         :root {
-            --mario-red: #E52521;
-            --luigi-green: #43B047;
-            --sky-blue: #5C94FC;
-            --brick-brown: #944200;
-            --gold: #ffd700;
+            --mario-red: #E52521; --luigi-green: #43B047; --sky-blue: #5C94FC;
+            --brick-brown: #944200; --gold: #ffd700;
         }
-
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-
+        * { box-sizing: border-box; }
         body {
-            font-family: 'Press Start 2P', cursive;
-            margin: 0; padding: 0;
-            background-color: #333; color: white;
-            display: flex; flex-direction: column; align-items: center;
-            height: 100vh; overflow: hidden;
+            font-family: 'Press Start 2P', cursive; margin: 0; background: #333; color: white;
+            display: flex; flex-direction: column; align-items: center; height: 100vh; overflow: hidden;
         }
 
-        /* --- 登入介面 --- */
-        #login-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--sky-blue); z-index: 200;
-            display: flex; flex-direction: column; align-items: center; padding: 20px;
-            overflow-y: auto;
-        }
-        #nickname-input {
-            padding: 15px; font-family: 'Press Start 2P'; font-size: 16px;
-            border: 4px solid #000; margin-bottom: 20px; width: 80%; max-width: 300px;
-        }
-        .room-grid {
-            display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; 
-            max-width: 500px; width: 100%;
-        }
-        .room-btn {
-            aspect-ratio: 1/1; background: var(--brick-brown); color: white;
-            border: 3px solid #000; cursor: pointer; font-size: 10px;
-            font-family: 'Press Start 2P'; border-radius: 5px;
-        }
-        .room-btn:hover { background: var(--luigi-green); }
-
-        /* --- 老師監控介面 (F2切換) --- */
+        /* --- 老師監控介面升級 --- */
         #admin-panel {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.95); z-index: 300;
-            display: none; padding: 20px; overflow-y: auto;
+            background: rgba(0,0,0,0.95); z-index: 300; display: none; padding: 20px;
         }
+        .admin-layout { display: flex; gap: 20px; height: 85%; }
         .monitor-grid {
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px;
+            flex: 1; display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+            gap: 8px; overflow-y: auto; padding-right: 10px;
         }
         .monitor-card {
-            border: 2px solid #555; padding: 10px; background: #222; font-size: 8px; line-height: 1.4;
+            border: 2px solid #555; padding: 8px; background: #222; font-size: 7px; cursor: pointer;
         }
-        .monitor-card.active { border-color: var(--gold); background: #442200; }
+        .monitor-card.active { border-color: var(--luigi-green); background: #1a331a; }
+        .monitor-card.selected { border-color: var(--gold); box-shadow: 0 0 10px var(--gold); }
 
-        /* --- 遊戲畫面佈局 --- */
-        .app-container {
-            width: 100%; max-width: 550px; height: 100%;
-            display: flex; flex-direction: column; background: var(--sky-blue);
-            border: 4px solid #000; position: relative;
+        /* 學生畫面預覽區 */
+        .student-preview {
+            width: 300px; background: #444; border: 4px solid var(--gold);
+            display: flex; flex-direction: column; padding: 10px;
         }
+        .preview-canvas-wrap { width: 100%; aspect-ratio: 4/3; background: #fff; margin-top: 10px; }
+        #previewCanvas { width: 100%; height: 100%; }
+
+        /* --- 遊戲介面 --- */
+        #login-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--sky-blue); z-index: 200; display: flex; flex-direction: column; align-items: center; padding: 20px;
+        }
+        .room-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; width: 100%; max-width: 400px; }
+        .room-btn { aspect-ratio: 1/1; background: var(--brick-brown); color: #fff; border: 3px solid #000; font-size: 10px; font-family: 'Press Start 2P'; cursor: pointer; }
+        
+        .app-container { width: 100%; max-width: 500px; height: 100%; display: flex; flex-direction: column; background: var(--sky-blue); border: 4px solid #000; }
         .hud { background: #000; padding: 10px; display: flex; justify-content: space-between; font-size: 8px; }
-        .hud span { color: var(--gold); }
-
-        .question-box { 
-            background: var(--brick-brown); border: 4px solid #000; 
-            margin: 5px 10px; padding: 12px; text-align: center; font-size: 10px; line-height: 1.6;
-        }
-        .canvas-area { flex-grow: 1; background: #fff; position: relative; overflow: hidden; border: 4px solid #000; margin: 0 10px;}
+        .question-box { background: var(--brick-brown); border: 4px solid #000; margin: 5px; padding: 10px; text-align: center; font-size: 9px; }
+        .canvas-area { flex-grow: 1; background: #fff; position: relative; margin: 0 5px; border: 2px solid #000; }
         canvas { width: 100%; height: 100%; display: block; }
-
-        /* --- 控制區 --- */
         .controls { background: #000; padding: 10px; border-top: 4px solid #fff; }
         .num-pad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
-        .btn { 
-            background: #fff; border: 3px solid #555; padding: 12px 0; 
-            font-family: 'Press Start 2P'; font-size: 12px; cursor: pointer;
-        }
-        .btn:active { transform: translateY(2px); background: #ddd; }
-
-        #input-view {
-            background: #fff; color: #000; padding: 8px; margin-bottom: 8px;
-            text-align: center; font-size: 20px; height: 40px; border: 3px solid var(--gold);
-        }
-
-        .admin-trigger { position: fixed; bottom: 5px; right: 5px; font-size: 8px; color: #666; cursor: pointer; z-index: 50; }
+        .btn { background: #fff; border: 2px solid #555; padding: 12px 0; font-family: 'Press Start 2P'; font-size: 10px; cursor: pointer; }
+        #input-view { background: #fff; color: #000; padding: 5px; margin-bottom: 5px; text-align: center; font-size: 18px; border: 3px solid var(--gold); }
     </style>
 </head>
 <body>
 
     <div id="login-screen">
-        <h1 style="font-size: 20px; color: #fff; text-shadow: 3px 3px 0 #000;">JOIN CLASS</h1>
-        <p style="font-size: 10px; margin-bottom: 20px;">請輸入姓名並領取座號房</p>
-        <input type="text" id="nickname-input" placeholder="NICKNAME" maxlength="10">
+        <h2 style="font-size:16px;">STUDENT LOGIN</h2>
+        <input type="text" id="nick-in" placeholder="NAME" maxlength="8" style="padding:10px; margin-bottom:15px; font-family:'Press Start 2P';">
         <div class="room-grid" id="room-btns"></div>
     </div>
 
     <div id="admin-panel">
-        <h1 style="color: var(--gold); font-size: 16px;">CLASS MONITORING</h1>
-        <p style="font-size: 8px;">點擊 CLOSE 或按 F2 返回</p>
-        <button onclick="toggleAdmin()" style="margin-bottom: 20px; padding: 10px; font-family: 'Press Start 2P';">CLOSE</button>
-        <div class="monitor-grid" id="monitor-content"></div>
-    </div>
-
-    <div class="app-container">
-        <div class="hud">
-            <div>NAME: <span id="p-name">?</span><br>ROOM: <span id="p-room">?</span></div>
-            <div>SCORE:<br><span id="p-score">000000</span></div>
-            <div>TIME:<br><span id="p-timer">120</span></div>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h2 style="color:var(--gold); font-size:14px;">TEACHER MONITORING</h2>
+            <button onclick="toggleAdmin()" style="font-family:'Press Start 2P'; padding:5px;">CLOSE</button>
         </div>
-
-        <div class="question-box" id="q-area">MISSION LOADING...</div>
-
-        <div class="canvas-area" id="c-wrap">
-            <canvas id="mainCanvas"></canvas>
-            <div id="feedback" style="position:absolute; bottom:10px; left:10px; font-size:10px; color:#000; font-weight:bold; pointer-events:none;"></div>
-        </div>
-
-        <div class="controls">
-            <div id="input-view">?</div>
-            <div class="num-pad">
-                <button class="btn" onclick="press('1')">1</button>
-                <button class="btn" onclick="press('2')">2</button>
-                <button class="btn" onclick="press('3')">3</button>
-                <button class="btn" style="background:#ddd;" onclick="press('C')">C</button>
-                <button class="btn" onclick="press('4')">4</button>
-                <button class="btn" onclick="press('5')">5</button>
-                <button class="btn" onclick="press('6')">6</button>
-                <button class="btn" style="background:var(--sky-blue); color:white;" onclick="press('-')">-</button>
-                <button class="btn" onclick="press('7')">7</button>
-                <button class="btn" onclick="press('8')">8</button>
-                <button class="btn" onclick="press('9')">9</button>
-                <button class="btn" onclick="press('0')">0</button>
-                <button class="btn" style="grid-column: span 4; background: var(--mario-red); color:white;" onclick="checkAnswer()">SHOOT! (Enter)</button>
+        <div class="admin-layout">
+            <div class="monitor-grid" id="monitor-content"></div>
+            <div class="student-preview">
+                <div style="font-size:10px; color:var(--gold); border-bottom:1px solid #666; padding-bottom:5px;">LIVE PREVIEW</div>
+                <div id="preview-info" style="font-size:8px; margin-top:10px; line-height:1.5;">請點擊左側房號查看學生畫面</div>
+                <div class="preview-canvas-wrap">
+                    <canvas id="previewCanvas"></canvas>
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="admin-trigger" onclick="toggleAdmin()">Teacher Portal</div>
+    <div class="app-container">
+        <div class="hud">
+            <div>NAME:<span id="p-name">?</span> RM:<span id="p-room">?</span></div>
+            <div>SCORE:<br><span id="p-score">000000</span></div>
+            <div>TIME:<br><span id="p-timer">120</span></div>
+        </div>
+        <div class="question-box" id="q-area">LOADING...</div>
+        <div class="canvas-area" id="c-wrap">
+            <canvas id="mainCanvas"></canvas>
+        </div>
+        <div class="controls">
+            <div id="input-view">?</div>
+            <div class="num-pad">
+                <button class="btn" onclick="press('1')">1</button><button class="btn" onclick="press('2')">2</button><button class="btn" onclick="press('3')">3</button><button class="btn" onclick="press('C')">C</button>
+                <button class="btn" onclick="press('4')">4</button><button class="btn" onclick="press('5')">5</button><button class="btn" onclick="press('6')">6</button><button class="btn" onclick="press('-')">-</button>
+                <button class="btn" onclick="press('7')">7</button><button class="btn" onclick="press('8')">8</button><button class="btn" onclick="press('9')">9</button><button class="btn" onclick="press('0')">0</button>
+                <button class="btn" style="grid-column:span 4; background:var(--mario-red); color:#fff;" onclick="checkAnswer()">FIRE!</button>
+            </div>
+        </div>
+    </div>
 
 <script>
     const canvas = document.getElementById('mainCanvas');
     const ctx = canvas.getContext('2d');
-    
-    let user = {
-        name: "", room: null, score: 0, timeLeft: 120,
-        currentInput: "",
-        q: { slope: 0, b: 0, x: 0, ans: 0 },
-        lastLine: null
-    };
+    const preCanvas = document.getElementById('previewCanvas');
+    const preCtx = preCanvas.getContext('2d');
 
-    // 房號按鈕初始化
+    let user = { name: "", room: null, score: 0, timeLeft: 120, currentInput: "", q: { slope: 0, b: 0, x: 0, ans: 0 }, lastLine: null };
+    let selectedStudentRoom = null;
+
+    // 初始化房間按鈕
     const roomContainer = document.getElementById('room-btns');
     for(let i=1; i<=35; i++) {
         const btn = document.createElement('button');
-        btn.className = 'room-btn';
-        btn.innerText = i;
-        btn.onclick = () => joinGame(i);
+        btn.className = 'room-btn'; btn.innerText = i;
+        btn.onclick = () => {
+            const nick = document.getElementById('nick-in').value.trim();
+            if(!nick) return alert("請輸入姓名！");
+            user.name = nick; user.room = i;
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('p-name').innerText = nick;
+            document.getElementById('p-room').innerText = i;
+            startGame();
+        };
         roomContainer.appendChild(btn);
-    }
-
-    function joinGame(n) {
-        const nick = document.getElementById('nickname-input').value.trim();
-        if(!nick) { alert("請輸入你的名字！"); return; }
-        user.name = nick;
-        user.room = n;
-        document.getElementById('login-screen').style.display = 'none';
-        document.getElementById('p-name').innerText = nick;
-        document.getElementById('p-room').innerText = n;
-        startGame();
     }
 
     function startGame() {
         newQuestion();
-        setInterval(() => { if(user.timeLeft > 0) user.timeLeft--; document.getElementById('p-timer').innerText = user.timeLeft; }, 1000);
-        setInterval(syncData, 2000);
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
+        setInterval(tick, 1000);
+        setInterval(syncData, 1500); // 縮短同步時間，讓畫面更即時
+        window.addEventListener('resize', () => { resize(canvas); });
+        resize(canvas);
     }
 
-    function newQuestion() {
-        // 隨機決定是一次函數還是常數函數 (目標 2)
-        const isConstant = Math.random() < 0.2;
-        let slope, b, x;
+    function tick() { if(user.timeLeft > 0) user.timeLeft--; document.getElementById('p-timer').innerText = user.timeLeft; }
 
-        if (isConstant) {
-            slope = 0;
-            b = Math.floor(Math.random() * 9) - 4; // -4 ~ 4
-            x = Math.floor(Math.random() * 9) - 4;
-            user.q = { slope, b, x, ans: b };
-            document.getElementById('q-area').innerHTML = `常數函數 y = ${b}<br>當 x = ${x} 時，y = ?`;
-        } else {
-            slope = Math.floor(Math.random() * 5) - 2 || 1; 
-            b = Math.floor(Math.random() * 9) - 4;
-            x = Math.floor(Math.random() * 9) - 4;
-            user.q = { slope, b, x, ans: (slope * x + b) };
-            let sign = b >= 0 ? "+" : "";
-            document.getElementById('q-area').innerHTML = `一次函數 y = ${slope}x ${sign}${b}<br>當 x = ${x} 時，y = ?`;
-        }
+    function newQuestion() {
+        const slope = Math.floor(Math.random() * 5) - 2 || 1;
+        const b = Math.floor(Math.random() * 9) - 4;
+        const x = Math.floor(Math.random() * 9) - 4;
+        user.q = { slope, b, x, ans: (slope * x + b) };
         user.currentInput = "";
         document.getElementById('input-view').innerText = "?";
-        drawScene();
+        document.getElementById('q-area').innerHTML = `y = ${slope}x + (${b})<br>當 x = ${x} 時, y = ?`;
+        draw(ctx, canvas, user);
     }
 
     function press(v) {
@@ -218,93 +161,79 @@
     function checkAnswer() {
         const val = parseInt(user.currentInput);
         if(isNaN(val)) return;
-
         if(val === user.q.ans) {
             user.score += 100;
-            user.lastLine = { slope: user.q.slope, b: user.q.b, color: "green", status: "HIT!" };
-            showFeedback("BINGO!", "green");
-            setTimeout(newQuestion, 1000);
+            user.lastLine = { slope: user.q.slope, b: user.q.b, color: "green" };
+            setTimeout(newQuestion, 1200);
         } else {
             user.score = Math.max(0, user.score - 50);
-            user.lastLine = { slope: user.q.slope, b: user.q.b, color: "red", status: "MISS!", errY: val };
-            showFeedback(`WRONG! 正確是 ${user.q.ans}`, "red");
+            user.lastLine = { slope: user.q.slope, b: user.q.b, color: "red", errY: val, errX: user.q.x };
         }
         document.getElementById('p-score').innerText = user.score.toString().padStart(6, '0');
-        drawScene();
+        draw(ctx, canvas, user);
     }
 
-    function showFeedback(txt, col) {
-        const f = document.getElementById('feedback');
-        f.innerText = txt; f.style.color = col;
-    }
-
-    // --- 繪圖邏輯 (目標 4) ---
-    
-    function drawScene() {
-        const w = canvas.width, h = canvas.height;
+    function draw(targetCtx, targetCanvas, data) {
+        const w = targetCanvas.width, h = targetCanvas.height;
         const cx = w/2, cy = h/2, scale = w/18;
-        ctx.clearRect(0, 0, w, h);
-        
-        // 坐標軸
-        ctx.strokeStyle = "#ccc"; ctx.lineWidth = 1;
-        ctx.beginPath(); ctx.moveTo(0, cy); ctx.lineTo(w, cy); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(cx, 0); ctx.lineTo(cx, h); ctx.stroke();
-
+        targetCtx.clearRect(0,0,w,h);
+        // 座標軸
+        targetCtx.strokeStyle = "#ccc"; targetCtx.beginPath();
+        targetCtx.moveTo(0,cy); targetCtx.lineTo(w,cy); targetCtx.moveTo(cx,0); targetCtx.lineTo(cx,h); targetCtx.stroke();
         // 目標點
-        const tx = cx + user.q.x * scale;
-        const ty = cy - user.q.ans * scale;
-        ctx.fillStyle = "red"; ctx.beginPath(); ctx.arc(tx, ty, 6, 0, Math.PI*2); ctx.fill();
-
-        // 畫出函數直線
-        if(user.lastLine) {
-            ctx.strokeStyle = user.lastLine.color;
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            const x1 = -10, y1 = user.lastLine.slope * x1 + user.lastLine.b;
-            const x2 = 10, y2 = user.lastLine.slope * x2 + user.lastLine.b;
-            ctx.moveTo(cx + x1*scale, cy - y1*scale);
-            ctx.lineTo(cx + x2*scale, cy - y2*scale);
-            ctx.stroke();
-
-            if(user.lastLine.color === "red") {
-                ctx.fillStyle = "black";
-                ctx.beginPath(); ctx.arc(tx, cy - user.lastLine.errY*scale, 4, 0, Math.PI*2); ctx.fill();
-            }
+        targetCtx.fillStyle = "red"; targetCtx.beginPath();
+        targetCtx.arc(cx + data.q.x*scale, cy - data.q.ans*scale, 5, 0, Math.PI*2); targetCtx.fill();
+        // 函數線
+        if(data.lastLine) {
+            targetCtx.strokeStyle = data.lastLine.color; targetCtx.lineWidth = 3;
+            targetCtx.beginPath();
+            const x1 = -10, y1 = data.lastLine.slope * x1 + data.lastLine.b;
+            const x2 = 10, y2 = data.lastLine.slope * x2 + data.lastLine.b;
+            targetCtx.moveTo(cx + x1*scale, cy - y1*scale); targetCtx.lineTo(cx + x2*scale, cy - y2*scale);
+            targetCtx.stroke();
         }
     }
 
-    // --- 監控同步 ---
+    // --- 監控同步邏輯 ---
     function syncData() {
-        let server = JSON.parse(localStorage.getItem('classroom_mario_35') || "{}");
-        server[user.room] = { name: user.name, score: user.score, time: user.timeLeft, active: Date.now() };
-        localStorage.setItem('classroom_mario_35', JSON.stringify(server));
+        let server = JSON.parse(localStorage.getItem('mario_monitor_v2') || "{}");
+        server[user.room] = { ...user, active: Date.now() };
+        localStorage.setItem('mario_monitor_v2', JSON.stringify(server));
     }
 
     function toggleAdmin() {
         const p = document.getElementById('admin-panel');
         p.style.display = (p.style.display === 'block') ? 'none' : 'block';
-        if(p.style.display === 'block') refreshMonitor();
+        if(p.style.display === 'block') { refreshMonitor(); resize(preCanvas); }
     }
 
     function refreshMonitor() {
         const container = document.getElementById('monitor-content');
         container.innerHTML = "";
-        let server = JSON.parse(localStorage.getItem('classroom_mario_35') || "{}");
+        let server = JSON.parse(localStorage.getItem('mario_monitor_v2') || "{}");
         for(let i=1; i<=35; i++) {
             const d = server[i];
             const online = d && (Date.now() - d.active < 10000);
             const card = document.createElement('div');
-            card.className = `monitor-card ${online ? 'active' : ''}`;
-            card.innerHTML = `<span style="color:var(--gold)">#${i}</span> <b>${d?d.name:'EMPTY'}</b><br>SCORE: ${d?d.score:0}<br>TIME: ${d?d.time:'--'}`;
+            card.className = `monitor-card ${online ? 'active' : ''} ${selectedStudentRoom == i ? 'selected' : ''}`;
+            card.innerHTML = `RM${i} ${d?d.name:'--'}<br>SCORE:${d?d.score:0}`;
+            card.onclick = () => { selectedStudentRoom = i; };
             container.appendChild(card);
         }
-        if(document.getElementById('admin-panel').style.display === 'block') setTimeout(refreshMonitor, 2000);
+        if(selectedStudentRoom) {
+            const d = server[selectedStudentRoom];
+            if(d) {
+                document.getElementById('preview-info').innerHTML = `學生: ${d.name}<br>題目: y = ${d.q.slope}x + ${d.q.b}<br>當前分數: ${d.score}`;
+                draw(preCtx, preCanvas, d);
+            }
+        }
+        if(document.getElementById('admin-panel').style.display === 'block') setTimeout(refreshMonitor, 1000);
     }
 
-    function resizeCanvas() {
-        const wrap = document.getElementById('c-wrap');
-        canvas.width = wrap.clientWidth; canvas.height = wrap.clientHeight;
-        drawScene();
+    function resize(c) {
+        c.width = c.parentElement.clientWidth;
+        c.height = c.parentElement.clientHeight;
+        if(c === canvas) draw(ctx, canvas, user);
     }
 
     window.addEventListener('keydown', (e) => { if(e.key === 'F2') toggleAdmin(); });
