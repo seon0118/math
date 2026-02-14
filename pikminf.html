@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>皮克敏函數大進擊</title>
+    <title>皮克敏函數大進擊：紫色大力士版</title>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;900&display=swap" rel="stylesheet">
     <style>
         :root {
             --pikmin-red: #ff3d00;
             --pikmin-yellow: #ffea00;
             --pikmin-blue: #2979ff;
+            --pikmin-purple: #9c27b0; /* 紫色皮克敏 */
             --leaf-green: #64dd17;
             --earth-brown: #5d4037;
             --bg-top: #8d6e63;
@@ -67,8 +68,8 @@
         .level-badge {
             position: absolute;
             top: 60px;
-            background: var(--pikmin-yellow);
-            color: #333;
+            background: var(--pikmin-purple); /* 改成紫色標籤 */
+            color: #fff;
             padding: 5px 15px;
             border-radius: 15px;
             font-weight: 900;
@@ -100,7 +101,7 @@
             background: #fff;
             padding: 2px 8px;
             border-radius: 10px;
-            color: var(--pikmin-blue);
+            color: var(--pikmin-purple); /* 題目重點色也改紫 */
             border: 2px solid #aed581;
             font-size: 20px;
             margin: 0 5px;
@@ -122,7 +123,7 @@
             align-items: center;
         }
         canvas {
-            background-color: #f1f8e9; /* 淺色草地 */
+            background-color: #f1f8e9;
             display: block;
             width: 100%;
         }
@@ -141,7 +142,6 @@
             overflow-y: auto;
         }
 
-        /* 按鈕樣式 */
         .key {
             background: #fff;
             border: none;
@@ -154,16 +154,18 @@
             width: 100%; height: 100%;
         }
         .key:active { transform: translateY(2px); box-shadow: 0 1px #b0bec5; }
-        .key-enter { grid-column: span 2; background: var(--pikmin-red); color: white; border-radius: 30px; box-shadow: 0 4px #d50000;}
-        .key-enter:active { box-shadow: 0 2px #d50000; }
+        
+        /* 確認鍵改成紫色 */
+        .key-enter { grid-column: span 2; background: var(--pikmin-purple); color: white; border-radius: 30px; box-shadow: 0 4px #7b1fa2;}
+        .key-enter:active { box-shadow: 0 2px #7b1fa2; }
 
         /* Level 1 */
         #level1-controls { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; }
         #displayInput {
             width: 60%; height: 50px;
-            background: #fff; color: var(--pikmin-red);
+            background: #fff; color: var(--pikmin-purple);
             font-size: 28px; font-weight: 900;
-            border: 3px solid var(--pikmin-yellow);
+            border: 3px solid var(--pikmin-purple);
             border-radius: 25px; margin-bottom: 10px;
             display: flex; justify-content: center; align-items: center;
         }
@@ -192,7 +194,7 @@
         .btn-start {
             margin-top: 25px; padding: 15px 40px;
             font-size: 22px; font-weight: 900;
-            background: var(--pikmin-yellow); color: #333;
+            background: var(--pikmin-purple); color: #fff;
             border: 4px solid #fff; border-radius: 40px; cursor: pointer;
             box-shadow: 0 5px rgba(0,0,0,0.3);
         }
@@ -243,7 +245,7 @@
                 <button class="key" onclick="inputNum('8')">8</button>
                 <button class="key" onclick="inputNum('9')">9</button>
                 <button class="key" onclick="inputNum('0')">0</button>
-                <button class="key key-enter" id="l1-submit" onclick="submitLevel1()">呼叫皮克敏</button>
+                <button class="key key-enter" id="l1-submit" onclick="submitLevel1()">發射紫色皮克敏</button>
                 <button class="key key-enter" id="l1-next" onclick="nextLevel1Question()" style="display:none; background:var(--pikmin-blue);">尋找下隻怪物</button>
             </div>
         </div>
@@ -266,7 +268,7 @@
 
 <div id="overlay">
     <h1 id="ov-title" style="color:#ffea00; margin-bottom:10px; font-size:36px; text-shadow: 2px 2px #33691e;">皮克敏<br>函數大進擊</h1>
-    <p id="ov-desc" style="font-size:18px; margin-bottom:20px;">用數學來指揮皮克敏戰鬥吧！</p>
+    <p id="ov-desc" style="font-size:18px; margin-bottom:20px;">使用紫色皮克敏的力量來計算！</p>
     <button id="ov-btn" class="btn-start" onclick="initLevel1()">開始探險</button>
 </div>
 
@@ -373,12 +375,25 @@
             ctx.beginPath(); ctx.ellipse(0, -14, 4, 2, Math.PI/4, 0, Math.PI*2); ctx.fill();
         }
 
-        // 頭
+        // 頭 (皮克敏本體)
         ctx.fillStyle = color;
         ctx.beginPath();
-        // 皮克敏的頭有點像水滴型
-        ctx.ellipse(0, 0, 7, 8, 0, 0, Math.PI*2); 
+        // 如果是紫色，稍微畫胖一點
+        if (color === '#9c27b0') {
+             ctx.ellipse(0, 0, 8.5, 8.5, 0, 0, Math.PI*2); 
+        } else {
+             ctx.ellipse(0, 0, 7, 8, 0, 0, Math.PI*2); 
+        }
         ctx.fill();
+
+        // 紫色皮克敏的特色：頭上有幾根毛 (簡單線條)
+        if (color === '#9c27b0') {
+            ctx.strokeStyle = "rgba(0,0,0,0.3)";
+            ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.moveTo(-3, -7); ctx.lineTo(-3, -10); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(0, -8); ctx.lineTo(0, -11); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(3, -7); ctx.lineTo(3, -10); ctx.stroke();
+        }
         
         // 眼睛
         ctx.fillStyle = "white";
@@ -390,15 +405,9 @@
         ctx.beginPath(); ctx.arc(-2.5, -1, 1, 0, Math.PI*2); ctx.fill();
         ctx.beginPath(); ctx.arc(2.5, -1, 1, 0, Math.PI*2); ctx.fill();
 
-        // 鼻子/嘴巴 (根據顏色不同)
-        if(color === '#ffea00') { // 黃色有耳朵
-            ctx.fillStyle = color;
-            ctx.beginPath(); ctx.ellipse(-8, 0, 2, 3, -0.2, 0, Math.PI*2); ctx.fill();
-            ctx.beginPath(); ctx.ellipse(8, 0, 2, 3, 0.2, 0, Math.PI*2); ctx.fill();
-        } else if (color === '#ff3d00') { // 紅色有鼻子
-            ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(4, 2); ctx.stroke();
-        } else if (color === '#2979ff') { // 藍色有嘴巴
-             ctx.strokeStyle = "#pink"; ctx.beginPath(); ctx.arc(0, 2, 2, 0, Math.PI); ctx.stroke();
+        // 鼻子/嘴巴
+        if (color === '#9c27b0') { // 紫色皮克敏也有類似的鼻子/嘴
+             // 簡單畫個線條表示
         }
 
         ctx.restore();
@@ -423,7 +432,7 @@
         ctx.fillStyle = "#ffe0b2";
         ctx.beginPath(); ctx.arc(-8, 5, 8, 0, Math.PI*2); ctx.fill();
 
-        // 眼睛 (凸出來)
+        // 眼睛
         ctx.fillStyle = "white";
         ctx.beginPath(); ctx.arc(-6, -6, 4, 0, Math.PI*2); ctx.fill();
         ctx.beginPath(); ctx.arc(4, -6, 4, 0, Math.PI*2); ctx.fill();
@@ -450,8 +459,8 @@
     function initLevel1() {
         currentLevel = 1; score = 0; strikes = 0;
         overlay.style.display = 'none';
-        document.getElementById('levelBadge').innerText = "LEVEL 1: 瞄準恰比";
-        document.getElementById('levelBadge').style.background = "#ffea00";
+        document.getElementById('levelBadge').innerText = "LEVEL 1: 紫色大進擊";
+        document.getElementById('levelBadge').style.background = "#9c27b0"; 
         document.getElementById('level1-controls').style.display = 'flex';
         document.getElementById('level2-controls').style.display = 'none';
         resizeCanvas();
@@ -509,9 +518,9 @@
         drawLevel1Scene(val);
 
         if (val === l1_correctY) {
-            score += 100; showMsg("命中! 開花了!", "#64dd17");
+            score += 100; showMsg("命中! 壓扁它!", "#9c27b0");
         } else {
-            strikes++; showMsg("沒丟中...", "#d50000");
+            strikes++; showMsg("失誤...", "#d50000");
         }
         updateHUD();
 
@@ -541,26 +550,28 @@
             let isCorrect = (userY === l1_correctY);
             
             ctx.lineWidth = 3;
-            ctx.strokeStyle = isCorrect ? "#64dd17" : "#b0bec5";
+            // 軌跡顏色
+            ctx.strokeStyle = isCorrect ? "#9c27b0" : "#b0bec5";
             ctx.beginPath();
             let xStart = -20; let yStart = l1_slope*xStart + l1_intercept;
             let xEnd = 20; let yEnd = l1_slope*xEnd + l1_intercept;
             
             if(isCorrect) {
-                // 畫正確的拋物線或直線軌跡
+                // 畫正確軌跡
                 ctx.moveTo(centerX+xStart*scale, centerY-yStart*scale);
                 ctx.lineTo(centerX+xEnd*scale, centerY-yEnd*scale);
                 ctx.stroke();
                 
-                // 皮克敏黏在敵人身上攻擊
-                drawPikminSprite(px, py, "#ff3d00", "flower");
+                // 紫色皮克敏攻擊 (沒有底下的圓點，直接畫角色)
+                drawPikminSprite(px, py, "#9c27b0", "flower");
             } else {
+                // 錯誤軌跡
                 ctx.moveTo(0, py); ctx.lineTo(px, py); ctx.stroke();
-                // 失敗的藍色皮克敏
-                drawPikminSprite(px, py, "#2979ff", "leaf");
+                // 失敗的皮克敏 (葉子狀態，紫色)
+                drawPikminSprite(px, py, "#9c27b0", "leaf");
                 
-                // 正確位置提示 (半透明皮克敏)
-                ctx.globalAlpha = 0.4;
+                // 正確位置提示 (半透明綠色)
+                ctx.globalAlpha = 0.5;
                 drawPikminSprite(px, centerY - l1_correctY * scale, "#64dd17", "flower");
                 ctx.globalAlpha = 1.0;
             }
@@ -572,8 +583,8 @@
         currentLevel = 2; strikes = 0;
         overlay.style.display = 'none';
         document.getElementById('levelBadge').innerText = "LEVEL 2: 蘑菇討伐戰";
-        document.getElementById('levelBadge').style.background = "#9c27b0";
-        document.getElementById('levelBadge').style.color = "#fff";
+        document.getElementById('levelBadge').style.background = "#ffea00";
+        document.getElementById('levelBadge').style.color = "#333";
         document.getElementById('level1-controls').style.display = 'none';
         document.getElementById('level2-controls').style.display = 'flex';
         resizeCanvas();
@@ -612,7 +623,7 @@
         document.getElementById('opt-2-text').innerText = l2_options[2];
 
         document.getElementById('qText').innerText = "巨大蘑菇出現！";
-        document.getElementById('qContent').innerHTML = "觀察路徑，選擇正確的皮克敏隊伍！";
+        document.getElementById('qContent').innerHTML = "觀察路徑，選擇正確的隊伍！";
 
         drawLevel2Scene(false);
     }
@@ -682,9 +693,9 @@
         ctx.restore();
 
         if(showResult && isCorrect) {
-            // 正確時，皮克敏出現在線上搬運
+            // 正確時，畫幾隻紅色皮克敏搬運
             drawPikminSprite(px-20, py+10, "#ff3d00", "flower");
-            drawPikminSprite(px+20, py+10, "#ffea00", "flower");
+            drawPikminSprite(px+20, py+10, "#ff3d00", "flower");
         }
     }
 
