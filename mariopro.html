@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>函數大戰：大字體穩定版</title>
+    <title>函數大戰：計時競技版</title>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
     <style>
@@ -18,7 +18,7 @@
             height: 100vh; overflow: hidden; display: flex; flex-direction: column;
         }
 
-        /* === 共用元件 === */
+        /* === UI 元件 === */
         .btn { cursor: pointer; font-family: inherit; border: 2px solid #fff; transition: all 0.1s; }
         .btn:active { transform: translateY(3px); }
         
@@ -28,7 +28,7 @@
             background: var(--blue); z-index: 1000;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
-        #waiting-room, #paused-overlay { display: none; z-index: 500; } /* 預設隱藏 */
+        #waiting-room, #paused-overlay { display: none; z-index: 500; }
         #paused-overlay { background: rgba(0,0,0,0.9); z-index: 600; }
         
         .login-card {
@@ -53,7 +53,11 @@
         /* 遊戲區 */
         #game-interface { display: none; height: 100%; flex-direction: column; background: var(--blue); align-items: center; }
         .app-container { width: 100%; max-width: 800px; height: 100%; display: flex; flex-direction: column; border-left: 5px solid #000; border-right: 5px solid #000; background: var(--blue); }
-        .hud { background: #000; padding: 10px 20px; display: flex; justify-content: space-between; font-size: 14px; }
+        
+        /* HUD 包含倒數計時 */
+        .hud { background: #000; padding: 10px 20px; display: flex; justify-content: space-between; font-size: 14px; align-items: center; }
+        .timer-display { color: var(--red); font-size: 16px; animation: pulse 1s infinite; }
+        
         .q-box { background: var(--brown); border: 4px solid #000; margin: 10px; padding: 15px; text-align: center; font-size: 16px; color: #fff; }
         .main-canvas-area { flex-grow: 1; background: #fff; position: relative; margin: 0 10px; border: 4px solid #000; min-height: 200px; }
         canvas { width: 100%; height: 100%; display: block; }
@@ -68,47 +72,34 @@
         .analysis-item { border-bottom: 1px solid #555; padding: 10px 0; font-size: 12px; line-height: 1.6; color: #fff; }
         .tag-correct { color: var(--green); } .tag-wrong { color: var(--red); }
 
-        /* === 老師戰情室 (大字體版) === */
+        /* === 老師戰情室 === */
         #teacher-dashboard { display: none; height: 100%; flex-direction: column; background: #1a1a1a; }
         .dashboard-header { padding: 15px 20px; background: #000; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--gold); }
         .view-switch { display: flex; gap: 10px; margin-right: 10px;}
         .view-btn { padding: 10px 15px; border: 2px solid #555; background: #333; color: #fff; font-size: 16px; cursor: pointer; }
         .view-btn.active { border-color: var(--gold); background: #555; color: var(--gold);}
-        .ctrl-group { display: flex; gap: 15px; align-items: center;}
+        .ctrl-group { display: flex; gap: 10px; align-items: center;}
         
-        .btn-start { background: var(--green); color: white; padding: 12px 25px; font-size: 18px; font-weight: bold; animation: pulse 1.5s infinite; }
-        .btn-pause { background: #ff9800; color: white; padding: 10px 20px; font-size: 16px; }
-        .btn-resume { background: #2196f3; color: white; padding: 10px 20px; font-size: 16px; }
-        .btn-end { background: var(--red); color: white; padding: 10px 20px; font-size: 16px; }
+        .timer-setup { display: flex; align-items: center; gap: 5px; color: var(--gold); font-size: 12px; margin-right: 10px; }
+        .timer-input { width: 50px; padding: 5px; font-family: inherit; font-size: 14px; text-align: center; }
+        .live-timer { font-size: 20px; color: var(--red); width: 80px; text-align: center; }
+
+        .btn-start { background: var(--green); color: white; padding: 12px 20px; font-size: 16px; font-weight: bold; }
+        .btn-pause { background: #ff9800; color: white; padding: 10px 20px; font-size: 14px; }
+        .btn-resume { background: #2196f3; color: white; padding: 10px 20px; font-size: 14px; }
+        .btn-end { background: var(--red); color: white; padding: 10px 20px; font-size: 14px; }
         
-        /* 全景監控 (放大) */
+        /* 全景監控 */
         #view-screens { display: flex; height: 100%; overflow: hidden; padding: 15px; gap: 20px; }
-        
-        /* 左側：監控牆 (改成 4 列，卡片更大) */
-        .monitor-wall { 
-            flex: 2.5; 
-            display: grid; grid-template-columns: repeat(4, 1fr); /* 放大卡片 */
-            gap: 15px; overflow-y: auto; align-content: start; 
-        }
-        .student-card { 
-            background: #333; border: 3px solid #555; padding: 5px; 
-            display: flex; flex-direction: column; aspect-ratio: 1/1; 
-        }
+        .monitor-wall { flex: 2.5; display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; overflow-y: auto; align-content: start; }
+        .student-card { background: #333; border: 3px solid #555; padding: 5px; display: flex; flex-direction: column; aspect-ratio: 1/1; }
         .student-card.active { border: 4px solid var(--green); box-shadow: 0 0 15px var(--green); }
-        /* 老師端監控文字加大 */
         .mini-hud { color: var(--gold); font-size: 18px; margin-bottom: 5px; font-weight: bold; display: flex; justify-content: space-between;}
         .mini-canvas { background: #fff; width: 100%; flex-grow: 1; display: block; border: 1px solid #999;}
 
-        /* 右側：排行榜 (加大) */
-        .leaderboard-sidebar { 
-            flex: 1; min-width: 300px;
-            background: #222; border: 4px solid #fff; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; 
-        }
-        .lb-title { text-align: center; color: var(--gold); border-bottom: 4px solid #555; padding-bottom: 15px; margin-bottom: 20px; font-size: 28px;}
-        .lb-row { 
-            display: flex; align-items: center; margin-bottom: 12px; background: #333; padding: 12px; 
-            font-size: 20px; border: 1px solid #555; 
-        }
+        .leaderboard-sidebar { flex: 1; min-width: 300px; background: #222; border: 4px solid #fff; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; }
+        .lb-title { text-align: center; color: var(--gold); border-bottom: 4px solid #555; padding-bottom: 10px; margin-bottom: 15px; font-size: 24px;}
+        .lb-row { display: flex; align-items: center; margin-bottom: 12px; background: #333; padding: 12px; font-size: 20px; border: 1px solid #555; }
         .lb-bar-bg { flex-grow: 1; height: 15px; background: #000; margin: 0 15px; border-radius: 5px; }
         .lb-bar { height: 100%; background: var(--green); width: 0%; border-radius: 5px; transition: width 0.5s; }
 
@@ -124,7 +115,7 @@
         .error-card { background: #333; border-left: 8px solid var(--red); padding: 20px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; color: #fff;}
         .bar-fill { height: 100%; background: var(--red); border-radius: 5px; }
 
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
         @media (max-width: 1400px) { .monitor-wall { grid-template-columns: repeat(3, 1fr); } }
     </style>
 </head>
@@ -166,14 +157,15 @@
 
     <div id="paused-overlay">
         <h1 style="font-size: 32px; color: #ff9800; animation: blink 1s infinite;">PAUSED</h1>
-        <p>老師講解中，請看大螢幕</p>
+        <p>老師講解中</p>
     </div>
 
     <div id="game-interface">
         <div class="app-container">
             <div class="hud">
                 <span><span id="g-name">P</span> (#<span id="g-seat">?</span>)</span>
-                <span>SCORE: <span id="g-score">0</span></span>
+                <span id="g-timer" class="timer-display">05:00</span>
+                <span>SCR: <span id="g-score">0</span></span>
             </div>
             <div class="q-box" id="q-text">Loading...</div>
             <div class="main-canvas-area" id="s-canvas-wrap">
@@ -213,8 +205,12 @@
                 <div class="view-btn" id="btn-review" onclick="switchView('review')">📊 檢討</div>
             </div>
             <div class="ctrl-group" id="t-controls">
+                <div class="timer-setup" id="t-timer-setup">
+                    設定: <input type="number" id="t-input-min" class="timer-input" value="5"> 分
+                </div>
                 <button class="btn btn-start" onclick="sendSignal('START')">開始遊戲</button>
             </div>
+            <div class="live-timer" id="t-live-timer" style="display:none;">00:00</div>
         </div>
         
         <div id="view-screens">
@@ -237,7 +233,22 @@
     </div>
 
 <script>
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyLHDpz-954-g7062_j-jkk6QNs30E4DDPx9iQxtwoHheZKBxZhRWfw8KXe224yX0yhAw/exec";
+    // ======================================================
+    // Google Apps Script 網址
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwfhsDnhuEOcot-1nVxTKNxES0RJOorsnvYWeOZtuCzGyXBxbHnT82KzEXmD1WEj0I5Eg/exec";
+    // ======================================================
+
+    // 0118 Hash
+    const PASSWORD_HASH = "94cd2e23b72c91350a5170cfd037a342372c3d9050d26989439c2794776b9777";
+    async function checkPassword(input) {
+        const encoder = new TextEncoder();
+        const data = encoder.encode(input);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        return hashHex === PASSWORD_HASH;
+    }
+
     const MQTT_BROKER = 'wss://broker.hivemq.com:8884/mqtt';
     const TARGET_SCORE = 2000;
 
@@ -245,6 +256,10 @@
     let playerData = { name: '', score: 0, currentInput: '', q: {}, lastLine: null, history: [] };
     let classState = {}, questionStats = {}, gameState = 'WAITING';
     let currentView = 'screens', versusP1 = 1, versusP2 = 2;
+    
+    // 計時器相關
+    let timerInterval = null;
+    let remainingTime = 300; // 預設 5 分鐘
 
     const seatContainer = document.getElementById('seat-container');
     for(let i=1; i<=35; i++){
@@ -261,10 +276,11 @@
     }
 
     function connectMQTT(code, onConnect) {
-        client = mqtt.connect(MQTT_BROKER);
+        const clientId = 'math_' + Math.random().toString(16).substr(2, 8);
+        client = mqtt.connect(MQTT_BROKER, { clientId: clientId });
+        
         client.on('connect', () => {
-            console.log("Connected to MQTT");
-            // 學生端連線成功亮燈
+            console.log("MQTT Connected");
             if(myRole === 'student') {
                 document.getElementById('s-status-dot').classList.add('status-connected');
                 document.getElementById('s-status-text').innerText = "已連線，準備就緒";
@@ -274,27 +290,42 @@
         });
         
         client.on('message', (topic, msg) => handleMessage(topic, msg.toString()));
-        client.on('offline', () => { if(myRole==='student') document.getElementById('s-status-dot').classList.remove('status-connected'); });
     }
 
     function handleMessage(topic, payload) {
         const parts = topic.split('/'); const type = parts[2];
-        console.log("MSG:", topic, payload); // Debug message
+        console.log("RX:", payload); // Debug
 
         if (myRole === 'student') {
             if (type === 'status') {
-                if(payload === 'START') {
+                // 解析指令，可能是 JSON 也可能是字串
+                let cmd = {};
+                try { cmd = JSON.parse(payload); } catch(e) { cmd = { action: payload }; }
+
+                if(cmd.action === 'START') {
+                    // 設定倒數時間
+                    if(cmd.duration) remainingTime = cmd.duration;
+                    
                     document.getElementById('waiting-room').style.display = 'none'; 
                     document.getElementById('paused-overlay').style.display = 'none'; 
                     document.getElementById('game-interface').style.display = 'flex';
                     if(playerData.history.length === 0) { resizeStudentCanvas(); newQuestion(); }
-                } else if (payload === 'PAUSE') { 
+                    startLocalTimer(); // 開始倒數
+                } 
+                else if (cmd.action === 'PAUSE') { 
+                    clearInterval(timerInterval);
                     document.getElementById('paused-overlay').style.display = 'flex';
-                } else if (payload === 'RESUME') { 
+                } 
+                else if (cmd.action === 'RESUME') { 
                     document.getElementById('paused-overlay').style.display = 'none';
-                } else if (payload === 'STOP') { 
+                    startLocalTimer();
+                } 
+                else if (cmd.action === 'STOP') { 
+                    clearInterval(timerInterval);
                     endGameForStudent(); 
                 }
+            } else if (type === 'config') {
+                updateSeatLimit(JSON.parse(payload).maxSeats);
             }
         } 
         else if (myRole === 'teacher') {
@@ -303,15 +334,40 @@
         }
     }
 
+    // === 計時器邏輯 ===
+    function startLocalTimer() {
+        if(timerInterval) clearInterval(timerInterval);
+        updateTimerDisplay(); // 立即更新一次
+        timerInterval = setInterval(() => {
+            if(remainingTime > 0) {
+                remainingTime--;
+                updateTimerDisplay();
+            } else {
+                clearInterval(timerInterval);
+                // 時間到，如果是老師，發送 STOP
+                if(myRole === 'teacher') sendSignal('STOP');
+            }
+        }, 1000);
+    }
+
+    function updateTimerDisplay() {
+        const m = Math.floor(remainingTime / 60).toString().padStart(2, '0');
+        const s = (remainingTime % 60).toString().padStart(2, '0');
+        const timeStr = `${m}:${s}`;
+        
+        if(myRole === 'student') document.getElementById('g-timer').innerText = timeStr;
+        if(myRole === 'teacher') document.getElementById('t-live-timer').innerText = timeStr;
+    }
+
     // === 老師端 ===
-    function teacherLogin() {
+    async function teacherLogin() {
         const code = document.getElementById('t-code').value.trim().toUpperCase();
         const pass = document.getElementById('t-pass').value.trim();
         const limitVal = document.getElementById('t-limit').value;
         maxSeats = parseInt(limitVal) || 35;
 
         if (!code) return alert("請設定代碼");
-        if (pass !== "0118") return alert("密碼錯誤 (預設 0118)");
+        if (!await checkPassword(pass)) return alert("密碼錯誤 (預設 0118)");
 
         myRole = 'teacher'; classCode = code;
         document.getElementById('login-screen').style.display = 'none';
@@ -322,7 +378,7 @@
         connectMQTT(code, () => {
             client.subscribe(`game/${code}/data/+`); 
             client.subscribe(`game/${code}/log`);
-            setInterval(() => client.publish(`game/${code}/config`, JSON.stringify({ maxSeats })), 2000);
+            setInterval(() => client.publish(`game/${code}/config`, JSON.stringify({ maxSeats }), {retain: true}), 2000);
         });
         updateControlButtons('WAITING');
     }
@@ -333,12 +389,10 @@
         const s1 = document.getElementById('sel-p1'), s2 = document.getElementById('sel-p2'); s1.innerHTML=""; s2.innerHTML="";
 
         for(let i=1; i<=maxSeats; i++){
-            // 監控卡片
             let card = document.createElement('div'); card.className = 'student-card'; card.id = `card-${i}`;
-            card.innerHTML = `<div class="mini-hud"><span style="color:var(--gold)">#${i}</span><span id="name-${i}">...</span><span id="score-${i}">0</span></div><canvas class="mini-canvas" id="mini-${i}"></canvas>`;
+            card.innerHTML = `<div class="mini-hud"><span style="color:var(--gold)">#${i}</span><span id="name-${i}" style="overflow:hidden; white-space:nowrap; max-width:60px;">...</span><span id="score-${i}">0</span></div><canvas class="mini-canvas" id="mini-${i}"></canvas>`;
             wall.appendChild(card);
             
-            // 排行榜條目
             let row = document.createElement('div'); row.className = 'lb-row'; row.id = `lb-row-${i}`; row.style.display = 'none';
             row.innerHTML = `<span style="width:30px;color:var(--gold);font-weight:bold;" id="lb-pos-${i}">-</span><span style="width:80px;overflow:hidden;white-space:nowrap" id="lb-name-${i}">...</span><div class="lb-bar-bg"><div class="lb-bar" id="lb-bar-${i}"></div></div><span id="lb-score-${i}">0</span>`;
             lbContent.appendChild(row);
@@ -349,18 +403,46 @@
         s1.value=1; s2.value=2; updateVersusSelection();
     }
 
-    function sendSignal(sig) {
-        // 重要：retain: true 保留訊息，確保後連上的學生也能收到狀態
-        if(client) client.publish(`game/${classCode}/status`, sig, { retain: true });
+    function sendSignal(action) {
+        let payload = { action: action };
         
-        if(sig === 'START') gameState = 'RUNNING'; else if(sig === 'PAUSE') gameState = 'PAUSED'; else if(sig === 'RESUME') gameState = 'RUNNING'; else if(sig === 'STOP') gameState = 'ENDED';
+        if(action === 'START') {
+            const mins = parseInt(document.getElementById('t-input-min').value) || 5;
+            remainingTime = mins * 60;
+            payload.duration = remainingTime;
+            
+            gameState = 'RUNNING';
+            document.getElementById('t-timer-setup').style.display = 'none';
+            document.getElementById('t-live-timer').style.display = 'block';
+            startLocalTimer();
+        } 
+        else if (action === 'PAUSE') { 
+            gameState = 'PAUSED'; 
+            clearInterval(timerInterval);
+        } 
+        else if (action === 'RESUME') { 
+            gameState = 'RUNNING'; 
+            startLocalTimer();
+        } 
+        else if (action === 'STOP') { 
+            gameState = 'ENDED'; 
+            clearInterval(timerInterval);
+            switchView('review');
+        }
+
+        // 傳送 JSON 格式指令，確保 retain
+        client.publish(`game/${classCode}/status`, JSON.stringify(payload), { retain: true });
         updateControlButtons(gameState);
-        if(sig === 'STOP') switchView('review');
     }
 
     function updateControlButtons(state) {
         const div = document.getElementById('t-controls'); div.innerHTML = '';
-        if(state === 'WAITING') div.innerHTML = `<button class="btn btn-start" onclick="sendSignal('START')">開始遊戲</button>`;
+        if(state === 'WAITING') {
+            // 恢復顯示時間設定
+            document.getElementById('t-timer-setup').style.display = 'flex';
+            document.getElementById('t-live-timer').style.display = 'none';
+            div.innerHTML = `<button class="btn btn-start" onclick="sendSignal('START')">開始遊戲</button>`;
+        }
         else if (state === 'RUNNING') div.innerHTML = `<button class="btn btn-pause" onclick="sendSignal('PAUSE')">暫停</button><button class="btn btn-end" onclick="confirmEnd()">結束</button>`;
         else if (state === 'PAUSED') div.innerHTML = `<button class="btn btn-resume" onclick="sendSignal('RESUME')">繼續</button><button class="btn btn-end" onclick="confirmEnd()">結束</button>`;
         else if (state === 'ENDED') div.innerHTML = `<button class="btn" style="background:#555">已結束</button>`;
@@ -441,7 +523,7 @@
     // === 學生 ===
     function studentLogin() {
         const codeInput = document.getElementById('s-code').value.trim();
-        const code = codeInput.toUpperCase(); // 強制轉大寫
+        const code = codeInput.toUpperCase(); 
         const name = document.getElementById('s-name').value.trim();
         if(!code || !name || !selectedSeat) return alert("請填寫完整");
         
@@ -451,6 +533,7 @@
         
         connectMQTT(code, ()=>{
             client.subscribe(`game/${code}/status`);
+            client.subscribe(`game/${code}/config`);
             setInterval(sendStudentData, 800);
         });
     }
@@ -487,12 +570,14 @@
         const mistakes = wrongs.map(h => ({ q: h.qText, input: h.input, ans: h.ans }));
         const dataObj = { name: playerData.name, seat: selectedSeat, score: playerData.score, completion: completion, mistakes: mistakes };
         
-        google.script.run.withSuccessHandler(function(res){
-            if(res==="SUCCESS") { statusEl.innerText = "✅ 上傳成功！"; statusEl.style.color = "#4caf50"; }
-            else { statusEl.innerText = "❌ 上傳失敗:" + res; statusEl.style.color = "#ff5252"; retryBtn.style.display = "inline-block"; }
-        }).withFailureHandler(function(err){
-            statusEl.innerText = "❌ 連線錯誤"; statusEl.style.color = "#ff5252"; retryBtn.style.display = "inline-block";
-        }).saveGameData(dataObj);
+        fetch(GOOGLE_SCRIPT_URL, {
+            method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify(dataObj)
+        }).then(() => {
+            statusEl.innerText = "✅ 上傳成功！"; statusEl.style.color = "#4caf50";
+        }).catch(err => {
+            console.error(err); statusEl.innerText = "❌ 上傳失敗，請重試"; statusEl.style.color = "#ff5252"; retryBtn.style.display = "inline-block";
+        });
     }
 
     function newQuestion() {
