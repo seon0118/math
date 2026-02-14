@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>函數大戰：字體加大穩定版</title>
+    <title>函數大戰：大字體穩定版</title>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
     <style>
@@ -35,7 +35,7 @@
             background: rgba(0,0,0,0.8); padding: 30px; border-radius: 15px;
             text-align: center; width: 90%; max-width: 500px; border: 5px solid #fff;
         }
-        input { width: 100%; padding: 15px; margin: 10px 0; font-family: inherit; text-align: center; font-size: 18px; }
+        input { width: 100%; padding: 15px; margin: 10px 0; font-family: inherit; text-align: center; font-size: 18px; text-transform: uppercase; }
         
         .role-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
         .tab-btn { background: #555; border: 2px solid #fff; color: #fff; padding: 12px; flex: 1; cursor: pointer; }
@@ -46,6 +46,10 @@
         .seat-btn.selected { background: var(--gold); color: #000; border-color: red; transform: scale(1.1); }
         .seat-btn.disabled { background: #555; color: #888; cursor: not-allowed; border-color: #555; pointer-events: none; }
         
+        /* 連線狀態燈 */
+        .status-dot { width: 15px; height: 15px; border-radius: 50%; background: red; margin: 10px auto; border: 2px solid #fff; transition: background 0.3s; }
+        .status-connected { background: #00ff00; box-shadow: 0 0 10px #00ff00; }
+
         /* 遊戲區 */
         #game-interface { display: none; height: 100%; flex-direction: column; background: var(--blue); align-items: center; }
         .app-container { width: 100%; max-width: 800px; height: 100%; display: flex; flex-direction: column; border-left: 5px solid #000; border-right: 5px solid #000; background: var(--blue); }
@@ -64,56 +68,54 @@
         .analysis-item { border-bottom: 1px solid #555; padding: 10px 0; font-size: 12px; line-height: 1.6; color: #fff; }
         .tag-correct { color: var(--green); } .tag-wrong { color: var(--red); }
 
-        /* 老師控制台 */
+        /* === 老師戰情室 (大字體版) === */
         #teacher-dashboard { display: none; height: 100%; flex-direction: column; background: #1a1a1a; }
-        .dashboard-header { padding: 10px 20px; background: #000; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--gold); }
+        .dashboard-header { padding: 15px 20px; background: #000; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--gold); }
         .view-switch { display: flex; gap: 10px; margin-right: 10px;}
-        .view-btn { padding: 8px 15px; border: 2px solid #555; background: #333; color: #fff; font-size: 14px; cursor: pointer; }
+        .view-btn { padding: 10px 15px; border: 2px solid #555; background: #333; color: #fff; font-size: 16px; cursor: pointer; }
         .view-btn.active { border-color: var(--gold); background: #555; color: var(--gold);}
-        .ctrl-group { display: flex; gap: 10px; align-items: center;}
+        .ctrl-group { display: flex; gap: 15px; align-items: center;}
         
-        .btn-start { background: var(--green); color: white; padding: 10px 20px; font-size: 16px; }
+        .btn-start { background: var(--green); color: white; padding: 12px 25px; font-size: 18px; font-weight: bold; animation: pulse 1.5s infinite; }
         .btn-pause { background: #ff9800; color: white; padding: 10px 20px; font-size: 16px; }
         .btn-resume { background: #2196f3; color: white; padding: 10px 20px; font-size: 16px; }
         .btn-end { background: var(--red); color: white; padding: 10px 20px; font-size: 16px; }
         
-        .status-light { width: 15px; height: 15px; border-radius: 50%; background: #555; display: inline-block; margin-right: 10px; border: 2px solid #fff;}
-        .status-ok { background: #00ff00; box-shadow: 0 0 10px #00ff00; }
-
-        /* 全景監控 (放大字體與佈局) */
-        #view-screens { display: flex; height: 100%; overflow: hidden; padding: 10px; gap: 15px; }
+        /* 全景監控 (放大) */
+        #view-screens { display: flex; height: 100%; overflow: hidden; padding: 15px; gap: 20px; }
         
-        /* 左側：監控牆 (35格) */
+        /* 左側：監控牆 (改成 4 列，卡片更大) */
         .monitor-wall { 
-            flex: 2; /* 佔比 2 */
-            display: grid; grid-template-columns: repeat(5, 1fr); /* 改成5列比較大 */
-            gap: 10px; overflow-y: auto; align-content: start; 
+            flex: 2.5; 
+            display: grid; grid-template-columns: repeat(4, 1fr); /* 放大卡片 */
+            gap: 15px; overflow-y: auto; align-content: start; 
         }
         .student-card { 
-            background: #333; border: 2px solid #555; padding: 5px; 
+            background: #333; border: 3px solid #555; padding: 5px; 
             display: flex; flex-direction: column; aspect-ratio: 1/1; 
         }
-        .student-card.active { border: 3px solid var(--green); box-shadow: 0 0 10px var(--green); }
-        .mini-hud { color: var(--gold); font-size: 14px; margin-bottom: 5px; font-weight: bold; display: flex; justify-content: space-between;}
+        .student-card.active { border: 4px solid var(--green); box-shadow: 0 0 15px var(--green); }
+        /* 老師端監控文字加大 */
+        .mini-hud { color: var(--gold); font-size: 18px; margin-bottom: 5px; font-weight: bold; display: flex; justify-content: space-between;}
         .mini-canvas { background: #fff; width: 100%; flex-grow: 1; display: block; border: 1px solid #999;}
 
-        /* 右側：排行榜 (放大) */
+        /* 右側：排行榜 (加大) */
         .leaderboard-sidebar { 
-            flex: 1; /* 佔比 1 */
-            background: #222; border: 4px solid #fff; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; 
+            flex: 1; min-width: 300px;
+            background: #222; border: 4px solid #fff; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; 
         }
-        .lb-title { text-align: center; color: var(--gold); border-bottom: 4px solid #555; padding-bottom: 10px; margin-bottom: 15px; font-size: 24px;}
+        .lb-title { text-align: center; color: var(--gold); border-bottom: 4px solid #555; padding-bottom: 15px; margin-bottom: 20px; font-size: 28px;}
         .lb-row { 
-            display: flex; align-items: center; margin-bottom: 10px; background: #333; padding: 10px; 
-            font-size: 16px; border: 1px solid #555; 
+            display: flex; align-items: center; margin-bottom: 12px; background: #333; padding: 12px; 
+            font-size: 20px; border: 1px solid #555; 
         }
-        .lb-bar-bg { flex-grow: 1; height: 15px; background: #000; margin: 0 10px; border-radius: 5px; }
+        .lb-bar-bg { flex-grow: 1; height: 15px; background: #000; margin: 0 15px; border-radius: 5px; }
         .lb-bar { height: 100%; background: var(--green); width: 0%; border-radius: 5px; transition: width 0.5s; }
 
         /* 對決模式 */
         #view-versus { display: none; height: 100%; padding: 20px; background: radial-gradient(circle, #222, #000); }
         .versus-container { display: flex; height: 100%; align-items: center; justify-content: center; gap: 40px;}
-        .vs-card { width: 40%; height: 90%; background: #222; border: 4px solid #fff; display: flex; flex-direction: column; padding: 15px; position: relative; }
+        .vs-card { width: 45%; height: 90%; background: #222; border: 4px solid #fff; display: flex; flex-direction: column; padding: 15px; position: relative; }
         .hp-bar { height: 100%; width: 0%; transition: width 0.5s; }
         .vs-canvas { flex-grow: 1; background: #fff; width: 100%; border: 4px solid #555; }
 
@@ -122,7 +124,8 @@
         .error-card { background: #333; border-left: 8px solid var(--red); padding: 20px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; color: #fff;}
         .bar-fill { height: 100%; background: var(--red); border-radius: 5px; }
 
-        @media (max-width: 1400px) { .monitor-wall { grid-template-columns: repeat(4, 1fr); } }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+        @media (max-width: 1400px) { .monitor-wall { grid-template-columns: repeat(3, 1fr); } }
     </style>
 </head>
 <body>
@@ -136,14 +139,14 @@
             </div>
             
             <div id="form-student">
-                <input type="text" id="s-code" placeholder="教室代碼" onkeyup="this.value = this.value.toUpperCase();">
+                <input type="text" id="s-code" placeholder="教室代碼 (例: MATH)" oninput="this.value = this.value.toUpperCase();">
                 <input type="text" id="s-name" placeholder="你的暱稱" maxlength="8">
                 <div class="seat-grid" id="seat-container"></div>
                 <button class="btn" style="width:100%; margin-top:30px; background:var(--green); color:white; padding: 15px;" onclick="studentLogin()">準備戰鬥</button>
             </div>
 
             <div id="form-teacher" style="display:none;">
-                <input type="text" id="t-code" placeholder="設定教室代碼" onkeyup="this.value = this.value.toUpperCase();">
+                <input type="text" id="t-code" placeholder="設定教室代碼" oninput="this.value = this.value.toUpperCase();">
                 <input type="password" id="t-pass" placeholder="輸入密碼 (0118)">
                 <div style="display:flex; align-items:center; justify-content:center; margin-top:20px; font-size:16px;">
                     <label style="margin-right:10px; color:#ffd700;">遊戲人數:</label>
@@ -156,13 +159,14 @@
 
     <div id="waiting-room">
         <h1 style="font-size: 32px; color:var(--green);">READY?</h1>
-        <p style="margin-top:15px; font-size:16px; color:#fff;">連線成功！等待老師指令...</p>
-        <div style="margin-top:20px; font-size:10px; color:#aaa;">ID: <span id="s-mqtt-id">...</span></div>
+        <p style="margin-top:15px; font-size:16px; color:#fff;">等待老師指令...</p>
+        <div id="s-status-dot" class="status-dot"></div>
+        <p id="s-status-text" style="font-size:10px; color:#aaa;">連線中...</p>
     </div>
 
     <div id="paused-overlay">
-        <h1 style="font-size: 40px; color: #ff9800;">PAUSED</h1>
-        <p>老師講解中</p>
+        <h1 style="font-size: 32px; color: #ff9800; animation: blink 1s infinite;">PAUSED</h1>
+        <p>老師講解中，請看大螢幕</p>
     </div>
 
     <div id="game-interface">
@@ -202,10 +206,7 @@
 
     <div id="teacher-dashboard">
         <div class="dashboard-header">
-            <div style="display:flex; align-items:center;">
-                <div class="status-light" id="conn-status" title="連線狀態"></div>
-                <div style="font-size: 16px;">ROOM: <span id="dash-code" style="color:var(--gold)">--</span></div>
-            </div>
+            <div style="font-size: 20px; font-weight:bold;">ROOM: <span id="dash-code" style="color:var(--gold)">--</span></div>
             <div class="view-switch">
                 <div class="view-btn active" id="btn-screens" onclick="switchView('screens')">📺 全景+排行</div>
                 <div class="view-btn" id="btn-versus" onclick="switchView('versus')">⚔️ 對決</div>
@@ -236,12 +237,10 @@
     </div>
 
 <script>
-    // ======================================================
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyLHDpz-954-g7062_j-jkk6QNs30E4DDPx9iQxtwoHheZKBxZhRWfw8KXe224yX0yhAw/exec";
-    // ======================================================
-
     const MQTT_BROKER = 'wss://broker.hivemq.com:8884/mqtt';
     const TARGET_SCORE = 2000;
+
     let client = null, myRole = '', classCode = '', selectedSeat = null, maxSeats = 35;
     let playerData = { name: '', score: 0, currentInput: '', q: {}, lastLine: null, history: [] };
     let classState = {}, questionStats = {}, gameState = 'WAITING';
@@ -261,41 +260,44 @@
         document.getElementById('form-teacher').style.display = role === 'teacher' ? 'block' : 'none';
     }
 
-    // === MQTT (強化版) ===
     function connectMQTT(code, onConnect) {
-        // 使用隨機 ID 避免衝突
-        const clientId = 'mario_' + Math.random().toString(16).substr(2, 8);
-        client = mqtt.connect(MQTT_BROKER, { clientId: clientId });
-        
+        client = mqtt.connect(MQTT_BROKER);
         client.on('connect', () => {
-            console.log("MQTT Connected");
-            if(myRole === 'teacher') document.getElementById('conn-status').classList.add('status-ok');
+            console.log("Connected to MQTT");
+            // 學生端連線成功亮燈
+            if(myRole === 'student') {
+                document.getElementById('s-status-dot').classList.add('status-connected');
+                document.getElementById('s-status-text').innerText = "已連線，準備就緒";
+                document.getElementById('s-status-text').style.color = "#00ff00";
+            }
             onConnect();
         });
         
         client.on('message', (topic, msg) => handleMessage(topic, msg.toString()));
-        
-        client.on('error', (err) => {
-            console.error("MQTT Error:", err);
-            alert("連線不穩定，請重新整理");
-        });
+        client.on('offline', () => { if(myRole==='student') document.getElementById('s-status-dot').classList.remove('status-connected'); });
     }
 
     function handleMessage(topic, payload) {
         const parts = topic.split('/'); const type = parts[2];
+        console.log("MSG:", topic, payload); // Debug message
+
         if (myRole === 'student') {
             if (type === 'status') {
-                console.log("Receive Status:", payload); // Debug
                 if(payload === 'START') {
                     document.getElementById('waiting-room').style.display = 'none'; 
                     document.getElementById('paused-overlay').style.display = 'none'; 
                     document.getElementById('game-interface').style.display = 'flex';
                     if(playerData.history.length === 0) { resizeStudentCanvas(); newQuestion(); }
-                } else if (payload === 'PAUSE') { document.getElementById('paused-overlay').style.display = 'flex';
-                } else if (payload === 'RESUME') { document.getElementById('paused-overlay').style.display = 'none';
-                } else if (payload === 'STOP') { endGameForStudent(); }
-            } else if (type === 'config') { updateSeatLimit(JSON.parse(payload).maxSeats); }
-        } else if (myRole === 'teacher') {
+                } else if (payload === 'PAUSE') { 
+                    document.getElementById('paused-overlay').style.display = 'flex';
+                } else if (payload === 'RESUME') { 
+                    document.getElementById('paused-overlay').style.display = 'none';
+                } else if (payload === 'STOP') { 
+                    endGameForStudent(); 
+                }
+            }
+        } 
+        else if (myRole === 'teacher') {
             if (type === 'data') updateTeacherScreen(parts[3], JSON.parse(payload));
             if (type === 'log') recordAnswerLog(JSON.parse(payload));
         }
@@ -309,43 +311,38 @@
         maxSeats = parseInt(limitVal) || 35;
 
         if (!code) return alert("請設定代碼");
-        
-        const btn = document.getElementById('t-login-btn');
-        const orgText = btn.innerText;
-        btn.innerText = "驗證中..."; btn.disabled = true;
+        if (pass !== "0118") return alert("密碼錯誤 (預設 0118)");
 
-        google.script.run.withSuccessHandler(function(isValid){
-            btn.innerText = orgText; btn.disabled = false;
-            if(isValid) {
-                myRole = 'teacher'; classCode = code;
-                document.getElementById('login-screen').style.display = 'none';
-                document.getElementById('teacher-dashboard').style.display = 'flex';
-                document.getElementById('dash-code').innerText = code;
-                initTeacherUI();
-                connectMQTT(code, () => {
-                    client.subscribe(`game/${code}/data/+`); 
-                    client.subscribe(`game/${code}/log`);
-                    setInterval(() => client.publish(`game/${code}/config`, JSON.stringify({ maxSeats })), 2000);
-                });
-                updateControlButtons('WAITING');
-            } else { alert("密碼錯誤"); }
-        }).withFailureHandler(function(err){
-            btn.innerText = orgText; btn.disabled = false; alert("連線錯誤: " + err);
-        }).verifyTeacherPassword(pass);
+        myRole = 'teacher'; classCode = code;
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('teacher-dashboard').style.display = 'flex';
+        document.getElementById('dash-code').innerText = code;
+
+        initTeacherUI();
+        connectMQTT(code, () => {
+            client.subscribe(`game/${code}/data/+`); 
+            client.subscribe(`game/${code}/log`);
+            setInterval(() => client.publish(`game/${code}/config`, JSON.stringify({ maxSeats })), 2000);
+        });
+        updateControlButtons('WAITING');
     }
 
     function initTeacherUI() {
         const wall = document.getElementById('monitor-wall'); wall.innerHTML = "";
         const lbContent = document.getElementById('lb-content'); lbContent.innerHTML = "";
         const s1 = document.getElementById('sel-p1'), s2 = document.getElementById('sel-p2'); s1.innerHTML=""; s2.innerHTML="";
+
         for(let i=1; i<=maxSeats; i++){
+            // 監控卡片
             let card = document.createElement('div'); card.className = 'student-card'; card.id = `card-${i}`;
-            card.innerHTML = `<div class="mini-hud"><span style="color:var(--gold)">#${i}</span><span id="name-${i}" style="overflow:hidden; white-space:nowrap; max-width:60px;">...</span><span id="score-${i}">0</span></div><canvas class="mini-canvas" id="mini-${i}"></canvas>`;
+            card.innerHTML = `<div class="mini-hud"><span style="color:var(--gold)">#${i}</span><span id="name-${i}">...</span><span id="score-${i}">0</span></div><canvas class="mini-canvas" id="mini-${i}"></canvas>`;
             wall.appendChild(card);
             
+            // 排行榜條目
             let row = document.createElement('div'); row.className = 'lb-row'; row.id = `lb-row-${i}`; row.style.display = 'none';
-            row.innerHTML = `<span style="width:25px;color:var(--gold);font-weight:bold;" id="lb-pos-${i}">-</span><span style="width:80px;overflow:hidden;white-space:nowrap" id="lb-name-${i}">...</span><div class="lb-bar-bg"><div class="lb-bar" id="lb-bar-${i}"></div></div><span id="lb-score-${i}">0</span>`;
+            row.innerHTML = `<span style="width:30px;color:var(--gold);font-weight:bold;" id="lb-pos-${i}">-</span><span style="width:80px;overflow:hidden;white-space:nowrap" id="lb-name-${i}">...</span><div class="lb-bar-bg"><div class="lb-bar" id="lb-bar-${i}"></div></div><span id="lb-score-${i}">0</span>`;
             lbContent.appendChild(row);
+
             let op1 = document.createElement('option'); op1.value=i; op1.innerText=`#${i}`; s1.appendChild(op1);
             let op2 = document.createElement('option'); op2.value=i; op2.innerText=`#${i}`; s2.appendChild(op2);
         }
@@ -353,15 +350,9 @@
     }
 
     function sendSignal(sig) {
-        // 重要： retain: true 確保學生即使晚一點連上，也能收到當前狀態
-        if(client) {
-            console.log("Sending:", sig);
-            client.publish(`game/${classCode}/status`, sig, { retain: true });
-        } else {
-            alert("尚未連線，請等待綠燈亮起");
-            return;
-        }
-
+        // 重要：retain: true 保留訊息，確保後連上的學生也能收到狀態
+        if(client) client.publish(`game/${classCode}/status`, sig, { retain: true });
+        
         if(sig === 'START') gameState = 'RUNNING'; else if(sig === 'PAUSE') gameState = 'PAUSED'; else if(sig === 'RESUME') gameState = 'RUNNING'; else if(sig === 'STOP') gameState = 'ENDED';
         updateControlButtons(gameState);
         if(sig === 'STOP') switchView('review');
@@ -449,13 +440,19 @@
 
     // === 學生 ===
     function studentLogin() {
-        const code = document.getElementById('s-code').value.trim().toUpperCase();
+        const codeInput = document.getElementById('s-code').value.trim();
+        const code = codeInput.toUpperCase(); // 強制轉大寫
         const name = document.getElementById('s-name').value.trim();
         if(!code || !name || !selectedSeat) return alert("請填寫完整");
+        
         myRole='student'; classCode=code; playerData.name=name;
-        document.getElementById('login-screen').style.display='none'; document.getElementById('waiting-room').style.display='flex';
-        document.getElementById('g-name').innerText=name; document.getElementById('g-seat').innerText=selectedSeat;
-        connectMQTT(code, ()=>{ client.subscribe(`game/${code}/status`); client.subscribe(`game/${code}/config`); setInterval(sendStudentData, 800); });
+        document.getElementById('login-screen').style.display='none'; 
+        document.getElementById('waiting-room').style.display='flex';
+        
+        connectMQTT(code, ()=>{
+            client.subscribe(`game/${code}/status`);
+            setInterval(sendStudentData, 800);
+        });
     }
     
     function updateSeatLimit(limit) {
@@ -531,7 +528,12 @@
     function drawStudentScene() { const cvs=document.getElementById('s-canvas'); drawScene(cvs.getContext('2d'),cvs.width,cvs.height,playerData.q,playerData.currentInput,playerData.lastLine); }
     function resizeStudentCanvas() { const w = document.getElementById('s-canvas-wrap'); const c = document.getElementById('s-canvas'); c.width=w.clientWidth; c.height=w.clientHeight; drawStudentScene(); }
     window.addEventListener('resize', resizeStudentCanvas);
-    window.addEventListener('keydown', (e)=>{ if(e.key==='F2') document.getElementById('teacher-dashboard').style.display='flex'; });
+    
+    // Style for blink
+    const style = document.createElement('style');
+    style.innerHTML = `@keyframes blink { 50% { opacity: 0; } }`;
+    document.head.appendChild(style);
+
 </script>
 </body>
 </html>
