@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>瑪利歐函數大亂鬥 (1v1)</title>
+    <title>瑪利歐函數大亂鬥 (圖形保留版)</title>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -26,27 +26,18 @@
             justify-content: center;
         }
 
-        /* 主戰場容器 */
         .battle-arena {
             display: flex;
             width: 100%; height: 100%;
             position: relative;
         }
 
-        /* 分割線 */
         .divider {
             width: 8px;
-            background: repeating-linear-gradient(
-                45deg,
-                #000,
-                #000 10px,
-                #ffd700 10px,
-                #ffd700 20px
-            );
+            background: repeating-linear-gradient(45deg, #000, #000 10px, #ffd700 10px, #ffd700 20px);
             z-index: 10;
         }
 
-        /* 玩家區域 */
         .player-zone {
             flex: 1;
             display: flex;
@@ -58,17 +49,10 @@
         #zone-p1 { background-color: var(--p1-bg); border-right: 4px solid #000; }
         #zone-p2 { background-color: var(--p2-bg); border-left: 4px solid #000; }
 
-        /* 血條與狀態 */
         .status-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px;
-            background: #000;
-            color: #fff;
-            border-radius: 10px;
-            margin-bottom: 10px;
-            box-shadow: 0 4px rgba(0,0,0,0.3);
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px; background: #000; color: #fff;
+            border-radius: 10px; margin-bottom: 10px; box-shadow: 0 4px rgba(0,0,0,0.3);
         }
         .hp-container { display: flex; gap: 5px; }
         .heart { color: red; font-size: 20px; }
@@ -77,28 +61,19 @@
         .p1-name { color: var(--p1-color); }
         .p2-name { color: var(--p2-color); }
 
-        /* 題目顯示 (磚塊風格) */
         .question-brick {
             background-color: var(--brick-color);
-            background-image: 
-                linear-gradient(335deg, rgba(0,0,0,0.3) 23px, transparent 23px),
-                linear-gradient(155deg, rgba(0,0,0,0.3) 23px, transparent 23px);
+            background-image: linear-gradient(335deg, rgba(0,0,0,0.3) 23px, transparent 23px), linear-gradient(155deg, rgba(0,0,0,0.3) 23px, transparent 23px);
             background-size: 58px 58px;
-            border: 4px solid #000;
-            color: #fff;
-            padding: 15px;
-            text-align: center;
-            font-size: 18px; /* 題目字體大一點 */
-            margin-bottom: 10px;
-            box-shadow: 0 6px #3e2723;
-            line-height: 1.5;
+            border: 4px solid #000; color: #fff;
+            padding: 15px; text-align: center; font-size: 18px;
+            margin-bottom: 10px; box-shadow: 0 6px #3e2723; line-height: 1.5;
         }
         .highlight { color: #ffd700; text-shadow: 2px 2px #000; }
 
-        /* 戰鬥畫面 (Canvas) */
         .canvas-container {
             flex-grow: 1;
-            background: #5c94fc; /* Sky Blue */
+            background: #5c94fc;
             border: 4px solid #000;
             margin-bottom: 10px;
             position: relative;
@@ -106,59 +81,39 @@
         }
         canvas { width: 100%; height: 100%; display: block; }
         
-        /* 懲罰遮罩 */
         .stun-overlay {
             position: absolute; top:0; left:0; right:0; bottom:0;
-            background: rgba(0,0,0,0.7);
+            background: rgba(0,0,0,0.0); /* 改成透明，讓學生看得到後面的錯誤線 */
             display: none;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            color: #fff;
-            z-index: 5;
-            font-size: 24px;
+            flex-direction: column; justify-content: center; align-items: center;
+            color: #fff; z-index: 5; font-size: 24px;
+            text-shadow: 2px 2px 0 #000; /* 增加文字描邊以防看不清 */
+        }
+        /* 暈眩時加一個紅色邊框提示 */
+        .stunned-border {
+            box-shadow: inset 0 0 50px rgba(255,0,0,0.5);
         }
 
-        /* 鍵盤區 */
-        .keypad {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-            height: 220px; /* 固定高度 */
-        }
+        .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; height: 220px; }
 
         .btn {
-            background: #fff;
-            border: 4px solid #000;
-            font-family: 'Press Start 2P';
-            font-size: 20px;
-            cursor: pointer;
-            box-shadow: 0 4px #999;
-            color: #333;
+            background: #fff; border: 4px solid #000;
+            font-family: 'Press Start 2P'; font-size: 20px; cursor: pointer;
+            box-shadow: 0 4px #999; color: #333;
         }
         .btn:active { transform: translateY(4px); box-shadow: 0 0 #999; }
         
-        /* 玩家1 按鈕色系 */
         #zone-p1 .btn-action { background: var(--p1-color); color: white; border-color: #b71c1c; }
         #zone-p1 .btn-del { background: #ffcdd2; }
-        
-        /* 玩家2 按鈕色系 */
         #zone-p2 .btn-action { background: var(--p2-color); color: white; border-color: #1b5e20; }
         #zone-p2 .btn-del { background: #c8e6c9; }
 
-        /* 輸入框顯示 */
         .input-display {
-            background: #000;
-            color: #fff;
-            padding: 10px;
-            text-align: center;
-            font-size: 24px;
-            border: 4px solid #fff;
-            margin-bottom: 10px;
-            height: 50px;
+            background: #000; color: #fff; padding: 10px;
+            text-align: center; font-size: 24px; border: 4px solid #fff;
+            margin-bottom: 10px; height: 50px;
         }
 
-        /* 開始/結算遮罩 */
         #main-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.9);
@@ -174,24 +129,9 @@
         }
         @keyframes pulse { 0% {transform: scale(1);} 50% {transform: scale(1.05);} 100% {transform: scale(1);} }
 
-        /* 攻擊動畫元素 */
-        .projectile {
-            position: absolute;
-            width: 30px; height: 30px;
-            border-radius: 50%;
-            display: none;
-            transition: all 0.5s linear;
-        }
-        .fireball { background: radial-gradient(circle, yellow, red); border: 2px solid #fff; box-shadow: 0 0 10px orange; }
-        .shell { background: green; border: 2px solid white; }
-
-        /* 角色站位 */
-        .char {
-            position: absolute; bottom: 10px; width: 50px; height: 50px;
-        }
+        .char { position: absolute; bottom: 10px; width: 50px; height: 50px; }
         .char-p1 { left: 20px; background: red; box-shadow: 4px 4px 0 #800000; }
         .char-p2 { right: 20px; background: green; box-shadow: -4px 4px 0 #004d40; }
-        /* 簡單的像素眼睛 */
         .eye { position: absolute; top: 10px; width: 5px; height: 5px; background: black; }
         .char-p1 .eye { right: 5px; }
         .char-p2 .eye { left: 5px; }
@@ -215,11 +155,11 @@
                 <div>TARGET: <span id="p1-target" class="highlight">x = 3</span></div>
             </div>
 
-            <div class="canvas-container">
+            <div class="canvas-container" id="container-p1">
                 <canvas id="canvas-p1"></canvas>
                 <div class="char char-p1"><div class="eye"></div></div>
                 <div id="p1-stun" class="stun-overlay">
-                    <div>DIZZY!</div>
+                    <div style="font-size:30px; color:#ff5252;">MISS!</div>
                     <div id="p1-timer">2.0</div>
                 </div>
             </div>
@@ -258,11 +198,11 @@
                 <div>TARGET: <span id="p2-target" class="highlight">x = ?</span></div>
             </div>
 
-            <div class="canvas-container">
+            <div class="canvas-container" id="container-p2">
                 <canvas id="canvas-p2"></canvas>
                 <div class="char char-p2"><div class="eye"></div></div>
                 <div id="p2-stun" class="stun-overlay">
-                    <div>DIZZY!</div>
+                    <div style="font-size:30px; color:#ff5252;">MISS!</div>
                     <div id="p2-timer">2.0</div>
                 </div>
             </div>
@@ -295,31 +235,29 @@
     </div>
 
 <script>
-    // 遊戲參數
     const MAX_HP = 5;
     
-    // 玩家狀態物件
+    // 玩家狀態
     const p1 = {
-        id: 1,
-        hp: MAX_HP,
-        input: "",
+        id: 1, hp: MAX_HP, input: "",
         slope: 0, intercept: 0, targetX: 0, correctY: 0,
         isStunned: false,
         ctx: document.getElementById('canvas-p1').getContext('2d'),
-        canvas: document.getElementById('canvas-p1')
+        canvas: document.getElementById('canvas-p1'),
+        container: document.getElementById('container-p1'),
+        persistentLine: null // { y: number, color: string }
     };
 
     const p2 = {
-        id: 2,
-        hp: MAX_HP,
-        input: "",
+        id: 2, hp: MAX_HP, input: "",
         slope: 0, intercept: 0, targetX: 0, correctY: 0,
         isStunned: false,
         ctx: document.getElementById('canvas-p2').getContext('2d'),
-        canvas: document.getElementById('canvas-p2')
+        canvas: document.getElementById('canvas-p2'),
+        container: document.getElementById('container-p2'),
+        persistentLine: null
     };
 
-    // RWD Canvas
     function resizeCanvases() {
         const w = document.querySelector('.canvas-container').clientWidth;
         const h = document.querySelector('.canvas-container').clientHeight;
@@ -330,34 +268,27 @@
     }
     window.addEventListener('resize', resizeCanvases);
 
-    // 遊戲流程
     function startGame() {
         document.getElementById('main-overlay').style.display = 'none';
-        
-        // 重置狀態
         p1.hp = MAX_HP; p2.hp = MAX_HP;
         p1.isStunned = false; p2.isStunned = false;
-        
+        p1.persistentLine = null; p2.persistentLine = null;
         updateHP(p1); updateHP(p2);
-        
         resizeCanvases();
-        
-        nextQuestion(p1);
-        nextQuestion(p2);
+        nextQuestion(p1); nextQuestion(p2);
     }
 
     function nextQuestion(p) {
         p.input = "";
+        p.persistentLine = null; // 清除上一題的線
         updateInputDisplay(p);
         
         // 出題
-        p.slope = Math.floor(Math.random() * 5) - 2; 
-        if(p.slope === 0) p.slope = 1;
+        p.slope = Math.floor(Math.random() * 5) - 2; if(p.slope === 0) p.slope = 1;
         p.intercept = Math.floor(Math.random() * 9) - 4;
         p.targetX = Math.floor(Math.random() * 9) - 4;
         p.correctY = p.slope * p.targetX + p.intercept;
 
-        // 顯示
         let sign = p.intercept >= 0 ? "+ " : "- ";
         let txt = `y = ${p.slope}x ${sign} ${Math.abs(p.intercept)}`;
         if(p.slope===1) txt=`y=x ${sign} ${Math.abs(p.intercept)}`;
@@ -371,15 +302,12 @@
     }
 
     function input(pid, key) {
-        // 防止 click 和 touchstart 重複觸發
         event.preventDefault(); 
-
         const p = pid === 1 ? p1 : p2;
         if (p.isStunned) return;
 
-        if (key === 'C') {
-            p.input = "";
-        } else if (key === '-') {
+        if (key === 'C') { p.input = ""; } 
+        else if (key === '-') {
             if (p.input === "") p.input = "-";
             else if (p.input === "-") p.input = "";
         } else {
@@ -400,25 +328,28 @@
         if (p.isStunned || p.input === "" || p.input === "-") return;
 
         let val = parseInt(p.input);
-
-        // 視覺回饋：畫出軌跡
         animateShot(p, val, opponent);
     }
 
     function resolveShot(p, val, opponent) {
         if (val === p.correctY) {
-            // 答對：扣對方血
-            opponent.hp--;
-            updateHP(opponent);
+            // 答對：顯示綠色軌跡並保留一下
+            p.persistentLine = { y: val, color: "#00e676" }; // Bright Green
+            drawScene(p);
             
-            // 檢查勝利
-            if(opponent.hp <= 0) {
-                endGame(p.id === 1 ? "MARIO WINS!" : "LUIGI WINS!");
-            } else {
-                nextQuestion(p);
-            }
+            // 延遲後扣血並進下一題
+            setTimeout(() => {
+                opponent.hp--;
+                updateHP(opponent);
+                if(opponent.hp <= 0) {
+                    endGame(p.id === 1 ? "MARIO WINS!" : "LUIGI WINS!");
+                } else {
+                    nextQuestion(p);
+                }
+            }, 1000); // 1秒讓學生看清楚正確圖形
         } else {
-            // 答錯：自己暈眩
+            // 答錯：顯示紅色軌跡並暈眩
+            p.persistentLine = { y: val, color: "#d50000" }; // Red
             stunPlayer(p);
         }
     }
@@ -427,8 +358,13 @@
         p.isStunned = true;
         const overlay = document.getElementById(`p${p.id}-stun`);
         const timer = document.getElementById(`p${p.id}-timer`);
+        
+        p.container.classList.add("stunned-border"); // 紅框視覺提示
         overlay.style.display = 'flex';
         
+        // 雖然暈眩，但要持續畫出剛剛那條錯誤的線
+        drawScene(p);
+
         let timeLeft = 2.0;
         timer.innerText = timeLeft.toFixed(1);
         
@@ -438,10 +374,13 @@
             if (timeLeft <= 0) {
                 clearInterval(interval);
                 overlay.style.display = 'none';
+                p.container.classList.remove("stunned-border");
                 p.isStunned = false;
                 p.input = "";
+                // 暈眩結束後，線條才消失
+                p.persistentLine = null;
                 updateInputDisplay(p);
-                drawScene(p); // 重畫以清除錯誤軌跡
+                drawScene(p); 
             }
         }, 100);
     }
@@ -463,8 +402,6 @@
         document.querySelector('.big-btn').innerText = "REMATCH";
     }
 
-    // --- 繪圖與動畫 ---
-
     function drawScene(p) {
         const ctx = p.ctx;
         const w = p.canvas.width;
@@ -482,14 +419,54 @@
         ctx.beginPath(); ctx.moveTo(0, cy); ctx.lineTo(w, cy); ctx.stroke();
         ctx.beginPath(); ctx.moveTo(cx, 0); ctx.lineTo(cx, h); ctx.stroke();
 
-        // 畫目標線 (敵人位置)
+        // 畫目標線
         let px = cx + p.targetX * scale;
-        ctx.strokeStyle = "rgba(255,0,0,0.5)"; ctx.setLineDash([5,5]);
+        ctx.strokeStyle = "rgba(255,255,255,0.7)"; ctx.setLineDash([5,5]);
         ctx.beginPath(); ctx.moveTo(px, 0); ctx.lineTo(px, h); ctx.stroke(); ctx.setLineDash([]);
         
-        // 畫目標 (Goomba/Turtle)
+        // 畫目標
         ctx.fillStyle = "#8d6e63";
         ctx.beginPath(); ctx.arc(px, cy, 10, 0, Math.PI*2); ctx.fill();
+
+        // **重點：如果有保留的線條（正確或錯誤的），把它畫出來**
+        if (p.persistentLine) {
+            drawTrajectory(ctx, p, p.persistentLine.y, p.persistentLine.color);
+        }
+    }
+
+    function drawTrajectory(ctx, p, yVal, color) {
+        const w = p.canvas.width;
+        const h = p.canvas.height;
+        const cx = w/2; 
+        const cy = h/2;
+        const scale = w / 20;
+        
+        // 算出該 Y 值對應的像素座標
+        // 因為是函數圖形，我們應該畫出從玩家到目標的直線
+        // 為了視覺效果，我們畫一條延伸的直線
+        
+        let startX = p.id === 1 ? 20 : w - 20;
+        let startY = h - 20;
+        let targetPixelX = cx + p.targetX * scale;
+        let targetPixelY = cy - yVal * scale;
+
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(startX, startY);
+        ctx.lineTo(targetPixelX, targetPixelY);
+        // 如果要延伸出去看起來像雷射
+        // 簡單向量計算
+        let dx = targetPixelX - startX;
+        let dy = targetPixelY - startY;
+        ctx.lineTo(targetPixelX + dx, targetPixelY + dy);
+        
+        ctx.stroke();
+
+        // 畫出擊中點
+        ctx.fillStyle = color;
+        ctx.beginPath(); ctx.arc(targetPixelX, targetPixelY, 8, 0, Math.PI*2); ctx.fill();
+        ctx.strokeStyle = "#fff"; ctx.lineWidth=2; ctx.stroke();
     }
 
     function animateShot(p, val, opponent) {
@@ -500,51 +477,40 @@
         const cy = h/2;
         const scale = w / 20;
         
-        let startX = p.id === 1 ? 20 : w - 20; // 從角色發射
+        let startX = p.id === 1 ? 20 : w - 20;
         let startY = h - 20;
-
         let targetPixelX = cx + p.targetX * scale;
         let targetPixelY = cy - val * scale;
         
-        // 簡單動畫：畫出火球飛過去
         let progress = 0;
         
         function loop() {
-            progress += 0.1;
+            progress += 0.15; // 加快動畫速度
             if(progress > 1) progress = 1;
             
-            // 重畫背景
-            drawScene(p);
+            drawScene(p); // 這會重繪背景
 
-            // 當前火球位置
             let currX = startX + (targetPixelX - startX) * progress;
             let currY = startY + (targetPixelY - startY) * progress;
 
-            // 畫軌跡線
-            ctx.strokeStyle = p.id===1 ? "red" : "green";
+            // 畫動畫中的火球軌跡
+            ctx.strokeStyle = p.id===1 ? "orange" : "lightgreen";
             ctx.lineWidth = 3;
             ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(currX, currY); ctx.stroke();
 
             // 畫火球
-            ctx.fillStyle = p.id===1 ? "orange" : "lightgreen";
+            ctx.fillStyle = p.id===1 ? "red" : "green";
             ctx.beginPath(); ctx.arc(currX, currY, 8, 0, Math.PI*2); ctx.fill();
 
             if (progress < 1) {
                 requestAnimationFrame(loop);
             } else {
-                // 動畫結束，顯示結果
-                if (val === p.correctY) {
-                    // 畫爆炸
-                    ctx.fillStyle = "yellow";
-                    ctx.beginPath(); ctx.arc(targetPixelX, targetPixelY, 20, 0, Math.PI*2); ctx.fill();
-                }
-                setTimeout(() => resolveShot(p, val, opponent), 200);
+                resolveShot(p, val, opponent);
             }
         }
         loop();
     }
     
-    // 初始化
     resizeCanvases();
 
 </script>
