@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>神秘函數狙擊手 - 國中數學版</title>
+    <title>神秘函數狙擊手 - 積分挑戰版</title>
     <style>
         body {
             font-family: '微軟正黑體', sans-serif;
@@ -10,15 +10,35 @@
             background-color: #222;
             color: white;
             margin: 0;
-            padding: 20px;
+            padding: 10px;
         }
-        h1 { margin-bottom: 10px; color: #ffcc00; }
+        h1 { margin: 5px 0; color: #ffcc00; font-size: 24px; }
+        
+        /* 遊戲狀態列 */
+        .status-bar {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            background-color: #333;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            width: 80%;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .status-item { font-size: 1.2em; font-weight: bold; }
+        .timer { color: #00e5ff; }
+        .score { color: #ffeb3b; }
+        .strikes { color: #ff4444; }
+
         .game-container {
             display: inline-block;
             background-color: #fff;
             border-radius: 10px;
-            padding: 20px;
+            padding: 15px;
             box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            position: relative;
         }
         canvas {
             background-color: #f0f0f0;
@@ -29,131 +49,284 @@
             margin-top: 15px;
             font-size: 1.2em;
             color: #333;
-        }
-        .hud {
             display: flex;
-            justify-content: space-between;
-            width: 600px;
-            margin: 0 auto 10px auto;
-            color: #fff;
-            font-size: 1.2em;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+        .hud-info {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            margin-bottom: 5px;
+            color: #333; /* 改深色以適應白色背景區塊 */
+            font-size: 1.3em;
+            font-weight: bold;
         }
         input {
             font-size: 1.2em;
             width: 80px;
             padding: 5px;
             text-align: center;
+            border: 2px solid #555;
+            border-radius: 5px;
         }
         button {
-            font-size: 1.2em;
-            padding: 5px 20px;
-            background-color: #ff4444;
+            font-size: 1.1em;
+            padding: 8px 20px;
             color: white;
             border: none;
             cursor: pointer;
             border-radius: 5px;
+            transition: 0.2s;
         }
-        button:hover { background-color: #cc0000; }
-        button:disabled { background-color: #888; cursor: not-allowed; }
+        .btn-fire { background-color: #ff4444; }
+        .btn-fire:hover { background-color: #cc0000; }
+        .btn-next { background-color: #4CAF50; }
+        .btn-next:hover { background-color: #388E3C; }
+        .btn-start { background-color: #2196F3; font-size: 1.5em; padding: 15px 40px; margin-top: 20px;}
+        
+        button:disabled { background-color: #ccc; cursor: not-allowed; }
+
         #message {
             margin-top: 10px;
             font-weight: bold;
             height: 30px;
             color: #333;
+            font-size: 1.1em;
         }
-        .math-expr { font-family: 'Times New Roman', serif; font-style: italic; font-weight: bold; color: blue;}
+        
+        /* 遮罩層 (開始/結束畫面) */
+        #overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0,0,0,0.85);
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+        .overlay-content h2 { font-size: 2.5em; margin-bottom: 10px; color: #fff;}
+        .overlay-content p { font-size: 1.2em; color: #ddd; margin-bottom: 20px;}
+        .math-expr { font-family: 'Times New Roman', serif; font-style: italic; color: #0056b3;}
     </style>
 </head>
 <body>
 
-    <h1>🎯 神秘函數狙擊手</h1>
+    <h1>🎯 神秘函數狙擊手 - 積分挑戰</h1>
     
-    <div class="hud">
-        <div id="equation-display">武器函數: y = ?</div>
-        <div id="target-display">敵人位置: x = ?</div>
+    <div class="status-bar">
+        <div class="status-item timer">⏱️ 時間: <span id="timeDisplay">180</span>s</div>
+        <div class="status-item score">🏆 分數: <span id="scoreDisplay">0</span></div>
+        <div class="status-item strikes">❌ 連續失誤: <span id="strikeDisplay">0</span>/3</div>
     </div>
 
     <div class="game-container">
+        <div id="overlay">
+            <div class="overlay-content">
+                <h2 id="overlayTitle">準備好了嗎？</h2>
+                <p id="overlayDesc">限時 3 分鐘，連續答錯 3 題即失敗！</p>
+                <button class="btn-start" onclick="startGame()">開始遊戲</button>
+            </div>
+        </div>
+
+        <div class="hud-info">
+            <div id="equation-display">武器: y = ?</div>
+            <div id="target-display">目標: x = ?</div>
+        </div>
+
         <canvas id="gameCanvas" width="600" height="400"></canvas>
         
         <div class="controls">
-            <span>輸入射擊高度 (y)：</span>
+            <span>高度 (y) = </span>
             <input type="number" id="inputY" placeholder="?" step="1">
-            <button id="fireBtn" onclick="fire()">發射砲彈!</button>
-            <button id="nextBtn" onclick="initGame()" style="display:none; background-color: #4CAF50;">下一關</button>
+            <button id="fireBtn" class="btn-fire" onclick="fire()">發射</button>
+            <button id="nextBtn" class="btn-next" onclick="nextLevel()" style="display:none;">下一題</button>
         </div>
-        <div id="message">準備就緒...</div>
+        <div id="message"></div>
     </div>
 
 <script>
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
+    
+    // UI 元件
     const inputY = document.getElementById('inputY');
     const messageDiv = document.getElementById('message');
-    const nextBtn = document.getElementById('nextBtn');
     const fireBtn = document.getElementById('fireBtn');
-    
+    const nextBtn = document.getElementById('nextBtn');
+    const timeDisplay = document.getElementById('timeDisplay');
+    const scoreDisplay = document.getElementById('scoreDisplay');
+    const strikeDisplay = document.getElementById('strikeDisplay');
+    const overlay = document.getElementById('overlay');
+    const overlayTitle = document.getElementById('overlayTitle');
+    const overlayDesc = document.getElementById('overlayDesc');
+
     // 遊戲參數
-    let scale = 20; // 1單位 = 20像素
+    let scale = 20; 
     let centerX = canvas.width / 2;
     let centerY = canvas.height / 2;
-    
-    // 當前題目變數
-    let slope = 0; // 斜率 a
-    let intercept = 0; // 截距 b
-    let targetX = 0; // 題目給的 x
-    let correctY = 0; // 正確答案 y
-    let isFired = false;
 
-    // 初始化遊戲
-    function initGame() {
-        // 重置狀態
-        isFired = false;
+    // 全局狀態
+    let timerInterval = null;
+    let timeLeft = 180;
+    let score = 0;
+    let consecutiveStrikes = 0;
+    let isGameActive = false;
+
+    // 當前題目變數
+    let slope = 0, intercept = 0, targetX = 0, correctY = 0;
+
+    // === 遊戲流程控制 ===
+
+    // 開始新遊戲 (重置所有積分與時間)
+    function startGame() {
+        score = 0;
+        timeLeft = 180;
+        consecutiveStrikes = 0;
+        isGameActive = true;
+        
+        updateUI();
+        overlay.style.display = 'none'; // 隱藏遮罩
+        
+        // 啟動計時器
+        if (timerInterval) clearInterval(timerInterval);
+        timerInterval = setInterval(gameTick, 1000);
+
+        nextLevel(); // 出第一題
+    }
+
+    // 每一秒執行一次
+    function gameTick() {
+        if (!isGameActive) return;
+        timeLeft--;
+        timeDisplay.innerText = timeLeft;
+        
+        if (timeLeft <= 0) {
+            endGame("時間到！");
+        }
+    }
+
+    // 遊戲結束
+    function endGame(reason) {
+        isGameActive = false;
+        clearInterval(timerInterval);
+        
+        overlayTitle.innerText = reason;
+        overlayDesc.innerText = `最終分數: ${score} 分`;
+        overlay.style.display = 'flex'; // 顯示遮罩
+        
+        // 按鈕文字改為重新開始
+        document.querySelector('.btn-start').innerText = "再玩一次";
+    }
+
+    // === 關卡邏輯 ===
+
+    // 產生下一題
+    function nextLevel() {
+        if (!isGameActive) return;
+
+        // 重置輸入區
         inputY.value = '';
         inputY.disabled = false;
+        fireBtn.style.display = 'block';
         fireBtn.disabled = false;
-        fireBtn.style.display = 'inline-block';
         nextBtn.style.display = 'none';
-        messageDiv.innerHTML = "請計算 y 值並輸入...";
+        messageDiv.innerHTML = "請計算並輸入 y 值...";
         messageDiv.style.color = "#333";
 
-        // 隨機產生題目 (限制範圍以免太難或超出畫面)
-        // 斜率 a: -3 到 3
-        slope = Math.floor(Math.random() * 7) - 3; 
-        if(slope === 0 && Math.random() > 0.5) slope = 1; // 減少出現常數函數的機率，但也保留可能性
-
-        // 截距 b: -5 到 5
-        intercept = Math.floor(Math.random() * 11) - 5;
-
-        // 目標 x: -8 到 8 (避開 0)
-        targetX = Math.floor(Math.random() * 17) - 8;
-        
-        // 計算正確答案
-        correctY = slope * targetX + intercept;
-
-        // 顯示題目
-        let sign = intercept >= 0 ? "+ " : "- ";
-        let bVal = Math.abs(intercept);
-        let equationText = `y = ${slope}x ${sign} ${bVal}`;
-        if (slope === 0) equationText = `y = ${intercept}`; // 常數函數
-        if (slope === 1) equationText = `y = x ${sign} ${bVal}`;
-        if (slope === -1) equationText = `y = -x ${sign} ${bVal}`;
-        if (intercept === 0) equationText = slope === 0 ? "y = 0" : `y = ${slope}x`;
-
-        document.getElementById('equation-display').innerHTML = `武器: <span class="math-expr">${equationText}</span>`;
-        document.getElementById('target-display').innerHTML = `敵人位置: <span class="math-expr">x = ${targetX}</span>`;
-
+        // 隨機出題
+        generateQuestion();
         drawScene();
     }
 
-    // 繪製座標系
+    function generateQuestion() {
+        // 斜率 (-3 ~ 3)
+        slope = Math.floor(Math.random() * 7) - 3; 
+        if(slope === 0 && Math.random() > 0.7) slope = 1; // 降低常數函數機率
+
+        // 截距 (-5 ~ 5)
+        intercept = Math.floor(Math.random() * 11) - 5;
+
+        // 目標 x (-8 ~ 8)
+        targetX = Math.floor(Math.random() * 17) - 8;
+        
+        correctY = slope * targetX + intercept;
+
+        // 格式化顯示
+        let sign = intercept >= 0 ? "+ " : "- ";
+        let bVal = Math.abs(intercept);
+        let equationText = `y = ${slope}x ${sign} ${bVal}`;
+        if (slope === 0) equationText = `y = ${intercept}`; 
+        else if (slope === 1) equationText = `y = x ${sign} ${bVal}`;
+        else if (slope === -1) equationText = `y = -x ${sign} ${bVal}`;
+        else if (intercept === 0) equationText = `y = ${slope}x`;
+
+        document.getElementById('equation-display').innerHTML = `武器: <span class="math-expr">${equationText}</span>`;
+        document.getElementById('target-display').innerHTML = `目標: <span class="math-expr">x = ${targetX}</span>`;
+    }
+
+    // === 核心互動 ===
+
+    function fire() {
+        if (!isGameActive) return;
+        
+        let valStr = inputY.value;
+        if (valStr === '') { alert("請輸入數字"); return; }
+        
+        let userVal = parseFloat(valStr);
+        inputY.disabled = true;
+        fireBtn.disabled = true;
+
+        // 繪製結果
+        drawScene(); // 清空重畫
+        drawTrajectory(userVal); // 畫軌跡
+
+        if (userVal === correctY) {
+            // 答對
+            score += 100;
+            consecutiveStrikes = 0; // 重置連錯計數
+            messageDiv.innerHTML = "🎉 命中目標！ (+100分)";
+            messageDiv.style.color = "green";
+        } else {
+            // 答錯
+            consecutiveStrikes++;
+            messageDiv.innerHTML = `💥 沒打中... 正確是 y=${correctY}`;
+            messageDiv.style.color = "red";
+            
+            // 標示正確位置
+            drawCorrectPoint();
+        }
+
+        updateUI();
+
+        // 檢查是否失敗
+        if (consecutiveStrikes >= 3) {
+            setTimeout(() => { endGame("任務失敗：連續失誤 3 次"); }, 1000);
+        } else {
+            // 顯示下一題按鈕
+            fireBtn.style.display = 'none';
+            nextBtn.style.display = 'block';
+            nextBtn.focus(); // 讓學生可以直接按 Enter 進下一題
+        }
+    }
+
+    function updateUI() {
+        scoreDisplay.innerText = score;
+        strikeDisplay.innerText = `${consecutiveStrikes}`;
+        timeDisplay.innerText = timeLeft;
+    }
+
+    // === 繪圖相關 ===
+
     function drawGrid() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        ctx.strokeStyle = "#ddd";
+        ctx.strokeStyle = "#e0e0e0";
         ctx.lineWidth = 1;
-
-        // 畫網格
+        // 網格
         for(let x = 0; x <= canvas.width; x += scale) {
             ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
         }
@@ -161,112 +334,96 @@
             ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
         }
 
-        // 畫 X, Y 軸
-        ctx.strokeStyle = "#000";
+        // 軸
+        ctx.strokeStyle = "#444";
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.moveTo(0, centerY); ctx.lineTo(canvas.width, centerY); // X軸
-        ctx.moveTo(centerX, 0); ctx.lineTo(centerX, canvas.height); // Y軸
+        ctx.moveTo(0, centerY); ctx.lineTo(canvas.width, centerY);
+        ctx.moveTo(centerX, 0); ctx.lineTo(centerX, canvas.height);
         ctx.stroke();
-
-        // 標記原點與方向
-        ctx.fillStyle = "black";
+        
+        // 標記
+        ctx.fillStyle = "#666";
         ctx.font = "14px Arial";
         ctx.fillText("O", centerX + 2, centerY + 15);
         ctx.fillText("x", canvas.width - 15, centerY - 5);
         ctx.fillText("y", centerX + 5, 15);
     }
 
-    // 繪製場景 (敵人)
     function drawScene() {
         drawGrid();
-
-        // 畫出敵人所在的垂直線 (提示線)
+        // 畫敵人提示線
+        let pixelX = centerX + targetX * scale;
         ctx.strokeStyle = "rgba(255, 0, 0, 0.3)";
         ctx.setLineDash([5, 5]);
         ctx.lineWidth = 2;
         ctx.beginPath();
-        let pixelTargetX = centerX + targetX * scale;
-        ctx.moveTo(pixelTargetX, 0);
-        ctx.lineTo(pixelTargetX, canvas.height);
+        ctx.moveTo(pixelX, 0); ctx.lineTo(pixelX, canvas.height);
         ctx.stroke();
         ctx.setLineDash([]);
-
-        // 在 x 軸上標記敵人位置
-        ctx.fillStyle = "red";
-        ctx.fillText(`x=${targetX}`, pixelTargetX - 10, centerY + 20);
+        
+        ctx.fillStyle = "#d32f2f";
+        ctx.fillText(`x=${targetX}`, pixelX - 10, centerY + 20);
     }
 
-    // 發射邏輯
-    function fire() {
-        let userVal = parseFloat(inputY.value);
-        if (isNaN(userVal)) {
-            alert("請輸入數字！");
-            return;
-        }
-
-        isFired = true;
-        inputY.disabled = true;
-        fireBtn.disabled = true;
-
-        // 動畫：畫出砲彈
-        let startX = centerX; // 假設從原點發射...不，為了視覺效果，我們畫出點的位置
+    function drawTrajectory(userY) {
         let pixelX = centerX + targetX * scale;
-        let pixelY = centerY - userVal * scale; // Y軸向上是負的 (Canvas座標系)
-        
-        // 畫出使用者的打擊點
-        drawScene();
-        
-        // 畫出正確的函數線 (如果是對的，畫綠色；錯的畫灰色)
-        ctx.strokeStyle = (userVal === correctY) ? "#4CAF50" : "#888";
+        let pixelY = centerY - userY * scale;
+
+        // 畫函數線 (若答對是綠線，答錯是灰線)
+        let isCorrect = (userY === correctY);
+        ctx.strokeStyle = isCorrect ? "#4CAF50" : "#999"; 
         ctx.lineWidth = 3;
-        ctx.beginPath();
-        // 找兩個點來畫線：x=-10 和 x=10
+        
+        // 延伸線段
         let x1 = -20; let y1 = slope * x1 + intercept;
         let x2 = 20; let y2 = slope * x2 + intercept;
-        ctx.moveTo(centerX + x1 * scale, centerY - y1 * scale);
-        ctx.lineTo(centerX + x2 * scale, centerY - y2 * scale);
+        
+        // 如果答錯，這條線應該要歪掉去對準使用者的錯誤點
+        // 這裡的邏輯：
+        // 答對 -> 畫原本的函數線
+        // 答錯 -> 畫一條通過 (targetX, userY) 的錯誤線 (為了視覺效果，我們簡單畫一條通過該點的虛擬線，或者只畫打擊點)
+        
+        ctx.beginPath();
+        if (isCorrect) {
+            // 畫出完美的正確軌跡
+            ctx.moveTo(centerX + x1 * scale, centerY - y1 * scale);
+            ctx.lineTo(centerX + x2 * scale, centerY - y2 * scale);
+        } else {
+            // 答錯時，畫一條從畫面左側射向錯誤點的軌跡
+            ctx.moveTo(0, pixelY); // 簡單示意水平射入，或是從原點射入
+            ctx.lineTo(pixelX, pixelY);
+        }
         ctx.stroke();
 
-        // 畫出玩家的彈著點
+        // 畫彈著點
         ctx.beginPath();
         ctx.arc(pixelX, pixelY, 8, 0, Math.PI * 2);
-        
-        if (userVal === correctY) {
-            ctx.fillStyle = "#4CAF50"; // Green
-            ctx.fill();
-            messageDiv.innerHTML = "🎉 命中目標！太神啦！";
-            messageDiv.style.color = "green";
-        } else {
-            ctx.fillStyle = "#ff4444"; // Red
-            ctx.fill();
-            
-            // 標示正確位置
-            let correctPixelY = centerY - correctY * scale;
-            ctx.beginPath();
-            ctx.arc(pixelX, correctPixelY, 8, 0, Math.PI * 2);
-            ctx.strokeStyle = "#4CAF50";
-            ctx.lineWidth = 2;
-            ctx.stroke(); // 空心圓表示正確位置
-
-            messageDiv.innerHTML = `💥 沒打中... 正確答案是 y = ${correctY}`;
-            messageDiv.style.color = "red";
-        }
-        
-        fireBtn.style.display = 'none';
-        nextBtn.style.display = 'inline-block';
+        ctx.fillStyle = isCorrect ? "#4CAF50" : "#ff4444";
+        ctx.fill();
     }
 
-    // 啟動第一關
-    initGame();
+    function drawCorrectPoint() {
+        let pixelX = centerX + targetX * scale;
+        let pixelCorrectY = centerY - correctY * scale;
+        
+        ctx.beginPath();
+        ctx.arc(pixelX, pixelCorrectY, 8, 0, Math.PI * 2);
+        ctx.strokeStyle = "#4CAF50"; // 綠色空心圓表示正確位置
+        ctx.lineWidth = 2;
+        ctx.stroke();
+    }
 
-    // 支援按 Enter 發射
+    // 鍵盤支援
     inputY.addEventListener("keyup", function(event) {
         if (event.key === "Enter") {
-            if(!isFired) fire();
-            else initGame();
+            if (!inputY.disabled) fire();
+            else if (nextBtn.style.display !== 'none') nextLevel();
         }
     });
+
+    // 初始畫面
+    drawGrid();
 
 </script>
 </body>
