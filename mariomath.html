@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>瑪利歐函數大冒險</title>
+    <title>瑪利歐函數大冒險 (國二版)</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
@@ -57,7 +57,7 @@
     let feedbackMessage = "";
     let feedbackColor = "";
 
-    // 瑪利歐物件 (簡單的紅色方塊代替)
+    // 瑪利歐物件
     const mario = {
         x: 100,
         y: 350,
@@ -72,15 +72,10 @@
     // 按鈕區域 (用於點擊偵測)
     let clickAreas = [];
 
-    // --- 音效 (使用簡單的 Web Audio API 或註解代替) ---
-    // 在實際專案中，這裡會載入瑪利歐的跳躍聲、金幣聲等。
+    // --- 音效模擬 ---
     function playSound(type) {
-        // 這裡僅作模擬示意
-        // if (type === 'jump') ...
-        // if (type === 'coin') ...
-        // if (type === 'wrong') ...
+        // 實際開發可在此加入 audio.play()
     }
-
 
     // --- 核心遊戲邏輯 ---
 
@@ -98,20 +93,25 @@
         clickAreas = [];
         questionCount++;
         
-        // 每 5 題升級一次，增加難度（這裡僅增加題號示意）
         if (questionCount % 5 === 0) level++;
 
-        // 隨機決定題目類型：0 = 計算值 (撞磚塊), 1 = 判斷定義 (修水管)
+        // 隨機決定題目類型：0 = 計算函數值, 1 = 判斷函數定義
         let type = Math.random() > 0.5 ? 0 : 1;
 
         if (type === 0) {
-            // --- 類型 A: 計算函數值 ---
+            // --- 類型 A: 計算函數值 (求對應值 y) ---
             let a = Math.floor(Math.random() * 5) + 1; // 斜率 1~5
             let b = Math.floor(Math.random() * 10) - 5;  // 截距 -5~5
-            let x = Math.floor(Math.random() * 6);      // 輸入 0~5
+            let x = Math.floor(Math.random() * 6);      // 輸入 x: 0~5
+            
+            // 計算正確答案 y
             let correctAnswer = a * x + b;
             
-            let ruleText = `f(x) = ${a === 1 ? '' : a}x ${b >= 0 ? '+' : ''}${b}`;
+            // 格式化顯示字串：處理係數為1或0的情況，讓數學式更自然
+            let axStr = (a === 1) ? "x" : `${a}x`;
+            let bStr = (b === 0) ? "" : (b > 0 ? ` + ${b}` : ` - ${Math.abs(b)}`);
+            // 修正點：使用 y = ... 而非 f(x) = ...
+            let ruleText = `y = ${axStr}${bStr}`;
             
             // 產生干擾選項
             let answers = [correctAnswer];
@@ -141,15 +141,17 @@
             }
 
         } else {
-            // --- 類型 B: 判斷是否為函數 ---
-            // 決定這個水管是否壞掉 (50% 機率壞掉)
+            // --- 類型 B: 判斷是否為函數關係 ---
+            // 決定這個關係是否「故障」(50% 機率不是函數)
             let isBroken = Math.random() > 0.5;
             let inputX = Math.floor(Math.random() * 5) + 1;
-            let outputY1 = inputX * 2; // 第一次測試的正常結果
-            let outputY2 = isBroken ? (inputX * 2 + 3) : outputY1; // 如果壞掉，第二次結果不同
+            let outputY1 = inputX * 2; 
+            let outputY2 = isBroken ? (inputX * 2 + 3) : outputY1; 
 
-            let scenarioText = `奇諾比奧測試：\n第一次：放入 ${inputX}，跑出 ${outputY1}。\n第二次：放入 ${inputX}，跑出 ${outputY2}。`;
-            let questionText = "這個水管的運作是函數關係嗎？";
+            // 題目描述
+            let scenarioText = `輸入 x=${inputX} 時，輸出 y=${outputY1}\n再次輸入 x=${inputX}，輸出 y=${outputY2}`;
+            // 修正點：用語改為「y 是 x 的函數嗎？」
+            let questionText = "請問 y 是 x 的函數嗎？";
 
             currentQuestion = {
                 type: 'DEFINITION',
@@ -158,9 +160,9 @@
                 isFunction: !isBroken
             };
 
-             // 設定 YES/NO 按鈕點擊區域
-             clickAreas.push({x: 250, y: 300, width: 120, height: 60, action: 'judgment', value: true, text: "是 (正常)"});
-             clickAreas.push({x: 450, y: 300, width: 120, height: 60, action: 'judgment', value: false, text: "否 (壞掉)"});
+             // 設定 YES/NO 按鈕
+             clickAreas.push({x: 250, y: 300, width: 120, height: 60, action: 'judgment', value: true, text: "是"});
+             clickAreas.push({x: 450, y: 300, width: 120, height: 60, action: 'judgment', value: false, text: "否"});
         }
     }
 
@@ -170,7 +172,6 @@
         playSound('jump');
 
         if (currentQuestion.type === 'CALCULATE') {
-            // 瑪利歐跳躍動畫
             mario.jumping = true;
             mario.jumpTargetY = clickAreas[selection].y + 50;
             
@@ -178,7 +179,6 @@
                 isCorrect = true;
             }
         } else {
-            // 判斷題
              if (selection === currentQuestion.isFunction) {
                 isCorrect = true;
             }
@@ -186,16 +186,16 @@
 
         // 顯示回饋
         gameState = "FEEDBACK";
-        feedbackTimer = 60; // 顯示 1 秒 (60 frames)
+        feedbackTimer = 60; 
         if (isCorrect) {
             score += 100;
-            feedbackMessage = "Correct! +100分";
-            feedbackColor = "#FFD700"; // 金色
+            feedbackMessage = "答對了! +100";
+            feedbackColor = "#FFD700"; 
             playSound('coin');
         } else {
             score = Math.max(0, score - 50);
-            feedbackMessage = "Wrong! 庫巴嘲笑你!";
-            feedbackColor = "#FF0000"; // 紅色
+            feedbackMessage = "答錯了! 扣分!";
+            feedbackColor = "#FF0000"; 
             playSound('wrong');
         }
     }
@@ -204,22 +204,20 @@
     // --- 繪圖函式 ---
 
     function draw() {
-        // 清空畫布
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // 繪製地板
+        // 地板
         ctx.fillStyle = '#00A800';
         ctx.fillRect(0, 400, canvas.width, 50);
-        ctx.fillStyle = '#FFD700'; // 地板裝飾線條
+        ctx.fillStyle = '#FFD700'; 
         ctx.fillRect(0, 405, canvas.width, 5);
 
-
-        // 繪製UI (分數與關卡)
+        // UI
         ctx.fillStyle = 'white';
         ctx.font = '20px "Press Start 2P"';
         ctx.textAlign = 'left';
-        ctx.fillText(`SCORE: ${score}`, 20, 40);
-        ctx.fillText(`LEVEL: ${level}`, 20, 70);
+        ctx.fillText(`分數: ${score}`, 20, 40);
+        ctx.fillText(`等級: ${level}`, 20, 70);
 
         if (gameState === "MENU") {
             drawMenu();
@@ -237,35 +235,31 @@
         ctx.fillStyle = '#FFD700';
         ctx.font = '40px "Press Start 2P"';
         ctx.textAlign = 'center';
-        ctx.fillText("瑪利歐函數大冒險", canvas.width / 2, 180);
+        ctx.fillText("函數大冒險", canvas.width / 2, 180);
         
         ctx.fillStyle = 'white';
         ctx.font = '20px "Press Start 2P"';
-        ctx.fillText("點擊畫面開始遊戲", canvas.width / 2, 250);
+        ctx.fillText("點擊畫面開始", canvas.width / 2, 250);
         ctx.font = '14px "Press Start 2P"';
-        ctx.fillText("挑戰八年級函數觀念!", canvas.width / 2, 300);
+        ctx.fillText("國中八年級數學挑戰", canvas.width / 2, 300);
     }
 
     function drawMario() {
-        // 簡單的瑪利歐跳躍動畫邏輯
         if (mario.jumping) {
             mario.y -= (mario.y - mario.jumpTargetY) * 0.2;
             if (Math.abs(mario.y - mario.jumpTargetY) < 5) {
-                mario.jumping = false; // 到達頂點，開始下落
+                mario.jumping = false; 
             }
         } else if (mario.y < mario.baseY) {
-            mario.y += (mario.baseY - mario.y) * 0.2 + 2; // 下落
+            mario.y += (mario.baseY - mario.y) * 0.2 + 2; 
         } else {
-            mario.y = mario.baseY; // 站在地上
+            mario.y = mario.baseY; 
         }
 
-        // 繪製瑪利歐 (用紅色方塊代表，加上一點特徵)
         ctx.fillStyle = mario.color;
         ctx.fillRect(mario.x, mario.y, mario.width, mario.height);
-        // 吊帶褲
         ctx.fillStyle = 'blue';
         ctx.fillRect(mario.x, mario.y+25, mario.width, 15);
-        // 鼻子
         ctx.fillStyle = '#FFA07A';
         ctx.fillRect(mario.x+30, mario.y+10, 10, 10);
     }
@@ -274,33 +268,28 @@
         ctx.textAlign = 'center';
         
         if (currentQuestion.type === 'CALCULATE') {
-            // --- 繪製計算題場景 ---
-            // 規則看板
+            // --- 繪製計算題 ---
             ctx.fillStyle = '#000';
             ctx.fillRect(200, 10, 400, 50);
             ctx.fillStyle = '#FFD700';
             ctx.font = '24px "Press Start 2P"';
-            ctx.fillText(`規則: ${currentQuestion.rule}`, canvas.width/2, 45);
+            // 顯示關係式 y = ...
+            ctx.fillText(`關係式: ${currentQuestion.rule}`, canvas.width/2, 45);
             
-            // 輸入蘑菇
             drawMushroom(mario.x + 60, 360, currentQuestion.inputX);
 
-            // 答案磚塊 (問號方塊風格)
             clickAreas.forEach((area, index) => {
                 drawBlock(area.x, area.y, currentQuestion.options[index]);
             });
             
             ctx.fillStyle = 'white';
             ctx.font = '16px "Press Start 2P"';
-            ctx.fillText("瑪利歐吃了蘑菇後，應該撞哪個磚塊？", canvas.width/2, 250);
-
+            ctx.fillText(`當 x=${currentQuestion.inputX} 時，y 是多少？`, canvas.width/2, 250);
 
         } else {
-            // --- 繪製定義判斷題場景 ---
-            // 繪製水管
+            // --- 繪製定義判斷題 ---
             drawPipe(canvas.width/2 - 50, 200);
 
-            // 繪製題目文字
             ctx.fillStyle = 'white';
             ctx.font = '16px "Press Start 2P"';
             let lines = currentQuestion.scenario.split('\n');
@@ -310,9 +299,8 @@
             ctx.fillStyle = '#FFD700';
             ctx.fillText(currentQuestion.question, canvas.width/2, 100 + lines.length * 30 + 30);
 
-            // 繪製 YES/NO 按鈕
             clickAreas.forEach(area => {
-                ctx.fillStyle = area.value ? '#4CAF50' : '#F44336'; // 綠色YES，紅色NO
+                ctx.fillStyle = area.value ? '#4CAF50' : '#F44336'; 
                 ctx.fillRect(area.x, area.y, area.width, area.height);
                 ctx.strokeStyle = 'white';
                 ctx.lineWidth = 4;
@@ -325,15 +313,13 @@
         }
     }
 
-    // 輔助繪圖：磚塊
     function drawBlock(x, y, text) {
-        ctx.fillStyle = '#FFD700'; // 金色
+        ctx.fillStyle = '#FFD700'; 
         ctx.fillRect(x, y, 100, 100);
-        ctx.strokeStyle = '#B8860B'; // 深金色邊框
+        ctx.strokeStyle = '#B8860B'; 
         ctx.lineWidth = 5;
         ctx.strokeRect(x+2.5, y+2.5, 95, 95);
         
-        // 磚塊上的鉚釘效果
         ctx.fillStyle = '#B8860B';
         ctx.fillRect(x+5, y+5, 10, 10);
         ctx.fillRect(x+85, y+5, 10, 10);
@@ -345,51 +331,41 @@
         ctx.fillText(text, x + 50, y + 65);
     }
 
-    // 輔助繪圖：蘑菇 (輸入)
     function drawMushroom(x, y, val) {
-        // 傘蓋
-        ctx.fillStyle = '#E70012'; // 紅
+        ctx.fillStyle = '#E70012'; 
         ctx.beginPath();
         ctx.arc(x+25, y+10, 30, 0, Math.PI*2);
         ctx.fill();
-        // 白點
         ctx.fillStyle = 'white';
         ctx.beginPath();
         ctx.arc(x+10, y+5, 8, 0, Math.PI*2);
         ctx.arc(x+40, y+15, 8, 0, Math.PI*2);
         ctx.fill();
-        // 菌柄
-        ctx.fillStyle = '#FFDAB9'; // 膚色
+        ctx.fillStyle = '#FFDAB9'; 
         ctx.fillRect(x+10, y+25, 30, 25);
         
-        // 數字
         ctx.fillStyle = '#000';
         ctx.font = '20px "Press Start 2P"';
-        ctx.fillText(`輸入:${val}`, x+25, y+70);
+        ctx.fillText(`x=${val}`, x+25, y+70);
     }
     
-    // 輔助繪圖：水管
     function drawPipe(x, y) {
         let pipeGreen = '#00A800';
         let pipeDarkGreen = '#006400';
-        // 管口
         ctx.fillStyle = pipeGreen;
         ctx.fillRect(x-10, y, 120, 40);
         ctx.strokeStyle = pipeDarkGreen;
         ctx.lineWidth = 4;
         ctx.strokeRect(x-10, y, 120, 40);
         
-        // 管身
         ctx.fillStyle = pipeGreen;
         ctx.fillRect(x, y+40, 100, 160);
         ctx.strokeStyle = pipeDarkGreen;
         ctx.strokeRect(x, y+40, 100, 160);
 
-        // 高光效果
         ctx.fillStyle = '#90EE90';
         ctx.fillRect(x+10, y+45, 15, 150);
         ctx.fillRect(x+5, y+5, 90, 10);
-
     }
 
     function drawFeedback() {
@@ -402,14 +378,12 @@
         ctx.fillText(feedbackMessage, canvas.width / 2, canvas.width / 2);
     }
 
-    // --- 遊戲主迴圈與輸入處理 ---
-
     function update() {
         if (gameState === "FEEDBACK") {
             feedbackTimer--;
             if (feedbackTimer <= 0) {
                 gameState = "PLAYING";
-                mario.x = 100; // Reset Mario position for next question
+                mario.x = 100; 
                 nextQuestion();
             }
         }
@@ -419,7 +393,6 @@
 
     canvas.addEventListener('click', (e) => {
         const rect = canvas.getBoundingClientRect();
-        // 計算滑鼠在 canvas 內的相對座標，並考慮 canvas 實際顯示大小與解析度的比例
         const scaleX = canvas.width / rect.width;
         const scaleY = canvas.height / rect.height;
         const clickX = (e.clientX - rect.left) * scaleX;
@@ -428,23 +401,19 @@
         if (gameState === "MENU") {
             startGame();
         } else if (gameState === "PLAYING") {
-            // 檢查是否點擊到互動區域
             for (let area of clickAreas) {
                 if (clickX > area.x && clickX < area.x + area.width &&
                     clickY > area.y && clickY < area.y + area.height) {
                     
-                    if (area.action === 'answer') {
-                        checkAnswer(area.value);
-                    } else if (area.action === 'judgment') {
+                    if (area.action === 'answer' || area.action === 'judgment') {
                         checkAnswer(area.value);
                     }
-                    break; // 只處理第一個點擊到的區域
+                    break; 
                 }
             }
         }
     });
 
-    // 開始遊戲迴圈
     update();
 
 </script>
