@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>函數大戰：PK競技場版</title>
+    <title>函數大戰：智慧檢討版</title>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
     <style>
@@ -18,7 +18,10 @@
             height: 100vh; overflow: hidden; display: flex; flex-direction: column;
         }
 
-        /* === 登入區 === */
+        /* 共用 UI */
+        button { cursor: pointer; font-family: inherit; }
+        
+        /* 登入區 */
         #login-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: var(--blue); z-index: 500;
@@ -35,21 +38,17 @@
         }
         .role-tabs { display: flex; gap: 10px; margin-bottom: 20px; justify-content: center; }
         .tab-btn {
-            background: #555; border: 2px solid #fff; color: #fff; padding: 10px; cursor: pointer; flex: 1;
+            background: #555; border: 2px solid #fff; color: #fff; padding: 10px; flex: 1;
         }
         .tab-btn.active { background: var(--gold); color: #000; }
         
-        .seat-grid {
-            display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-top: 10px;
-        }
-        .seat-btn {
-            padding: 8px 0; font-size: 10px; cursor: pointer; background: var(--brown); color: white; border: 1px solid #fff;
-        }
+        .seat-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-top: 10px; }
+        .seat-btn { padding: 8px 0; font-size: 10px; background: var(--brown); color: white; border: 1px solid #fff; }
         .seat-btn:hover { background: var(--green); }
         .seat-btn.selected { background: var(--gold); color: #000; transform: scale(1.1); border-color: red;}
-        .seat-btn.disabled { background: #555; color: #888; cursor: not-allowed; border-color: #555; pointer-events: none; }
+        .seat-btn.disabled { background: #555; color: #888; pointer-events: none; }
 
-        /* === 學生介面 === */
+        /* 學生遊戲區 */
         #waiting-room {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.95); z-index: 400;
@@ -63,69 +62,44 @@
         canvas { width: 100%; height: 100%; display: block; }
         .controls { background: #000; padding: 10px; }
         .numpad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
-        .btn { background: #fff; padding: 15px 0; font-family: inherit; cursor: pointer; border: 3px solid #555; }
+        .btn { background: #fff; padding: 15px 0; border: 3px solid #555; }
         .btn:active { transform: translateY(2px); background: #ccc; }
         #input-display { background: #fff; color: #000; text-align: center; padding: 10px; margin-bottom: 5px; font-size: 20px; }
 
-        /* === 老師戰情室 === */
-        #teacher-dashboard {
-            display: none; height: 100%; flex-direction: column; background: #1a1a1a;
-        }
+        /* 老師戰情室 */
+        #teacher-dashboard { display: none; height: 100%; flex-direction: column; background: #1a1a1a; }
         .dashboard-header {
             padding: 10px 15px; background: #000; display: flex; justify-content: space-between; align-items: center;
             border-bottom: 3px solid var(--gold);
         }
         .view-switch { display: flex; gap: 5px; }
-        .view-btn { padding: 8px 12px; font-family: inherit; cursor: pointer; border: 2px solid #555; background: #333; color: #fff; font-size: 10px;}
+        .view-btn { padding: 8px 12px; border: 2px solid #555; background: #333; color: #fff; font-size: 10px;}
         .view-btn.active { border-color: var(--gold); background: #555; color: var(--gold);}
 
-        /* 模式 A: 35人監控 */
-        #view-screens { 
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; 
-            padding: 10px; overflow-y: auto; height: 100%;
-        }
-        .student-card {
-            background: #333; border: 2px solid #555; padding: 5px; font-size: 10px;
-            display: flex; flex-direction: column; height: 130px;
-        }
-        .student-card.active { border-color: var(--green); box-shadow: 0 0 5px var(--green); }
-        .mini-canvas { background: #fff; width: 100%; flex-grow: 1; margin-top: 5px; border: 1px solid #999; }
+        /* 監控網格 */
+        #view-screens { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; padding: 10px; overflow-y: auto; height: 100%; }
+        .student-card { background: #333; border: 2px solid #555; padding: 5px; font-size: 10px; display: flex; flex-direction: column; height: 130px; }
+        .student-card.active { border-color: var(--green); }
+        .mini-canvas { background: #fff; width: 100%; flex-grow: 1; margin-top: 5px; }
 
-        /* 模式 B: 排行榜 */
-        #view-leaderboard {
-            display: none; flex-direction: column; padding: 20px; overflow-y: auto; height: 100%;
+        /* 檢討面板 (Review Panel) - 新增 */
+        #review-panel {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(20, 20, 20, 0.98); z-index: 600;
+            display: none; flex-direction: column; padding: 20px; overflow-y: auto;
         }
-        .leader-row {
-            display: flex; align-items: center; margin-bottom: 8px; 
-            background: #333; padding: 10px; border-radius: 5px;
+        .review-header { text-align: center; color: var(--gold); margin-bottom: 20px; border-bottom: 2px solid #555; padding-bottom: 10px; }
+        .error-card {
+            background: #333; border-left: 5px solid var(--red); padding: 15px; margin-bottom: 15px;
+            display: flex; justify-content: space-between; align-items: center;
         }
-        .rank-bar-container { flex-grow: 1; margin: 0 20px; height: 20px; background: #000; border-radius: 10px; overflow: hidden; }
-        .rank-bar { height: 100%; background: var(--green); width: 0%; transition: width 1s; }
-
-        /* 模式 C: 1v1 對決 (新增) */
-        #view-versus {
-            display: none; height: 100%; padding: 10px;
-            background: radial-gradient(circle, #333, #000);
-        }
-        .versus-container {
-            display: flex; height: 100%; align-items: center; justify-content: space-around;
-        }
-        .vs-card {
-            width: 45%; height: 90%; background: #222; border: 4px solid #fff;
-            display: flex; flex-direction: column; padding: 10px; position: relative;
-        }
-        .vs-card.p1 { border-color: var(--red); }
-        .vs-card.p2 { border-color: var(--blue); }
-        .vs-header { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px;}
-        .vs-canvas { flex-grow: 1; background: #fff; border: 2px solid #555; width: 100%; }
-        .vs-selector { background: #000; color: #fff; font-family: inherit; padding: 5px; border: 1px solid #555; }
-        .vs-center { font-size: 40px; color: var(--gold); font-style: italic; text-shadow: 4px 4px #000; animation: pulse 1s infinite;}
-
-        .start-btn {
-            background: var(--red); color: white; font-family: inherit; padding: 10px 20px;
-            font-size: 14px; cursor: pointer; border: 2px solid #fff; animation: pulse 1.5s infinite;
-        }
-        .start-btn:disabled { background: #555; animation: none; cursor: not-allowed; opacity: 0.7;}
+        .error-info { flex-grow: 1; }
+        .error-stat { text-align: right; min-width: 100px; }
+        .bar-bg { width: 100%; height: 8px; background: #555; margin-top: 5px; border-radius: 4px; }
+        .bar-fill { height: 100%; background: var(--red); border-radius: 4px; }
+        
+        .start-btn { background: var(--red); color: white; padding: 10px 20px; font-size: 14px; border: 2px solid #fff; animation: pulse 1.5s infinite; }
+        .stop-btn { background: #555; color: white; padding: 10px 20px; font-size: 14px; border: 2px solid #fff; }
         
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
     </style>
@@ -134,26 +108,26 @@
 
     <div id="login-screen">
         <div class="login-card">
-            <h1 style="font-size: 18px; color: var(--gold); margin-bottom: 20px;">MATH ARENA</h1>
+            <h1 style="font-size: 18px; color: var(--gold); margin-bottom: 20px;">MATH BATTLE</h1>
             <div class="role-tabs">
-                <div class="tab-btn active" onclick="switchRole('student')">學生 Student</div>
-                <div class="tab-btn" onclick="switchRole('teacher')">老師 Teacher</div>
+                <div class="tab-btn active" onclick="switchRole('student')">學生</div>
+                <div class="tab-btn" onclick="switchRole('teacher')">老師</div>
             </div>
             <div id="form-student">
                 <input type="text" id="s-code" placeholder="教室代碼" onkeyup="this.value = this.value.toUpperCase();">
                 <input type="text" id="s-name" placeholder="你的暱稱" maxlength="8">
                 <p style="font-size: 10px; margin-top:15px; color:#ccc;">選擇座號:</p>
                 <div class="seat-grid" id="seat-container"></div>
-                <button class="btn" style="width:100%; margin-top:20px; background:var(--green); color:white; border-color:white;" onclick="studentLogin()">加入戰局</button>
+                <button class="btn" style="width:100%; margin-top:20px; background:var(--green); color:white; border-color:white;" onclick="studentLogin()">加入</button>
             </div>
             <div id="form-teacher" style="display:none;">
-                <input type="text" id="t-code" placeholder="設定教室代碼" onkeyup="this.value = this.value.toUpperCase();">
-                <input type="password" id="t-pass" placeholder="輸入教師密碼">
+                <input type="text" id="t-code" placeholder="設定代碼" onkeyup="this.value = this.value.toUpperCase();">
+                <input type="password" id="t-pass" placeholder="密碼">
                 <div style="display:flex; align-items:center; justify-content:center; margin-top:10px;">
-                    <label style="font-size:10px; margin-right:10px;">人數上限:</label>
+                    <label style="font-size:10px; margin-right:10px;">人數:</label>
                     <input type="number" id="t-limit" value="35" min="1" max="35" style="width:60px;">
                 </div>
-                <button class="btn" style="width:100%; margin-top:20px; background:var(--red); color:white; border-color:white;" onclick="teacherLogin()">開設房間</button>
+                <button class="btn" style="width:100%; margin-top:20px; background:var(--red); color:white; border-color:white;" onclick="teacherLogin()">開房</button>
             </div>
         </div>
     </div>
@@ -166,10 +140,10 @@
 
     <div id="game-interface">
         <div class="hud">
-            <span><span id="g-name">Player</span> (#<span id="g-seat">?</span>)</span>
+            <span><span id="g-name">P</span> (#<span id="g-seat">?</span>)</span>
             <span>SCORE: <span id="g-score">0</span></span>
         </div>
-        <div class="q-box" id="q-text">題目載入中...</div>
+        <div class="q-box" id="q-text">Loading...</div>
         <div class="main-canvas-area" id="s-canvas-wrap">
             <canvas id="s-canvas"></canvas>
             <div id="feedback" style="position:absolute; bottom:5px; left:5px; font-size:12px; font-weight:bold; color:black;"></div>
@@ -199,49 +173,36 @@
             <div style="font-size: 12px;">CODE: <span id="dash-code" style="color:var(--gold)">---</span></div>
             <div class="view-switch">
                 <div class="view-btn active" id="btn-screens" onclick="switchView('screens')">📺 全景</div>
-                <div class="view-btn" id="btn-versus" onclick="switchView('versus')">⚔️ 對決</div>
-                <div class="view-btn" id="btn-leaderboard" onclick="switchView('leaderboard')">🏆 戰況</div>
+                <div class="view-btn" id="btn-review" onclick="openReviewPanel()">📊 檢討</div>
             </div>
-            <button id="start-btn" class="start-btn" onclick="broadcastStart()">START</button>
+            <button id="start-btn" class="start-btn" onclick="toggleGameStatus()">START</button>
         </div>
         
         <div id="view-screens"></div>
-        
-        <div id="view-versus">
-            <div class="versus-container">
-                <div class="vs-card p1">
-                    <div class="vs-header">
-                        <select id="sel-p1" class="vs-selector" onchange="updateVersusSelection()"></select>
-                        <span id="score-p1" style="color:var(--gold)">0</span>
-                    </div>
-                    <canvas class="vs-canvas" id="canvas-p1"></canvas>
-                </div>
-                
-                <div class="vs-center">VS</div>
-                
-                <div class="vs-card p2">
-                    <div class="vs-header">
-                        <select id="sel-p2" class="vs-selector" onchange="updateVersusSelection()"></select>
-                        <span id="score-p2" style="color:var(--gold)">0</span>
-                    </div>
-                    <canvas class="vs-canvas" id="canvas-p2"></canvas>
-                </div>
-            </div>
-        </div>
+    </div>
 
-        <div id="view-leaderboard"></div>
+    <div id="review-panel">
+        <div class="review-header">
+            <h2>MISSION DEBRIEF</h2>
+            <button class="view-btn" onclick="closeReviewPanel()">返回監控</button>
+        </div>
+        <div id="review-content">
+            <p style="text-align:center; color:#ccc;">尚無答題數據</p>
+        </div>
     </div>
 
 <script>
-    // === 設定 ===
     const MQTT_BROKER = 'wss://broker.hivemq.com:8884/mqtt';
     let client = null, myRole = '', classCode = '', selectedSeat = null, maxSeats = 35;
-    let playerData = { name: '', score: 0, currentInput: '', q: {}, lastLine: null };
-    let classState = {}; // { id: {name, score, q, input, ...} }
-    let currentView = 'screens';
-    let versusP1 = 1, versusP2 = 2; // 對決模式的兩個座號
+    let playerData = { name: '', score: 0, currentInput: '', q: {}, lastLine: null, qStr: '' };
+    
+    // 老師端數據庫
+    let classState = {}; 
+    let gameRunning = false;
+    // 題庫統計: { "y=2x+1,x=3": { qText: "...", correct: 0, wrong: 0, wrongAnswers: [] } }
+    let questionStats = {}; 
 
-    // 座號按鈕
+    // 初始化座號
     const seatContainer = document.getElementById('seat-container');
     for(let i=1; i<=35; i++){
         let b = document.createElement('div');
@@ -263,28 +224,36 @@
 
     // === MQTT ===
     function connectMQTT(code, onConnect) {
-        const clientId = 'math_' + Math.random().toString(16).substr(2, 8);
         client = mqtt.connect(MQTT_BROKER);
         client.on('connect', () => onConnect());
         client.on('message', (topic, msg) => handleMessage(topic, msg.toString()));
     }
 
     function handleMessage(topic, payload) {
-        const parts = topic.split('/');
+        const parts = topic.split('/'); 
         const type = parts[2];
         if (myRole === 'student') {
             if (type === 'config') updateSeatLimit(JSON.parse(payload).maxSeats);
-            if (type === 'status' && payload === 'START') {
-                document.getElementById('waiting-room').style.display = 'none';
-                document.getElementById('game-interface').style.display = 'flex';
-                resizeStudentCanvas(); newQuestion();
+            if (type === 'status') {
+                if(payload === 'START') {
+                    document.getElementById('waiting-room').style.display = 'none';
+                    document.getElementById('game-interface').style.display = 'flex';
+                    resizeStudentCanvas(); newQuestion();
+                } else if (payload === 'STOP') {
+                    // 暫停或結束
+                    document.getElementById('game-interface').style.display = 'none';
+                    document.getElementById('waiting-room').style.display = 'flex';
+                    document.getElementById('waiting-room').innerHTML = "<h1>GAME PAUSED</h1><p>老師正在檢討中...</p>";
+                }
             }
-        } else if (myRole === 'teacher' && type === 'data') {
-            updateClassState(parts[3], JSON.parse(payload));
+        } 
+        else if (myRole === 'teacher') {
+            if (type === 'data') updateClassState(parts[3], JSON.parse(payload));
+            if (type === 'log') recordAnswerLog(JSON.parse(payload)); // 接收答題紀錄
         }
     }
 
-    // === 老師功能 ===
+    // === 老師端功能 ===
     function teacherLogin() {
         const code = document.getElementById('t-code').value.trim().toUpperCase();
         const pass = document.getElementById('t-pass').value.trim();
@@ -298,122 +267,133 @@
         document.getElementById('dash-code').innerText = code;
 
         initMonitorGrid();
-        initVersusSelects(); // 初始化對決選單
         connectMQTT(code, () => {
             client.subscribe(`game/${code}/data/+`);
+            client.subscribe(`game/${code}/log`); // 訂閱答題紀錄頻道
             setInterval(() => client.publish(`game/${code}/config`, JSON.stringify({ maxSeats })), 2000);
         });
     }
 
+    function toggleGameStatus() {
+        gameRunning = !gameRunning;
+        const btn = document.getElementById('start-btn');
+        if(gameRunning) {
+            btn.innerText = "STOP & REVIEW";
+            btn.className = "stop-btn";
+            client.publish(`game/${classCode}/status`, 'START');
+        } else {
+            btn.innerText = "START GAME";
+            btn.className = "start-btn";
+            client.publish(`game/${classCode}/status`, 'STOP');
+            openReviewPanel(); // 自動打開檢討
+        }
+    }
+
     function initMonitorGrid() {
         const screenDiv = document.getElementById('view-screens');
-        const leaderDiv = document.getElementById('view-leaderboard');
-        screenDiv.innerHTML = ""; leaderDiv.innerHTML = "";
+        screenDiv.innerHTML = "";
         for(let i=1; i<=maxSeats; i++){
-            // 35格
             let card = document.createElement('div');
             card.className = 'student-card'; card.id = `card-${i}`;
             card.innerHTML = `<div style="display:flex; justify-content:space-between;"><span style="color:var(--gold)">#${i}</span> <span id="name-${i}">...</span></div><div>SCR: <span id="score-${i}">0</span></div><canvas class="mini-canvas" id="mini-${i}"></canvas>`;
             screenDiv.appendChild(card);
-            // 排行榜
-            let row = document.createElement('div');
-            row.className = 'leader-row'; row.id = `rank-row-${i}`; row.style.display = 'none';
-            row.innerHTML = `<div style="width:30px;color:var(--gold);text-align:center" id="rank-pos-${i}">-</div><div style="width:80px;font-size:10px;white-space:nowrap;overflow:hidden;" id="rank-name-${i}">...</div><div class="rank-bar-container"><div class="rank-bar" id="rank-bar-${i}"></div></div><div style="width:50px;text-align:right;color:var(--gold)" id="rank-score-${i}">0</div>`;
-            leaderDiv.appendChild(row);
         }
-    }
-
-    function initVersusSelects() {
-        const s1 = document.getElementById('sel-p1');
-        const s2 = document.getElementById('sel-p2');
-        s1.innerHTML = ""; s2.innerHTML = "";
-        for(let i=1; i<=maxSeats; i++) {
-            let op1 = document.createElement('option'); op1.value = i; op1.innerText = `#${i}`;
-            let op2 = document.createElement('option'); op2.value = i; op2.innerText = `#${i}`;
-            s1.appendChild(op1); s2.appendChild(op2);
-        }
-        s1.value = 1; s2.value = 2; // 預設 1 vs 2
-        updateVersusSelection();
-    }
-
-    function updateVersusSelection() {
-        versusP1 = parseInt(document.getElementById('sel-p1').value);
-        versusP2 = parseInt(document.getElementById('sel-p2').value);
-        // 手動觸發一次重畫
-        if(classState[versusP1]) renderVersusCanvas(1, classState[versusP1]);
-        if(classState[versusP2]) renderVersusCanvas(2, classState[versusP2]);
     }
 
     function updateClassState(id, data) {
         if(id > maxSeats) return;
-        classState[id] = data; classState[id].lastUpdate = Date.now();
-
-        // 1. 全景模式更新
-        if(currentView === 'screens') {
-            document.getElementById(`card-${id}`).classList.add('active');
-            document.getElementById(`name-${id}`).innerText = data.name;
-            document.getElementById(`score-${id}`).innerText = data.score;
-            const cvs = document.getElementById(`mini-${id}`);
-            if(cvs && cvs.width > 0) drawScene(cvs.getContext('2d'), cvs.width, cvs.height, data.q, data.input, null);
-        }
-        
-        // 2. 對決模式更新 (只有當資料屬於選中的兩人時才畫)
-        if(currentView === 'versus') {
-            if(parseInt(id) === versusP1) renderVersusCanvas(1, data);
-            if(parseInt(id) === versusP2) renderVersusCanvas(2, data);
-        }
-
-        // 3. 排行榜 (背景更新)
-        updateLeaderboard();
+        document.getElementById(`card-${id}`).classList.add('active');
+        document.getElementById(`name-${id}`).innerText = data.name;
+        document.getElementById(`score-${id}`).innerText = data.score;
+        const cvs = document.getElementById(`mini-${id}`);
+        if(cvs && cvs.width > 0) drawScene(cvs.getContext('2d'), cvs.width, cvs.height, data.q, data.input, null);
     }
 
-    function renderVersusCanvas(slot, data) {
-        // slot 1 = left, slot 2 = right
-        const cvs = document.getElementById(`canvas-p${slot}`);
-        if(!cvs) return;
-        // 確保尺寸正確
-        if(cvs.width !== cvs.clientWidth) { cvs.width = cvs.clientWidth; cvs.height = cvs.clientHeight; }
+    // --- 核心：檢討系統 ---
+    
+    function recordAnswerLog(data) {
+        // data = { qId: "y=2x+1,x=3", qText: "...", isCorrect: bool, ans: 7, input: 5 }
+        const qId = data.qId;
+        if (!questionStats[qId]) {
+            questionStats[qId] = {
+                text: data.qText,
+                ans: data.ans,
+                correct: 0,
+                wrong: 0,
+                wrongAnswers: {} // 記錄錯誤答案的分佈 { "5": 2, "-1": 1 }
+            };
+        }
         
-        document.getElementById(`score-p${slot}`).innerText = data.score;
-        // 顯示名字在選項裡比較好
-        const sel = document.getElementById(`sel-p${slot}`);
-        sel.options[sel.selectedIndex].text = `#${sel.value} ${data.name}`;
-
-        drawScene(cvs.getContext('2d'), cvs.width, cvs.height, data.q, data.input, null);
+        if (data.isCorrect) {
+            questionStats[qId].correct++;
+        } else {
+            questionStats[qId].wrong++;
+            const wrongInput = data.input;
+            if(!questionStats[qId].wrongAnswers[wrongInput]) questionStats[qId].wrongAnswers[wrongInput] = 0;
+            questionStats[qId].wrongAnswers[wrongInput]++;
+        }
     }
 
-    function updateLeaderboard() {
-        let players = [];
-        for(let id in classState) players.push({id:id, ...classState[id]});
-        players.sort((a,b) => b.score - a.score);
-        const maxScore = players.length > 0 ? Math.max(players[0].score, 100) : 100;
-        players.forEach((p, index) => {
-            const row = document.getElementById(`rank-row-${p.id}`);
-            if(row) {
-                row.style.display = 'flex'; row.style.order = index;
-                document.getElementById(`rank-pos-${p.id}`).innerText = index+1;
-                document.getElementById(`rank-name-${p.id}`).innerText = `#${p.id} ${p.name}`;
-                document.getElementById(`rank-score-${p.id}`).innerText = p.score;
-                document.getElementById(`rank-bar-${p.id}`).style.width = Math.min((p.score/maxScore)*100, 100) + "%";
+    function openReviewPanel() {
+        document.getElementById('review-panel').style.display = 'flex';
+        renderReview();
+    }
+
+    function closeReviewPanel() {
+        document.getElementById('review-panel').style.display = 'none';
+    }
+
+    function renderReview() {
+        const container = document.getElementById('review-content');
+        container.innerHTML = "";
+
+        // 將統計資料轉為陣列並排序 (依錯誤率)
+        let qArray = [];
+        for (let key in questionStats) {
+            let item = questionStats[key];
+            let total = item.correct + item.wrong;
+            if (total > 0) {
+                item.errorRate = (item.wrong / total) * 100;
+                qArray.push(item);
             }
+        }
+        
+        // 排序：錯誤率高 -> 低
+        qArray.sort((a, b) => b.errorRate - a.errorRate);
+
+        // 取前 10 名或全部
+        if (qArray.length === 0) {
+            container.innerHTML = "<p style='text-align:center;'>尚未有答題數據</p>";
+            return;
+        }
+
+        qArray.forEach((item, index) => {
+            // 找出最多人答錯的答案
+            let commonWrong = Object.entries(item.wrongAnswers).sort((a,b)=>b[1]-a[1]);
+            let commonWrongText = commonWrong.length > 0 ? `(多數人誤答: ${commonWrong[0][0]})` : "";
+
+            let div = document.createElement('div');
+            div.className = 'error-card';
+            div.innerHTML = `
+                <div class="error-info">
+                    <div style="font-size:14px; color:var(--gold); margin-bottom:5px;">
+                        RANK ${index+1}: ${item.text}
+                    </div>
+                    <div style="font-size:12px; color:#ccc;">
+                        正確答案: <span style="color:var(--green)">${item.ans}</span> 
+                        <span style="color:var(--red)">${commonWrongText}</span>
+                    </div>
+                    <div class="bar-bg">
+                        <div class="bar-fill" style="width:${item.errorRate}%"></div>
+                    </div>
+                </div>
+                <div class="error-stat">
+                    <div style="font-size:20px; color:var(--red);">${Math.round(item.errorRate)}%</div>
+                    <div style="font-size:10px;">錯誤率</div>
+                </div>
+            `;
+            container.appendChild(div);
         });
-    }
-
-    function switchView(mode) {
-        currentView = mode;
-        document.getElementById('view-screens').style.display = mode==='screens'?'grid':'none';
-        document.getElementById('view-versus').style.display = mode==='versus'?'block':'none';
-        document.getElementById('view-leaderboard').style.display = mode==='leaderboard'?'flex':'none';
-        
-        ['screens','versus','leaderboard'].forEach(m => 
-            document.getElementById(`btn-${m}`).classList.toggle('active', m===mode));
-        
-        // 切換過來時強制刷新一下畫面
-        if(mode === 'versus') updateVersusSelection();
-    }
-
-    function broadcastStart() {
-        if(client) { client.publish(`game/${classCode}/status`, 'START'); document.getElementById('start-btn').disabled=true; }
     }
 
     // === 學生端 ===
@@ -424,12 +404,11 @@
         myRole='student'; classCode=code; playerData.name=name;
         document.getElementById('login-screen').style.display='none';
         document.getElementById('waiting-room').style.display='flex';
-        document.getElementById('wait-info').innerText = `${name} | 座號 ${selectedSeat}`;
-        document.getElementById('g-name').innerText = name; document.getElementById('g-seat').innerText = selectedSeat;
+        document.getElementById('g-name').innerText=name; document.getElementById('g-seat').innerText=selectedSeat;
         connectMQTT(code, ()=>{
             client.subscribe(`game/${code}/status`);
             client.subscribe(`game/${code}/config`);
-            setInterval(sendStudentData, 800); // 傳送頻率稍高一點讓對決更流暢
+            setInterval(sendStudentData, 1000); 
         });
     }
     
@@ -450,22 +429,51 @@
     // 學生遊戲邏輯
     function newQuestion() {
         const isC = Math.random() < 0.2;
-        let s, b, x;
-        if(isC) { s=0; b=Math.floor(Math.random()*9)-4; x=Math.floor(Math.random()*9)-4; playerData.q={slope:0,b,x,ans:b}; 
-                  document.getElementById('q-text').innerHTML=`常數函數 y=${b}<br>x=${x}, y=?`; }
-        else { s=Math.floor(Math.random()*5)-2||1; b=Math.floor(Math.random()*9)-4; x=Math.floor(Math.random()*9)-4;
-               playerData.q={slope:s,b,x,ans:s*x+b}; document.getElementById('q-text').innerHTML=`y=${s}x${b>=0?'+':''}${b}<br>x=${x}, y=?`; }
+        let s, b, x, qText, uniqueId;
+        
+        if(isC) { 
+            s=0; b=Math.floor(Math.random()*9)-4; x=Math.floor(Math.random()*9)-4; 
+            qText=`常數函數 y=${b}, x=${x}`;
+            uniqueId = `y=${b}|x=${x}`; // 用來歸類的 ID
+            playerData.q={slope:0,b,x,ans:b};
+        } else { 
+            s=Math.floor(Math.random()*5)-2||1; b=Math.floor(Math.random()*9)-4; x=Math.floor(Math.random()*9)-4;
+            let sign = b>=0?'+':'';
+            qText=`y=${s}x${sign}${b}, x=${x}`;
+            uniqueId = `y=${s}x${sign}${b}|x=${x}`;
+            playerData.q={slope:s,b,x,ans:s*x+b}; 
+        }
+        
+        playerData.qStr = qText;
+        playerData.qId = uniqueId;
+        document.getElementById('q-text').innerHTML = `${qText} <br> y = ?`;
         playerData.currentInput=""; document.getElementById('input-display').innerText="?";
         drawStudentScene();
     }
+
     function inputNum(v) {
         if(v==='C') playerData.currentInput=""; else if(playerData.currentInput.length<5) playerData.currentInput+=v;
         document.getElementById('input-display').innerText = playerData.currentInput||"?";
         drawStudentScene(); sendStudentData();
     }
+
     function submitAnswer() {
         let v = parseInt(playerData.currentInput); if(isNaN(v)) return;
-        if(v===playerData.q.ans) { 
+        const isCorrect = (v===playerData.q.ans);
+        
+        // 發送答題紀錄給老師
+        if(client) {
+            const logData = {
+                qId: playerData.qId,
+                qText: playerData.qStr,
+                ans: playerData.q.ans,
+                input: v,
+                isCorrect: isCorrect
+            };
+            client.publish(`game/${classCode}/log`, JSON.stringify(logData));
+        }
+
+        if(isCorrect) { 
             playerData.score+=100; playerData.lastLine={slope:playerData.q.slope,b:playerData.q.b,color:"green"};
             setTimeout(newQuestion,1000); 
         } else {
@@ -487,8 +495,7 @@
             const tx=cx+q.x*scale, ty=cy-q.ans*scale;
             ctx.fillStyle="red"; ctx.beginPath(); ctx.arc(tx,ty,w/30,0,Math.PI*2); ctx.fill();
             if(input && !isNaN(input)) {
-                let v = parseInt(input);
-                let tb = v - q.slope*q.x;
+                let v = parseInt(input); let tb = v - q.slope*q.x;
                 ctx.strokeStyle="blue"; ctx.lineWidth=1; ctx.setLineDash([4,2]);
                 ctx.beginPath(); 
                 let x1=-10, y1=q.slope*x1+tb, x2=10, y2=q.slope*x2+tb;
@@ -515,7 +522,7 @@
         c.width=w.clientWidth; c.height=w.clientHeight; drawStudentScene();
     }
     window.addEventListener('resize', resizeStudentCanvas);
-    window.addEventListener('keydown', (e)=>{ if(e.key==='F2') document.getElementById('admin-panel').style.display='block'; });
+    window.addEventListener('keydown', (e)=>{ if(e.key==='F2') document.getElementById('teacher-dashboard').style.display='flex'; });
 
 </script>
 </body>
