@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>函數大戰：最終修復版</title>
+    <title>函數大戰</title>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
     <style>
@@ -68,41 +68,44 @@
         .analysis-item { border-bottom: 1px solid #555; padding: 10px 0; font-size: 12px; line-height: 1.6; color: #fff; }
         .tag-correct { color: var(--green); } .tag-wrong { color: var(--red); }
 
-        /* === 老師戰情室 (修復版) === */
+        /* === 老師戰情室 (新佈局：Grid 3欄) === */
         #teacher-dashboard { display: none; height: 100%; flex-direction: column; background: #1a1a1a; }
         
         .dashboard-header { 
-            padding: 10px 15px; background: #000; border-bottom: 4px solid var(--gold); 
-            display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px;
+            background: #000; border-bottom: 4px solid var(--gold); padding: 10px 20px;
+            display: grid; 
+            grid-template-columns: 1fr auto 1fr; /* 左-中-右 佈局 */
+            align-items: center; gap: 10px;
         }
         
-        .header-left { display: flex; align-items: center; gap: 15px; }
-        .room-info { font-size: 18px; color: var(--gold); white-space: nowrap; }
+        /* 左側區塊 */
+        .header-left { justify-self: start; display: flex; align-items: center; gap: 15px; }
+        .room-info { font-size: 16px; color: var(--gold); white-space: nowrap; }
         .view-switch { display: flex; gap: 5px; }
         .view-btn { padding: 8px 12px; border: 2px solid #555; background: #333; color: #fff; font-size: 12px; cursor: pointer; }
         .view-btn.active { border-color: var(--gold); background: #555; color: var(--gold);}
 
-        /* 控制區：絕對不隱藏，使用 flex 確保按鈕存在 */
-        .ctrl-group { 
-            display: flex; align-items: center; gap: 10px; 
-            background: #222; padding: 5px 10px; border: 1px solid #555; border-radius: 5px;
+        /* 中間區塊 (時間顯示) */
+        .header-center { justify-self: center; text-align: center; }
+        .timer-input-group { display: flex; align-items: center; gap: 5px; font-size: 12px; color: #aaa; background: #222; padding: 5px 10px; border-radius: 5px; border:1px solid #555;}
+        .timer-input { width: 50px; padding: 5px; font-size: 14px; text-align: center; color: white; background: #000; border: 1px solid #555;}
+        /* 計時器樣式優化 */
+        .live-timer { 
+            font-size: 40px; color: var(--red); font-weight: bold; 
+            text-shadow: 0 0 10px rgba(255,0,0,0.5); letter-spacing: 2px;
+            display: none; /* 預設隱藏 */
         }
-        
-        .timer-input-group { display: flex; align-items: center; gap: 5px; font-size: 12px; color: #aaa; }
-        .timer-input { width: 50px; padding: 5px; font-size: 14px; text-align: center; }
-        .live-timer { font-size: 24px; color: var(--red); font-weight: bold; width: 90px; text-align: center; display: none;}
 
-        /* 按鈕樣式 */
-        .btn-ctrl { padding: 10px 15px; font-size: 14px; border: 2px solid #fff; color: white; cursor: pointer; display: none; } /* 預設隱藏，由 JS 開啟 */
-        .btn-start { background: var(--green); display: block; } /* 預設只顯示開始 */
+        /* 右側區塊 (按鈕) */
+        .header-right { justify-self: end; }
+        .btn-ctrl { padding: 10px 20px; font-size: 14px; border: 2px solid #fff; color: white; cursor: pointer; display: none; }
+        .btn-start { background: var(--green); display: block; font-size: 16px;} 
         .btn-pause { background: #ff9800; }
         .btn-resume { background: #2196f3; }
         .btn-end { background: var(--red); }
         
-        /* 全景監控 (放大字體) */
+        /* 全景監控 */
         #view-screens { display: flex; height: 100%; overflow: hidden; padding: 10px; gap: 10px; }
-        
-        /* 左側：監控牆 (4列) */
         .monitor-wall { 
             flex: 3; display: grid; grid-template-columns: repeat(4, 1fr); 
             gap: 10px; overflow-y: auto; align-content: start; 
@@ -112,29 +115,19 @@
             display: flex; flex-direction: column; aspect-ratio: 1/1; 
         }
         .student-card.active { border: 3px solid var(--green); box-shadow: 0 0 10px var(--green); }
-        
-        /* ★★★ 這裡加大字體 ★★★ */
-        .mini-hud { 
-            color: var(--gold); font-size: 18px; /* 姓名分數加大 */
-            margin-bottom: 5px; font-weight: bold; display: flex; justify-content: space-between;
-        }
-        .mini-input-preview {
-            background: #000; color: #fff; text-align: center; font-size: 16px; margin-top: 2px;
-        }
+        .mini-hud { color: var(--gold); font-size: 18px; margin-bottom: 5px; font-weight: bold; display: flex; justify-content: space-between;}
+        .mini-input-preview { background: #000; color: #fff; text-align: center; font-size: 16px; margin-top: 2px; }
         .mini-canvas { background: #fff; width: 100%; flex-grow: 1; display: block; border: 1px solid #999;}
 
-        /* 右側：排行榜 (加大) */
+        /* 排行榜 */
         .leaderboard-sidebar { 
             flex: 1; min-width: 280px;
             background: #222; border: 4px solid #fff; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; 
         }
         .lb-title { text-align: center; color: var(--gold); border-bottom: 4px solid #555; padding-bottom: 10px; margin-bottom: 15px; font-size: 20px;}
-        
-        /* ★★★ 排行榜字體加大 ★★★ */
         .lb-row { 
             display: flex; align-items: center; margin-bottom: 10px; background: #333; padding: 10px; 
-            font-size: 18px; /* 排名列字體加大 */
-            border: 1px solid #555; 
+            font-size: 18px; border: 1px solid #555; 
         }
         .lb-bar-bg { flex-grow: 1; height: 12px; background: #000; margin: 0 10px; border-radius: 5px; }
         .lb-bar { height: 100%; background: var(--green); width: 0%; border-radius: 5px; transition: width 0.5s; }
@@ -166,7 +159,7 @@
             </div>
             
             <div id="form-student">
-                <input type="text" id="s-code" placeholder="教室代碼" oninput="this.value = this.value.toUpperCase();">
+                <input type="text" id="s-code" placeholder="教室代碼 (例: MATH)" oninput="this.value = this.value.toUpperCase();">
                 <input type="text" id="s-name" placeholder="你的暱稱" maxlength="8">
                 <div class="seat-grid" id="seat-container"></div>
                 <button class="btn" style="width:100%; margin-top:30px; background:var(--green); color:white; padding: 15px;" onclick="studentLogin()">準備戰鬥</button>
@@ -193,7 +186,7 @@
 
     <div id="paused-overlay">
         <h1 style="font-size: 32px; color: #ff9800; animation: blink 1s infinite;">PAUSED</h1>
-        <p>老師講解中</p>
+        <p>老師講解中，請看大螢幕</p>
     </div>
 
     <div id="game-interface">
@@ -243,16 +236,20 @@
                 </div>
             </div>
             
-            <div class="ctrl-group">
+            <div class="header-center">
                 <div class="timer-input-group" id="t-timer-setup">
-                    設定 <input type="number" id="t-input-min" class="timer-input" value="5"> 分
+                    倒數設定: <input type="number" id="t-input-min" class="timer-input" value="5"> 分
                 </div>
                 <div class="live-timer" id="t-live-timer">05:00</div>
-                
-                <button id="btn-c-start" class="btn btn-ctrl btn-start" onclick="sendSignal('START')">開始</button>
-                <button id="btn-c-pause" class="btn btn-ctrl btn-pause" onclick="sendSignal('PAUSE')">暫停</button>
-                <button id="btn-c-resume" class="btn btn-ctrl btn-resume" onclick="sendSignal('RESUME')">繼續</button>
-                <button id="btn-c-end" class="btn btn-ctrl btn-end" onclick="confirmEnd()">結束</button>
+            </div>
+
+            <div class="header-right">
+                <button id="btn-c-start" class="btn btn-ctrl btn-start" onclick="sendSignal('START')">開始遊戲</button>
+                <div id="running-controls" style="display:none; gap:10px;">
+                    <button id="btn-c-pause" class="btn btn-ctrl btn-pause" onclick="sendSignal('PAUSE')">暫停</button>
+                    <button id="btn-c-resume" class="btn btn-ctrl btn-resume" style="display:none;" onclick="sendSignal('RESUME')">繼續</button>
+                    <button id="btn-c-end" class="btn btn-ctrl btn-end" onclick="confirmEnd()">結束</button>
+                </div>
             </div>
         </div>
         
@@ -276,7 +273,18 @@
     </div>
 
 <script>
+    // ======================================================
+    // 您的 Google Apps Script 網址
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwfhsDnhuEOcot-1nVxTKNxES0RJOorsnvYWeOZtuCzGyXBxbHnT82KzEXmD1WEj0I5Eg/exec";
+    // ======================================================
+
+    // 0118 Hash
+    const PASSWORD_HASH = "94cd2e23b72c91350a5170cfd037a342372c3d9050d26989439c2794776b9777";
+    async function checkPassword(input) {
+        // 直接比對避免瀏覽器限制
+        return input === "0118";
+    }
+
     const MQTT_BROKER = 'wss://broker.hivemq.com:8884/mqtt';
     const TARGET_SCORE = 2000;
 
@@ -284,9 +292,11 @@
     let playerData = { name: '', score: 0, currentInput: '', q: {}, lastLine: null, history: [] };
     let classState = {}, questionStats = {}, gameState = 'WAITING';
     let currentView = 'screens', versusP1 = 1, versusP2 = 2;
-    let timerInterval = null, remainingTime = 300;
+    
+    // 計時器
+    let timerInterval = null;
+    let remainingTime = 300; 
 
-    // === 座號按鈕 ===
     const seatContainer = document.getElementById('seat-container');
     for(let i=1; i<=35; i++){
         let b = document.createElement('div'); b.className = 'seat-btn'; b.innerText = i;
@@ -304,24 +314,28 @@
     function connectMQTT(code, onConnect) {
         const clientId = 'math_' + Math.random().toString(16).substr(2, 8);
         client = mqtt.connect(MQTT_BROKER, { clientId: clientId });
+        
         client.on('connect', () => {
             console.log("MQTT Connected");
-            if(myRole==='student'){
+            if(myRole === 'student') {
                 document.getElementById('s-status-dot').classList.add('status-connected');
-                document.getElementById('s-status-text').innerText = "已連線";
+                document.getElementById('s-status-text').innerText = "已連線，準備就緒";
                 document.getElementById('s-status-text').style.color = "#00ff00";
             }
             onConnect();
         });
+        
         client.on('message', (topic, msg) => handleMessage(topic, msg.toString()));
     }
 
     function handleMessage(topic, payload) {
         const parts = topic.split('/'); const type = parts[2];
+        
         if (myRole === 'student') {
             if (type === 'status') {
-                let cmd = {}; try { cmd = JSON.parse(payload); } catch(e) { cmd = { action: payload }; }
-                
+                let cmd = {};
+                try { cmd = JSON.parse(payload); } catch(e) { cmd = { action: payload }; }
+
                 if(cmd.action === 'START') {
                     if(cmd.duration) remainingTime = cmd.duration;
                     document.getElementById('waiting-room').style.display = 'none'; 
@@ -329,12 +343,21 @@
                     document.getElementById('game-interface').style.display = 'flex';
                     if(playerData.history.length === 0) { resizeStudentCanvas(); newQuestion(); }
                     startLocalTimer();
-                } 
-                else if (cmd.action === 'PAUSE') { clearInterval(timerInterval); document.getElementById('paused-overlay').style.display = 'flex'; }
-                else if (cmd.action === 'RESUME') { document.getElementById('paused-overlay').style.display = 'none'; startLocalTimer(); }
-                else if (cmd.action === 'STOP') { clearInterval(timerInterval); endGameForStudent(); }
-            } else if (type === 'config') { updateSeatLimit(JSON.parse(payload).maxSeats); }
-        } else if (myRole === 'teacher') {
+                } else if (cmd.action === 'PAUSE') { 
+                    clearInterval(timerInterval);
+                    document.getElementById('paused-overlay').style.display = 'flex';
+                } else if (cmd.action === 'RESUME') { 
+                    document.getElementById('paused-overlay').style.display = 'none';
+                    startLocalTimer();
+                } else if (cmd.action === 'STOP') { 
+                    clearInterval(timerInterval);
+                    endGameForStudent(); 
+                }
+            } else if (type === 'config') {
+                updateSeatLimit(JSON.parse(payload).maxSeats);
+            }
+        } 
+        else if (myRole === 'teacher') {
             if (type === 'data') updateTeacherScreen(parts[3], JSON.parse(payload));
             if (type === 'log') recordAnswerLog(JSON.parse(payload));
         }
@@ -342,10 +365,15 @@
 
     function startLocalTimer() {
         if(timerInterval) clearInterval(timerInterval);
-        updateTimerDisplay();
+        updateTimerDisplay(); 
         timerInterval = setInterval(() => {
-            if(remainingTime > 0) { remainingTime--; updateTimerDisplay(); }
-            else { clearInterval(timerInterval); if(myRole==='teacher') sendSignal('STOP'); }
+            if(remainingTime > 0) {
+                remainingTime--;
+                updateTimerDisplay();
+            } else {
+                clearInterval(timerInterval);
+                if(myRole === 'teacher') sendSignal('STOP'); // 時間到自動結束
+            }
         }, 1000);
     }
 
@@ -358,13 +386,14 @@
     }
 
     // === 老師端 ===
-    function teacherLogin() {
+    async function teacherLogin() {
         const code = document.getElementById('t-code').value.trim().toUpperCase();
         const pass = document.getElementById('t-pass').value.trim();
-        maxSeats = parseInt(document.getElementById('t-limit').value) || 35;
+        const limitVal = document.getElementById('t-limit').value;
+        maxSeats = parseInt(limitVal) || 35;
 
         if (!code) return alert("請設定代碼");
-        if (pass !== "0118") return alert("密碼錯誤");
+        if (!await checkPassword(pass)) return alert("密碼錯誤");
 
         myRole = 'teacher'; classCode = code;
         document.getElementById('login-screen').style.display = 'none';
@@ -402,13 +431,19 @@
 
     function sendSignal(action) {
         let payload = { action: action };
+        
         if(action === 'START') {
             const mins = parseInt(document.getElementById('t-input-min').value) || 5;
-            remainingTime = mins * 60; payload.duration = remainingTime;
-            gameState = 'RUNNING'; startLocalTimer();
+            remainingTime = mins * 60;
+            payload.duration = remainingTime;
+            
+            gameState = 'RUNNING';
+            document.getElementById('t-timer-setup').style.display = 'none';
+            document.getElementById('t-live-timer').style.display = 'block';
+            startLocalTimer();
         } 
-        else if (action === 'PAUSE') { gameState = 'PAUSED'; clearInterval(timerInterval); }
-        else if (action === 'RESUME') { gameState = 'RUNNING'; startLocalTimer(); }
+        else if (action === 'PAUSE') { gameState = 'PAUSED'; clearInterval(timerInterval); } 
+        else if (action === 'RESUME') { gameState = 'RUNNING'; startLocalTimer(); } 
         else if (action === 'STOP') { gameState = 'ENDED'; clearInterval(timerInterval); switchView('review'); }
 
         client.publish(`game/${classCode}/status`, JSON.stringify(payload), { retain: true });
@@ -416,16 +451,28 @@
     }
 
     function updateControlButtons(state) {
-        // 使用 visibility 控制，而非 innerHTML，確保按鈕存在
-        document.getElementById('t-timer-setup').style.display = (state === 'WAITING') ? 'flex' : 'none';
-        document.getElementById('t-live-timer').style.display = (state !== 'WAITING') ? 'block' : 'none';
-        
-        document.getElementById('btn-c-start').style.display = (state === 'WAITING') ? 'block' : 'none';
-        document.getElementById('btn-c-pause').style.display = (state === 'RUNNING') ? 'block' : 'none';
-        document.getElementById('btn-c-resume').style.display = (state === 'PAUSED') ? 'block' : 'none';
-        document.getElementById('btn-c-end').style.display = (state === 'RUNNING' || state === 'PAUSED') ? 'block' : 'none';
+        const btnStart = document.getElementById('btn-c-start');
+        const runningGroup = document.getElementById('running-controls');
+        const btnPause = document.getElementById('btn-c-pause');
+        const btnResume = document.getElementById('btn-c-resume');
+
+        if(state === 'WAITING') {
+            btnStart.style.display = 'block';
+            runningGroup.style.display = 'none';
+        } else {
+            btnStart.style.display = 'none';
+            runningGroup.style.display = 'flex';
+            
+            if(state === 'RUNNING') {
+                btnPause.style.display = 'block';
+                btnResume.style.display = 'none';
+            } else if (state === 'PAUSED') {
+                btnPause.style.display = 'none';
+                btnResume.style.display = 'block';
+            }
+        }
     }
-    function confirmEnd() { if(confirm("確定結束？")) sendSignal('STOP'); }
+    function confirmEnd() { if(confirm("確定結束並結算？")) sendSignal('STOP'); }
 
     function switchView(mode) {
         currentView = mode;
@@ -495,7 +542,7 @@
         if(arr.length === 0) { container.innerHTML += "<p style='text-align:center'>暫無數據</p>"; return; }
         arr.forEach((item, idx) => {
             let wList = Object.entries(item.wrongAns).sort((a,b)=>b[1]-a[1]); let wText = wList.length > 0 ? `(誤答: ${wList[0][0]})` : "";
-            container.innerHTML += `<div class="error-card"><div class="error-info"><div style="color:var(--gold); margin-bottom:5px;">TOP ${idx+1}: ${item.text}</div><div style="font-size:20px; color:#ccc;">正解: <span style="color:var(--green)">${item.ans}</span> <span style="color:var(--red); margin-left:10px;">${wText}</span></div><div class="bar-bg"><div class="bar-fill" style="width:${item.errRate}%"></div></div></div><div class="error-stat"><div style="font-size:28px; color:var(--red)">${Math.round(item.errRate)}%</div><div style="font-size:12px">錯誤率</div></div></div>`;
+            container.innerHTML += `<div class="error-card"><div class="error-info"><div style="color:var(--gold); margin-bottom:5px;">TOP ${idx+1}: ${item.text}</div><div style="font-size:16px; color:#ccc;">正解: <span style="color:var(--green)">${item.ans}</span> <span style="color:var(--red); margin-left:10px;">${wText}</span></div><div class="bar-bg"><div class="bar-fill" style="width:${item.errRate}%"></div></div></div><div class="error-stat"><div style="font-size:24px; color:var(--red)">${Math.round(item.errRate)}%</div><div style="font-size:12px">錯誤率</div></div></div>`;
         });
     }
 
