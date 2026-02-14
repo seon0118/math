@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>函數大戰：庫巴的算術堡壘</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --mario-red: #E52521;
+            --luigi-green: #43B047;
+            --sky-blue: #5C94FC;
+            --brick-brown: #944200;
+        }
+
+        body {
+            font-family: 'Press Start 2P', cursive;
+            background-color: #333;
+            color: white;
+            margin: 0; padding: 0;
+            display: flex; flex-direction: column; align-items: center;
+            height: 100vh; overflow: hidden;
+            touch-action: manipulation;
+        }
+
+        /* 響應式容器 */
+        .game-container {
+            width: 100%; max-width: 500px;
+            height: 100%; display: flex; flex-direction: column;
+            background-color: var(--sky-blue);
+            position: relative;
+            border-left: 4px solid #000; border-right: 4px solid #000;
+        }
+
+        /* HUD 資訊欄 */
+        .hud {
+            padding: 15px; display: flex; justify-content: space-between;
+            background: #000; font-size: 10px; z-index: 10;
+        }
+        .hud span { color: #ffd700; }
+
+        /* 題目顯示區 */
+        .question-area {
+            background-color: var(--brick-brown);
+            border: 4px solid #000;
+            margin: 10px; padding: 15px;
+            text-align: center; font-size: 12px; line-height: 1.6;
+            box-shadow: 0 5px 0 rgba(0,0,0,0.3);
+        }
+
+        /* 遊戲畫面 (Canvas) */
+        .stage {
+            flex-grow: 1; position: relative;
+            background: linear-gradient(to bottom, var(--sky-blue) 70%, #8D5A32 70%);
+            display: flex; justify-content: center; align-items: center;
+        }
+        canvas { width: 100%; height: auto; }
+
+        /* 控制區 */
+        .controls {
+            background-color: #000; padding: 15px;
+            display: flex; flex-direction: column; gap: 10px;
+            border-top: 4px solid #fff;
+        }
+
+        /* 選項按鈕樣式 */
+        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .btn {
+            background: #fff; border: 4px solid #555; padding: 15px 5px;
+            font-family: 'Press Start 2P'; font-size: 10px; cursor: pointer;
+            box-shadow: 0 4px #999;
+        }
+        .btn:active { transform: translateY(4px); box-shadow: 0 0 #999; }
+        .btn.correct { background-color: var(--luigi-green); color: white; }
+        .btn.wrong { background-color: var(--mario-red); color: white; }
+
+        /* 數字鍵盤樣式 (Level 1) */
+        .num-pad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
+
+        /* 遮罩層 */
+        #overlay {
+            position: absolute; top:0; left:0; width: 100%; height:100%;
+            background: rgba(0,0,0,0.9); z-index: 100;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            text-align: center;
+        }
+        .start-btn {
+            padding: 20px 30px; background: #ffd700; border: none;
+            font-family: 'Press Start 2P'; cursor: pointer; margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="game-container">
+    <div class="hud">
+        <div>SCORE:<br><span id="score">000000</span></div>
+        <div>TIME:<br><span id="timer">120</span></div>
+        <div>LV:<br><span id="lv-text">1-1</span></div>
+    </div>
+
+    <div id="level-badge" style="text-align:center; font-size:10px; padding:5px; background: #ffd700; color: #000;">
+        目標：函數判定與代值
+    </div>
+
+    <div class="question-area" id="q-text">
+        讀取中...
+    </div>
+
+    <div class="stage" id="stage">
+        <canvas id="gameCanvas"></canvas>
+    </div>
+
+    <div class="controls">
+        <div id="ctrl-l1" style="display:none;">
+            <div id="input-display" style="background:#fff; color:#000; padding:10px; margin-bottom:10px; text-align:center;">?</div>
+            <div class="num-pad">
+                <button class="btn" onclick="press('1')">1</button>
+                <button class="btn" onclick="press('2')">2</button>
+                <button class="btn" onclick="press('3')">3</button>
+                <button class="btn" onclick="press('C')">C</button>
+                <button class="btn" onclick="press('4')">4</button>
+                <button class="btn" onclick="press('5')">5</button>
+                <button class="btn" onclick="press('6')">6</button>
+                <button class="btn" onclick="press('-')">-</button>
+                <button class="btn" onclick="press('7')">7</button>
+                <button class="btn" onclick="press('8')">8</button>
+                <button class="btn" onclick="press('9')">9</button>
+                <button class="btn" onclick="press('0')">0</button>
+                <button class="btn" style="grid-column: span 4; background: var(--mario-red); color:white;" onclick="checkL1()">OK! (FIRE!)</button>
+            </div>
+        </div>
+
+        <div id="ctrl-l2" style="display:none;">
+            <div class="btn-grid" id="l2-btns">
+                </div>
+        </div>
+    </div>
+
+    <div id="overlay">
+        <h1 id="ov-title">MATH MARIO</h1>
+        <p id="ov-desc" style="font-size:10px; padding:20px;">庫巴佔領了坐標平面！<br>利用函數的力量擊敗他。</p>
+        <button class="start-btn" onclick="startGame()">PRESS START</button>
+    </div>
+</div>
+
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const qText = document.getElementById('q-text');
+    const inputDisplay = document.getElementById('input-display');
+    
+    let currentLv = 1;
+    let score = 0;
+    let timeLeft = 120;
+    let timerInterval;
+    let currentAns = "";
+    let mathData = {};
+
+    function startGame() {
+        document.getElementById('overlay').style.display = 'none';
+        score = 0; timeLeft = 120; currentLv = 1;
+        updateHUD();
+        timerInterval = setInterval(updateTimer, 1000);
+        loadLevel();
+    }
+
+    function updateTimer() {
+        timeLeft--;
+        document.getElementById('timer').innerText = timeLeft;
+        if(timeLeft <= 0) endGame("TIME UP!");
+    }
+
+    function loadLevel() {
+        if (currentLv === 1) {
+            document.getElementById('ctrl-l1').style.display = 'block';
+            document.getElementById('ctrl-l2').style.display = 'none';
+            document.getElementById('level-badge').innerText = "關卡 1-1：函數判斷與求值";
+            generateL1Question();
+        } else {
+            document.getElementById('ctrl-l1').style.display = 'none';
+            document.getElementById('ctrl-l2').style.display = 'block';
+            document.getElementById('level-badge').innerText = "關卡 2-1：圖形特徵判讀";
+            generateL2Question();
+        }
+    }
+
+    // 第一關邏輯：學習目標 1 & 3
+    function generateL1Question() {
+        const type = Math.random() > 0.5 ? 'calc' : 'concept';
+        currentAns = "";
+        inputDisplay.innerText = "?";
+
+        if (type === 'calc') {
+            const a = Math.floor(Math.random() * 5) + 1;
+            const b = Math.floor(Math.random() * 10) - 5;
+            const x = Math.floor(Math.random() * 5);
+            mathData.ans = a * x + b;
+            qText.innerHTML = `若函數 y = ${a}x + (${b})<br>當 x = ${x} 時，y 是多少？`;
+        } else {
+            // 觀念判斷：簡化為輸入 1(是) 或 2(否)
+            const isFunction = Math.random() > 0.5;
+            mathData.ans = isFunction ? 1 : 2;
+            const relation = isFunction ? "「多對一」" : "「一對多」";
+            qText.innerHTML = `對應關係為 ${relation}<br>這是否為函數？<br>(1:是, 2:否)`;
+        }
+        drawStage();
+    }
+
+    // 第二關邏輯：學習目標 2 & 4
+    function generateL2Question() {
+        const isConstant = Math.random() > 0.5;
+        let options = [];
+        
+        if (isConstant) {
+            const b = Math.floor(Math.random() * 10) - 5;
+            mathData.ans = `y = ${b}`;
+            qText.innerHTML = `哪一個函數圖形是「平行 x 軸」<br>且通過 (0, ${b}) 的水平線？`;
+            options = [mathData.ans, `x = ${b}`, `y = ${b}x`, `y = x + ${b}`];
+        } else {
+            mathData.ans = "一次函數";
+            qText.innerHTML = `函數 y = 3x - 2 的圖形<br>在座標平面上是一條？`;
+            options = ["一次函數", "常數函數", "拋物線", "圓形"];
+        }
+        
+        options.sort(() => Math.random() - 0.5);
+        const container = document.getElementById('l2-btns');
+        container.innerHTML = "";
+        options.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.className = "btn";
+            btn.innerText = opt;
+            btn.onclick = () => checkL2(opt);
+            container.appendChild(btn);
+        });
+        drawStage();
+    }
+
+    function press(n) {
+        if(n === 'C') currentAns = "";
+        else if(currentAns.length < 5) currentAns += n;
+        inputDisplay.innerText = currentAns || "?";
+    }
+
+    function checkL1() {
+        if (parseInt(currentAns) === mathData.ans) {
+            correctEffect();
+        } else {
+            wrongEffect();
+        }
+    }
+
+    function checkL2(opt) {
+        if (opt === mathData.ans) {
+            correctEffect();
+        } else {
+            wrongEffect();
+        }
+    }
+
+    function correctEffect() {
+        score += 100;
+        updateHUD();
+        if (score >= 500 && currentLv === 1) {
+            currentLv = 2;
+            alert("進階到第二關：圖形判讀！");
+        }
+        loadLevel();
+    }
+
+    function wrongEffect() {
+        score = Math.max(0, score - 50);
+        updateHUD();
+        alert("喔不！再想一下！");
+    }
+
+    function updateHUD() {
+        document.getElementById('score').innerText = score.toString().padStart(6, '0');
+        document.getElementById('lv-text').innerText = currentLv + "-1";
+    }
+
+    function drawStage() {
+        ctx.clearRect(0,0,canvas.width, canvas.height);
+        // 畫出簡單的座標軸象徵圖形學習
+        ctx.strokeStyle = "#fff";
+        ctx.beginPath();
+        ctx.moveTo(10, 75); ctx.lineTo(290, 75); // X軸
+        ctx.moveTo(150, 10); ctx.lineTo(150, 140); // Y軸
+        ctx.stroke();
+    }
+
+    function endGame(msg) {
+        clearInterval(timerInterval);
+        document.getElementById('overlay').style.display = 'flex';
+        document.getElementById('ov-title').innerText = msg;
+        document.getElementById('ov-desc').innerText = `最終得分: ${score}`;
+    }
+</script>
+
+</body>
+</html>
