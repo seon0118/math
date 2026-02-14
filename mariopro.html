@@ -130,7 +130,7 @@
             </div>
             
             <div id="form-student">
-                <input type="text" id="s-code" placeholder="教室代碼 (例: MATH)" oninput="this.value = this.value.toUpperCase();">
+                <input type="text" id="s-code" placeholder="教室代碼 (老師提供)" oninput="this.value = this.value.toUpperCase();">
                 <input type="text" id="s-name" placeholder="你的暱稱" maxlength="8">
                 <div class="seat-grid" id="seat-container"></div>
                 <button class="btn" style="width:100%; margin-top:30px; background:var(--green); color:white; padding: 15px;" onclick="studentLogin()">準備戰鬥</button>
@@ -138,7 +138,7 @@
 
             <div id="form-teacher" style="display:none;">
                 <input type="text" id="t-code" placeholder="設定教室代碼" oninput="this.value = this.value.toUpperCase();">
-                <input type="password" id="t-pass" placeholder="輸入密碼 (0118)">
+                <input type="password" id="t-pass" placeholder="輸入密碼">
                 <div style="display:flex; align-items:center; justify-content:center; margin-top:20px; font-size:16px;">
                     <label style="margin-right:10px; color:#ffd700;">遊戲人數:</label>
                     <input type="number" id="t-limit" value="35" min="1" max="35" style="width:80px; padding:5px; font-size:16px;">
@@ -367,7 +367,7 @@
         maxSeats = parseInt(limitVal) || 35;
 
         if (!code) return alert("請設定代碼");
-        if (!await checkPassword(pass)) return alert("密碼錯誤 (預設 0118)");
+        if (!await checkPassword(pass)) return alert("密碼錯誤");
 
         myRole = 'teacher'; classCode = code;
         document.getElementById('login-screen').style.display = 'none';
