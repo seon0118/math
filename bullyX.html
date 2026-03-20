@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>網路霸凌多重結局體驗 (終極隨機版)</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #1a1a1a; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; }
+        .phone-container { width: 375px; height: 812px; background: white; border-radius: 40px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); overflow: hidden; position: relative; border: 8px solid #333; }
+        @media (max-width: 400px) {
+            .phone-container { width: 100vw; height: 100vh; border-radius: 0; border: none; }
+        }
+        
+        /* 動畫設定 */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeInLeft { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 50% { transform: translateX(5px); } 75% { transform: translateX(-5px); } }
+        @keyframes floatText { 0% { opacity: 0; transform: translateY(100vh) scale(0.5); } 50% { opacity: 1; transform: translateY(50vh) scale(1.2); } 100% { opacity: 0; transform: translateY(-20vh) scale(0.8); } }
+        @keyframes pulseRed { 0% { background-color: rgba(239, 68, 68, 0); } 50% { background-color: rgba(239, 68, 68, 0.3); } 100% { background-color: rgba(239, 68, 68, 0); } }
+
+        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        .animate-fade-in-left { animation: fadeInLeft 0.4s ease-out forwards; }
+        .animate-shake { animation: shake 0.3s ease-in-out; }
+        .floating-word { position: absolute; color: rgba(255, 255, 255, 0.8); font-weight: bold; pointer-events: none; animation: floatText linear forwards; text-shadow: 0 0 10px rgba(255,0,0,0.8); }
+        .screen-flash { position: absolute; inset: 0; pointer-events: none; animation: pulseRed 2s infinite; z-index: 50; }
+        
+        /* 隱藏滾動條 */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // --- SVG 圖示元件 (解決 lucideReact 找不到的問題) ---
+        const Icons = {
+            MessageCircle: ({className}) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m3 21 1.9-5.7a8.5 8.5 0 1 1 3.8 3.8z"/></svg>,
+            AlertOctagon: ({className}) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>,
+            Smartphone: ({className}) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></svg>,
+            Heart: ({className}) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>,
+            ChevronLeft: ({className}) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m15 18-6-6 6-6"/></svg>,
+            Search: ({className}) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>,
+            WifiOff: ({className}) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="2" y1="2" x2="22" y2="22"/><path d="M8.5 16.5a5 5 0 0 1 7 0"/><path d="M2 8.82a15 15 0 0 1 4.17-2.65"/><path d="M10.66 5c4.01-.36 8.14.9 11.34 3.82"/><path d="M16.85 11.15a10 10 0 0 1 2.22 1.67"/><path d="M5 12.55a10 10 0 0 1 5.17-2.39"/></svg>,
+            ShieldCheck: ({className}) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>,
+            Ghost: ({className}) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M9 10h.01"/><path d="M15 10h.01"/><path d="M12 2a8 8 0 0 0-8 8v12l3-3 2.5 2.5L12 19l2.5 2.5L17 19l3 3V10a8 8 0 0 0-8-8z"/></svg>,
+            Swords: ({className}) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"/><line x1="13" y1="19" x2="19" y2="13"/><line x1="16" y1="16" x2="20" y2="20"/><line x1="19" y1="21" x2="21" y2="19"/><polyline points="14.5 6.5 18 3 21 3 21 6 17.5 9.5"/><line x1="5" y1="14" x2="9" y2="18"/><line x1="7" y1="17" x2="4" y2="20"/><line x1="3" y1="19" x2="5" y2="21"/></svg>,
+            Landmark: ({className}) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="3" y1="22" x2="21" y2="22"/><line x1="6" y1="18" x2="6" y2="11"/><line x1="10" y1="18" x2="10" y2="11"/><line x1="14" y1="18" x2="14" y2="11"/><line x1="18" y1="18" x2="18" y2="11"/><polygon points="12 2 20 7 4 7"/></svg>,
+            HeartHandshake: ({className}) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/><path d="M12 5 9.04 7.96a2.17 2.17 0 0 0 0 3.08v0c.82.82 2.13.85 3 .07l2.07-1.9a2.82 2.82 0 0 1 3.79 0l2.96 2.66"/><path d="m18 15-2-2"/><path d="m15 18-2-2"/></svg>,
+            UserX: ({className}) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="17" y1="8" x2="22" y2="13"/><line x1="22" y1="8" x2="17" y2="13"/></svg>,
+            Skull: ({className}) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><path d="M8 20v2h8v-2"/><path d="m12.5 17-.5-1-.5 1h1z"/><path d="M16 20a2 2 0 0 0 1.56-3.25 8 8 0 1 0-11.12 0A2 2 0 0 0 8 20"/></svg>,
+            RotateCcw: ({className}) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>,
+            Wifi: ({className}) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>,
+            Battery: ({className}) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="16" height="10" x="2" y="7" rx="2" ry="2"/><line x1="22" y1="11" x2="22" y2="13"/></svg>
+        };
+
+        // --- 隨機言論資料庫 (Data Pools) ---
+        const POOLS = {
+            feed: [
+                "笑死這什麼可悲發言", "長這樣還敢出來嚇人", "做作女/男🤮", "聽說他私下人品超差", 
+                "被排擠剛好而已啦", "只有我覺得他很假嗎？", "這修圖修太大了吧", "不要出來丟人現眼了",
+                "真的有夠噁心", "看到你就想吐", "自以為是誰啊", "裝什麼清高"
+            ],
+            dm: [
+                "你今天在學校是在跩什麼？", "去死一死好嗎", "全班都討厭你你不知道？", "明天走著瞧", 
+                "你以為老師會幫你喔笑死", "敢惹我們你死定了", "廢物", "沒人要的邊緣人", 
+                "看你一次打一次", "有種明天出來喬啊", "你活著就是在浪費空氣", "已截圖，等著被公審吧"
+            ],
+            forum: [
+                "【閒聊】某系大一那個XXX是不是有病？", "卡一個血流成河", "推，原PO說的都是真的", 
+                "肉搜出來了，IG是 @xxxx", "這種人就該社會性死亡", "噁心死了，難怪被霸凌", 
+                "幫高調，別讓他好過", "他國中就這副德性了", "真面目被拆穿了吧", "笑死，坐等當事人崩潰",
+                "求掛，聽說他還會偷東西？", "長那樣還敢出來作怪"
+            ],
+            climaxWords: ['去死', '社會性死亡', '心機重', '肉搜', '邊緣人', '廢物', '沒人愛你', '垃圾', '造作', '滾', '醜八怪', '噁心', '假面', '去跳樓']
+        };
+
+        const getRandomSubset = (arr, num) => {
+            const shuffled = [...arr].sort(() => 0.5 - Math.random());
+            return shuffled.slice(0, num).map((text, i) => ({ id: `rand_${Date.now()}_${i}`, text }));
+        };
+
+        const CyberbullyingSim = () => {
+            const [scene, setScene] = useState('intro'); 
+            const [isShaking, setIsShaking] = useState(false);
+            const [activeChoice, setActiveChoice] = useState(null);
+            const [endingType, setEndingType] = useState('none');
+            
+            // 對話與留言狀態
+            const [comments, setComments] = useState([]);
+            const [dms, setDms] = useState([]);
+            const [forumPosts, setForumPosts] = useState([]);
+            const [teacherChat, setTeacherChat] = useState([]);
+            
+            const messagesEndRef = useRef(null);
+
+            const delay = (ms) => new Promise(res => setTimeout(res, ms));
+
+            const scrollToBottom = () => {
+                if (messagesEndRef.current) {
+                    messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+                }
+            };
+
+            useEffect(() => {
+                scrollToBottom();
+            }, [comments, dms, forumPosts, teacherChat]);
+
+            // 核心劇情引擎
+            useEffect(() => {
+                let isCancelled = false;
+
+                const runScenario = async () => {
+                    // --- 第一關：公開動態牆 ---
+                    if (scene === 'feed') {
+                        const randomComments = getRandomSubset(POOLS.feed, 4);
+                        await delay(1000);
+                        for (let c of randomComments) {
+                            if (isCancelled) return;
+                            setComments(prev => [...prev, { ...c, user: `user${Math.floor(Math.random()*9999)}` }]);
+                            await delay(1200);
+                        }
+                        await delay(1000);
+                        if (!isCancelled) {
+                            setActiveChoice({
+                                title: "【第一階段】你的社群貼文突然湧入大量不明的惡意留言...",
+                                options: [
+                                    { label: "直接封鎖這些人並關閉通知", type: "safe", action: () => { setActiveChoice(null); setEndingType('good_early'); setScene('outro'); } },
+                                    { label: "冷靜回覆，試圖解釋並澄清誤會", type: "neutral", action: () => { setActiveChoice(null); setScene('calm_reply'); } },
+                                    { label: "覺得害怕，刪除貼文裝作沒看到", type: "neutral", action: () => { setActiveChoice(null); setScene('dm'); } }
+                                ]
+                            });
+                        }
+                    }
+                    // --- 分支：冷靜澄清 ---
+                    else if (scene === 'calm_reply') {
+                        setComments(prev => [...prev, { id: 'reply1', text: '請問我是不是有哪裡讓你們誤會了？我們可以好好談談嗎？', isUser: true }]);
+                        await delay(2000);
+                        setComments(prev => [...prev, { id: 'reply2', text: '笑死，還在裝無辜啊？', user: 'hater_01' }]);
+                        await delay(1500);
+                        setComments(prev => [...prev, { id: 'reply3', text: '誰要跟你談，噁心🤮 大家轉戰私訊罵他！', user: 'hater_02' }]);
+                        await delay(2000);
+                        if (!isCancelled) setScene('dm'); // 霸凌者不聽，進階到私訊
+                    }
+                    // --- 第二關：私訊轟炸 ---
+                    else if (scene === 'dm') {
+                        setDms([]); // Reset DMs
+                        const randomDMs = getRandomSubset(POOLS.dm, 4);
+                        await delay(500);
+                        for (let d of randomDMs) {
+                            if (isCancelled) return;
+                            setDms(prev => [...prev, { ...d, isUser: false }]);
+                            setIsShaking(true); setTimeout(() => setIsShaking(false), 200);
+                            await delay(1500);
+                        }
+                        await delay(1000);
+                        if (!isCancelled) {
+                            setActiveChoice({
+                                title: "【第二階段】惡意蔓延到私訊，他們開始威脅你的現實生活...",
+                                options: [
+                                    { label: "截圖蒐證，立刻傳給老師/家長求助", type: "safe", action: () => { setActiveChoice(null); setScene('report_school'); } },
+                                    { label: "向他們道歉，求他們放過我...", type: "neutral", action: () => { setActiveChoice(null); setScene('dm_begging'); } },
+                                    { label: "氣死我了，直接用髒話對罵回去！", type: "danger", action: () => { setActiveChoice(null); setScene('dm_fight'); } },
+                                    { label: "不敢回覆，退出畫面...", type: "neutral", action: () => { setActiveChoice(null); setScene('forum'); } }
+                                ]
+                            });
+                        }
+                    }
+                    // --- 分支：對罵回去 ---
+                    else if (scene === 'dm_fight') {
+                        setDms(prev => [...prev, { id: 'f1', text: '你們到底有什麼毛病？一群神經病！', isUser: true }]);
+                        await delay(1500);
+                        setDms(prev => [...prev, { id: 'f2', text: '有種當面講啊，躲在螢幕後面算什麼英雄？凸', isUser: true }]);
+                        await delay(2000);
+                        setDms(prev => [...prev, { id: 'f3', text: '哇塞破防了耶😂😂 截圖發論壇給大家看！' }]);
+                        setIsShaking(true); setTimeout(() => setIsShaking(false), 300);
+                        await delay(2000);
+                        if (!isCancelled) setScene('forum'); // 激怒對方，被發到論壇
+                    }
+                    // --- 分支：道歉妥協 ---
+                    else if (scene === 'dm_begging') {
+                        setDms(prev => [...prev, { id: 'b1', text: '對不起，如果我哪裡做錯了可以告訴我嗎？請你們不要這樣...', isUser: true }]);
+                        await delay(2000);
+                        setDms(prev => [...prev, { id: 'b2', text: '現在知道怕了？太遲了啦' }]);
+                        await delay(1500);
+                        setDms(prev => [...prev, { id: 'b3', text: '看你這可悲的樣子就覺得噁心，截圖發大群！' }]);
+                        await delay(2500);
+                        if (!isCancelled) {
+                            setEndingType('bad_begging');
+                            setScene('outro');
+                        }
+                    }
+                    // --- 分支：報告老師 ---
+                    else if (scene === 'report_school') {
+                        setTeacherChat([
+                            { id: 't1', text: '老師，我一直收到這些恐嚇訊息，我好害怕，不知道該怎麼辦...(附上截圖)', isUser: true }
+                        ]);
+                        await delay(2500);
+                        setTeacherChat(prev => [...prev, { id: 't2', text: '王老師：天啊！這太嚴重了。你做得很好，馬上截圖是對的。' }]);
+                        await delay(2000);
+                        setTeacherChat(prev => [...prev, { id: 't3', text: '王老師：你現在安全嗎？我馬上聯絡學務處和家長會，我們明天會直接介入處理，你不要理會他們！' }]);
+                        await delay(3000);
+                        if (!isCancelled) {
+                            setEndingType('authority');
+                            setScene('outro');
+                        }
+                    }
+                    // --- 第三關：論壇公審 (Doxxing) ---
+                    else if (scene === 'forum') {
+                        setForumPosts([]);
+                        const randomPosts = getRandomSubset(POOLS.forum, 5);
+                        await delay(1000);
+                        for (let p of randomPosts) {
+                            if (isCancelled) return;
+                            setForumPosts(prev => [...prev, p]);
+                            setIsShaking(true); setTimeout(() => setIsShaking(false), 150);
+                            await delay(1200);
+                        }
+                        await delay(1000);
+                        if (!isCancelled) {
+                            setActiveChoice({
+                                title: "【最終階段】他們在匿名論壇公開你的個資與假照片（肉搜），成千上萬的人正在看戲...",
+                                options: [
+                                    { label: "開分身帳號反肉搜他們，大家一起死！", type: "danger", action: () => { setActiveChoice(null); setScene('counter_doxxing'); } },
+                                    { label: "我受不了了，這一切太痛苦了...", type: "danger", action: () => { setActiveChoice(null); setScene('climax'); } },
+                                    { label: "獨自承受，關掉手機假裝沒發生...", type: "neutral", action: () => { setActiveChoice(null); setScene('silent_suffering'); } },
+                                    { label: "傳訊息向最好的朋友求救...", type: "safe", action: () => { setActiveChoice(null); setScene('chat_help'); } }
+                                ]
+                            });
+                        }
+                    }
+                    // --- 分支：互相肉搜 (兩敗俱傷) ---
+                    else if (scene === 'counter_doxxing') {
+                        setForumPosts(prev => [...prev, { id: 'c1', text: '【爆卦】霸凌者真面目大公開！上面那個發文的其實是A班的XXX！', isUser: true, highlight: true }]);
+                        await delay(2000);
+                        setForumPosts(prev => [...prev, { id: 'c2', text: '哇靠反咬一口！血流成河！' }]);
+                        await delay(1500);
+                        setForumPosts(prev => [...prev, { id: 'c3', text: '原PO連對方家長在哪工作都貼出來了，這犯法了吧？' }]);
+                        setIsShaking(true); setTimeout(() => setIsShaking(false), 500);
+                        await delay(3000);
+                        if (!isCancelled) {
+                            setEndingType('mutual_destruction');
+                            setScene('outro');
+                        }
+                    }
+                    // --- 其他結局分支 ---
+                    else if (scene === 'chat_help') {
+                        await delay(1000);
+                        setDms([
+                            { id: 'h1', text: '小雅，我好害怕，論壇上的人都在罵我，他們連我國中的照片都拿出來嘲笑...', isUser: true }
+                        ]);
+                        await delay(2500);
+                        setDms(prev => [...prev, { id: 'h2', text: '小雅：我看到了！你千萬不要看那些垃圾留言！' }]);
+                        await delay(2000);
+                        setDms(prev => [...prev, { id: 'h3', text: '小雅：不要怕，我現在去你家找你！我們一起存證報警，你不是一個人！❤️' }]);
+                        await delay(3000);
+                        if (!isCancelled) {
+                            setEndingType('good_late');
+                            setScene('outro');
+                        }
+                    }
+                    else if (scene === 'silent_suffering') {
+                        await delay(3000);
+                        if (!isCancelled) {
+                            setEndingType('bad_silent');
+                            setScene('outro');
+                        }
+                    }
+                };
+
+                runScenario();
+                return () => { isCancelled = true; };
+            }, [scene]);
+
+            // --- 浮動文字特效 (Climax) ---
+            useEffect(() => {
+                let interval;
+                if (scene === 'climax') {
+                    interval = setInterval(() => {
+                        const word = document.createElement('div');
+                        word.className = 'floating-word';
+                        word.innerText = POOLS.climaxWords[Math.floor(Math.random() * POOLS.climaxWords.length)];
+                        word.style.left = `${Math.random() * 80}%`;
+                        word.style.fontSize = `${Math.random() * 2 + 1}rem`;
+                        word.style.animationDuration = `${Math.random() * 2 + 2}s`;
+                        
+                        const container = document.getElementById('climax-container');
+                        if (container) {
+                            container.appendChild(word);
+                        }
+                        
+                        setTimeout(() => word.remove(), 4000);
+                    }, 200);
+                    
+                    setTimeout(() => {
+                        clearInterval(interval);
+                        setEndingType('bad_climax');
+                        setScene('outro');
+                    }, 6000);
+                }
+                return () => clearInterval(interval);
+            }, [scene]);
+
+            const resetSimulation = () => {
+                setScene('intro');
+                setComments([]);
+                setDms([]);
+                setForumPosts([]);
+                setTeacherChat([]);
+                setActiveChoice(null);
+                setEndingType('none');
+            };
+
+            // --- UI 渲染區塊 ---
+            const renderChoiceOverlay = () => {
+                if (!activeChoice) return null;
+                return (
+                    <div className="absolute inset-0 bg-black/80 z-40 flex flex-col items-center justify-end p-6 animate-fade-in backdrop-blur-sm">
+                        <div className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl mb-4">
+                            <h3 className="text-lg font-bold text-gray-800 mb-4 leading-relaxed">{activeChoice.title}</h3>
+                            <div className="space-y-3">
+                                {activeChoice.options.map((opt, idx) => {
+                                    let btnClass = "bg-gray-100 text-gray-800 hover:bg-gray-200"; 
+                                    if (opt.type === 'danger') btnClass = "bg-red-50 text-red-600 border border-red-200 hover:bg-red-100";
+                                    if (opt.type === 'safe') btnClass = "bg-blue-600 text-white hover:bg-blue-700 shadow-md";
+                                    if (opt.type === 'neutral') btnClass = "bg-gray-600 text-white hover:bg-gray-700 shadow-md";
+                                    
+                                    return (
+                                        <button
+                                            key={idx}
+                                            onClick={opt.action}
+                                            className={`w-full py-3 px-4 rounded-xl text-left font-medium transition-all transform active:scale-95 ${btnClass}`}
+                                        >
+                                            {opt.label}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </div>
+                );
+            };
+
+            const renderIntro = () => (
+                <div className="h-full bg-gradient-to-b from-blue-900 to-black text-white flex flex-col items-center justify-center p-8 text-center relative overflow-hidden">
+                    <div className="absolute top-10 left-10 opacity-20"><Icons.MessageCircle className="w-16 h-16" /></div>
+                    <div className="absolute bottom-20 right-10 opacity-20"><Icons.AlertOctagon className="w-20 h-20" /></div>
+                    
+                    <Icons.Smartphone className="w-20 h-20 mb-6 text-blue-400 animate-pulse" />
+                    <h1 className="text-3xl font-black mb-4 tracking-wider">網路霸凌<br/>多重結局體驗</h1>
+                    <p className="text-gray-300 mb-8 leading-relaxed">
+                        這是一場第一人稱的模擬實驗。<br/>
+                        你的每一個「選擇」，都會將故事導向完全不同的結局。<br/><br/>
+                        <span className="text-sm text-gray-400">※ 內容包含負面詞彙，請斟酌體驗。</span>
+                    </p>
+                    <button 
+                        onClick={() => setScene('feed')}
+                        className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded-full font-bold text-lg transition-all transform hover:scale-105 shadow-[0_0_15px_rgba(59,130,246,0.5)]"
+                    >
+                        開啟手機
+                    </button>
+                </div>
+            );
+
+            const renderFeed = () => (
+                <div className="h-full bg-gray-50 flex flex-col">
+                    <div className="bg-white p-4 border-b flex items-center justify-between sticky top-0 z-10 shadow-sm">
+                        <span className="font-bold text-lg">Instagram</span>
+                        <Icons.Heart className="w-6 h-6 text-gray-800" />
+                    </div>
+                    <div className="p-4 flex-1 overflow-y-auto pb-32">
+                        <div className="bg-white rounded-2xl shadow-sm border p-4 mb-4">
+                            <div className="flex items-center gap-3 mb-3">
+                                <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-yellow-400 to-pink-500 p-0.5">
+                                    <div className="w-full h-full bg-white rounded-full border-2 border-white"></div>
+                                </div>
+                                <span className="font-bold">你的帳號</span>
+                            </div>
+                            <div className="w-full h-48 bg-gray-200 rounded-lg mb-3 flex items-center justify-center text-gray-400">
+                                [生活照片]
+                            </div>
+                            <p className="text-sm mb-4 text-gray-700">今天天氣真好！跟朋友出門逛街😊</p>
+                            
+                            <div className="space-y-3 border-t pt-3">
+                                {comments.map((c) => (
+                                    <div key={c.id} className="text-sm animate-fade-in-left">
+                                        <span className={c.isUser ? "font-bold text-blue-600" : "font-bold mr-2"}>{c.isUser ? '你' : c.user}</span>
+                                        <span className={c.isUser ? "text-blue-800" : "text-gray-800"}>{c.text}</span>
+                                    </div>
+                                ))}
+                                <div ref={messagesEndRef} />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+
+            const renderDM = () => (
+                <div className="h-full bg-white flex flex-col relative">
+                    {scene.includes('fight') && <div className="screen-flash" />}
+                    <div className="bg-gray-100 p-4 border-b flex items-center gap-3 sticky top-0 z-10">
+                        <Icons.ChevronLeft className="w-6 h-6 text-gray-500" />
+                        <span className="font-bold text-lg">陌生訊息 (99+)</span>
+                    </div>
+                    <div className="flex-1 p-4 overflow-y-auto space-y-4 pb-32">
+                        {dms.map((dm) => (
+                            <div key={dm.id} className={`flex gap-2 animate-fade-in-left ${dm.isUser ? 'flex-row-reverse animate-fade-in' : ''}`}>
+                                {!dm.isUser && <div className="w-8 h-8 rounded-full bg-gray-800 flex-shrink-0 flex items-center justify-center text-white text-xs">匿</div>}
+                                <div className={`border p-3 rounded-2xl shadow-sm max-w-[80%] ${dm.isUser ? 'bg-blue-500 text-white border-blue-600 rounded-tr-none' : 'bg-gray-100 border-gray-200 rounded-tl-none'}`}>
+                                    <p className={`text-sm ${dm.isUser ? 'text-white' : 'text-gray-800'}`}>{dm.text}</p>
+                                </div>
+                            </div>
+                        ))}
+                        <div ref={messagesEndRef} />
+                    </div>
+                </div>
+            );
+
+            const renderReportSchool = () => (
+                <div className="h-full bg-white flex flex-col">
+                    <div className="bg-green-600 p-4 border-b flex items-center gap-3 text-white sticky top-0 z-10">
+                        <Icons.ChevronLeft className="w-6 h-6" />
+                        <span className="font-bold text-lg">王老師 (導師)</span>
+                    </div>
+                    <div className="flex-1 p-4 overflow-y-auto space-y-4 bg-green-50 pb-32">
+                        {teacherChat.map((msg) => (
+                            <div key={msg.id} className={`flex gap-2 animate-fade-in-left ${msg.isUser ? 'flex-row-reverse' : ''}`}>
+                                <div className={`border p-3 rounded-2xl shadow-sm max-w-[80%] ${msg.isUser ? 'bg-green-500 text-white rounded-tr-none' : 'bg-white border-gray-200 rounded-tl-none'}`}>
+                                    <p className="text-sm">{msg.text}</p>
+                                </div>
+                            </div>
+                        ))}
+                        <div ref={messagesEndRef} />
+                    </div>
+                </div>
+            );
+
+            const renderForum = () => (
+                <div className="h-full bg-gray-100 flex flex-col relative">
+                    <div className="bg-blue-800 p-4 text-white flex items-center justify-between sticky top-0 z-10">
+                        <span className="font-bold text-lg tracking-widest">匿名論壇</span>
+                        <Icons.Search className="w-5 h-5" />
+                    </div>
+                    <div className="flex-1 p-2 overflow-y-auto pb-32">
+                        {forumPosts.map((post) => (
+                            <div key={post.id} className={`bg-white p-4 mb-2 border-b animate-fade-in-left ${post.highlight ? 'border-l-4 border-red-500 bg-red-50' : ''}`}>
+                                <div className="flex gap-2 text-xs text-gray-500 mb-2">
+                                    <span className={post.isUser ? "text-red-500 font-bold" : "text-blue-600"}>{post.isUser ? '你 (原PO)' : '匿名網友'}</span>
+                                    <span>• 剛剛</span>
+                                </div>
+                                <p className={`text-sm ${post.highlight ? 'font-bold text-red-700' : 'text-gray-800'}`}>{post.text}</p>
+                            </div>
+                        ))}
+                        <div ref={messagesEndRef} />
+                    </div>
+                </div>
+            );
+
+            const renderClimax = () => (
+                <div id="climax-container" className="h-full bg-black relative overflow-hidden">
+                    <div className="absolute inset-0 flex items-center justify-center z-50 animate-fade-in" style={{ animationDelay: '3s' }}>
+                        <div className="w-full h-full bg-black/80 flex flex-col items-center justify-center">
+                            <Icons.WifiOff className="w-16 h-16 text-red-500 mb-4 animate-pulse" />
+                            <h2 className="text-white text-2xl font-bold mb-2">系統崩潰</h2>
+                            <p className="text-gray-400">精神壓力已達極限</p>
+                        </div>
+                    </div>
+                </div>
+            );
+
+            const renderSilentSuffering = () => (
+                <div className="h-full bg-black flex flex-col items-center justify-center p-8">
+                    <div className="w-full max-w-[250px] space-y-12">
+                        <p className="text-gray-500 text-center animate-fade-in text-lg" style={{ animationDelay: '0s' }}>只要不看就好了...</p>
+                        <p className="text-gray-400 text-center animate-fade-in text-lg" style={{ animationDelay: '2s' }}>明天去學校...大家會怎麼看我？</p>
+                        <p className="text-gray-300 text-center animate-fade-in text-lg" style={{ animationDelay: '4s' }}>是不是真的是我的錯？</p>
+                        <p className="text-white text-center animate-fade-in text-xl font-bold" style={{ animationDelay: '6s' }}>好累...不想面對這一切...</p>
+                    </div>
+                </div>
+            );
+
+            const renderOutro = () => {
+                let config = {};
+                switch(endingType) {
+                    case 'good_early':
+                        config = {
+                            title: "結局一：及時止損", icon: <Icons.ShieldCheck className="w-10 h-10" />, color: "bg-blue-100 text-blue-700",
+                            desc: "在惡意剛開始蔓延時，你選擇了「不理會並封鎖」。這成功切斷了霸凌者的樂趣，將傷害降到最低。",
+                            takeaway: "【不隨之起舞】是初期的最佳防禦。惡意留言者渴望看到你的崩潰，無視就是最好的反擊。"
+                        }; break;
+                    case 'bad_begging':
+                        config = {
+                            title: "結局二：放棄尊嚴的代價", icon: <Icons.Ghost className="w-10 h-10" />, color: "bg-purple-100 text-purple-700",
+                            desc: "你選擇了妥協與求饒。但對於網路霸凌者而言，示弱不僅無法喚起同情，反而成為了他們新的笑柄與攻擊素材。",
+                            takeaway: "【委曲求全只會換來更多傷害】。不要試圖向充滿惡意的人證明自己的價值，你的尊嚴不該被這樣踐踏。"
+                        }; break;
+                    case 'mutual_destruction':
+                        config = {
+                            title: "結局三：反噬的烈火 (兩敗俱傷)", icon: <Icons.Swords className="w-10 h-10" />, color: "bg-orange-100 text-orange-700",
+                            desc: "你選擇以暴制暴，互罵甚至反肉搜對方。最終雙方都面臨學校記過與法律訴訟。你雖然反擊了，但也變成了自己曾經討厭的那種人。",
+                            takeaway: "【以暴制暴沒有贏家】。在網路上留下互相攻擊的字眼，反而可能讓你在法律上失去站得住腳的立場。"
+                        }; break;
+                    case 'authority':
+                        config = {
+                            title: "結局四：體制的保護傘", icon: <Icons.Landmark className="w-10 h-10" />, color: "bg-green-100 text-green-700",
+                            desc: "你冷靜地截圖，並立刻尋求老師的協助。透過校方介入與法律警告，霸凌者最終受到了應有的懲罰。",
+                            takeaway: "【冷靜蒐證，向上通報】是最有效的止血方法。將對話截圖，讓有能力的大人（老師、家長、警察）來介入處理。"
+                        }; break;
+                    case 'good_late':
+                        config = {
+                            title: "結局五：溫暖的光", icon: <Icons.HeartHandshake className="w-10 h-10" />, color: "bg-teal-100 text-teal-700",
+                            desc: "在面對匿名論壇鋪天蓋地的造謠時，你勇敢地向信任的朋友求救，在陪伴下走出了陰霾。",
+                            takeaway: "【尋求同儕協助】是終結孤立感的關鍵。當事態升級時，告訴身邊信任的人，你永遠不是一個人。"
+                        }; break;
+                    case 'bad_silent':
+                        config = {
+                            title: "結局六：無聲的窒息", icon: <Icons.UserX className="w-10 h-10" />, color: "bg-gray-200 text-gray-800",
+                            desc: "你選擇關上手機獨自承受。但網路的惡意像慢性毒藥，在現實中慢慢侵蝕你的心理防線，讓你陷入更深的抑鬱。",
+                            takeaway: "【逃避無法解決網路暴力】。當攻擊已經影響現實時，獨自承受會壓垮你。勇敢求助才是打破黑暗的唯一方式。"
+                        }; break;
+                    case 'bad_climax':
+                    default:
+                        config = {
+                            title: "結局七：深淵吞噬", icon: <Icons.Skull className="w-10 h-10" />, color: "bg-red-100 text-red-700",
+                            desc: "大量的惡意訊息與公審徹底擊潰了你的心理防線。這正是許多網路霸凌受害者最終面臨的絕望處境。",
+                            takeaway: "螢幕後的文字，能成為殺人的利刃。在按送出鍵之前，請永遠記得：網路的另一端，是一個活生生的人。"
+                        }; break;
+                }
+
+                return (
+                    <div className="h-full bg-gray-50 flex flex-col items-center justify-center p-6 text-center animate-fade-in overflow-y-auto">
+                        <div className={`w-20 h-20 rounded-full flex items-center justify-center mb-6 shadow-lg ${config.color}`}>
+                            {config.icon}
+                        </div>
+                        <h2 className={`text-2xl font-black mb-4 ${config.color.split(' ')[1]}`}>{config.title}</h2>
+                        <div className="bg-white p-6 rounded-2xl shadow-sm mb-6 border w-full">
+                            <p className="text-gray-700 mb-4 leading-relaxed text-left">{config.desc}</p>
+                            <div className="h-px bg-gray-200 w-full my-4"></div>
+                            <h4 className="font-bold text-gray-900 mb-2 text-left">💡 核心反思</h4>
+                            <p className="text-gray-600 text-sm leading-relaxed text-left">{config.takeaway}</p>
+                        </div>
+                        <button onClick={resetSimulation} className="bg-gray-800 hover:bg-black text-white px-8 py-3 rounded-full font-bold transition-colors w-full flex items-center justify-center gap-2">
+                            <Icons.RotateCcw className="w-5 h-5" /> 重新體驗不同結局
+                        </button>
+                    </div>
+                );
+            };
+
+            return (
+                <div className={`phone-container ${isShaking ? 'animate-shake' : ''}`}>
+                    {scene !== 'intro' && scene !== 'outro' && scene !== 'climax' && scene !== 'silent_suffering' && (
+                        <div className="absolute top-0 w-full h-6 bg-black/10 z-50 flex justify-between items-center px-4 text-[10px] text-gray-800 backdrop-blur-sm pointer-events-none">
+                            <span>14:30</span>
+                            <div className="flex gap-1"><Icons.Wifi className="w-3 h-3"/><Icons.Battery className="w-3 h-3"/></div>
+                        </div>
+                    )}
+                    
+                    {renderChoiceOverlay()}
+                    
+                    <div className="h-full relative z-0">
+                        {scene === 'intro' && renderIntro()}
+                        {scene === 'feed' && renderFeed()}
+                        {scene === 'calm_reply' && renderFeed()}
+                        {(scene === 'dm' || scene === 'dm_fight' || scene === 'dm_begging' || scene === 'chat_help') && renderDM()}
+                        {scene === 'report_school' && renderReportSchool()}
+                        {(scene === 'forum' || scene === 'counter_doxxing') && renderForum()}
+                        {scene === 'climax' && renderClimax()}
+                        {scene === 'silent_suffering' && renderSilentSuffering()}
+                        {scene === 'outro' && renderOutro()}
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<CyberbullyingSim />);
+    </script>
+</body>
+</html>
