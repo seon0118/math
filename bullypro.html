@@ -96,8 +96,34 @@
                 };
 
                 const runScenario = async () => {
-                    if (scene === 'feed') {
+                    // 新增的前導故事階段
+                    if (scene === 'background') {
+                        setUiView('text');
+                        setTextLines([]);
+                        const lines = [
+                            '我是個普通的高二學生，平時在班上不太起眼。',
+                            '身為總務股長，昨天放學後，',
+                            '我獨自留在教室整理剛收齊的班費。',
+                            '今天週末，我開心地出門，',
+                            '像平常一樣發了一篇生活貼文...',
+                            '卻不知道，一場風暴早已在暗處成形。'
+                        ];
+                        for (let l of lines) {
+                            if (isCancelled) return;
+                            setTextLines(prev => [...prev, l]);
+                            await delay(2500);
+                        }
+                        await delay(2000);
+                        if (!isCancelled) setScene('feed');
+                    }
+                    
+                    else if (scene === 'feed') {
                         setUiView('feed');
+                        // 先展示一則正常留言，營造日常感
+                        setFeedComments([{ id: 'normal_1', user: 'amy_030', text: '哇！今天天氣真好，好好玩喔！' }]);
+                        await delay(2500);
+                        
+                        // 突然湧入攻擊留言
                         const initialComments = [
                             { user: 'ting_0905', text: '這人真的很噁心，偷拿班費還有心情發文？' },
                             { user: 'hater_A', text: '難怪最近花錢這麼闊綽，笑死' },
@@ -163,7 +189,7 @@
                         await delay(500);
                         updateChat({ sender: 'me', text: '婷婷，為什麼要造謠毀了我？我根本沒碰班費！' });
                         await delay(2000);
-                        updateChat({ sender: 'other', senderName: '婷婷', text: '造謠？全班都覺得是你啊。你平常那副清高的樣子看了就討厭，活該啦。' });
+                        updateChat({ sender: 'other', senderName: '婷婷', text: '敢做不敢當喔？昨天放學就你一個人在教室碰班費袋，不是你偷的還有誰？' });
                         await delay(2000);
                         updateChat({ sender: 'other', senderName: '婷婷', text: '我要把你這副急跳牆的嘴臉截圖發到論壇，讓大家看看小偷的真面目！' });
                         triggerShake();
@@ -385,11 +411,16 @@
                 return () => clearInterval(interval);
             }, [uiView]);
 
+            // 修復：徹底清除所有狀態
             const resetSimulation = () => {
                 setScene('intro');
                 setUiView('none');
                 setActiveChoice(null);
                 setEndingType('none');
+                setFeedComments([]); 
+                setChatData({ theme: 'ig', title: '', messages: [] });
+                setForumPosts([]);
+                setTextLines([]);
             };
 
             // --- UI 渲染區塊 ---
@@ -429,7 +460,7 @@
                         <span className="text-xs text-red-500 font-bold block text-center">※ 內容包含負面詞彙與極度精神壓迫，請斟酌體驗。</span>
                     </p>
                     <button 
-                        onClick={() => setScene('feed')}
+                        onClick={() => setScene('background')}
                         className="bg-red-900 text-red-100 px-8 py-4 rounded-full font-bold text-lg transition-all transform hover:scale-105 shadow-[0_0_20px_rgba(220,38,38,0.4)]"
                     >
                         開啟手機
