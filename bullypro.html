@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>網路霸凌多重結局體驗 (沉浸擴充版)</title>
+    <title>網路霸凌多重結局沉浸式體驗</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
@@ -113,23 +113,23 @@
                         }
                         if (!isCancelled) {
                             setActiveChoice({
-                                title: "【突發狀況】你的貼文突然湧入大量指控你「偷班費」的留言...",
+                                title: "【突發狀況】我的生活貼文突然湧入大量指控我「偷班費」的留言...",
                                 options: [
-                                    { label: "直接封鎖這些人，當作沒看到", action: () => { setActiveChoice(null); setEndingType('good_early'); setScene('outro'); } },
-                                    { label: "在貼文底下留言澄清自己沒有拿", action: () => { setActiveChoice(null); setScene('calm_reply'); } },
-                                    { label: "私訊同班的好兄弟「小傑」問清楚", action: () => { setActiveChoice(null); setScene('ask_friend_jie'); } },
-                                    { label: "氣到刪除貼文，退出IG", action: () => { setActiveChoice(null); setScene('dm_escalation'); } }
+                                    { label: "直接封鎖這些人，假裝沒看到", action: () => { setActiveChoice(null); setEndingType('silent_suffering'); setScene('outro'); } },
+                                    { label: "在貼文底下無力地留言澄清", action: () => { setActiveChoice(null); setScene('calm_reply'); } },
+                                    { label: "向最好的兄弟「小傑」求救", action: () => { setActiveChoice(null); setScene('ask_friend_jie'); } },
+                                    { label: "崩潰刪除貼文，退出IG", action: () => { setActiveChoice(null); setScene('dm_escalation'); } }
                                 ]
                             });
                         }
                     }
                     
                     else if (scene === 'calm_reply') {
-                        setFeedComments(prev => [...prev, { id: 'r1', user: '你', text: '請問這是什麼意思？我從來沒有拿過班費！', isUser: true }]);
+                        setFeedComments(prev => [...prev, { id: 'r1', user: '我', text: '請問這是什麼意思？我從來沒有拿過班費！', isUser: true }]);
                         await delay(1500);
-                        setFeedComments(prev => [...prev, { id: 'r2', user: 'ting_0905', text: '還裝？有人親眼看到你翻總務的抽屜啦！' }]);
+                        setFeedComments(prev => [...prev, { id: 'r2', user: 'ting_0905', text: '還裝？有人親眼看到你翻總務的抽屜啦！不要臉。' }]);
                         await delay(1000);
-                        setFeedComments(prev => [...prev, { id: 'r3', user: 'hater_A', text: '不要臉天下無敵，大家去私訊灌爆他！' }]);
+                        setFeedComments(prev => [...prev, { id: 'r3', user: 'hater_A', text: '笑死，急了耶。大家去私訊灌爆他！' }]);
                         await delay(2000);
                         if (!isCancelled) setScene('dm_escalation');
                     }
@@ -138,19 +138,21 @@
                         setUiView('chat');
                         setChatData({ theme: 'line', title: '小傑 (死黨)', bg: 'bg-[#8baecf]', messages: [] });
                         await delay(500);
-                        updateChat({ sender: 'me', text: '小傑，為什麼大家突然在IG罵我偷班費？發生什麼事了？' });
+                        updateChat({ sender: 'me', text: '小傑，發生什麼事了？為什麼大家突然在IG罵我偷班費？' });
                         await delay(2000);
-                        updateChat({ sender: 'other', senderName: '小傑', text: '你還不知道嗎？婷婷在班群說班費不見了，還說那天放學只有你一個人在教室。' });
-                        await delay(1500);
-                        updateChat({ sender: 'other', senderName: '小傑', text: '現在班上的人都很生氣，說要抵制你...你要不要趕快解釋？' });
+                        updateChat({ sender: 'other', senderName: '小傑', text: '...你真的沒拿嗎？' });
+                        await delay(2000);
+                        updateChat({ sender: 'me', text: '你怎麼會這樣問？你不相信我？！' });
+                        await delay(2000);
+                        updateChat({ sender: 'other', senderName: '小傑', text: '婷婷在班群說得信誓旦旦...抱歉，大家現在都在氣頭上，我不想被牽連。' });
                         await delay(1500);
                         if (!isCancelled) {
                             setActiveChoice({
-                                title: "【謠言源頭】原來是同學「婷婷」在班群帶風向...",
+                                title: "【背叛】連最好的朋友都不願意相信我...",
                                 options: [
-                                    { label: "私訊婷婷跟她對質", action: () => { setActiveChoice(null); setScene('confront_ting'); } },
-                                    { label: "直接在班級群組發澄清文", action: () => { setActiveChoice(null); setScene('class_group_clarify'); } },
-                                    { label: "拜託班長幫忙調解", action: () => { setActiveChoice(null); setScene('ask_monitor'); } }
+                                    { label: "私訊質問造謠的婷婷", action: () => { setActiveChoice(null); setScene('confront_ting'); } },
+                                    { label: "在班級群組絕望地發聲", action: () => { setActiveChoice(null); setScene('class_group_clarify'); } },
+                                    { label: "卑微地拜託班長幫忙調解", action: () => { setActiveChoice(null); setScene('ask_monitor'); } }
                                 ]
                             });
                         }
@@ -159,11 +161,11 @@
                     else if (scene === 'confront_ting') {
                         setChatData({ theme: 'line', title: '婷婷', bg: 'bg-[#8baecf]', messages: [] });
                         await delay(500);
-                        updateChat({ sender: 'me', text: '婷婷，你為什麼要在班群亂說話？我根本沒碰班費！' });
+                        updateChat({ sender: 'me', text: '婷婷，為什麼要造謠毀了我？我根本沒碰班費！' });
                         await delay(2000);
-                        updateChat({ sender: 'other', senderName: '婷婷', text: '敢做不敢當喔？我親眼看到你靠近總務的座位的啦，少在那邊裝無辜。' });
-                        await delay(1500);
-                        updateChat({ sender: 'other', senderName: '婷婷', text: '你這種人真的有夠噁心，我要把你這副嘴臉截圖發到論壇上給大家看！' });
+                        updateChat({ sender: 'other', senderName: '婷婷', text: '造謠？全班都覺得是你啊。你平常那副清高的樣子看了就討厭，活該啦。' });
+                        await delay(2000);
+                        updateChat({ sender: 'other', senderName: '婷婷', text: '我要把你這副急跳牆的嘴臉截圖發到論壇，讓大家看看小偷的真面目！' });
                         triggerShake();
                         await delay(2500);
                         if (!isCancelled) setScene('forum_doxxing');
@@ -172,14 +174,14 @@
                     else if (scene === 'ask_monitor') {
                         setChatData({ theme: 'line', title: '班長', bg: 'bg-[#8baecf]', messages: [] });
                         await delay(500);
-                        updateChat({ sender: 'me', text: '班長，班費真的不是我拿的，你可以幫我跟婷婷他們說嗎？我現在被罵得很慘...' });
+                        updateChat({ sender: 'me', text: '班長，幫幫我...我真的沒拿錢，現在連小傑都不理我了，我不知道該怎麼辦...' });
+                        await delay(2500);
+                        updateChat({ sender: 'other', senderName: '班長', text: '我剛在群組幫你說了一句話，結果他們連我一起罵，說我包庇你。' });
                         await delay(2000);
-                        updateChat({ sender: 'other', senderName: '班長', text: '我知道了，我剛好在班群幫你說話，說事情還沒查清楚不要亂罵人。' });
-                        await delay(1500);
-                        updateChat({ sender: 'other', senderName: '班長', text: '結果...他們現在連我一起罵，說我包庇你，還把我踢出群組了...' });
-                        await delay(2000);
+                        updateChat({ sender: 'other', senderName: '班長', text: '對不起，但我真的無能為力。拜託你以後別找我了，我不想成為下一個被針對的人。' });
+                        await delay(3000);
                         if (!isCancelled) {
-                            setEndingType('monitor_bullied');
+                            setEndingType('abandoned_by_all');
                             setScene('outro');
                         }
                     }
@@ -187,13 +189,13 @@
                     else if (scene === 'class_group_clarify') {
                         setChatData({ theme: 'line', title: '二年三班 官方群 (35)', bg: 'bg-[#8baecf]', isGroup: true, messages: [] });
                         await delay(500);
-                        updateChat({ sender: 'me', text: '各位，關於班費的事情是誤會，我真的沒有拿，有疑問我們可以請老師查走廊監視器。' });
+                        updateChat({ sender: 'me', text: '各位，班費的事情真的是誤會，我發誓我沒有拿...' });
                         await delay(2000);
-                        updateChat({ sender: 'other', senderName: '阿浩', text: '笑死，走廊監視器壞了你當然敢這樣說。' });
+                        updateChat({ sender: 'other', senderName: '阿浩', text: '噁心，少在那邊裝可憐。' });
                         await delay(1500);
-                        updateChat({ sender: 'other', senderName: '婷婷', text: '小偷還敢講話啊，大家不要理他，孤立他！' });
+                        updateChat({ sender: 'other', senderName: '婷婷', text: '大家不要理這個小偷，直接封殺他。' });
                         await delay(1500);
-                        updateChat({ sender: 'other', senderName: '系統', text: '你已被踢出群組', isSystem: true });
+                        updateChat({ sender: 'other', senderName: '系統', text: '你已被 阿浩 踢出群組', isSystem: true });
                         await delay(2000);
                         if (!isCancelled) setScene('dm_escalation');
                     }
@@ -201,22 +203,22 @@
                     else if (scene === 'dm_escalation') {
                         setUiView('chat');
                         setChatData({ theme: 'ig', title: '陌生訊息 (99+)', bg: 'bg-white', messages: [] });
-                        const dms = ['去死一死好嗎小偷', '明天去學校走著瞧', '你活著就是在浪費空氣', '廢物'];
+                        const dms = ['去死一死好嗎小偷', '明天去學校走著瞧', '你活著就是在浪費空氣', '廢物', '怎麼不去跳樓啊'];
                         await delay(500);
                         for (let d of dms) {
                             if (isCancelled) return;
                             updateChat({ sender: 'other', senderName: '匿名', text: d, isAnon: true });
                             triggerShake(150);
-                            await delay(1200);
+                            await delay(1000);
                         }
                         if (!isCancelled) {
                             setActiveChoice({
-                                title: "【事態升級】惡意蔓延到私訊，他們開始用各種難聽的字眼攻擊你...",
+                                title: "【窒息】惡意像潮水般湧入私訊，每一句都刺在我的心上...",
                                 options: [
-                                    { label: "截圖蒐證，立刻傳給老師求助", action: () => { setActiveChoice(null); setScene('report_school'); } },
-                                    { label: "截圖傳給爸媽，尋求家人的保護", action: () => { setActiveChoice(null); setScene('report_parents'); } },
-                                    { label: "氣死我了，直接用髒話對罵回去！", action: () => { setActiveChoice(null); setScene('dm_fight'); } },
-                                    { label: "不敢回覆，直接退出畫面...", action: () => { setActiveChoice(null); setScene('forum_doxxing'); } }
+                                    { label: "截圖傳給老師求救", action: () => { setActiveChoice(null); setScene('report_school'); } },
+                                    { label: "哭著傳給媽媽，尋求家人的保護", action: () => { setActiveChoice(null); setScene('report_parents'); } },
+                                    { label: "失去理智，用最難聽的髒話對罵回去", action: () => { setActiveChoice(null); setScene('dm_fight'); } },
+                                    { label: "關掉螢幕，躲進棉被裡發抖...", action: () => { setActiveChoice(null); setScene('forum_doxxing'); } }
                                 ]
                             });
                         }
@@ -225,24 +227,24 @@
                     else if (scene === 'report_parents') {
                         setChatData({ theme: 'line', title: '媽媽', bg: 'bg-[#8baecf]', messages: [] });
                         await delay(500);
-                        updateChat({ sender: 'me', text: '媽，學校同學在網路上造謠說我偷錢，還一直傳訊息罵我，我好害怕...' });
+                        updateChat({ sender: 'me', text: '媽，學校同學都在網路上造謠罵我，我好害怕，我真的沒有偷東西...' });
                         await delay(2500);
-                        updateChat({ sender: 'other', senderName: '媽媽', text: '我早就跟你說過不要整天掛在網路上！你不去惹別人，別人會罵你嗎？' });
-                        await delay(2000);
-                        updateChat({ sender: 'other', senderName: '媽媽', text: '網路上的東西不要看就好了，自己惹麻煩！手機交出來，這禮拜都不准用！' });
+                        updateChat({ sender: 'other', senderName: '媽媽', text: '我早就跟你說過不要整天掛在網路上！你不去惹別人，別人會閒閒沒事罵你？' });
+                        await delay(2500);
+                        updateChat({ sender: 'other', senderName: '媽媽', text: '一定是你平常行為有問題人家才會懷疑你！手機馬上交出來，這禮拜都不准用！' });
                         await delay(3000);
                         if (!isCancelled) {
-                            setEndingType('bad_parent_gap');
+                            setEndingType('isolated_at_home');
                             setScene('outro');
                         }
                     }
 
                     else if (scene === 'dm_fight') {
-                        updateChat({ sender: 'me', text: '你們到底有什麼毛病？一群神經病！' });
+                        updateChat({ sender: 'me', text: '你們到底有什麼毛病？一群只會躲在鍵盤後面的廢物！' });
                         await delay(1500);
-                        updateChat({ sender: 'me', text: '有種當面講啊，躲在螢幕後面算什麼英雄？凸' });
+                        updateChat({ sender: 'me', text: '有種當面講啊！我都記下來了，你們全都會下地獄！' });
                         await delay(1500);
-                        updateChat({ sender: 'other', senderName: '匿名', text: '哇塞破防了耶😂😂 截圖發論壇給大家看！', isAnon: true });
+                        updateChat({ sender: 'other', senderName: '匿名', text: '哇塞破防了耶😂😂 大家快來看小偷發瘋囉！截圖發論壇！', isAnon: true });
                         await delay(2000);
                         if (!isCancelled) setScene('forum_doxxing');
                     }
@@ -250,14 +252,14 @@
                     else if (scene === 'report_school') {
                         setChatData({ theme: 'line', title: '王老師 (導師)', bg: 'bg-[#8baecf]', messages: [] });
                         await delay(500);
-                        updateChat({ sender: 'me', text: '老師，同學們誤會我拿班費，現在一直在網路上攻擊我...(附上截圖)' });
+                        updateChat({ sender: 'me', text: '老師救救我...同學們誤會我，現在全網都在攻擊我...(附上截圖)' });
                         await delay(2500);
-                        updateChat({ sender: 'other', senderName: '王老師', text: '天啊！這太嚴重了。你做得很好，馬上截圖是對的。' });
-                        await delay(2000);
-                        updateChat({ sender: 'other', senderName: '王老師', text: '你現在安全嗎？我馬上聯絡學務處，明天我會親自調查這件事，你先不要理會他們！' });
+                        updateChat({ sender: 'other', senderName: '王老師', text: '這太誇張了。老師明天會去調查監視器，也會請學務處處理。' });
+                        await delay(2500);
+                        updateChat({ sender: 'other', senderName: '王老師', text: '但現在事情鬧得很大，為了你的身心狀況，你這週先請假在家休息避避風頭吧。' });
                         await delay(3000);
                         if (!isCancelled) {
-                            setEndingType('authority');
+                            setEndingType('fake_peace');
                             setScene('outro');
                         }
                     }
@@ -267,25 +269,25 @@
                         setForumPosts([]);
                         const posts = [
                             { text: '【爆卦】某高中二年級偷錢仔，真面目大公開！' },
-                            { text: '肉搜出來了，本名XXX，家住桃園，國中就偷過東西了吧？' },
-                            { text: '這種人就該社會性死亡，長那樣還敢出來作怪' },
-                            { text: '幫高調，別讓他好過，明天去學校堵他！' }
+                            { text: '肉搜出來了，本名XXX，家住桃園市XX區XX路，連家人在哪上班都查到了。' },
+                            { text: '長那樣還敢出來作怪，這種社會敗類就該直接去死一死。' },
+                            { text: '幫高調，別讓他好過，明天放學去他家樓下堵他！' }
                         ];
                         await delay(1000);
                         for (let p of posts) {
                             if (isCancelled) return;
                             setForumPosts(prev => [...prev, { id: Date.now()+Math.random(), ...p }]);
-                            triggerShake(200);
-                            await delay(1500);
+                            triggerShake(250);
+                            await delay(1800);
                         }
                         if (!isCancelled) {
                             setActiveChoice({
-                                title: "【最後防線】他們在匿名論壇公開了你的真實姓名與住址（肉搜），數千人正在看戲...",
+                                title: "【最後防線】他們公開了我的真實姓名與住址，數千個陌生人正在看戲...",
                                 options: [
-                                    { label: "開分身帳號反肉搜造謠的婷婷，大家一起死！", action: () => { setActiveChoice(null); setScene('counter_doxxing'); } },
-                                    { label: "假裝沒事，關掉手機，明天照常去上學", action: () => { setActiveChoice(null); setScene('school_confrontation'); } },
-                                    { label: "傳訊息向最好的朋友小雅求救", action: () => { setActiveChoice(null); setScene('chat_help'); } },
-                                    { label: "我受不了了，這一切太痛苦了...", action: () => { setActiveChoice(null); setScene('climax'); } }
+                                    { label: "開分身帳號反肉搜他們，大家一起下地獄", action: () => { setActiveChoice(null); setScene('counter_doxxing'); } },
+                                    { label: "假裝沒事，明天繼續去學校面對", action: () => { setActiveChoice(null); setScene('school_confrontation'); } },
+                                    { label: "絕望地傳訊息給唯一還願意聽我說話的小雅", action: () => { setActiveChoice(null); setScene('chat_help'); } },
+                                    { label: "我受不了了，一切都毀了...", action: () => { setActiveChoice(null); setScene('climax'); } }
                                 ]
                             });
                         }
@@ -295,33 +297,33 @@
                         setUiView('text');
                         setTextLines([]);
                         const lines = [
-                            '隔天，你硬著頭皮走進教室...',
-                            '原本吵鬧的班級瞬間安靜下來',
-                            '所有人都在盯著你，竊竊私語',
-                            '你走到座位旁，發現桌上被奇異筆寫滿了...',
-                            '「小偷」、「去死」、「不要臉」',
-                            '沒有人願意靠近你。'
+                            '隔天，我硬著頭皮走進教室...',
+                            '原本吵鬧的班級瞬間死寂。',
+                            '三十幾雙眼睛像看著怪物一樣盯著我。',
+                            '我走到座位旁，發現桌椅不見了...',
+                            '只剩下地板上用奇異筆寫著大大的：',
+                            '「去死」'
                         ];
                         for (let l of lines) {
                             if (isCancelled) return;
                             setTextLines(prev => [...prev, l]);
-                            await delay(2000);
+                            await delay(2500);
                         }
                         await delay(2000);
                         if (!isCancelled) {
-                            setEndingType('bad_real_world');
+                            setEndingType('real_world_hell');
                             setScene('outro');
                         }
                     }
 
                     else if (scene === 'counter_doxxing') {
-                        setForumPosts(prev => [...prev, { id: 'c1', text: '【打臉】霸凌者真面目大公開！上面造謠的其實是2班的婷婷！', highlight: true }]);
+                        setForumPosts(prev => [...prev, { id: 'c1', text: '【打臉】霸凌者真面目！造謠的婷婷其實私生活超亂！(附圖)', highlight: true }]);
                         await delay(2000);
-                        setForumPosts(prev => [...prev, { id: 'c2', text: '哇靠反咬一口！原PO連對方家長在哪工作都貼出來了，血流成河！' }]);
+                        setForumPosts(prev => [...prev, { id: 'c2', text: '哇靠反咬一口！原PO把對方全家底細都貼出來了，血流成河！' }]);
                         triggerShake(500);
                         await delay(3000);
                         if (!isCancelled) {
-                            setEndingType('mutual_destruction');
+                            setEndingType('abyss_stare');
                             setScene('outro');
                         }
                     }
@@ -330,14 +332,16 @@
                         setUiView('chat');
                         setChatData({ theme: 'line', title: '小雅', bg: 'bg-[#8baecf]', messages: [] });
                         await delay(1000);
-                        updateChat({ sender: 'me', text: '小雅，我好害怕，論壇上的人都在罵我，他們連我家地址都貼出來了...' });
+                        updateChat({ sender: 'me', text: '小雅，我快撐不下去了...他們把我家地址貼出來了，我好怕...' });
                         await delay(2500);
-                        updateChat({ sender: 'other', senderName: '小雅', text: '我看到了！你千萬不要看那些垃圾留言！' });
+                        updateChat({ sender: 'other', senderName: '小雅', text: '我看到了...可是...' });
                         await delay(2000);
-                        updateChat({ sender: 'other', senderName: '小雅', text: '不要怕，我現在去你家找你！我們一起把畫面存下來報警，你不是一個人！❤️' });
+                        updateChat({ sender: 'other', senderName: '小雅', text: '他們剛剛私訊警告我，如果我敢幫你講話，就要連我一起肉搜。' });
+                        await delay(2500);
+                        updateChat({ sender: 'other', senderName: '小雅', text: '對不起...我真的很害怕。我們...先不要聯絡了。' });
                         await delay(3000);
                         if (!isCancelled) {
-                            setEndingType('good_late');
+                            setEndingType('lost_last_light');
                             setScene('outro');
                         }
                     }
@@ -358,7 +362,7 @@
             useEffect(() => {
                 let interval;
                 if (uiView === 'climax') {
-                    const words = ['去死', '社會性死亡', '小偷', '肉搜', '廢物', '沒人相信你', '垃圾', '滾', '噁心', '假面'];
+                    const words = ['去死', '沒有人相信你', '小偷', '消失吧', '廢物', '連朋友都不要你', '都是你的錯', '社會性死亡', '噁心', '沒救了'];
                     interval = setInterval(() => {
                         const word = document.createElement('div');
                         word.className = 'floating-word';
@@ -374,7 +378,7 @@
                     
                     setTimeout(() => {
                         clearInterval(interval);
-                        setEndingType('bad_climax');
+                        setEndingType('system_crash');
                         setScene('outro');
                     }, 6000);
                 }
@@ -400,7 +404,7 @@
                                     <button
                                         key={idx}
                                         onClick={opt.action}
-                                        className="w-full py-4 px-5 rounded-2xl text-left font-medium transition-all transform active:scale-95 bg-white text-gray-800 hover:bg-gray-200 border border-gray-300 shadow-sm"
+                                        className="w-full py-4 px-5 rounded-2xl text-left font-medium transition-all transform active:scale-95 bg-gray-800 text-gray-200 hover:bg-gray-700 border border-gray-600 shadow-sm"
                                     >
                                         {opt.label}
                                     </button>
@@ -418,15 +422,15 @@
                     
                     <Icons.Smartphone className="w-20 h-20 mb-6 text-slate-300 animate-pulse" />
                     <h1 className="text-3xl font-black mb-4 tracking-wider">網路霸凌<br/>多重結局體驗</h1>
-                    <p className="text-gray-400 mb-8 leading-relaxed text-sm">
-                        這是一場第一人稱的心理模擬實驗。<br/>
-                        沒有顏色提示，沒有絕對正確的解答。<br/>
-                        你的每一個「選擇」，都會將故事導向完全不同的結局。<br/><br/>
-                        <span className="text-xs text-red-400">※ 內容包含負面詞彙與精神壓迫，請斟酌體驗。</span>
+                    <p className="text-gray-400 mb-8 leading-relaxed text-sm text-left">
+                        這是我親身經歷的一場惡夢。<br/>
+                        沒有顏色提示，沒有能夠拯救一切的正確解答。<br/>
+                        我的每一個「選擇」，只是帶我走向不同形式的深淵。<br/><br/>
+                        <span className="text-xs text-red-500 font-bold block text-center">※ 內容包含負面詞彙與極度精神壓迫，請斟酌體驗。</span>
                     </p>
                     <button 
                         onClick={() => setScene('feed')}
-                        className="bg-white text-black px-8 py-4 rounded-full font-bold text-lg transition-all transform hover:scale-105 shadow-[0_0_20px_rgba(255,255,255,0.3)]"
+                        className="bg-red-900 text-red-100 px-8 py-4 rounded-full font-bold text-lg transition-all transform hover:scale-105 shadow-[0_0_20px_rgba(220,38,38,0.4)]"
                     >
                         開啟手機
                     </button>
@@ -445,7 +449,7 @@
                                 <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-yellow-400 to-pink-500 p-0.5">
                                     <div className="w-full h-full bg-white rounded-full border-2 border-white"></div>
                                 </div>
-                                <span className="font-bold">你的帳號</span>
+                                <span className="font-bold">我的帳號</span>
                             </div>
                             <div className="w-full h-48 bg-gray-200 rounded-lg mb-3 flex items-center justify-center text-gray-400">
                                 [生活照片]
@@ -520,7 +524,7 @@
                         {forumPosts.map((post) => (
                             <div key={post.id} className={`bg-white p-4 mb-2 shadow-sm rounded-lg animate-fade-in-left ${post.highlight ? 'border-l-4 border-red-500 bg-red-50' : ''}`}>
                                 <div className="flex gap-2 text-xs text-gray-500 mb-2">
-                                    <span className={post.highlight ? "text-red-500 font-bold" : "text-[#0066CC] font-bold"}>{post.highlight ? '你 (原PO)' : '匿名網友'}</span>
+                                    <span className={post.highlight ? "text-red-500 font-bold" : "text-[#0066CC] font-bold"}>{post.highlight ? '我 (原PO)' : '匿名網友'}</span>
                                     <span>• 剛剛</span>
                                 </div>
                                 <p className={`text-sm ${post.highlight ? 'font-bold text-red-700' : 'text-gray-800'}`}>{post.text}</p>
@@ -550,7 +554,7 @@
                         <div className="w-full h-full bg-black/90 flex flex-col items-center justify-center">
                             <Icons.WifiOff className="w-16 h-16 text-red-600 mb-4 animate-pulse" />
                             <h2 className="text-white text-3xl font-bold mb-2 tracking-widest">系統崩潰</h2>
-                            <p className="text-gray-500">精神壓力已達極限</p>
+                            <p className="text-gray-500">我的世界徹底瓦解了。</p>
                         </div>
                     </div>
                 </div>
@@ -559,60 +563,60 @@
             const renderOutro = () => {
                 let config = {};
                 switch(endingType) {
-                    case 'good_early':
+                    case 'silent_suffering':
                         config = {
-                            title: "結局：及時止損", icon: <Icons.ShieldCheck className="w-10 h-10" />, color: "bg-blue-100 text-blue-700",
-                            desc: "在惡意剛開始蔓延時，你選擇了「不理會並封鎖」。這成功切斷了霸凌者的樂趣，將傷害降到最低。",
-                            takeaway: "【不隨之起舞】是初期的最佳防禦。惡意留言者渴望看到你的崩潰，無視就是最好的反擊。"
+                            title: "結局：沉默的代價", icon: <Icons.Ghost className="w-10 h-10" />, color: "bg-gray-200 text-gray-700",
+                            desc: "我以為封鎖他們、裝作沒看到，事情就會過去。但我錯了，惡意並沒有消失，只是轉移到了我看不見的匿名論壇。當我隔天走進教室，面對的是全班鄙夷的目光。我的沉默，被當成了默認。",
+                            takeaway: "【逃避無法解決造謠】。在網路暴力的初期，受害者往往選擇忍氣吞聲，但這只會讓加害者更加肆無忌憚地剝奪你的話語權。"
                         }; break;
-                    case 'monitor_bullied':
+                    case 'abandoned_by_all':
                         config = {
-                            title: "結局：波及無辜", icon: <Icons.Users className="w-10 h-10" />, color: "bg-yellow-100 text-yellow-700",
-                            desc: "班長試圖幫你說話，卻連帶成為了被攻擊的目標。看著無辜的人因為自己被霸凌，你的內心充滿了無法言喻的愧疚與痛苦。",
-                            takeaway: "【霸凌者的怒火是盲目的】。面對群體暴走，單靠同儕的力量往往不足以抵抗，需要更專業的大人或機制來介入。"
+                            title: "結局：無人敢靠近", icon: <Icons.UserX className="w-10 h-10" />, color: "bg-slate-300 text-slate-800",
+                            desc: "班長試圖幫我說話，卻立刻成為了下一個被攻擊的目標。看著他為了自保而將我推開，我明白了：在群體的盲目惡意面前，沒有人敢為我發聲。我徹底成了一座孤島。",
+                            takeaway: "【旁觀者的恐懼】。霸凌之所以能蔓延，往往是因為旁觀者害怕引火上身而選擇沉默甚至切割，這對受害者的心理打擊往往比霸凌本身更深。"
                         }; break;
-                    case 'bad_parent_gap':
+                    case 'isolated_at_home':
                         config = {
-                            title: "結局：二度傷害", icon: <Icons.UserX className="w-10 h-10" />, color: "bg-purple-100 text-purple-700",
-                            desc: "你鼓起勇氣向家人求助，卻換來責備與不解。有時候，親近之人的不理解，比網路上的酸言酸語更讓人絕望。",
-                            takeaway: "【求助對象的選擇很重要】。如果家人暫時無法理解，請尋求學校輔導老師、反霸凌專線 (1953) 等專業管道的協助。"
+                            title: "結局：避風港的崩塌", icon: <Icons.Landmark className="w-10 h-10" />, color: "bg-purple-200 text-purple-900",
+                            desc: "我鼓起勇氣向最親的家人求助，換來的卻是指責與沒收手機。媽媽認為是我「行為不檢點」才惹禍上身。當連家都不再安全，我已經無路可逃。",
+                            takeaway: "【二次傷害】。長輩常因為不理解網路生態，而將問題怪罪於受害者「愛玩手機」。這種指責切斷了受害者最後的求救管道。"
                         }; break;
-                    case 'mutual_destruction':
+                    case 'abyss_stare':
                         config = {
-                            title: "結局：反噬的烈火", icon: <Icons.Swords className="w-10 h-10" />, color: "bg-orange-100 text-orange-700",
-                            desc: "你選擇以暴制暴，互相肉搜對方。最終雙方都面臨學校記過與法律訴訟。你雖然反擊了，但也變成了自己曾經討厭的那種人。",
-                            takeaway: "【以暴制暴沒有贏家】。在網路上留下互相攻擊的字眼，反而可能讓你在法律上失去站得住腳的立場。"
+                            title: "結局：墜入深淵", icon: <Icons.Swords className="w-10 h-10" />, color: "bg-orange-200 text-orange-800",
+                            desc: "我選擇以暴制暴，肉搜並公開了對方的隱私。我們互相毀滅，最終雙方都面臨學校退學與法律訴訟。看著鏡子裡充滿仇恨的自己，我變得和他們一樣噁心了。",
+                            takeaway: "【當你凝視深淵】。以暴制暴或許能帶來短暫的快感，但在網路留下互相攻擊的字眼，只會讓你在現實和法律上失去站得住腳的立場。"
                         }; break;
-                    case 'authority':
+                    case 'fake_peace':
                         config = {
-                            title: "結局：體制的保護傘", icon: <Icons.Landmark className="w-10 h-10" />, color: "bg-green-100 text-green-700",
-                            desc: "你冷靜地截圖，並立刻尋求老師的協助。透過校方介入與調查監視器，真相大白，造謠者受到了應有的懲罰。",
-                            takeaway: "【冷靜蒐證，向上通報】是最有效的止血方法。將對話截圖，讓有能力的大人來介入處理。"
+                            title: "結局：虛假的和平", icon: <Icons.ShieldCheck className="w-10 h-10" />, color: "bg-blue-200 text-blue-800",
+                            desc: "老師介入了，造謠者被記過。但傷害已經造成，我請了一週的假，回到學校時，雖然沒人敢當面罵我，但我能感受到背後的竊竊私語與刻意的疏離。真相大白了，但我的人生卻回不到從前了。",
+                            takeaway: "【遲來的正義無法撫平傷痕】。即便體制介入還原了真相，受害者在群體中受損的聲譽與創傷，往往需要漫長的時間才能修復。"
                         }; break;
-                    case 'good_late':
+                    case 'lost_last_light':
                         config = {
-                            title: "結局：溫暖的光", icon: <Icons.HeartHandshake className="w-10 h-10" />, color: "bg-teal-100 text-teal-700",
-                            desc: "在面對匿名論壇鋪天蓋地的造謠時，你勇敢地向信任的朋友求救，在陪伴下走出了陰霾並報警處理。",
-                            takeaway: "【尋求同儕協助】是終結孤立感的關鍵。當事態升級時，告訴身邊信任的人，你永遠不是一個人。"
+                            title: "結局：熄滅的微光", icon: <Icons.HeartHandshake className="w-10 h-10" />, color: "bg-teal-200 text-teal-800",
+                            desc: "小雅是我最後的希望，但網路霸凌的火燒向了她。為了保護她，也因為她的恐懼，我們斷了聯繫。看著空蕩蕩的聊天室，我心中最後一絲光亮也熄滅了。",
+                            takeaway: "【連坐效應的殘酷】。霸凌者常透過威脅受害者身邊的朋友來孤立受害者。理解朋友的恐懼很痛，但也顯現了這場暴力的無差別性。"
                         }; break;
-                    case 'bad_real_world':
+                    case 'real_world_hell':
                         config = {
-                            title: "結局：虛實交錯的惡意", icon: <Icons.UserX className="w-10 h-10" />, color: "bg-gray-200 text-gray-800",
-                            desc: "你以為不看手機就能逃避，但網路的惡意早已蔓延到現實生活。孤立無援的你，成為了全班霸凌的對象。",
-                            takeaway: "【網路霸凌絕非只在網路上】。當造謠與攻擊發生時，必須及時澄清或尋求具權威的大人介入，忽視只會讓事態在現實中發酵。"
+                            title: "結局：現實的煉獄", icon: <Icons.Skull className="w-10 h-10" />, color: "bg-red-200 text-red-900",
+                            desc: "我以為不看手機就能逃避一切。但當我走進教室，看到不見的桌椅和滿地的詛咒時，我才明白，網路上的惡意早已化為現實的刀刃，將我千刀萬剮。",
+                            takeaway: "【網路霸凌從不只在網路上】。虛擬空間的造謠與仇恨會迅速蔓延到現實生活，忽視它並不會讓它消失，只會讓它發酵得更具破壞力。"
                         }; break;
-                    case 'bad_climax':
+                    case 'system_crash':
                     default:
                         config = {
-                            title: "結局：深淵吞噬", icon: <Icons.Skull className="w-10 h-10" />, color: "bg-red-100 text-red-700",
-                            desc: "大量的惡意訊息與公審徹底擊潰了你的心理防線。這正是許多網路霸凌受害者最終面臨的絕望處境。",
-                            takeaway: "螢幕後的文字，能成為殺人的利刃。在按送出鍵之前，請永遠記得：網路的另一端，是一個活生生的人。"
+                            title: "結局：徹底崩潰", icon: <Icons.WifiOff className="w-10 h-10" />, color: "bg-black text-gray-400",
+                            desc: "鋪天蓋地的惡意訊息、朋友的背離、家人的不解，徹底擊潰了我的心理防線。我關掉手機，看著漆黑的螢幕映出自己慘白的臉，感覺自己已經從這個世界上消失了。",
+                            takeaway: "【螢幕後的文字，是殺人的利刃】。在按下送出鍵之前，請永遠記得：網路的另一端，是一個會痛、會流淚的，活生生的人。"
                         }; break;
                 }
 
                 return (
                     <div className="h-full bg-slate-50 flex flex-col items-center justify-center p-6 text-center animate-fade-in overflow-y-auto">
-                        <div className={`w-24 h-24 rounded-full flex items-center justify-center mb-6 shadow-xl border-4 border-white ${config.color}`}>
+                        <div className={`w-24 h-24 rounded-full flex items-center justify-center mb-6 shadow-2xl border-4 border-white ${config.color}`}>
                             {config.icon}
                         </div>
                         <h2 className={`text-2xl font-black mb-6 ${config.color.split(' ')[1]}`}>{config.title}</h2>
@@ -620,13 +624,12 @@
                             <p className="text-gray-700 mb-6 leading-relaxed text-left font-medium">{config.desc}</p>
                             <div className="h-px bg-gray-200 w-full mb-6"></div>
                             <h4 className="font-bold text-gray-900 mb-3 text-left flex items-center gap-2">
-                                <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs">💡 解析</span>
-                                核心反思
+                                <span className="bg-gray-800 text-gray-100 px-2 py-1 rounded text-xs">📝 殘酷反思</span>
                             </h4>
                             <p className="text-gray-600 text-sm leading-relaxed text-left">{config.takeaway}</p>
                         </div>
                         <button onClick={resetSimulation} className="bg-slate-900 hover:bg-black text-white px-8 py-4 rounded-full font-bold transition-colors w-full flex items-center justify-center gap-2 shadow-lg">
-                            <Icons.RotateCcw className="w-5 h-5" /> 重新體驗不同選擇
+                            <Icons.RotateCcw className="w-5 h-5" /> 重新經歷另一場絕望
                         </button>
                     </div>
                 );
