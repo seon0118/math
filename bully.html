@@ -1,0 +1,494 @@
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Bell, Home, MessageCircle, User, Heart, Share2, MoreHorizontal, ArrowLeft, Power, AlertTriangle, ShieldCheck, Skull } from 'lucide-react';
+
+// --- 模擬數據 ---
+const MOCK_POST = {
+  author: '你的帳號',
+  handle: '@user_1234',
+  avatar: 'https://api.dicebear.com/7.x/notionists/svg?seed=Felix&backgroundColor=e2e8f0',
+  content: '今天的小組報告終於順利結束了！為了這個專案熬夜好幾天，大家都辛苦啦～ 期待週末的慶功宴！ ✨🍕',
+  time: '10 分鐘前',
+  likes: 12,
+};
+
+// 階段一：初步的酸言酸語
+const FEED_PART_1 = [
+  { id: 1, user: '匿名者_99', text: '笑死，你根本沒做事吧？都在雷別人。' },
+  { id: 2, user: '看戲的', text: '聽說她把別人的功勞搶走欸，有夠心機。' },
+  { id: 3, user: '正義使者', text: '長這樣還敢發文求關注？嘔嘔嘔🤢' },
+];
+
+// 階段二（分支 A）：如果選擇回擊，引發的大量惡意留言
+const FEED_PART_2_ESCALATED = [
+  { id: 'u1', user: '你的帳號', text: '你們到底在說什麼？我明明就有做事！不要亂說話好嗎？', isUser: true },
+  { id: 4, user: '路人甲', text: '急了急了，被說中開始跳腳囉？' },
+  { id: 5, user: 'Hater123', text: '笑死，還敢回嘴啊？退學啦！看到你就覺得礙眼。' },
+  { id: 6, user: '同學A', text: '原來你是這種人... 虧我之前還幫你。' },
+  { id: 7, user: '黑粉', text: '大家去檢舉這篇貼文，讓他下架！截圖發到論壇上公審啦！' },
+];
+
+// 私訊階段一：開始收到惡意私訊
+const DM_PART_1 = [
+  { id: 1, text: '你怎麼不去死一死？' },
+  { id: 2, text: '明天到學校你就知道。' },
+  { id: 3, text: '大家都討厭你，你沒有朋友了。' },
+];
+
+// 私訊階段二（分支 B）：如果選擇繼續看，引發更多惡意
+const DM_PART_2_ESCALATED = [
+  { id: 4, text: '我把你以前的醜照都發到論壇上了' },
+  { id: 5, text: '垃圾' },
+  { id: 6, text: '不敢回？心虛了嗎？' },
+  { id: 7, text: '去死 去死 去死' },
+];
+
+const FLOATING_WORDS = ['去死', '噁心', '心機重', '退學', '沒人愛你', '垃圾', '造作', '滾', '醜八怪', '自以為是'];
+
+// 工具函數：非同步等待
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+// --- 主元件 ---
+export default function CyberbullyingSimulation() {
+  const [scene, setScene] = useState('intro'); 
+  // scenes: intro, feed, feed_escalated, dm, dm_escalated, climax, outro
+  
+  const [comments, setComments] = useState([]);
+  const [dms, setDms] = useState([]);
+  const [unreadDMs, setUnreadDMs] = useState(0);
+  const [isShaking, setIsShaking] = useState(false);
+  const [climaxWords, setClimaxWords] = useState([]);
+  const [activeChoice, setActiveChoice] = useState(null); // 控制選擇對話框
+  const [endingType, setEndingType] = useState('none'); // 'good' or 'bad'
+
+  const messagesEndRef = useRef(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [comments, dms]);
+
+  // --- 劇情控制器 ---
+  useEffect(() => {
+    let isCancelled = false;
+
+    const runScenario = async () => {
+      if (scene === 'feed') {
+        await delay(1500);
+        if (isCancelled) return;
+        
+        for (let c of FEED_PART_1) {
+          setComments(prev => [...prev, c]);
+          await delay(2000); // 每則留言間隔 2 秒
+          if (isCancelled) return;
+        }
+        
+        setUnreadDMs(3); // 模擬同時收到私訊
+        await delay(1000);
+        if (isCancelled) return;
+
+        // 觸發第一個選擇點
+        setActiveChoice({
+          title: "留言的風向突然變了，充滿了惡意。你感到一陣焦慮與憤怒...",
+          options: [
+            { 
+              label: "氣死了，直接留言跟他們吵！", 
+              type: "danger",
+              action: () => { setActiveChoice(null); setScene('feed_escalated'); } 
+            },
+            { 
+              label: "眼不見為淨，去看看右上角的私訊吧...", 
+              type: "safe",
+              action: () => { setActiveChoice(null); setScene('dm'); } 
+            }
+          ]
+        });
+      } 
+      
+      else if (scene === 'feed_escalated') {
+        // 分支：在貼文底下吵架
+        for (let c of FEED_PART_2_ESCALATED) {
+          setComments(prev => [...prev, c]);
+          setIsShaking(true);
+          setTimeout(() => setIsShaking(false), 200);
+          await delay(c.isUser ? 1500 : 1000); // 惡意洗版速度越來越快
+          if (isCancelled) return;
+        }
+        await delay(1500);
+        setEndingType('bad');
+        setScene('climax');
+      }
+
+      else if (scene === 'dm') {
+        await delay(1000);
+        setUnreadDMs(0);
+        
+        for (let d of DM_PART_1) {
+          setDms(prev => [...prev, d]);
+          setIsShaking(true);
+          setTimeout(() => setIsShaking(false), 200);
+          await delay(2000);
+          if (isCancelled) return;
+        }
+
+        await delay(1000);
+        if (isCancelled) return;
+
+        // 觸發第二個選擇點
+        setActiveChoice({
+          title: "連私領域都被惡意灌爆了，那些不認識的人不斷咒罵你。你的心跳不斷加速...",
+          options: [
+            { 
+              label: "太可怕了，立刻封鎖他們並關閉手機！", 
+              type: "safe",
+              action: () => { setActiveChoice(null); setEndingType('good'); setScene('outro'); } 
+            },
+            { 
+              label: "我倒要看看他們還能說多難聽的話！", 
+              type: "danger",
+              action: () => { setActiveChoice(null); setScene('dm_escalated'); } 
+            }
+          ]
+        });
+      }
+
+      else if (scene === 'dm_escalated') {
+        // 分支：深陷私訊泥沼
+        for (let d of DM_PART_2_ESCALATED) {
+          setDms(prev => [...prev, d]);
+          setIsShaking(true);
+          setTimeout(() => setIsShaking(false), 300);
+          await delay(800); // 極快速度洗版
+          if (isCancelled) return;
+        }
+        await delay(1500);
+        setEndingType('bad');
+        setScene('climax');
+      }
+    };
+
+    runScenario();
+    return () => { isCancelled = true; };
+  }, [scene]);
+
+  // 處理高潮場景的文字浮動
+  useEffect(() => {
+    if (scene === 'climax') {
+      const interval = setInterval(() => {
+        setClimaxWords((prev) => [
+          ...prev,
+          {
+            id: Date.now(),
+            text: FLOATING_WORDS[Math.floor(Math.random() * FLOATING_WORDS.length)],
+            x: Math.random() * 80 + 10,
+            y: Math.random() * 80 + 10,
+            scale: Math.random() * 1.5 + 1,
+          },
+        ]);
+      }, 250);
+      return () => clearInterval(interval);
+    }
+  }, [scene]);
+
+  const resetSimulation = () => {
+    setScene('intro');
+    setComments([]);
+    setDms([]);
+    setUnreadDMs(0);
+    setClimaxWords([]);
+    setActiveChoice(null);
+    setEndingType('none');
+  };
+
+  // --- 畫面渲染函數 ---
+
+  const renderChoiceOverlay = () => {
+    if (!activeChoice) return null;
+    return (
+      <div className="absolute inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-6 animate-fade-in">
+        <div className="bg-white rounded-2xl p-6 shadow-2xl w-full max-w-sm flex flex-col items-center text-center">
+          <AlertTriangle className="w-12 h-12 text-yellow-500 mb-4" />
+          <h3 className="text-gray-900 font-bold text-lg mb-6 leading-relaxed">
+            {activeChoice.title}
+          </h3>
+          <div className="w-full space-y-3">
+            {activeChoice.options.map((opt, idx) => (
+              <button
+                key={idx}
+                onClick={opt.action}
+                className={`w-full py-3 px-4 rounded-xl font-bold transition-all transform hover:scale-105 ${
+                  opt.type === 'danger' 
+                    ? 'bg-red-50 text-red-600 border border-red-200 hover:bg-red-100' 
+                    : 'bg-blue-600 text-white hover:bg-blue-700 shadow-md'
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderIntro = () => (
+    <div className="h-full flex flex-col items-center justify-center p-8 bg-gray-900 text-white text-center">
+      <AlertTriangle className="w-16 h-16 text-red-500 mb-6 animate-pulse" />
+      <h1 className="text-3xl font-bold mb-4 tracking-wider">網路霸凌<br/>多重結局體驗</h1>
+      <p className="text-gray-400 text-sm mb-8 leading-relaxed text-left">
+        此體驗將模擬真實的社群霸凌情境。<br/><br/>
+        在體驗過程中，您將面臨數次抉擇。您的選擇將決定主角最終會走向深淵，還是成功保護自己。<br/><br/>
+        <span className="text-red-400">⚠️ 包含惡意言論模擬，請斟酌體驗。</span>
+      </p>
+      <button
+        onClick={() => setScene('feed')}
+        className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-4 rounded-xl transition-colors shadow-lg shadow-red-900/50"
+      >
+        我了解，開始體驗
+      </button>
+    </div>
+  );
+
+  const renderFeed = () => (
+    <div className="h-full bg-white flex flex-col relative">
+      <div className="flex justify-between items-center p-4 border-b bg-white/80 backdrop-blur-md sticky top-0 z-10">
+        <h2 className="text-xl font-bold text-gray-800 tracking-tighter">SocialEcho</h2>
+        <div className="flex gap-4 relative">
+          <div className="relative cursor-pointer" onClick={() => activeChoice ? null : setScene('dm')}>
+            <MessageCircle className="text-gray-600" />
+            {unreadDMs > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full animate-bounce">
+                {unreadDMs}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="p-4 border-b flex-1 overflow-y-auto bg-gray-50 pb-20">
+        <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-3">
+              <img src={MOCK_POST.avatar} alt="avatar" className="w-10 h-10 rounded-full border border-gray-200" />
+              <div>
+                <p className="font-bold text-sm text-gray-900">{MOCK_POST.author}</p>
+                <p className="text-xs text-gray-500">{MOCK_POST.handle} • {MOCK_POST.time}</p>
+              </div>
+            </div>
+            <MoreHorizontal className="text-gray-400" />
+          </div>
+          <p className="text-gray-800 text-sm leading-relaxed mb-4">{MOCK_POST.content}</p>
+          <div className="flex gap-6 text-gray-500 border-t pt-3">
+            <button className="flex items-center gap-1.5 text-xs">
+              <Heart className="w-4 h-4" /> {MOCK_POST.likes}
+            </button>
+            <button className="flex items-center gap-1.5 text-xs">
+              <MessageCircle className="w-4 h-4" /> {comments.length}
+            </button>
+            <button className="flex items-center gap-1.5 text-xs">
+              <Share2 className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        <div className="mt-4 space-y-3">
+          {comments.map((comment) => (
+            <div key={comment.id} className={`p-3 rounded-xl border animate-fade-in flex gap-3 ${comment.isUser ? 'bg-blue-50 border-blue-100' : 'bg-white border-gray-100'}`}>
+               <div className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center ${comment.isUser ? 'bg-blue-200' : 'bg-gray-200'}`}>
+                  <User className={`w-4 h-4 ${comment.isUser ? 'text-blue-600' : 'text-gray-400'}`} />
+               </div>
+               <div>
+                 <p className="text-xs font-bold text-gray-900 mb-1">{comment.user}</p>
+                 <p className="text-sm text-gray-700">{comment.text}</p>
+               </div>
+            </div>
+          ))}
+          <div ref={messagesEndRef} />
+        </div>
+      </div>
+
+      <div className="flex justify-around items-center p-4 border-t bg-white absolute bottom-0 w-full">
+        <Home className="text-gray-800" />
+        <Bell className="text-gray-400" />
+        <User className="text-gray-400" />
+      </div>
+
+      {renderChoiceOverlay()}
+    </div>
+  );
+
+  const renderDM = () => (
+    <div className="h-full bg-gray-50 flex flex-col relative">
+      <div className="flex items-center gap-4 p-4 border-b bg-white shadow-sm">
+        <button onClick={() => activeChoice ? null : setScene('feed')} className="text-gray-600">
+          <ArrowLeft />
+        </button>
+        <div className="flex items-center gap-2">
+           <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center">
+              <AlertTriangle className="w-4 h-4 text-red-500" />
+           </div>
+          <div>
+            <h2 className="text-sm font-bold text-gray-900">陌生訊息請求</h2>
+            <p className="text-xs text-gray-500">這些人不在你的好友名單中</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex-1 p-4 overflow-y-auto space-y-4">
+        {dms.map((dm) => (
+          <div key={dm.id} className="flex gap-2 animate-fade-in-left">
+            <div className="w-8 h-8 rounded-full bg-gray-300 flex-shrink-0" />
+            <div className="bg-white border border-gray-200 p-3 rounded-2xl rounded-tl-none shadow-sm max-w-[80%]">
+              <p className="text-sm text-gray-800">{dm.text}</p>
+            </div>
+          </div>
+        ))}
+        <div ref={messagesEndRef} />
+      </div>
+
+      <div className="p-4 bg-white border-t">
+        <div className="bg-gray-100 text-gray-400 p-3 rounded-full text-sm flex items-center">
+          你無法回覆此對話...
+        </div>
+      </div>
+
+      {renderChoiceOverlay()}
+    </div>
+  );
+
+  const renderClimax = () => (
+    <div className="h-full bg-black flex flex-col items-center justify-center relative overflow-hidden">
+      <div className="absolute inset-0 opacity-20 mix-blend-screen pointer-events-none" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }}></div>
+      
+      {climaxWords.map((word) => (
+        <span
+          key={word.id}
+          className="absolute text-red-600 font-bold whitespace-nowrap pointer-events-none transition-opacity duration-1000"
+          style={{
+            left: `${word.x}%`,
+            top: `${word.y}%`,
+            transform: `scale(${word.scale})`,
+            opacity: Math.random() > 0.5 ? 0.9 : 0.4,
+            textShadow: '0 0 10px rgba(220, 38, 38, 0.8)'
+          }}
+        >
+          {word.text}
+        </span>
+      ))}
+
+      <div className="z-10 bg-black/80 p-8 rounded-2xl backdrop-blur-sm border border-red-900/50 flex flex-col items-center animate-pulse">
+        <h2 className="text-white text-2xl font-bold mb-4">感覺快要窒息了嗎？</h2>
+        <p className="text-gray-400 text-sm mb-8 text-center max-w-[250px]">
+          當惡意像海嘯般襲來，你已經失去了控制權。<br/><br/>拔掉電源，是最後的防線。
+        </p>
+        <button
+          onClick={() => setScene('outro')}
+          className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-full font-bold transition-all transform hover:scale-105"
+        >
+          <Power className="w-5 h-5" />
+          強制關機
+        </button>
+      </div>
+    </div>
+  );
+
+  const renderOutro = () => {
+    const isGoodEnding = endingType === 'good';
+
+    return (
+      <div className="h-full bg-gray-50 flex flex-col p-6 overflow-y-auto">
+        <div className="bg-white rounded-3xl p-6 shadow-xl border border-gray-100 flex-1 flex flex-col">
+          
+          <div className="text-center mb-6">
+            <div className={`mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4 ${isGoodEnding ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
+              {isGoodEnding ? <ShieldCheck className="w-8 h-8" /> : <Skull className="w-8 h-8" />}
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              {isGoodEnding ? "結局：保護結界" : "結局：深淵吞噬"}
+            </h2>
+          </div>
+
+          <p className="text-gray-600 mb-8 leading-relaxed text-sm">
+            {isGoodEnding 
+              ? "太好了，你及時切斷了惡意的來源！雖然這些不負責的話語很傷人，但你選擇了保護自己，不隨之起舞，這需要很大的勇氣。記住，網路上的惡意不代表你的價值。"
+              : "你試圖獨自對抗或是消化這些惡意，卻不小心讓自己陷入了更深的泥沼。霸凌者往往期望看到你的崩潰與回應。有時候，不看、不回，才是最好的防禦。"}
+          </p>
+
+          <div className="space-y-4 flex-1">
+            <h3 className="font-bold text-gray-900 border-b pb-2">面對網路霸凌的三個「不」與一個「要」：</h3>
+            
+            <div className="bg-gray-50 p-3 rounded-xl">
+              <p className="font-bold text-gray-800 text-sm">❌ 不回應</p>
+              <p className="text-gray-600 text-xs mt-1">不要與對方謾罵，這會激化情緒並讓對方得逞。</p>
+            </div>
+            <div className="bg-gray-50 p-3 rounded-xl">
+              <p className="font-bold text-gray-800 text-sm">❌ 不觀看</p>
+              <p className="text-gray-600 text-xs mt-1">立刻離開該平台，避免文字持續造成心理創傷。</p>
+            </div>
+            <div className="bg-gray-50 p-3 rounded-xl">
+              <p className="font-bold text-gray-800 text-sm">✅ 要截圖存證</p>
+              <p className="text-gray-600 text-xs mt-1">冷靜地截下對方的帳號與惡意言論，作為後續檢舉或報案的證據。</p>
+            </div>
+            <div className="bg-blue-50 p-3 rounded-xl border border-blue-100">
+              <p className="font-bold text-blue-800 text-sm">✅ 要尋求協助</p>
+              <p className="text-blue-600 text-xs mt-1">向信任的家人、老師，或撥打專線求助。你不需要獨自面對。</p>
+            </div>
+          </div>
+
+          <button 
+            onClick={resetSimulation}
+            className="mt-8 bg-gray-900 text-white font-bold py-4 rounded-xl shadow-md hover:bg-black transition-colors"
+          >
+            重新體驗不同選擇
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="min-h-screen bg-neutral-900 flex items-center justify-center p-4 font-sans">
+      <style dangerouslySetInnerHTML={{__html: `
+        @keyframes custom-shake {
+          0%, 100% { transform: translateX(0); }
+          10%, 30%, 50%, 70%, 90% { transform: translateX(-3px); }
+          20%, 40%, 60%, 80% { transform: translateX(3px); }
+        }
+        .animate-custom-shake {
+          animation: custom-shake 0.3s cubic-bezier(.36,.07,.19,.97) both;
+        }
+        @keyframes fade-in {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+          animation: fade-in 0.3s ease-out forwards;
+        }
+        @keyframes fade-in-left {
+          from { opacity: 0; transform: translateX(-10px); }
+          to { opacity: 1; transform: translateX(0); }
+        }
+        .animate-fade-in-left {
+          animation: fade-in-left 0.3s ease-out forwards;
+        }
+      `}} />
+
+      <div 
+        className={`w-full max-w-[375px] h-[812px] bg-black rounded-[3rem] p-2 shadow-2xl relative overflow-hidden transition-transform duration-100 ${isShaking ? 'animate-custom-shake' : ''}`}
+        style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 2px #333' }}
+      >
+        <div className="absolute top-0 inset-x-0 h-7 bg-black rounded-b-3xl w-40 mx-auto z-50"></div>
+
+        <div className="w-full h-full bg-white rounded-[2.5rem] overflow-hidden relative">
+          {scene === 'intro' && renderIntro()}
+          {(scene === 'feed' || scene === 'feed_escalated') && renderFeed()}
+          {(scene === 'dm' || scene === 'dm_escalated') && renderDM()}
+          {scene === 'climax' && renderClimax()}
+          {scene === 'outro' && renderOutro()}
+        </div>
+      </div>
+    </div>
+  );
+}
