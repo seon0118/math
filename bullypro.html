@@ -345,6 +345,9 @@
                     else if (scene === 'climax') {
                         setUiView('climax');
                     }
+                    else if (scene === 'outro') {
+                        setUiView('none'); // 清除舊 UI，讓結局畫面浮現出來
+                    }
                 };
 
                 runScenario();
@@ -642,11 +645,18 @@
                     
                     <div className="h-full relative z-0">
                         {scene === 'intro' && renderIntro()}
-                        {uiView === 'feed' && renderFeed()}
-                        {uiView === 'chat' && renderChat()}
-                        {uiView === 'forum' && renderForum()}
-                        {uiView === 'text' && renderTextScene()}
-                        {uiView === 'climax' && renderClimax()}
+                        
+                        {/* 嚴格控制只在非結局場景時，才顯示 UI 畫面 */}
+                        {scene !== 'intro' && scene !== 'outro' && (
+                            <React.Fragment>
+                                {uiView === 'feed' && renderFeed()}
+                                {uiView === 'chat' && renderChat()}
+                                {uiView === 'forum' && renderForum()}
+                                {uiView === 'text' && renderTextScene()}
+                                {uiView === 'climax' && renderClimax()}
+                            </React.Fragment>
+                        )}
+
                         {scene === 'outro' && renderOutro()}
                     </div>
                 </div>
