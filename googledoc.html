@@ -3,44 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Google 文件基本操作互動指引</title>
+    <title>Google 文件操作學習與檢定</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@700&display=swap');
         body {
             font-family: 'Noto Sans TC', sans-serif;
         }
+        .cert-font {
+            font-family: 'Noto Serif TC', serif;
+        }
         .fade-in {
-            animation: fadeIn 0.3s ease-in-out;
+            animation: fadeIn 0.4s ease-out forwards;
+            opacity: 0;
         }
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
+            from { opacity: 0; transform: translateY(15px); }
             to { opacity: 1; transform: translateY(0); }
         }
         /* Custom scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
+        
+        /* Quiz radio custom styling */
+        .quiz-option input:checked + div {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
         }
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1; 
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #c1c1c1; 
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #a8a8a8; 
+        .quiz-option input:checked + div .radio-inner {
+            background-color: #3b82f6;
         }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800 h-screen flex overflow-hidden">
 
+    <!-- Login/Registration Screen (Overlay) -->
+    <div id="login-screen" class="fixed inset-0 bg-gradient-to-br from-blue-50 to-indigo-100 z-[100] flex items-center justify-center p-4 transition-opacity duration-500">
+        <div class="bg-white rounded-2xl shadow-xl p-8 md:p-12 max-w-md w-full fade-in">
+            <div class="text-center mb-8">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 text-blue-600 mb-4">
+                    <i data-lucide="graduation-cap" class="w-8 h-8"></i>
+                </div>
+                <h1 class="text-2xl font-bold text-gray-800">Docs 學習檢定系統</h1>
+                <p class="text-gray-500 mt-2">請輸入您的資料以開始學習與測驗</p>
+            </div>
+            
+            <form id="student-form" class="space-y-5">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">班級</label>
+                    <input type="text" id="input-class" required placeholder="例如：一年甲班 或 101" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
+                </div>
+                <div class="flex gap-4">
+                    <div class="w-1/3">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">座號</label>
+                        <input type="number" id="input-number" required min="1" max="99" placeholder="號碼" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
+                    </div>
+                    <div class="w-2/3">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">姓名</label>
+                        <input type="text" id="input-name" required placeholder="您的真實姓名" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
+                    </div>
+                </div>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg mt-6 transition-colors shadow-md flex justify-center items-center gap-2">
+                    開始學習 <i data-lucide="arrow-right" class="w-5 h-5"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
     <!-- Mobile menu button -->
     <div class="md:hidden fixed top-0 left-0 w-full bg-white shadow-sm z-50 p-4 flex justify-between items-center border-b">
         <div class="flex items-center gap-2 text-blue-600 font-bold text-lg">
             <i data-lucide="file-text" class="w-6 h-6"></i>
-            <span>Docs 指引</span>
+            <span>Docs 檢定</span>
         </div>
         <button id="mobile-menu-btn" class="p-2 bg-gray-100 rounded-md">
             <i data-lucide="menu" class="w-5 h-5 text-gray-600"></i>
@@ -49,17 +87,32 @@
 
     <!-- Sidebar -->
     <aside id="sidebar" class="bg-white w-64 border-r border-gray-200 flex-shrink-0 h-full flex flex-col absolute md:relative z-40 transform -translate-x-full md:translate-x-0 transition-transform duration-300 pt-16 md:pt-0">
-        <div class="p-6 border-b border-gray-100 hidden md:flex items-center gap-3">
-            <div class="bg-blue-600 p-2 rounded-lg text-white">
-                <i data-lucide="file-text" class="w-6 h-6"></i>
+        <div class="p-6 border-b border-gray-100 flex flex-col gap-4">
+            <div class="hidden md:flex items-center gap-3">
+                <div class="bg-blue-600 p-2 rounded-lg text-white">
+                    <i data-lucide="file-check-2" class="w-6 h-6"></i>
+                </div>
+                <h1 class="text-xl font-bold text-gray-800">文件操作檢定</h1>
             </div>
-            <h1 class="text-xl font-bold text-gray-800">文件操作指引</h1>
+            <!-- Student Info Display -->
+            <div class="bg-gray-50 rounded-lg p-3 text-sm border border-gray-100 flex items-center gap-3">
+                <div class="bg-blue-100 text-blue-700 rounded-full w-8 h-8 flex items-center justify-center font-bold">
+                    <i data-lucide="user" class="w-4 h-4"></i>
+                </div>
+                <div class="overflow-hidden">
+                    <div id="display-class" class="text-xs text-gray-500 truncate">尚未登入</div>
+                    <div id="display-name" class="font-bold text-gray-800 truncate">學員</div>
+                </div>
+            </div>
         </div>
         <nav class="flex-1 overflow-y-auto py-4" id="nav-menu">
-            <!-- Navigation items will be injected here by JS -->
+            <!-- Navigation items injected here -->
         </nav>
-        <div class="p-4 border-t border-gray-100 text-xs text-gray-400 text-center">
-            互動式學習網頁 &copy; 2026
+        <div class="p-4 border-t border-gray-100">
+            <div class="bg-blue-50 rounded p-3 text-xs text-blue-800 flex items-start gap-2">
+                <i data-lucide="info" class="w-4 h-4 flex-shrink-0 mt-0.5"></i>
+                <p>完成所有章節後，請至「隨堂測驗」領取證書。</p>
+            </div>
         </div>
     </aside>
 
@@ -67,388 +120,270 @@
     <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-30 hidden md:hidden"></div>
 
     <!-- Main Content -->
-    <main class="flex-1 h-full overflow-y-auto bg-gray-50 pt-16 md:pt-0 relative">
+    <main class="flex-1 h-full overflow-y-auto bg-gray-50 pt-16 md:pt-0 relative scroll-smooth">
         <div class="max-w-4xl mx-auto p-6 md:p-10 pb-24" id="content-area">
-            <!-- Content will be injected here by JS -->
+            <!-- Content injected here -->
         </div>
     </main>
 
     <script>
-        // Content Data
+        // --- State Management ---
+        let studentInfo = {
+            className: '',
+            seatNumber: '',
+            name: ''
+        };
+        
+        // Quiz Data
+        const quizQuestions = [
+            {
+                q: "如果想在瀏覽器「最快速」建立一份空白的 Google 文件，可以在網址列輸入什麼？",
+                options: ["google.com/doc", "doc.new", "docs.new", "new.google.doc"],
+                answer: 2 // index 2 is "docs.new"
+            },
+            {
+                q: "如果我希望將文件分享給同學，讓他可以看內容並『畫重點留言』，但『不能直接修改或刪除』我的文字，我應該給他什麼權限？",
+                options: ["檢視者", "加註者", "編輯者", "擁有人"],
+                answer: 1
+            },
+            {
+                q: "從網路上複製了一段文字貼上到文件後，格式變得很奇怪（有底色、字體大小不一）。如果想「清除格式」恢復純文字，快捷鍵是什麼？",
+                options: ["Ctrl + B", "Ctrl + C", "Ctrl + \\ (反斜線)", "Ctrl + Z"],
+                answer: 2
+            },
+            {
+                q: "不小心把剛寫好的整段心得刪除了，哪一個功能可以救回之前的內容？",
+                options: ["尋找與取代", "版本紀錄", "共用設定", "大綱檢視"],
+                answer: 1
+            },
+            {
+                q: "老師要求繳交的報告格式不能跑掉，確保任何人打開看起來都一樣。下載時應該選擇哪一種格式最安全？",
+                options: ["Microsoft Word (.docx)", "純文字 (.txt)", "網頁 (.html)", "PDF 文件 (.pdf)"],
+                answer: 3
+            }
+        ];
+
+        // --- Content Data ---
         const guideData = [
             {
-                id: 'intro',
-                icon: 'flag',
-                title: '歡迎使用',
+                id: 'intro', icon: 'flag', title: '01. 歡迎使用',
                 content: `
                     <div class="text-center py-10 fade-in">
                         <div class="inline-block bg-blue-100 p-4 rounded-full mb-6">
-                            <i data-lucide="file-text" class="w-16 h-16 text-blue-600"></i>
+                            <i data-lucide="book-open" class="w-16 h-16 text-blue-600"></i>
                         </div>
                         <h2 class="text-3xl font-bold text-gray-800 mb-4">開始學習 Google 文件</h2>
                         <p class="text-gray-600 max-w-lg mx-auto leading-relaxed mb-8">
-                            這是一個互動式的學習指南。請點擊左側的選單，我們將帶您一步步了解 Google 文件的基本與進階操作技巧。
+                            你好，<span class="font-bold text-blue-600" id="welcome-name">同學</span>！<br>
+                            歡迎進入互動式學習指南。請點擊左側選單依序學習，最後完成測驗即可獲得專屬證書。
                         </p>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto text-left">
-                            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-start gap-3">
-                                <div class="bg-green-100 p-2 rounded-lg text-green-600 mt-1"><i data-lucide="zap" class="w-5 h-5"></i></div>
-                                <div>
-                                    <h3 class="font-bold text-gray-800">快速上手</h3>
-                                    <p class="text-sm text-gray-500 mt-1">從建立檔案到基本編輯，掌握核心功能。</p>
-                                </div>
-                            </div>
-                            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-start gap-3">
-                                <div class="bg-purple-100 p-2 rounded-lg text-purple-600 mt-1"><i data-lucide="users" class="w-5 h-5"></i></div>
-                                <div>
-                                    <h3 class="font-bold text-gray-800">團隊協作</h3>
-                                    <p class="text-sm text-gray-500 mt-1">學習如何與他人同時編輯、留言與分享。</p>
-                                </div>
-                            </div>
-                        </div>
-                        <button onclick="selectTopic('create')" class="mt-10 bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-8 rounded-full transition-colors shadow-md hover:shadow-lg">
+                        <button onclick="selectTopic('create')" class="mt-4 bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-8 rounded-full transition-colors shadow-md">
                             開始第一課：建立與開啟
                         </button>
                     </div>
                 `
             },
             {
-                id: 'create',
-                icon: 'plus-circle',
-                title: '建立與開啟檔案',
+                id: 'create', icon: 'plus-circle', title: '02. 建立與開啟',
                 content: `
                     <div class="fade-in">
                         <h2 class="text-3xl font-bold text-gray-800 mb-6 border-b pb-4">建立與開啟檔案</h2>
-                        
-                        <div class="space-y-8">
-                            <section class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                                <h3 class="text-xl font-bold text-blue-600 mb-3 flex items-center gap-2">
-                                    <i data-lucide="zap" class="w-5 h-5"></i> 秘技：最快的建立方式
-                                </h3>
-                                <p class="text-gray-600 mb-4">你知道只要在瀏覽器網址列輸入特定網址，就能瞬間建立新文件嗎？</p>
-                                <div class="bg-gray-800 text-gray-200 p-4 rounded-lg font-mono text-lg text-center flex items-center justify-center gap-3">
-                                    <span>docs.new</span>
-                                    <button onclick="window.open('https://docs.new', '_blank')" class="bg-blue-600 hover:bg-blue-500 text-white text-sm py-1 px-3 rounded flex items-center gap-1 transition-colors">
-                                        <i data-lucide="external-link" class="w-4 h-4"></i> 試試看
-                                    </button>
-                                </div>
-                            </section>
-
-                            <section class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                                <h3 class="text-xl font-bold text-gray-800 mb-3">從 Google 雲端硬碟建立</h3>
-                                <ol class="list-decimal list-inside space-y-3 text-gray-600 ml-2">
-                                    <li>前往 <a href="https://drive.google.com" target="_blank" class="text-blue-600 hover:underline">Google 雲端硬碟</a>。</li>
-                                    <li>點擊左上角大大的 <strong>「＋ 新增」</strong> 按鈕。</li>
-                                    <li>在選單中選擇 <strong>「Google 文件」</strong>。</li>
-                                    <li>（可選）點擊旁邊的箭頭，可以選擇「空白文件」或「從範本建立」。</li>
-                                </ol>
-                                <div class="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-800 text-sm flex gap-3">
-                                    <i data-lucide="lightbulb" class="w-5 h-5 flex-shrink-0"></i>
-                                    <p><strong>提示：</strong> 文件建立後，第一件事記得點擊左上角的「未命名的文件」來為檔案命名，方便日後尋找！</p>
-                                </div>
-                            </section>
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-6">
+                            <h3 class="text-xl font-bold text-blue-600 mb-3 flex items-center gap-2">
+                                <i data-lucide="zap" class="w-5 h-5"></i> 秘技：最快的建立方式
+                            </h3>
+                            <p class="text-gray-600 mb-4">你知道只要在瀏覽器網址列輸入特定網址，就能瞬間建立新文件嗎？</p>
+                            <div class="bg-gray-800 text-yellow-400 p-4 rounded-lg font-mono text-xl text-center font-bold tracking-wider">
+                                docs.new
+                            </div>
+                            <p class="text-sm text-gray-500 mt-2 text-center">↑ 記住這個網址，稍後測驗會考喔！</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center">
+                            <span class="text-gray-600">學習完畢了嗎？</span>
+                            <button onclick="selectTopic('format')" class="bg-gray-100 hover:bg-blue-50 text-blue-600 font-medium py-2 px-6 rounded-lg transition-colors flex items-center gap-2">下一課 <i data-lucide="arrow-right" class="w-4 h-4"></i></button>
                         </div>
                     </div>
                 `
             },
             {
-                id: 'format',
-                icon: 'type',
-                title: '文字編輯與格式',
+                id: 'format', icon: 'type', title: '03. 文字格式化',
                 content: `
                     <div class="fade-in">
-                        <h2 class="text-3xl font-bold text-gray-800 mb-6 border-b pb-4">文字編輯與格式化</h2>
-                        <p class="text-gray-600 mb-6">熟悉上方的工具列，能讓您的文件看起來更專業。在下方的小型模擬器中試試看吧！</p>
-                        
-                        <!-- Interactive Editor Simulator -->
-                        <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden mb-8">
-                            <!-- Toolbar -->
-                            <div class="bg-gray-50 border-b border-gray-200 p-2 flex flex-wrap gap-1 items-center">
-                                <select id="sim-font" class="border border-gray-300 rounded px-2 py-1 text-sm bg-white hover:bg-gray-50">
-                                    <option value="Arial">Arial</option>
-                                    <option value="Times New Roman">Times New Roman</option>
-                                    <option value="Courier New">Courier</option>
-                                </select>
-                                <div class="w-px h-6 bg-gray-300 mx-1"></div>
-                                <button onclick="toggleFormat('bold')" id="btn-bold" class="p-1.5 rounded hover:bg-gray-200 text-gray-700 transition-colors" title="粗體 (Ctrl+B)">
-                                    <i data-lucide="bold" class="w-4 h-4"></i>
-                                </button>
-                                <button onclick="toggleFormat('italic')" id="btn-italic" class="p-1.5 rounded hover:bg-gray-200 text-gray-700 transition-colors" title="斜體 (Ctrl+I)">
-                                    <i data-lucide="italic" class="w-4 h-4"></i>
-                                </button>
-                                <button onclick="toggleFormat('underline')" id="btn-underline" class="p-1.5 rounded hover:bg-gray-200 text-gray-700 transition-colors" title="底線 (Ctrl+U)">
-                                    <i data-lucide="underline" class="w-4 h-4"></i>
-                                </button>
-                                <div class="w-px h-6 bg-gray-300 mx-1"></div>
-                                <button onclick="setAlignment('left')" class="p-1.5 rounded hover:bg-gray-200 text-gray-700 transition-colors" title="靠左對齊">
-                                    <i data-lucide="align-left" class="w-4 h-4"></i>
-                                </button>
-                                <button onclick="setAlignment('center')" class="p-1.5 rounded hover:bg-gray-200 text-gray-700 transition-colors" title="置中對齊">
-                                    <i data-lucide="align-center" class="w-4 h-4"></i>
-                                </button>
-                                <button onclick="setAlignment('right')" class="p-1.5 rounded hover:bg-gray-200 text-gray-700 transition-colors" title="靠右對齊">
-                                    <i data-lucide="align-right" class="w-4 h-4"></i>
-                                </button>
-                                <div class="w-px h-6 bg-gray-300 mx-1"></div>
-                                <input type="color" id="sim-color" value="#1f2937" class="w-6 h-6 p-0 border-0 rounded cursor-pointer" title="文字顏色" onchange="changeColor(this.value)">
+                        <h2 class="text-3xl font-bold text-gray-800 mb-6 border-b pb-4">文字編輯與清除格式</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                            <div class="bg-blue-50 p-5 rounded-lg border border-blue-100">
+                                <h4 class="font-bold text-blue-800 mb-2 flex items-center gap-2"><i data-lucide="keyboard" class="w-4 h-4"></i> 常用快捷鍵</h4>
+                                <ul class="text-sm text-blue-700 space-y-3 mt-3">
+                                    <li class="flex items-center gap-2"><kbd class="bg-white px-1.5 py-0.5 rounded border shadow-sm text-gray-800">Ctrl</kbd> + <kbd class="bg-white px-1.5 py-0.5 rounded border shadow-sm text-gray-800">B</kbd> : 粗體</li>
+                                    <li class="flex items-center gap-2"><kbd class="bg-white px-1.5 py-0.5 rounded border shadow-sm text-gray-800">Ctrl</kbd> + <kbd class="bg-white px-1.5 py-0.5 rounded border shadow-sm text-gray-800">U</kbd> : 底線</li>
+                                </ul>
                             </div>
-                            <!-- Editor Area -->
-                            <div class="p-6 min-h-[150px] bg-white">
-                                <p id="sim-text" class="text-gray-800 text-lg transition-all duration-200">
-                                    請反白選取這段文字，或者直接點擊上方的工具列按鈕，看看文字會發生什麼變化！這是模擬 Google 文件的基本排版功能。
+                            <div class="bg-red-50 p-5 rounded-lg border border-red-100">
+                                <h4 class="font-bold text-red-800 mb-2 flex items-center gap-2"><i data-lucide="eraser" class="w-4 h-4"></i> 必學：清除格式</h4>
+                                <p class="text-sm text-red-700 leading-relaxed">
+                                    從網頁複製文字貼上時，常會帶有奇怪的底色或大小。選取文字後按：<br><br>
+                                    <kbd class="bg-white px-1.5 py-0.5 rounded border shadow-sm text-gray-800">Ctrl</kbd> + <kbd class="bg-white px-1.5 py-0.5 rounded border shadow-sm text-gray-800">\</kbd> (反斜線)<br><br>
+                                    就能瞬間恢復乾淨的純文字！(必考題)
                                 </p>
                             </div>
                         </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div class="bg-blue-50 p-4 rounded-lg">
-                                <h4 class="font-bold text-blue-800 mb-2">常用快捷鍵</h4>
-                                <ul class="text-sm text-blue-700 space-y-2">
-                                    <li><kbd class="bg-white px-1 py-0.5 rounded border border-blue-200 shadow-sm">Ctrl</kbd> + <kbd class="bg-white px-1 py-0.5 rounded border border-blue-200 shadow-sm">B</kbd> : 粗體</li>
-                                    <li><kbd class="bg-white px-1 py-0.5 rounded border border-blue-200 shadow-sm">Ctrl</kbd> + <kbd class="bg-white px-1 py-0.5 rounded border border-blue-200 shadow-sm">I</kbd> : 斜體</li>
-                                    <li><kbd class="bg-white px-1 py-0.5 rounded border border-blue-200 shadow-sm">Ctrl</kbd> + <kbd class="bg-white px-1 py-0.5 rounded border border-blue-200 shadow-sm">U</kbd> : 底線</li>
-                                </ul>
-                            </div>
-                            <div class="bg-green-50 p-4 rounded-lg">
-                                <h4 class="font-bold text-green-800 mb-2">清除格式</h4>
-                                <p class="text-sm text-green-700">
-                                    從網頁複製文字貼上時，常會帶有奇怪的格式。選取文字後，點擊選單的「格式」>「清除格式」（或按 <kbd class="bg-white px-1 py-0.5 rounded border border-green-200 shadow-sm">Ctrl</kbd> + <kbd class="bg-white px-1 py-0.5 rounded border border-green-200 shadow-sm">\\</kbd>），就能恢復乾淨的純文字。
-                                </p>
-                            </div>
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center">
+                            <span class="text-gray-600">學習完畢了嗎？</span>
+                            <button onclick="selectTopic('share')" class="bg-gray-100 hover:bg-blue-50 text-blue-600 font-medium py-2 px-6 rounded-lg transition-colors flex items-center gap-2">下一課 <i data-lucide="arrow-right" class="w-4 h-4"></i></button>
                         </div>
                     </div>
                 `
             },
             {
-                id: 'insert',
-                icon: 'image',
-                title: '插入物件 (圖片/表格)',
+                id: 'share', icon: 'share-2', title: '04. 共用設定',
                 content: `
                     <div class="fade-in">
-                        <h2 class="text-3xl font-bold text-gray-800 mb-6 border-b pb-4">豐富您的文件</h2>
-                        <p class="text-gray-600 mb-6">純文字太單調了？Google 文件允許您插入各種元素來豐富內容。所有功能都在上方選單的 <strong>「插入」</strong> 標籤中。</p>
-
-                        <div class="space-y-6">
-                            <!-- Image Insert -->
-                            <div class="flex flex-col md:flex-row gap-6 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                                <div class="bg-gray-100 rounded-lg flex items-center justify-center p-8 md:w-1/3 text-gray-400">
-                                    <i data-lucide="image-plus" class="w-16 h-16"></i>
-                                </div>
-                                <div class="md:w-2/3">
-                                    <h3 class="text-xl font-bold text-gray-800 mb-2">插入圖片</h3>
-                                    <p class="text-gray-600 text-sm mb-3">您可以透過多種方式加入圖片：</p>
-                                    <ul class="list-disc list-inside text-sm text-gray-600 space-y-1">
-                                        <li><strong>上傳電腦中的圖片：</strong> 直接從電腦選擇檔案。</li>
-                                        <li><strong>搜尋網路：</strong> 直接在文件右側開啟搜尋面板找圖，免切換視窗！</li>
-                                        <li><strong>雲端硬碟 / Google 相簿：</strong> 從您現有的雲端檔案匯入。</li>
-                                        <li><strong>直接拖曳：</strong> 將電腦中的圖片直接拖進瀏覽器視窗中最快！</li>
-                                    </ul>
-                                </div>
-                            </div>
-
-                            <!-- Table Insert -->
-                            <div class="flex flex-col md:flex-row-reverse gap-6 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                                <div class="bg-gray-100 rounded-lg flex items-center justify-center p-8 md:w-1/3 text-gray-400">
-                                    <i data-lucide="table" class="w-16 h-16"></i>
-                                </div>
-                                <div class="md:w-2/3">
-                                    <h3 class="text-xl font-bold text-gray-800 mb-2">插入表格</h3>
-                                    <p class="text-gray-600 text-sm mb-3">整理數據與資訊的好幫手：</p>
-                                    <p class="text-sm text-gray-600 mb-2">
-                                        點擊「插入」>「表格」，會出現一個格子矩陣。滑鼠游標在上面移動，選擇您需要的 欄(行)數 與 列數，點擊即可建立。
-                                    </p>
-                                    <div class="bg-blue-50 p-3 rounded text-sm text-blue-800 border border-blue-100">
-                                        <strong>小技巧：</strong> 表格建立後，對著表格點擊「右鍵」，可以隨時「插入列」、「刪除欄」或修改表格屬性（如邊框顏色）。
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `
-            },
-            {
-                id: 'share',
-                icon: 'share-2',
-                title: '共用與協作',
-                content: `
-                    <div class="fade-in">
-                        <h2 class="text-3xl font-bold text-gray-800 mb-6 border-b pb-4">共用與協作 (模擬)</h2>
-                        <p class="text-gray-600 mb-6">Google 文件最強大的功能就是「多人同時協作」。點擊右上角的「共用」按鈕，就能邀請他人。</p>
-
-                        <!-- Share Simulator -->
-                        <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-8 text-center mb-8 relative overflow-hidden">
-                            <div class="absolute top-0 right-0 p-4">
-                                <button onclick="openShareModal()" class="bg-[#c2e7ff] hover:bg-[#b3dcf4] text-[#001d35] font-medium py-2 px-5 rounded-full flex items-center gap-2 transition-colors">
-                                    <i data-lucide="lock" class="w-4 h-4"></i> 共用
-                                </button>
-                            </div>
-                            
-                            <div class="py-12">
-                                <i data-lucide="users" class="w-16 h-16 text-gray-300 mx-auto mb-4"></i>
-                                <h3 class="text-lg font-bold text-gray-700 mb-2">模擬共用設定</h3>
-                                <p class="text-gray-500 text-sm">點擊右上角的「共用」按鈕，看看會發生什麼事！</p>
-                            </div>
-                        </div>
-
-                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                            <h3 class="text-lg font-bold text-gray-800 mb-4">三種共用權限介紹</h3>
-                            <div class="space-y-4">
-                                <div class="flex gap-4 items-start">
-                                    <div class="bg-gray-100 p-2 rounded text-gray-600"><i data-lucide="eye" class="w-5 h-5"></i></div>
-                                    <div>
-                                        <h4 class="font-bold text-gray-800">檢視者 (Viewer)</h4>
-                                        <p class="text-sm text-gray-600">對方只能閱讀文件內容，不能修改，也不能留下註解。適合發布最終公告或簡章。</p>
-                                    </div>
-                                </div>
-                                <div class="flex gap-4 items-start">
-                                    <div class="bg-blue-50 p-2 rounded text-blue-600"><i data-lucide="message-square" class="w-5 h-5"></i></div>
-                                    <div>
-                                        <h4 class="font-bold text-gray-800">加註者 (Commenter)</h4>
-                                        <p class="text-sm text-gray-600">對方不能直接修改內文，但可以選取文字「新增註解」，或是提出「建議編輯」。適合請人校稿時使用。</p>
-                                    </div>
-                                </div>
-                                <div class="flex gap-4 items-start">
-                                    <div class="bg-green-50 p-2 rounded text-green-600"><i data-lucide="edit-3" class="w-5 h-5"></i></div>
-                                    <div>
-                                        <h4 class="font-bold text-gray-800">編輯者 (Editor)</h4>
-                                        <p class="text-sm text-gray-600">對方擁有與您幾乎相同的權限，可以直接修改、刪除內容。適合團隊共同撰寫報告。</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Fake Share Modal -->
-                    <div id="share-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center fade-in">
-                        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden m-4">
-                            <div class="p-4 border-b flex justify-between items-center">
-                                <h3 class="text-lg font-bold">與他人和群組共用</h3>
-                                <button onclick="closeShareModal()" class="text-gray-500 hover:text-gray-700">
-                                    <i data-lucide="x" class="w-5 h-5"></i>
-                                </button>
-                            </div>
-                            <div class="p-4">
-                                <div class="flex gap-2 mb-4">
-                                    <input type="text" placeholder="新增使用者或群組" class="flex-1 border border-gray-300 rounded px-3 py-2 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
-                                    <select class="border border-gray-300 rounded px-3 py-2 bg-gray-50 focus:outline-none">
-                                        <option>編輯者</option>
-                                        <option>加註者</option>
-                                        <option>檢視者</option>
-                                    </select>
-                                </div>
-                                <div class="border border-gray-200 rounded-lg p-3">
-                                    <p class="text-sm font-bold text-gray-700 mb-1">一般存取權</p>
-                                    <div class="flex justify-between items-center">
-                                        <div class="flex items-center gap-2">
-                                            <div class="bg-gray-100 p-1.5 rounded-full"><i data-lucide="lock" class="w-4 h-4 text-gray-600"></i></div>
-                                            <div>
-                                                <select class="text-sm font-medium bg-transparent border-none focus:outline-none text-blue-600">
-                                                    <option>限制</option>
-                                                    <option>知道連結的任何人</option>
-                                                </select>
-                                                <p class="text-xs text-gray-500">只有新增的使用者才能透過連結開啟</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="p-4 bg-gray-50 border-t flex justify-between items-center">
-                                <button class="text-blue-600 border border-gray-300 bg-white hover:bg-gray-50 px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2">
-                                    <i data-lucide="link" class="w-4 h-4"></i> 複製連結
-                                </button>
-                                <button onclick="closeShareModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-full text-sm font-medium">
-                                    完成
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                `
-            },
-            {
-                id: 'history',
-                icon: 'history',
-                title: '版本紀錄',
-                content: `
-                    <div class="fade-in">
-                        <h2 class="text-3xl font-bold text-gray-800 mb-6 border-b pb-4">版本紀錄 (時光機)</h2>
-                        <p class="text-gray-600 mb-6">不小心刪掉了一大段文字？或是想看看別人改了什麼？不用怕，Google 文件會自動幫你存檔，並保留所有的歷史紀錄。</p>
-
-                        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-8 rounded-xl border border-blue-100 text-center">
-                            <i data-lucide="history" class="w-16 h-16 text-blue-400 mx-auto mb-4"></i>
-                            <h3 class="text-xl font-bold text-blue-900 mb-2">如何開啟版本紀錄？</h3>
-                            <p class="text-blue-800 mb-6">點擊上方選單：<strong>檔案</strong> > <strong>版本紀錄</strong> > <strong>查看版本紀錄</strong></p>
-                            
-                            <div class="inline-block bg-white px-4 py-2 rounded-lg shadow-sm text-sm text-gray-600">
-                                快捷鍵： <kbd class="bg-gray-100 px-1 py-0.5 rounded border">Ctrl</kbd> + <kbd class="bg-gray-100 px-1 py-0.5 rounded border">Alt</kbd> + <kbd class="bg-gray-100 px-1 py-0.5 rounded border">Shift</kbd> + <kbd class="bg-gray-100 px-1 py-0.5 rounded border">H</kbd>
-                            </div>
-                        </div>
-
-                        <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
-                                <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center text-green-600 mb-3">
-                                    <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
-                                </div>
-                                <h4 class="font-bold text-gray-800 mb-2">還原舊版本</h4>
-                                <p class="text-sm text-gray-600">在右側面板選擇過去的時間點，文件就會預覽當時的狀態。點擊上方的「還原此版本」，就能搭時光機回到過去。</p>
-                            </div>
-                            <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
-                                <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 mb-3">
-                                    <i data-lucide="eye" class="w-5 h-5"></i>
-                                </div>
-                                <h4 class="font-bold text-gray-800 mb-2">查看誰改了什麼</h4>
-                                <p class="text-sm text-gray-600">在版本紀錄中，不同使用者的修改會用不同顏色標記。你可以清楚看到哪一段文字是誰在什麼時間點加入或刪除的。</p>
-                            </div>
-                        </div>
-                    </div>
-                `
-            },
-            {
-                id: 'download',
-                icon: 'download',
-                title: '下載與匯出',
-                content: `
-                    <div class="fade-in">
-                        <h2 class="text-3xl font-bold text-gray-800 mb-6 border-b pb-4">下載與匯出</h2>
-                        <p class="text-gray-600 mb-6">雖然 Google 文件是雲端作業，但有時候我們還是需要實體檔案來寄送或繳交作業。</p>
-
-                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                            <div class="bg-gray-50 border-b border-gray-100 p-4">
-                                <h3 class="font-bold text-gray-800">操作步驟： 檔案 > 下載</h3>
-                            </div>
-                            <div class="p-6">
-                                <p class="text-gray-600 mb-4">您可以將 Google 文件轉換成多種常見格式：</p>
-                                
-                                <ul class="space-y-4">
-                                    <li class="flex items-start gap-4">
-                                        <div class="bg-blue-100 p-2 rounded text-blue-700 mt-1"><i data-lucide="file-word" class="w-5 h-5"></i></div>
-                                        <div>
-                                            <h4 class="font-bold text-gray-800">Microsoft Word (.docx)</h4>
-                                            <p class="text-sm text-gray-500">最常用的選項。下載後可以用 Office Word 開啟，排版通常能保持 90% 以上的一致性。</p>
-                                        </div>
-                                    </li>
-                                    <li class="flex items-start gap-4">
-                                        <div class="bg-red-100 p-2 rounded text-red-700 mt-1"><i data-lucide="file-text" class="w-5 h-5"></i></div>
-                                        <div>
-                                            <h4 class="font-bold text-gray-800">PDF 文件 (.pdf)</h4>
-                                            <p class="text-sm text-gray-500">如果擔心排版跑掉，或是要繳交正式報告、履歷，強烈建議下載為 PDF。任何人開啟看起來都會一模一樣。</p>
-                                        </div>
-                                    </li>
-                                    <li class="flex items-start gap-4">
-                                        <div class="bg-gray-100 p-2 rounded text-gray-700 mt-1"><i data-lucide="file" class="w-5 h-5"></i></div>
-                                        <div>
-                                            <h4 class="font-bold text-gray-800">純文字 (.txt)</h4>
-                                            <p class="text-sm text-gray-500">移除所有圖片、表格和格式，只保留純粹的文字內容。</p>
-                                        </div>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-
-                        <div class="mt-8 flex justify-center">
-                            <div class="bg-green-50 text-green-800 px-6 py-4 rounded-lg flex items-center gap-3 border border-green-200">
-                                <i data-lucide="check-circle" class="w-6 h-6"></i>
+                        <h2 class="text-3xl font-bold text-gray-800 mb-6 border-b pb-4">共用權限有三種</h2>
+                        <p class="text-gray-600 mb-6">點擊右上角的「共用」按鈕，您可以決定別人打開這份文件時能做什麼事：</p>
+                        
+                        <div class="bg-white p-2 rounded-xl shadow-sm border border-gray-100 mb-6 space-y-2">
+                            <div class="flex gap-4 items-center p-4 hover:bg-gray-50 rounded-lg transition-colors">
+                                <div class="bg-gray-100 p-3 rounded-full text-gray-600"><i data-lucide="eye" class="w-6 h-6"></i></div>
                                 <div>
-                                    <strong class="block">恭喜！</strong>
-                                    <span class="text-sm">您已經完成了 Google 文件的基本操作導覽。</span>
+                                    <h4 class="font-bold text-gray-800 text-lg">檢視者 (Viewer)</h4>
+                                    <p class="text-sm text-gray-500">只能看，不能改，不能留言。</p>
+                                </div>
+                            </div>
+                            <div class="flex gap-4 items-center p-4 bg-yellow-50 border border-yellow-100 rounded-lg">
+                                <div class="bg-yellow-200 p-3 rounded-full text-yellow-700"><i data-lucide="message-square" class="w-6 h-6"></i></div>
+                                <div>
+                                    <h4 class="font-bold text-yellow-900 text-lg">加註者 (Commenter)</h4>
+                                    <p class="text-sm text-yellow-800">不能改內文，但可以<strong class="underline">選取文字畫重點、留言或提出修改建議</strong>。適合請人校稿。</p>
+                                </div>
+                            </div>
+                            <div class="flex gap-4 items-center p-4 hover:bg-gray-50 rounded-lg transition-colors">
+                                <div class="bg-green-100 p-3 rounded-full text-green-600"><i data-lucide="edit-3" class="w-6 h-6"></i></div>
+                                <div>
+                                    <h4 class="font-bold text-gray-800 text-lg">編輯者 (Editor)</h4>
+                                    <p class="text-sm text-gray-500">擁有最高權限，可以直接修改或刪除內容。</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center">
+                            <span class="text-gray-600">學習完畢了嗎？</span>
+                            <button onclick="selectTopic('history')" class="bg-gray-100 hover:bg-blue-50 text-blue-600 font-medium py-2 px-6 rounded-lg transition-colors flex items-center gap-2">下一課 <i data-lucide="arrow-right" class="w-4 h-4"></i></button>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 'history', icon: 'history', title: '05. 歷史與下載',
+                content: `
+                    <div class="fade-in">
+                        <h2 class="text-3xl font-bold text-gray-800 mb-6 border-b pb-4">後悔藥與檔案匯出</h2>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                                <div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center text-indigo-600 mb-4">
+                                    <i data-lucide="history" class="w-6 h-6"></i>
+                                </div>
+                                <h3 class="text-xl font-bold text-gray-800 mb-2">版本紀錄</h3>
+                                <p class="text-sm text-gray-600 mb-2">不小心刪除大量內容？按 Ctrl+Z 沒用怎麼辦？</p>
+                                <p class="text-sm font-medium text-indigo-700 bg-indigo-50 p-2 rounded">解答：去「檔案」>「版本紀錄」找回過去存檔的版本！</p>
+                            </div>
+
+                            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                                <div class="w-12 h-12 bg-teal-100 rounded-lg flex items-center justify-center text-teal-600 mb-4">
+                                    <i data-lucide="download" class="w-6 h-6"></i>
+                                </div>
+                                <h3 class="text-xl font-bold text-gray-800 mb-2">下載為 PDF</h3>
+                                <p class="text-sm text-gray-600 mb-2">要交作業了，怕老師用不同軟體打開排版會跑掉？</p>
+                                <p class="text-sm font-medium text-teal-700 bg-teal-50 p-2 rounded">解答：「檔案」>「下載」> 選擇「PDF 文件 (.pdf)」，最安全不會跑版。</p>
+                            </div>
+                        </div>
+                        <div class="bg-blue-600 p-6 rounded-xl shadow-sm text-center text-white">
+                            <h3 class="text-xl font-bold mb-2"><i data-lucide="award" class="w-6 h-6 inline-block mr-2 pb-1"></i>準備好接受挑戰了嗎？</h3>
+                            <p class="text-blue-100 mb-6">完成最後的隨堂測驗，分數達 80 分即可獲得結業證書！</p>
+                            <button onclick="selectTopic('quiz')" class="bg-white text-blue-600 hover:bg-gray-100 font-bold py-3 px-8 rounded-full transition-colors shadow-lg">
+                                進入隨堂測驗
+                            </button>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 'quiz', icon: 'clipboard-check', title: '✍️ 隨堂測驗 (結業)',
+                content: `
+                    <div class="fade-in" id="quiz-container">
+                        <h2 class="text-3xl font-bold text-gray-800 mb-2 border-b pb-4 flex items-center gap-3">
+                            <i data-lucide="clipboard-list" class="w-8 h-8 text-blue-600"></i> 結業測驗
+                        </h2>
+                        <p class="text-gray-500 mb-8">請回答以下 5 個問題，答對 4 題(80分)以上即可產出證書。作答完畢請點擊最下方按鈕交卷。</p>
+                        
+                        <form id="quiz-form" class="space-y-8" onsubmit="submitQuiz(event)">
+                            <!-- Questions will be injected here -->
+                        </form>
+                    </div>
+                    
+                    <!-- Result & Certificate Area (Hidden initially) -->
+                    <div id="result-container" class="hidden fade-in text-center py-10">
+                        <div id="score-circle" class="w-32 h-32 mx-auto rounded-full flex items-center justify-center text-4xl font-bold text-white mb-6 shadow-lg">
+                            <!-- Score injected here -->
+                        </div>
+                        <h2 id="result-title" class="text-3xl font-bold text-gray-800 mb-2">測驗完成</h2>
+                        <p id="result-msg" class="text-gray-600 mb-8 max-w-md mx-auto"></p>
+                        
+                        <div id="cert-actions" class="hidden flex justify-center gap-4">
+                            <button onclick="generatePDF()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition-colors flex items-center gap-2 shadow-md">
+                                <i data-lucide="download"></i> 下載專屬證書 PDF
+                            </button>
+                            <button onclick="showCertificatePreview()" class="bg-white border-2 border-green-600 text-green-700 hover:bg-green-50 font-bold py-3 px-6 rounded-lg transition-colors">
+                                預覽證書
+                            </button>
+                        </div>
+                        <div id="retry-action" class="hidden">
+                            <button onclick="resetQuiz()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full transition-colors shadow-md">
+                                <i data-lucide="rotate-ccw" class="w-5 h-5 inline-block mr-1"></i> 重新測驗
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Certificate HTML Template (Used for PDF generation & Preview) -->
+                    <div id="certificate-template" class="hidden">
+                        <div class="bg-white w-[800px] h-[600px] p-10 relative overflow-hidden text-center text-gray-800 shadow-2xl mx-auto my-8 border border-gray-200">
+                            <!-- Decorative borders -->
+                            <div class="absolute top-4 left-4 right-4 bottom-4 border-4 border-double border-blue-800 opacity-20"></div>
+                            <div class="absolute top-6 left-6 right-6 bottom-6 border border-blue-600 opacity-40"></div>
+                            
+                            <!-- Content -->
+                            <div class="relative z-10 flex flex-col h-full justify-between py-8">
+                                <div>
+                                    <div class="flex justify-center mb-6">
+                                        <div class="bg-blue-600 text-white p-3 rounded-full">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+                                        </div>
+                                    </div>
+                                    <h1 class="cert-font text-5xl font-bold tracking-widest text-blue-900 mb-2">結 業 證 書</h1>
+                                    <p class="text-sm tracking-widest text-gray-500 uppercase mb-10">Certificate of Completion</p>
+                                </div>
+                                
+                                <div class="space-y-6">
+                                    <p class="text-xl text-gray-600">茲證明</p>
+                                    <div class="border-b-2 border-gray-400 inline-block px-10 pb-2 min-w-[300px]">
+                                        <p class="text-3xl font-bold text-gray-800">
+                                            <span id="cert-class" class="text-xl text-gray-500 mr-2"></span>
+                                            <span id="cert-name"></span>
+                                            <span class="text-xl text-gray-500 ml-2">同學</span>
+                                        </p>
+                                    </div>
+                                    <p class="text-lg text-gray-600 max-w-lg mx-auto leading-relaxed">
+                                        已成功完成「Google 文件基本操作指引」之線上課程，並於隨堂評量中取得 <span id="cert-score" class="font-bold text-blue-700 text-2xl"></span> 分之優異成績，特發此證以茲鼓勵。
+                                    </p>
+                                </div>
+                                
+                                <div class="flex justify-between items-end px-16 mt-8">
+                                    <div class="text-left">
+                                        <p class="text-sm text-gray-500 mb-1">Date / 日期</p>
+                                        <p class="font-bold border-t border-gray-300 pt-2 w-32" id="cert-date"></p>
+                                    </div>
+                                    <div class="text-right">
+                                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=DocsCertified" class="inline-block opacity-80" alt="QR Code">
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -459,25 +394,38 @@
 
         let currentTopicId = 'intro';
 
-        // Initialize Application
+        // --- Initialization ---
         function init() {
-            renderSidebar();
-            renderContent(currentTopicId);
             lucide.createIcons();
+            
+            // Handle Login Form
+            document.getElementById('student-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                studentInfo.className = document.getElementById('input-class').value;
+                studentInfo.seatNumber = document.getElementById('input-number').value;
+                studentInfo.name = document.getElementById('input-name').value;
+                
+                // Update UI with student info
+                document.getElementById('display-class').textContent = `${studentInfo.className} - ${studentInfo.seatNumber}號`;
+                document.getElementById('display-name').textContent = studentInfo.name;
+                
+                // Hide login screen
+                const loginScreen = document.getElementById('login-screen');
+                loginScreen.style.opacity = '0';
+                setTimeout(() => {
+                    loginScreen.style.display = 'none';
+                    // Render app content
+                    renderSidebar();
+                    renderContent('intro');
+                }, 500);
+            });
 
             // Mobile menu listeners
             document.getElementById('mobile-menu-btn').addEventListener('click', toggleMobileMenu);
             document.getElementById('sidebar-overlay').addEventListener('click', toggleMobileMenu);
-
-            // Simulator listeners
-            document.addEventListener('change', function(e) {
-                if(e.target && e.target.id === 'sim-font'){
-                    document.getElementById('sim-text').style.fontFamily = e.target.value;
-                }
-            });
         }
 
-        // Render Sidebar Navigation
+        // --- Navigation & Rendering ---
         function renderSidebar() {
             const navMenu = document.getElementById('nav-menu');
             navMenu.innerHTML = '';
@@ -486,7 +434,7 @@
                 const btn = document.createElement('button');
                 btn.className = `w-full text-left px-6 py-3 flex items-center gap-3 transition-colors ${
                     topic.id === currentTopicId 
-                    ? 'bg-blue-50 text-blue-700 border-r-4 border-blue-600 font-medium' 
+                    ? 'bg-blue-50 text-blue-700 border-r-4 border-blue-600 font-bold' 
                     : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                 }`;
                 btn.onclick = () => selectTopic(topic.id);
@@ -500,90 +448,191 @@
             lucide.createIcons();
         }
 
-        // Handle Topic Selection
         function selectTopic(id) {
             currentTopicId = id;
             renderSidebar();
             renderContent(id);
             
-            // Close mobile menu if open
             const sidebar = document.getElementById('sidebar');
             if (!sidebar.classList.contains('-translate-x-full')) {
                 toggleMobileMenu();
             }
-
-            // Scroll to top
             document.querySelector('main').scrollTop = 0;
         }
 
-        // Render Main Content
         function renderContent(id) {
             const topic = guideData.find(t => t.id === id);
             if (topic) {
                 const contentArea = document.getElementById('content-area');
-                // clear first to re-trigger animation
                 contentArea.innerHTML = ''; 
                 setTimeout(() => {
                     contentArea.innerHTML = topic.content;
+                    
+                    // Special injections based on topic
+                    if (id === 'intro' && document.getElementById('welcome-name')) {
+                        document.getElementById('welcome-name').textContent = studentInfo.name;
+                    }
+                    if (id === 'quiz') {
+                        renderQuizForm();
+                    }
+                    
                     lucide.createIcons();
                 }, 10);
             }
         }
 
-        // Mobile Menu Toggle
         function toggleMobileMenu() {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('sidebar-overlay');
-            
             sidebar.classList.toggle('-translate-x-full');
             overlay.classList.toggle('hidden');
         }
 
-        // --- Simulator Functions ---
-
-        // Text Formatting Simulator
-        let formatState = { bold: false, italic: false, underline: false };
-        
-        function toggleFormat(type) {
-            const textEl = document.getElementById('sim-text');
-            const btnEl = document.getElementById(`btn-${type}`);
+        // --- Quiz Logic ---
+        function renderQuizForm() {
+            const form = document.getElementById('quiz-form');
+            form.innerHTML = '';
             
-            formatState[type] = !formatState[type];
-            
-            if (type === 'bold') {
-                textEl.style.fontWeight = formatState.bold ? 'bold' : 'normal';
-            } else if (type === 'italic') {
-                textEl.style.fontStyle = formatState.italic ? 'italic' : 'normal';
-            } else if (type === 'underline') {
-                textEl.style.textDecoration = formatState.underline ? 'underline' : 'none';
-            }
+            quizQuestions.forEach((q, qIndex) => {
+                const qDiv = document.createElement('div');
+                qDiv.className = 'bg-white p-6 rounded-xl shadow-sm border border-gray-100';
+                
+                let optionsHtml = '';
+                q.options.forEach((opt, oIndex) => {
+                    optionsHtml += `
+                        <label class="quiz-option cursor-pointer block mt-3">
+                            <input type="radio" name="q${qIndex}" value="${oIndex}" class="peer sr-only" required>
+                            <div class="flex items-center p-4 border border-gray-200 rounded-lg transition-all hover:bg-gray-50">
+                                <div class="w-5 h-5 rounded-full border border-gray-300 mr-3 flex items-center justify-center">
+                                    <div class="radio-inner w-2.5 h-2.5 rounded-full bg-transparent transition-colors"></div>
+                                </div>
+                                <span class="text-gray-700">${opt}</span>
+                            </div>
+                        </label>
+                    `;
+                });
 
-            if (formatState[type]) {
-                btnEl.classList.add('bg-blue-100', 'text-blue-700');
-                btnEl.classList.remove('text-gray-700', 'hover:bg-gray-200');
+                qDiv.innerHTML = `
+                    <h3 class="font-bold text-lg text-gray-800 mb-4 flex gap-2">
+                        <span class="text-blue-600 bg-blue-50 px-2 rounded h-fit">Q${qIndex + 1}</span> 
+                        <span>${q.q}</span>
+                    </h3>
+                    <div>${optionsHtml}</div>
+                `;
+                form.appendChild(qDiv);
+            });
+
+            // Add submit button
+            form.innerHTML += `
+                <div class="text-center pt-4">
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-12 rounded-full transition-colors shadow-md text-lg">
+                        <i data-lucide="send" class="w-5 h-5 inline-block mr-2 pb-0.5"></i>交卷看成績
+                    </button>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        function submitQuiz(e) {
+            e.preventDefault();
+            
+            // Calculate Score
+            let correctCount = 0;
+            const formData = new FormData(e.target);
+            
+            quizQuestions.forEach((q, index) => {
+                const userAnswer = parseInt(formData.get(`q${index}`));
+                if (userAnswer === q.answer) {
+                    correctCount++;
+                }
+            });
+
+            const score = (correctCount / quizQuestions.length) * 100;
+            const passed = score >= 80;
+
+            // Hide Quiz, Show Results
+            document.getElementById('quiz-container').classList.add('hidden');
+            const resultContainer = document.getElementById('result-container');
+            resultContainer.classList.remove('hidden');
+
+            // Update Result UI
+            const scoreCircle = document.getElementById('score-circle');
+            scoreCircle.textContent = score;
+            
+            const resultTitle = document.getElementById('result-title');
+            const resultMsg = document.getElementById('result-msg');
+            const certActions = document.getElementById('cert-actions');
+            const retryAction = document.getElementById('retry-action');
+
+            if (passed) {
+                scoreCircle.className = "w-32 h-32 mx-auto rounded-full flex items-center justify-center text-5xl font-bold text-white mb-6 shadow-lg bg-green-500 shadow-green-200";
+                resultTitle.textContent = "恭喜通過！";
+                resultTitle.className = "text-3xl font-bold text-green-600 mb-2";
+                resultMsg.textContent = `太棒了 ${studentInfo.name} 同學！您展現了對 Google 文件的熟悉度，請領取您的專屬結業證書。`;
+                certActions.classList.remove('hidden');
+                retryAction.classList.add('hidden');
+                
+                // Prepare Certificate Data
+                prepareCertificate(score);
             } else {
-                btnEl.classList.remove('bg-blue-100', 'text-blue-700');
-                btnEl.classList.add('text-gray-700', 'hover:bg-gray-200');
+                scoreCircle.className = "w-32 h-32 mx-auto rounded-full flex items-center justify-center text-5xl font-bold text-white mb-6 shadow-lg bg-red-500 shadow-red-200";
+                resultTitle.textContent = "再接再厲！";
+                resultTitle.className = "text-3xl font-bold text-red-600 mb-2";
+                resultMsg.textContent = `很可惜，您只答對了 ${correctCount} 題，未達 80 分標準。請複習前面的章節後再試一次！`;
+                certActions.classList.add('hidden');
+                retryAction.classList.remove('hidden');
             }
+            
+            // Scroll to top
+            document.querySelector('main').scrollTop = 0;
         }
 
-        function setAlignment(align) {
-            document.getElementById('sim-text').style.textAlign = align;
+        function resetQuiz() {
+            document.getElementById('result-container').classList.add('hidden');
+            document.getElementById('quiz-container').classList.remove('hidden');
+            document.getElementById('quiz-form').reset();
+            document.querySelector('main').scrollTop = 0;
         }
 
-        function changeColor(color) {
-            document.getElementById('sim-text').style.color = color;
+        // --- Certificate Generation ---
+        function prepareCertificate(score) {
+            const today = new Date();
+            const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+            
+            document.getElementById('cert-class').textContent = `${studentInfo.className} (${studentInfo.seatNumber}號)`;
+            document.getElementById('cert-name').textContent = studentInfo.name;
+            document.getElementById('cert-score').textContent = score;
+            document.getElementById('cert-date').textContent = dateStr;
         }
 
-        // Share Modal Simulator
-        function openShareModal() {
-            const modal = document.getElementById('share-modal');
-            if(modal) modal.classList.remove('hidden');
+        function showCertificatePreview() {
+            const certDiv = document.getElementById('certificate-template');
+            certDiv.classList.remove('hidden');
+            // Scroll to cert
+            certDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
-        function closeShareModal() {
-            const modal = document.getElementById('share-modal');
-            if(modal) modal.classList.add('hidden');
+        function generatePDF() {
+            // Temporarily show the template for html2pdf to capture
+            const element = document.getElementById('certificate-template');
+            element.classList.remove('hidden');
+            
+            // Use the inner div as the target for PDF (the 800x600 container)
+            const targetElement = element.firstElementChild;
+
+            const opt = {
+                margin:       0,
+                filename:     `Google文件證書_${studentInfo.className}_${studentInfo.name}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'px', format: [800, 600], orientation: 'landscape' }
+            };
+
+            // Generate and save
+            html2pdf().set(opt).from(targetElement).save().then(() => {
+                // Re-hide if it was meant to be hidden (unless user clicked preview first)
+                // For simplicity, we leave it visible after download so they can see what downloaded.
+            });
         }
 
         // Run init on load
