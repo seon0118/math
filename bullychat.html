@@ -102,6 +102,29 @@
                 if (!inputText.trim() || chatData.inputDisabled) return;
                 
                 const userMsg = inputText.trim();
+
+                // --- 使用者輸入過濾機制 (防止亂輸入字眼) ---
+                const bannedWords = ['幹', '靠', '媽的', '智障', '垃圾', '白痴', '白癡', '死', '廢物', '賤', '婊', '屌', '操', '沙小', '三小'];
+                const hasBannedWord = bannedWords.some(word => userMsg.includes(word));
+
+                // 簡單的亂碼檢查 (例如連續相同字元超過5個)
+                const isGibberish = /^(.)\1{5,}$/.test(userMsg);
+
+                if (hasBannedWord || isGibberish) {
+                    setChatData(prev => ({
+                        ...prev,
+                        messages: [...prev.messages, {
+                            id: Date.now() + Math.random(),
+                            sender: 'system',
+                            text: '⚠️ 系統提示：請注意用詞，我們不該用惡意回應惡意，或是輸入無意義的字元。',
+                            isSystem: true
+                        }]
+                    }));
+                    setInputText('');
+                    return; // 終止發送，不讓訊息送出
+                }
+                // ----------------------------------------
+
                 setInputText('');
                 
                 setChatData(prev => ({
@@ -434,9 +457,8 @@
                     }
 
                     else if (scene === 'dm_fight') {
-                        updateChat({ sender: 'me', text: '你們到底有什麼毛病？一群只會躲在鍵盤後面的廢物！' });
-                        await delay(1500);
-                        updateChat({ sender: 'me', text: '有種當面講啊！我都記下來了，你們全都會下地獄！' });
+                        // 移除原本寫死的髒話，以避免矛盾，這裡直接切換到論壇階段
+                        updateChat({ sender: 'system', text: '即使你想反擊，系統也建議你冷靜。', isSystem: true });
                         await delay(1500);
                         updateChat({ sender: 'other', senderName: '匿名', text: '哇塞破防了耶😂😂 大家快來看小偷發瘋囉！截圖發論壇！', isAnon: true });
                         await delay(2000);
