@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>迴聲深淵：網路霸凌互動體驗</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
+        
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #0f172a;
+            color: #f1f5f9;
+            margin: 0;
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        .chat-container {
+            max-width: 500px;
+            margin: 0 auto;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-color: #1e293b;
+            box-shadow: 0 0 60px rgba(0,0,0,0.7);
+        }
+
+        .message {
+            margin: 12px;
+            padding: 14px 18px;
+            border-radius: 20px;
+            max-width: 85%;
+            word-wrap: break-word;
+            animation: fadeIn 0.4s ease-out;
+            position: relative;
+            font-size: 1.05rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .message-other {
+            background-color: #334155;
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+            color: #f8fafc;
+        }
+
+        .message-self {
+            background-color: #2563eb;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+            color: #ffffff;
+        }
+
+        .message-system {
+            background-color: rgba(248, 113, 113, 0.15);
+            color: #f87171;
+            align-self: center;
+            max-width: 90%;
+            font-size: 0.95rem;
+            text-align: center;
+            border-radius: 12px;
+            border: 1px solid rgba(248, 113, 113, 0.3);
+            margin: 20px 10px;
+            font-weight: 500;
+        }
+
+        .ending-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #ef4444;
+            display: block;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        .survival-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #10b981;
+            display: block;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        .ending-text {
+            color: #cbd5e1;
+            font-size: 1.1rem;
+            line-height: 1.8;
+        }
+
+        .glitch-subtle {
+            position: relative;
+            animation: glitch-color 3s infinite;
+        }
+
+        @keyframes glitch-color {
+            0% { text-shadow: 1px 0 #ff0000, -1px 0 #00ffff; }
+            50% { text-shadow: -1px 0 #ff0000, 1px 0 #00ffff; }
+            100% { text-shadow: 1px 0 #ff0000, -1px 0 #00ffff; }
+        }
+
+        .choice-btn {
+            display: block;
+            width: 100%;
+            padding: 18px;
+            margin-top: 12px;
+            background-color: #334155;
+            border: 1px solid #475569;
+            border-radius: 12px;
+            text-align: left;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            color: #e2e8f0;
+        }
+
+        .choice-btn:hover {
+            background-color: #475569;
+            border-color: #64748b;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .choice-container {
+            padding: 24px;
+            background: linear-gradient(to top, rgba(15, 23, 42, 1), rgba(15, 23, 42, 0.95));
+            border-top: 1px solid #334155;
+            position: sticky;
+            bottom: 0;
+            z-index: 20;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        #history {
+            flex-grow: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            padding-bottom: 40px;
+        }
+
+        .typing-indicator {
+            font-size: 0.85rem;
+            color: #94a3b8;
+            margin-left: 15px;
+            margin-bottom: 15px;
+            display: none;
+            font-style: italic;
+        }
+
+        .restart-btn {
+            background-color: #ef4444 !important;
+            text-align: center !important;
+            font-weight: 700 !important;
+        }
+
+        .survival-btn {
+            background-color: #059669 !important;
+            text-align: center !important;
+            font-weight: 700 !important;
+        }
+
+        .fail-counter {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 10px;
+            color: #475569;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+<div id="start-screen" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-slate-900 p-6 text-center">
+    <div class="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
+        <h1 class="text-5xl font-bold mb-2 text-white tracking-tighter">迴聲深淵</h1>
+        <p class="text-red-400 font-medium text-lg">ECHO ABYSS</p>
+    </div>
+    <p class="text-slate-400 mb-10 max-w-md text-lg">
+        網路上的惡意一旦開始，就難以終止。<br>
+        你能找到通往光明的出口嗎？
+    </p>
+    <button onclick="startGame()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-12 rounded-full transition-all text-xl shadow-lg shadow-blue-900/40">
+        開啟手機螢幕
+    </button>
+    <div id="hint-text" class="mt-8 text-xs text-slate-600 italic"></div>
+</div>
+
+<div class="chat-container hidden" id="game-ui">
+    <div class="fail-counter" id="fail-display"></div>
+    <div class="bg-slate-800 p-4 sticky top-0 z-30 flex items-center shadow-xl border-b border-slate-700">
+        <div class="w-12 h-12 bg-indigo-600 rounded-full mr-3 flex items-center justify-center font-bold text-white">班</div>
+        <div class="flex-grow">
+            <div class="font-bold text-base">8年3班 班級群組 (32)</div>
+            <div id="connection-status" class="text-xs text-green-400 flex items-center">
+                <span class="w-2 h-2 bg-green-500 rounded-full mr-1 animate-pulse"></span>
+                ● 28 人在線上
+            </div>
+        </div>
+    </div>
+
+    <div id="history"></div>
+
+    <div id="typing" class="typing-indicator">有人正在輸入...</div>
+
+    <div class="choice-container" id="choices"></div>
+</div>
+
+<script>
+    const historyEl = document.getElementById('history');
+    const choicesEl = document.getElementById('choices');
+    const typingEl = document.getElementById('typing');
+    const failDisplay = document.getElementById('fail-display');
+    const hintText = document.getElementById('hint-text');
+
+    // 初始化失敗計數器 (從 localStorage 讀取)
+    let failCount = parseInt(localStorage.getItem('cyberbullying_fail_count')) || 0;
+
+    function updateHint() {
+        if (failCount > 0 && failCount < 3) {
+            hintText.innerText = `你已經在深淵中迷失了 ${failCount} 次...`;
+        } else if (failCount >= 3) {
+            hintText.innerText = "經歷了足夠的黑暗，你似乎看到了一絲理性的光芒。";
+            hintText.classList.remove('text-slate-600');
+            hintText.classList.add('text-green-500');
+        }
+    }
+    updateHint();
+
+    const story = {
+        start: {
+            messages: [
+                { sender: "阿強", text: "欸欸，你們看這張照片，這不是我們班的某人嗎？XD", type: "other" },
+                { sender: "系統", text: "[圖片訊息：你在換衣間不小心摔倒，表情扭曲且衣衫不整的側拍照]", type: "system" },
+                { sender: "小美", text: "天哪...這表情也太醜了吧，是在演恐怖片喔？", type: "other" }
+            ],
+            choices: [
+                { text: "在群組回覆：那是個意外，請刪掉！", next: "defend_angry" },
+                { text: "私訊平常比較好的同學『阿明』求助", next: "help_friend" },
+                // 隱藏選項，僅在失敗 3 次後出現
+                { text: "保持冷靜，先截圖保存所有證據", next: "survival_step1", condition: () => failCount >= 3 }
+            ]
+        },
+
+        // --- 求生路徑分支 (正向) ---
+        survival_step1: {
+            messages: [
+                { sender: "系統", text: "你感到心跳加速，雙手顫抖，但你強迫自己按下電源鍵與音量鍵。", type: "system" },
+                { sender: "系統", text: "【證據已存入相簿】。你記錄下了發布者、時間以及群組中的嘲諷言論。", type: "system" }
+            ],
+            choices: [
+                { text: "關閉網路，尋找校外的專業諮詢資源", next: "survival_step2" }
+            ]
+        },
+
+        survival_step2: {
+            messages: [
+                { sender: "系統", text: "你放下手機，深呼吸。你撥打了反霸凌諮詢專線。", type: "system" },
+                { sender: "專業諮詢員", text: "這不是你的錯。現在你需要將證據交給能信任的大人。", type: "other" },
+                { sender: "系統", text: "你鼓起勇氣，對父母坦白了這一切。", type: "system" }
+            ],
+            choices: [
+                { text: "正式向學校申訴並保留法律追訴權", next: "survival_step3" }
+            ]
+        },
+
+        survival_step3: {
+            messages: [
+                { sender: "系統", text: "由於證據確鑿，阿強與大凱無法抵賴。學校展開了正式調查。", type: "system" },
+                { sender: "阿強", text: "（私訊）欸...對不起啦，我撤掉照片了，可以叫你爸媽撤告嗎？", type: "other" }
+            ],
+            choices: [
+                { text: "堅定立場：我需要的是正式的道歉與處理", next: "ending_resilience" }
+            ]
+        },
+
+        // --- 負面路徑 ---
+        help_friend: {
+            messages: [
+                { sender: "你", text: "阿明，你能幫我說話嗎？這張照片讓我很不舒服。", type: "self" },
+                { sender: "阿明", text: "我也覺得他們有點過分...但我不敢得罪阿強。", type: "other" }
+            ],
+            choices: [
+                { text: "對阿明訴苦：我真的很想哭，覺得班級好可怕", next: "betrayal" }
+            ]
+        },
+
+        betrayal: {
+            messages: [
+                { sender: "阿強", text: "[轉傳截圖] 喔喔！有人在私下說我們班很可怕耶～", type: "other" },
+                { sender: "系統", text: "阿明將你的心聲出賣了。這班級已無你容身之處。", type: "system" }
+            ],
+            choices: [
+                { text: "陷入徹底的孤立", next: "ending_dark" }
+            ]
+        },
+
+        defend_angry: {
+            messages: [
+                { sender: "你", text: "那是個意外，請刪掉！這一點都不好笑！", type: "self" },
+                { sender: "阿強", text: "喔～生氣囉？開個玩笑而已，這麼玻璃心？", type: "other" },
+                { sender: "系統", text: "【你的回覆被截圖並製成『崩潰小醜』貼圖】", type: "system" }
+            ],
+            choices: [
+                { text: "現實生活中找阿強理論", next: "recorded_video" }
+            ]
+        },
+
+        recorded_video: {
+            messages: [
+                { sender: "系統", text: "你在走廊攔住阿強，阿強卻笑著讓同學在旁邊錄影。", type: "system" },
+                { sender: "大凱", text: "[發布新影片] 來看喔！瘋子要打人了喔～", type: "other" }
+            ],
+            choices: [
+                { text: "情緒失控衝過去", next: "ending_violence" }
+            ]
+        },
+
+        // --- 結局 ---
+        ending_resilience: {
+            messages: [
+                { sender: "系統", text: "【結局：自我奪還】", type: "system", isSurvival: true },
+                { text: "你學會了透過正確的管道保護自己。雖然流言蜚語需要時間消散，但你不再是任人宰割的獵物。", type: "system" },
+                { text: "這段經歷讓你更堅強，你也明白：有些惡意無法透過軟弱來化解。", type: "system" }
+            ],
+            choices: [{ text: "體驗結束 (感謝你的堅韌)", next: "complete" }]
+        },
+        ending_dark: {
+            messages: [
+                { sender: "系統", text: "【結局：信任瓦解】", type: "system", isTitle: true },
+                { text: "你不再相信任何人。網路的惡意像黑洞一樣吞噬了你的日常生活。", type: "system" }
+            ],
+            choices: [{ text: "再次重生 (在痛苦中尋找規律)", next: "start", isRestart: true }]
+        },
+        ending_violence: {
+            messages: [
+                { sender: "系統", text: "【結局：受害者變加害者】", type: "system", isTitle: true },
+                { text: "你動手了，這正中他們下懷。現在網路上的輿論都在罵你是一個『暴力狂』。", type: "system" }
+            ],
+            choices: [{ text: "再次重生 (學習掌控情緒)", next: "start", isRestart: true }]
+        },
+        complete: {
+            messages: [{ sender: "系統", text: "願所有的聲音，都能找到溫暖的迴響。", type: "system" }],
+            choices: [{ text: "重置所有體驗 (清空記憶)", next: "reset_all" }]
+        }
+    };
+
+    function startGame() {
+        document.getElementById('start-screen').classList.add('hidden');
+        document.getElementById('game-ui').classList.remove('hidden');
+        loadNode('start');
+    }
+
+    async function loadNode(nodeKey) {
+        if (nodeKey === 'reset_all') {
+            localStorage.removeItem('cyberbullying_fail_count');
+            location.reload();
+            return;
+        }
+
+        const node = story[nodeKey];
+        choicesEl.innerHTML = '';
+        
+        if (nodeKey === 'start') {
+            historyEl.innerHTML = '<div class="message message-system">202X年10月15日 (週三)</div>';
+            failDisplay.innerText = failCount > 0 ? `死亡循環次數: ${failCount}` : "";
+        }
+
+        for (let msg of node.messages) {
+            typingEl.style.display = 'block';
+            await new Promise(r => setTimeout(r, 600 + Math.random() * 500));
+            typingEl.style.display = 'none';
+            
+            const msgDiv = document.createElement('div');
+            
+            if (msg.isTitle) {
+                msgDiv.className = 'message message-system glitch-subtle';
+                msgDiv.innerHTML = `<span class="ending-title">${msg.text}</span>`;
+                // 增加失敗次數
+                failCount++;
+                localStorage.setItem('cyberbullying_fail_count', failCount);
+            } else if (msg.isSurvival) {
+                msgDiv.className = 'message message-system';
+                msgDiv.style.color = '#10b981';
+                msgDiv.innerHTML = `<span class="survival-title">${msg.text}</span>`;
+            } else {
+                msgDiv.className = `message ${msg.type === 'self' ? 'message-self' : (msg.type === 'system' ? 'message-system' : 'message-other')}`;
+                let content = '';
+                if (msg.sender && msg.type !== 'system') {
+                    content += `<div class="text-xs font-bold ${msg.type === 'self' ? 'text-blue-200' : 'text-slate-400'} mb-1">${msg.sender}</div>`;
+                }
+                content += `<div>${msg.text}</div>`;
+                msgDiv.innerHTML = content;
+            }
+            
+            historyEl.appendChild(msgDiv);
+            historyEl.scrollTop = historyEl.scrollHeight;
+        }
+
+        // 過濾選擇
+        node.choices.forEach(choice => {
+            if (choice.condition && !choice.condition()) return;
+
+            const btn = document.createElement('button');
+            btn.className = `choice-btn ${choice.isRestart ? 'restart-btn' : (choice.next === 'ending_resilience' || choice.next.startsWith('survival') ? 'survival-btn' : '')}`;
+            btn.innerText = choice.text;
+            btn.onclick = () => loadNode(choice.next);
+            choicesEl.appendChild(btn);
+        });
+    }
+</script>
+
+</body>
+</html>
