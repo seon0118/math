@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>方程式佔地賽</title>
+  
+  <!-- 引入 React 與 Tailwind CSS，不需安裝任何環境即可在瀏覽器執行 -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    // --- 圖示元件 (替換原本需要安裝的套件) ---
+    const RefreshCw = ({ className }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+    );
+    const Play = ({ className }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="6 3 20 12 6 21 6 3"/></svg>
+    );
+    const CircleIcon = ({ fill, className }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/></svg>
+    );
+    const Info = ({ className }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+    );
+
+    // --- 遊戲邏輯與元件 ---
+    const generatePoints = () => {
+      const allCoords = [];
+      for (let x = -5; x <= 5; x++) {
+        for (let y = -5; y <= 5; y++) {
+          allCoords.push({ x, y });
+        }
+      }
+      for (let i = allCoords.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [allCoords[i], allCoords[j]] = [allCoords[j], allCoords[i]];
+      }
+      return allCoords.slice(0, 35).map(p => ({ 
+        id: `${p.x},${p.y}`, x: p.x, y: p.y, owner: null 
+      }));
+    };
+
+    const parseInput = (str) => {
+      if (!str && str !== '0') return NaN;
+      const s = String(str).trim();
+      if (s.includes('/')) {
+        const [num, den] = s.split('/');
+        const n = parseFloat(num);
+        const d = parseFloat(den);
+        if (d === 0) return NaN;
+        return n / d;
+      }
+      return parseFloat(s);
+    };
+
+    function App() {
+      const [points, setPoints] = useState([]);
+      const [lines, setLines] = useState([]);
+      const [currentPlayer, setCurrentPlayer] = useState(1);
+      const [phase, setPhase] = useState('draw_condition');
+      const [condition, setCondition] = useState(null);
+      const [inputs, setInputs] = useState({ m: '', b: '', c: '', isVertical: false });
+      const [winner, setWinner] = useState(null);
+      const [errorMsg, setErrorMsg] = useState('');
+      const [lastActionMsg, setLastActionMsg] = useState('');
+
+      const p1Score = points.filter(p => p.owner === 1).length;
+      const p2Score = points.filter(p => p.owner === 2).length;
+      const WINNING_SCORE = 12;
+
+      useEffect(() => {
+        startNewGame();
+      }, []);
+
+      const startNewGame = () => {
+        setPoints(generatePoints());
+        setLines([]);
+        setCurrentPlayer(1);
+        setPhase('draw_condition');
+        setCondition(null);
+        setInputs({ m: '', b: '', c: '', isVertical: false });
+        setWinner(null);
+        setErrorMsg('');
+        setLastActionMsg('遊戲開始！玩家 1 (紅色) 請先抽取條件。');
+      };
+
+      const drawCondition = () => {
+        setErrorMsg('');
+        const types = [
+          { type: 'slope', weight: 3 },
+          { type: 'y-int', weight: 3 },
+          { type: 'point', weight: 3 },
+          { type: 'horizontal', weight: 1 },
+          { type: 'vertical', weight: 1 },
+          { type: 'free', weight: 1 }
+        ];
+        
+        const totalWeight = types.reduce((acc, curr) => acc + curr.weight, 0);
+        let randomNum = Math.random() * totalWeight;
+        let selectedType = 'slope';
+        for (const t of types) {
+          if (randomNum < t.weight) {
+            selectedType = t.type;
+            break;
+          }
+          randomNum -= t.weight;
+        }
+
+        let newCondition = { type: selectedType };
+        
+        if (selectedType === 'slope') {
+          newCondition.val = Math.floor(Math.random() * 7) - 3;
+        } else if (selectedType === 'y-int') {
+          newCondition.val = Math.floor(Math.random() * 9) - 4;
+        } else if (selectedType === 'point') {
+          const unclaimed = points.filter(p => p.owner === null);
+          if (unclaimed.length > 0) {
+            const rp = unclaimed[Math.floor(Math.random() * unclaimed.length)];
+            newCondition.x = rp.x;
+            newCondition.y = rp.y;
+          } else {
+            newCondition = { type: 'free' };
+          }
+        }
+
+        setCondition(newCondition);
+        setInputs({ m: '', b: '', c: '', isVertical: false });
+        setPhase('input_equation');
+        setLastActionMsg(`玩家 ${currentPlayer} 抽到了新條件，請輸入方程式。`);
+      };
+
+      const submitLine = () => {
+        setErrorMsg('');
+        let m = 0, b = 0, isVert = false, x0 = 0;
+        
+        const pm = parseInput(inputs.m);
+        const pb = parseInput(inputs.b);
+        const pc = parseInput(inputs.c);
+
+        if (condition.type === 'slope') {
+          if (isNaN(pb)) return setErrorMsg('請輸入有效的 y 截距 (例如: 2 或 -1/2)');
+          m = condition.val; b = pb;
+        } else if (condition.type === 'y-int') {
+          if (isNaN(pm)) return setErrorMsg('請輸入有效的斜率 (例如: 2 或 -1/2)');
+          m = pm; b = condition.val;
+        } else if (condition.type === 'point') {
+          if (inputs.isVertical) {
+            isVert = true; x0 = condition.x;
+          } else {
+            if (isNaN(pm)) return setErrorMsg('請輸入有效的斜率');
+            m = pm;
+            b = condition.y - m * condition.x;
+          }
+        } else if (condition.type === 'horizontal') {
+          if (isNaN(pc)) return setErrorMsg('請輸入有效的 y 值');
+          m = 0; b = pc;
+        } else if (condition.type === 'vertical') {
+          if (isNaN(pc)) return setErrorMsg('請輸入有效的 x 值');
+          isVert = true; x0 = pc;
+        } else if (condition.type === 'free') {
+          if (inputs.isVertical) {
+            if (isNaN(pc)) return setErrorMsg('請輸入有效的 x 值');
+            isVert = true; x0 = pc;
+          } else {
+            if (isNaN(pm) || isNaN(pb)) return setErrorMsg('請輸入有效的斜率與 y 截距');
+            m = pm; b = pb;
+          }
+        }
+
+        let capturedCount = 0;
+        const newPoints = points.map(p => {
+          if (p.owner !== null) return p;
+          let isOnLine = false;
+          if (isVert) {
+            isOnLine = Math.abs(p.x - x0) < 1e-4;
+          } else {
+            isOnLine = Math.abs(p.y - (m * p.x + b)) < 1e-4;
+          }
+          if (isOnLine) {
+            capturedCount++;
+            return { ...p, owner: currentPlayer };
+          }
+          return p;
+        });
+
+        const newLine = { isVert, m, b, x0, owner: currentPlayer, id: Date.now() };
+        
+        setPoints(newPoints);
+        setLines([...lines, newLine]);
+
+        const currentP1Score = newPoints.filter(p => p.owner === 1).length;
+        const currentP2Score = newPoints.filter(p => p.owner === 2).length;
+
+        if (currentP1Score >= WINNING_SCORE) {
+          setWinner(1);
+          setPhase('game_over');
+          setLastActionMsg(`🎉 玩家 1 成功累積 ${WINNING_SCORE} 個點，獲得勝利！`);
+          return;
+        } else if (currentP2Score >= WINNING_SCORE) {
+          setWinner(2);
+          setPhase('game_over');
+          setLastActionMsg(`🎉 玩家 2 成功累積 ${WINNING_SCORE} 個點，獲得勝利！`);
+          return;
+        }
+
+        setLastActionMsg(`玩家 ${currentPlayer} 畫了直線，佔領了 ${capturedCount} 個點。換對手回合。`);
+        setCurrentPlayer(currentPlayer === 1 ? 2 : 1);
+        setPhase('draw_condition');
+      };
+
+      const getPlayerColor = (player) => player === 1 ? 'text-red-500' : 'text-blue-500';
+      const getPlayerBg = (player) => player === 1 ? 'bg-red-500' : 'bg-blue-500';
+      const getPlayerStroke = (player) => player === 1 ? '#EF4444' : '#3B82F6';
+
+      const renderConditionInput = () => {
+        if (!condition) return null;
+        return (
+          <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 shadow-sm">
+            <h3 className="font-bold text-gray-700 mb-3 flex items-center">
+              <Info className="w-5 h-5 mr-2 text-indigo-500" />
+              當前回合條件
+            </h3>
+            
+            {condition.type === 'slope' && (
+              <div>
+                <p className="text-gray-800 mb-2">限制：直線斜率 <span className="font-bold text-indigo-600">m = {condition.val}</span></p>
+                <div className="flex items-center space-x-2 text-lg">
+                  <span>y = {condition.val}x + </span>
+                  <input type="text" placeholder="輸入 b" value={inputs.b} onChange={(e) => setInputs({...inputs, b: e.target.value})} className="w-24 border-2 border-gray-300 rounded px-2 py-1 focus:border-indigo-500 outline-none" />
+                </div>
+              </div>
+            )}
+
+            {condition.type === 'y-int' && (
+              <div>
+                <p className="text-gray-800 mb-2">限制：直線 y 截距 <span className="font-bold text-indigo-600">b = {condition.val}</span></p>
+                <div className="flex items-center space-x-2 text-lg">
+                  <span>y = </span>
+                  <input type="text" placeholder="輸入 m" value={inputs.m} onChange={(e) => setInputs({...inputs, m: e.target.value})} className="w-24 border-2 border-gray-300 rounded px-2 py-1 focus:border-indigo-500 outline-none" />
+                  <span> x {condition.val >= 0 ? `+ ${condition.val}` : `- ${Math.abs(condition.val)}`}</span>
+                </div>
+              </div>
+            )}
+
+            {condition.type === 'point' && (
+              <div>
+                <p className="text-gray-800 mb-2">限制：必須通過點 <span className="font-bold text-indigo-600">({condition.x}, {condition.y})</span></p>
+                <label className="flex items-center space-x-2 mb-3 text-sm cursor-pointer">
+                  <input type="checkbox" checked={inputs.isVertical} onChange={(e) => setInputs({...inputs, isVertical: e.target.checked})} className="rounded text-indigo-600 focus:ring-indigo-500" />
+                  <span>這是一條垂直線 (x = {condition.x})</span>
+                </label>
+                {!inputs.isVertical && (
+                  <div className="flex items-center space-x-2 text-lg">
+                    <span>y - {condition.y} = </span>
+                    <input type="text" placeholder="輸入 m" value={inputs.m} onChange={(e) => setInputs({...inputs, m: e.target.value})} className="w-24 border-2 border-gray-300 rounded px-2 py-1 focus:border-indigo-500 outline-none" />
+                    <span>(x - {condition.x})</span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {condition.type === 'horizontal' && (
+              <div>
+                <p className="text-gray-800 mb-2">限制：必須為 <span className="font-bold text-indigo-600">水平線</span></p>
+                <div className="flex items-center space-x-2 text-lg">
+                  <span>y = </span>
+                  <input type="text" placeholder="輸入 c" value={inputs.c} onChange={(e) => setInputs({...inputs, c: e.target.value})} className="w-24 border-2 border-gray-300 rounded px-2 py-1 focus:border-indigo-500 outline-none" />
+                </div>
+              </div>
+            )}
+
+            {condition.type === 'vertical' && (
+              <div>
+                <p className="text-gray-800 mb-2">限制：必須為 <span className="font-bold text-indigo-600">垂直線</span></p>
+                <div className="flex items-center space-x-2 text-lg">
+                  <span>x = </span>
+                  <input type="text" placeholder="輸入 c" value={inputs.c} onChange={(e) => setInputs({...inputs, c: e.target.value})} className="w-24 border-2 border-gray-300 rounded px-2 py-1 focus:border-indigo-500 outline-none" />
+                </div>
+              </div>
+            )}
+
+            {condition.type === 'free' && (
+              <div>
+                <p className="text-gray-800 mb-2">幸運卡！限制：<span className="font-bold text-green-600">自由發揮</span></p>
+                <label className="flex items-center space-x-2 mb-3 text-sm cursor-pointer">
+                  <input type="checkbox" checked={inputs.isVertical} onChange={(e) => setInputs({...inputs, isVertical: e.target.checked})} className="rounded text-indigo-600 focus:ring-indigo-500" />
+                  <span>繪製垂直線 (x = c)</span>
+                </label>
+                {inputs.isVertical ? (
+                  <div className="flex items-center space-x-2 text-lg">
+                    <span>x = </span>
+                    <input type="text" placeholder="輸入 c" value={inputs.c} onChange={(e) => setInputs({...inputs, c: e.target.value})} className="w-24 border-2 border-gray-300 rounded px-2 py-1 focus:border-indigo-500 outline-none" />
+                  </div>
+                ) : (
+                   <div className="flex items-center space-x-2 text-lg">
+                    <span>y = </span>
+                    <input type="text" placeholder="斜率 m" value={inputs.m} onChange={(e) => setInputs({...inputs, m: e.target.value})} className="w-20 border-2 border-gray-300 rounded px-2 py-1 focus:border-indigo-500 outline-none" />
+                    <span>x + </span>
+                    <input type="text" placeholder="截距 b" value={inputs.b} onChange={(e) => setInputs({...inputs, b: e.target.value})} className="w-20 border-2 border-gray-300 rounded px-2 py-1 focus:border-indigo-500 outline-none" />
+                  </div>
+                )}
+              </div>
+            )}
+
+            {errorMsg && <p className="mt-3 text-red-500 text-sm font-medium">{errorMsg}</p>}
+
+            <button 
+              onClick={submitLine}
+              className={`mt-4 w-full py-2 rounded-lg font-bold text-white transition shadow-md ${currentPlayer === 1 ? 'bg-red-500 hover:bg-red-600' : 'bg-blue-500 hover:bg-blue-600'}`}
+            >
+              確認畫線並佔領
+            </button>
+          </div>
+        );
+      };
+
+      const gridLines = [];
+      for (let i = -5; i <= 5; i++) {
+        gridLines.push(<line key={`h${i}`} x1="-6" y1={-i} x2="6" y2={-i} stroke="#E5E7EB" strokeWidth="0.05" />);
+        gridLines.push(<line key={`v${i}`} x1={i} y1="-6" x2={i} y2="6" stroke="#E5E7EB" strokeWidth="0.05" />);
+        if (i !== 0) {
+          gridLines.push(<text key={`tx${i}`} x={i} y="0.4" fontSize="0.3" textAnchor="middle" fill="#6B7280">{i}</text>);
+          gridLines.push(<text key={`ty${i}`} x="0.2" y={-i + 0.1} fontSize="0.3" textAnchor="start" fill="#6B7280">{i}</text>);
+        }
+      }
+
+      return (
+        <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4 font-sans text-gray-800">
+          <div className="max-w-5xl w-full bg-white rounded-2xl shadow-xl overflow-hidden flex flex-col md:flex-row">
+            
+            <div className="w-full md:w-3/5 p-6 bg-slate-50 flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-gray-200">
+              <h2 className="text-2xl font-black mb-4 text-gray-800 tracking-wide text-center">方程式佔地賽</h2>
+              <div className="relative w-full aspect-square max-w-lg bg-white border-2 border-gray-300 rounded-lg shadow-inner overflow-hidden">
+                <svg viewBox="-6 -6 12 12" className="w-full h-full">
+                  {gridLines}
+                  <line x1="-6" y1="0" x2="6" y2="0" stroke="black" strokeWidth="0.08" />
+                  <line x1="0" y1="-6" x2="0" y2="6" stroke="black" strokeWidth="0.08" />
+                  
+                  {lines.map((l) => {
+                    let x1, y1, x2, y2;
+                    if (l.isVert) {
+                      x1 = l.x0; y1 = -6; x2 = l.x0; y2 = 6;
+                    } else {
+                      x1 = -6; y1 = -(l.m * -6 + l.b);
+                      x2 = 6; y2 = -(l.m * 6 + l.b);
+                    }
+                    return <line key={l.id} x1={x1} y1={y1} x2={x2} y2={y2} stroke={getPlayerStroke(l.owner)} strokeWidth="0.06" opacity="0.6" />;
+                  })}
+
+                  {points.map(p => (
+                    <circle key={p.id} cx={p.x} cy={-p.y} r={p.owner ? "0.2" : "0.15"} fill={p.owner === null ? "#D1D5DB" : getPlayerStroke(p.owner)} className="transition-all duration-300" />
+                  ))}
+                </svg>
+              </div>
+            </div>
+
+            <div className="w-full md:w-2/5 p-6 flex flex-col justify-between">
+              <div>
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-xl font-bold">遊戲控制台</h3>
+                  <button onClick={startNewGame} className="flex items-center text-sm bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1.5 rounded-lg transition">
+                    <RefreshCw className="w-4 h-4 mr-1" /> 重新開始
+                  </button>
+                </div>
+
+                <div className="flex justify-between space-x-4 mb-4">
+                  <div className={`flex-1 text-center p-3 rounded-xl border-2 transition-colors ${currentPlayer === 1 && !winner ? 'bg-red-100 border-red-400' : 'bg-gray-50 border-gray-200'}`}>
+                    <div className="text-red-500 font-bold mb-1">玩家 1</div>
+                    <div className="text-2xl font-black text-red-600">{p1Score} <span className="text-sm font-normal text-gray-500">/ {WINNING_SCORE}</span></div>
+                  </div>
+                  <div className={`flex-1 text-center p-3 rounded-xl border-2 transition-colors ${currentPlayer === 2 && !winner ? 'bg-blue-100 border-blue-400' : 'bg-gray-50 border-gray-200'}`}>
+                    <div className="text-blue-500 font-bold mb-1">玩家 2</div>
+                    <div className="text-2xl font-black text-blue-600">{p2Score} <span className="text-sm font-normal text-gray-500">/ {WINNING_SCORE}</span></div>
+                  </div>
+                </div>
+
+                {winner ? (
+                   <div className="mb-6 p-4 rounded-xl border-2 border-green-500 bg-green-50 text-center shadow-sm">
+                    <p className="text-sm text-green-700 font-semibold mb-1">遊戲結束</p>
+                    <h4 className="text-2xl font-black flex items-center justify-center text-green-600">
+                      🏆 玩家 {winner} 獲勝！
+                    </h4>
+                  </div>
+                ) : (
+                  <div className="mb-4">
+                    {phase === 'draw_condition' ? (
+                      <button onClick={drawCondition} className={`w-full py-4 rounded-xl font-bold text-white text-lg flex items-center justify-center transition shadow-lg hover:scale-105 transform ${getPlayerBg(currentPlayer)}`}>
+                        <Play className="w-6 h-6 mr-2" /> 
+                        <span className="flex items-center">
+                          換 <CircleIcon fill="currentColor" className="w-4 h-4 mx-1" /> 玩家 {currentPlayer} 抽取條件
+                        </span>
+                      </button>
+                    ) : renderConditionInput()}
+                  </div>
+                )}
+
+                <div className="bg-gray-800 text-green-400 p-4 rounded-lg font-mono text-sm shadow-inner h-20 overflow-y-auto flex items-center mt-4">
+                  <p>{lastActionMsg}</p>
+                </div>
+              </div>
+              
+              <div className="mt-6 text-xs text-gray-500 leading-relaxed">
+                <strong>遊戲規則：</strong> 抽取條件後，寫出符合條件的直線方程式。畫出的直線若穿過圖上的灰色點，即可將其佔領。不同的直線可以累積佔領不同的點，<strong>最先累積佔領 12 個點的人獲勝！</strong> (支援輸入分數如 1/2)。
+              </div>
+            </div>
+
+          </div>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
