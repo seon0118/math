@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>芷晴是不是美女？</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
+
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #fdf2f8; /* pink-50 */
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        /* 跑馬燈動畫 - 垂直 (桌面版) */
+        @keyframes scroll-vertical {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-50%); }
+        }
+        .marquee-v-content {
+            animation: scroll-vertical 20s linear infinite;
+        }
+
+        /* 跑馬燈動畫 - 水平 (手機版) */
+        @keyframes scroll-horizontal {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        .marquee-h-content {
+            display: flex;
+            animation: scroll-horizontal 20s linear infinite;
+        }
+
+        /* 隱藏的「不是」按鈕的位移動畫設定 */
+        #btn-no {
+            position: relative;
+            transition: all 0.2s ease-in-out;
+        }
+
+        /* 飄落花瓣動畫 */
+        .petal {
+            position: absolute;
+            pointer-events: none;
+            z-index: 50;
+            animation: fall linear forwards;
+        }
+        @keyframes fall {
+            to {
+                transform: translateY(100vh) rotate(360deg);
+            }
+        }
+
+        /* 彈出視窗 */
+        .modal {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .modal.show {
+            display: flex;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="h-screen flex flex-col md:flex-row relative">
+
+    <!-- 主要內容區 -->
+    <main class="flex-1 flex flex-col items-center justify-center p-6 relative overflow-hidden h-full">
+        
+        <!-- 標題 -->
+        <div class="text-center mb-12 relative z-10">
+            <h1 class="text-4xl md:text-6xl font-black text-pink-500 drop-shadow-md mb-4 tracking-wider">
+                芷晴是不是美女？
+            </h1>
+            <p class="text-lg text-pink-400 font-bold">請憑著您的良心作答 🌸</p>
+        </div>
+
+        <!-- 投票按鈕區 -->
+        <div class="flex flex-col md:flex-row items-center gap-6 relative z-10 min-h-[150px] w-full justify-center">
+            <button id="btn-yes" onclick="answerYes()" class="bg-pink-500 hover:bg-pink-600 text-white font-bold py-4 px-8 rounded-full text-2xl shadow-[0_10px_20px_rgba(236,72,153,0.4)] transform transition hover:-translate-y-1 hover:scale-105 active:scale-95 border-4 border-pink-300">
+                是，芷晴真的是美女！
+            </button>
+            
+            <!-- 逃跑按鈕 -->
+            <button id="btn-no" class="bg-gray-300 text-gray-600 font-bold py-2 px-6 rounded-full text-lg shadow-md border-2 border-gray-400">
+                不是
+            </button>
+        </div>
+
+        <!-- 慶祝訊息 (預設隱藏) -->
+        <div id="success-msg" class="hidden mt-8 text-center z-10 animate-bounce">
+            <h2 class="text-3xl font-bold text-green-500 mb-2">💖 答對了！你非常有眼光！ 💖</h2>
+            <p class="text-gray-600">世界因為芷晴的美貌而和平。</p>
+        </div>
+
+        <!-- 玉蘭花訂購區塊 -->
+        <div class="mt-auto md:mt-16 bg-white/80 backdrop-blur-sm p-6 rounded-3xl shadow-xl border-2 border-green-200 max-w-sm text-center relative z-10 w-full">
+            <div class="absolute -top-6 left-1/2 transform -translate-x-1/2 text-4xl">🌿</div>
+            <h2 class="text-2xl font-bold text-green-700 mb-2 mt-2">芳香玉蘭花專賣</h2>
+            <p class="mb-5 text-gray-600 text-sm">慶祝芷晴的美貌！買串玉蘭花讓好心情延續一整天！</p>
+            <button onclick="openOrderModal()" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition duration-300 flex justify-center items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
+                </svg>
+                🛒 立即點此訂購玉蘭花
+            </button>
+        </div>
+    </main>
+
+    <!-- 側邊欄跑馬燈 (桌面版垂直 / 手機版水平) -->
+    <aside class="w-full md:w-72 bg-white border-t md:border-t-0 md:border-l border-pink-200 flex flex-col shadow-xl z-20 h-48 md:h-full">
+        <div class="bg-gradient-to-r from-green-100 to-green-50 p-3 md:p-4 border-b border-green-200">
+            <h3 class="text-green-800 font-bold text-center flex items-center justify-center gap-2">
+                <span>🔔</span> 最新玉蘭花訂單
+            </h3>
+        </div>
+        
+        <!-- 跑馬燈容器 -->
+        <div class="flex-1 overflow-hidden relative bg-gray-50/50" id="marquee-container">
+            <!-- 內容會在 JS 中動態生成 -->
+        </div>
+    </aside>
+
+    <!-- 訂購玉蘭花彈出視窗 -->
+    <div id="order-modal" class="modal fixed inset-0 bg-black/50 z-50 items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl transform scale-100 transition-transform">
+            <h2 class="text-2xl font-bold text-center text-green-600 mb-4">🌸 訂購成功 🌸</h2>
+            <p class="text-center text-gray-700 mb-6">感謝您的購買！<br>帶著玉蘭花的香氣，<br>繼續欣賞芷晴的美貌吧！</p>
+            <div class="flex justify-center">
+                <button onclick="closeOrderModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-8 rounded-xl transition">
+                    關閉
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 閃避按鈕邏輯 ---
+        const btnNo = document.getElementById('btn-no');
+        
+        // 偵測滑鼠靠近或觸控
+        const dodge = (e) => {
+            // 阻止觸控的預設行為以免點擊到
+            if(e.type === 'touchstart') e.preventDefault();
+            
+            const x = Math.random() * 200 - 100; // -100px 到 100px
+            const y = Math.random() * 200 - 100; // -100px 到 100px
+            
+            btnNo.style.transform = `translate(${x}px, ${y}px)`;
+        };
+
+        btnNo.addEventListener('mouseover', dodge);
+        btnNo.addEventListener('touchstart', dodge);
+        btnNo.addEventListener('click', () => {
+            alert("系統錯誤：這個選項是無效的！請重新選擇！");
+        });
+
+        // --- 答對邏輯與花瓣特效 ---
+        function answerYes() {
+            document.getElementById('success-msg').classList.remove('hidden');
+            document.getElementById('btn-yes').innerText = "✅ 已認證：芷晴是美女";
+            document.getElementById('btn-yes').classList.remove('bg-pink-500', 'hover:bg-pink-600');
+            document.getElementById('btn-yes').classList.add('bg-green-500', 'hover:bg-green-600');
+            
+            // 隱藏「不是」按鈕
+            btnNo.style.display = 'none';
+
+            createPetals();
+        }
+
+        // 飄落花瓣特效
+        function createPetals() {
+            const colors = ['#fbcfe8', '#f9a8d4', '#f472b6', '#ffffff']; // 粉紅色系與白色
+            const emojis = ['🌸', '🌺', '💖', '✨'];
+            
+            for (let i = 0; i < 50; i++) {
+                setTimeout(() => {
+                    const petal = document.createElement('div');
+                    petal.className = 'petal text-2xl';
+                    petal.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+                    
+                    // 隨機起始位置
+                    petal.style.left = Math.random() * 100 + 'vw';
+                    petal.style.top = '-50px';
+                    
+                    // 隨機動畫時間與延遲
+                    const duration = Math.random() * 3 + 2; // 2-5秒
+                    petal.style.animationDuration = duration + 's';
+                    
+                    document.body.appendChild(petal);
+                    
+                    // 動畫結束後移除
+                    setTimeout(() => {
+                        petal.remove();
+                    }, duration * 1000);
+                }, i * 100); // 錯開生成時間
+            }
+        }
+
+        // --- 訂購彈窗邏輯 ---
+        const modal = document.getElementById('order-modal');
+        function openOrderModal() {
+            modal.classList.add('show');
+        }
+        function closeOrderModal() {
+            modal.classList.remove('show');
+        }
+
+        // --- 跑馬燈資料與邏輯 ---
+        const orders = [
+            { name: '王先生', item: '玉蘭花 3 串', time: '剛剛' },
+            { name: '陳小姐', item: '玉蘭花 10 串', time: '1分鐘前' },
+            { name: '林阿姨', item: '玉蘭花 5 串', time: '3分鐘前' },
+            { name: '張同學', item: '玉蘭花 1 串', time: '5分鐘前' },
+            { name: '神秘客', item: '玉蘭花 99 串', time: '10分鐘前' },
+            { name: '李伯伯', item: '玉蘭花 2 串', time: '12分鐘前' },
+            { name: '黃太太', item: '玉蘭花 6 串', time: '15分鐘前' },
+            { name: '吳先生', item: '玉蘭花 8 串', time: '20分鐘前' }
+        ];
+
+        function initMarquee() {
+            const container = document.getElementById('marquee-container');
+            const isMobile = window.innerWidth < 768;
+            
+            container.innerHTML = ''; // 清空
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = isMobile ? 'marquee-h-content' : 'marquee-v-content w-full absolute';
+            
+            // 建立訂單卡片 HTML
+            let cardsHtml = '';
+            orders.forEach(order => {
+                cardsHtml += `
+                    <div class="${isMobile ? 'w-48 flex-shrink-0 mx-2 my-auto' : 'mx-4 my-3'} bg-white p-3 rounded-lg border border-green-100 shadow-sm flex items-center gap-3">
+                        <div class="bg-green-100 text-green-600 rounded-full w-10 h-10 flex items-center justify-center font-bold shrink-0">
+                            ${order.name.charAt(0)}
+                        </div>
+                        <div>
+                            <p class="text-sm font-bold text-gray-800">${order.name} <span class="text-xs text-gray-400 font-normal ml-1">${order.time}</span></p>
+                            <p class="text-xs text-green-600 mt-0.5">已訂購 ${order.item} 🌸</p>
+                        </div>
+                    </div>
+                `;
+            });
+
+            // 複製兩份以達到無縫輪播效果
+            contentDiv.innerHTML = cardsHtml + cardsHtml;
+            container.appendChild(contentDiv);
+        }
+
+        // 初始化
+        initMarquee();
+
+        // 監聽視窗大小改變，重新渲染跑馬燈方向
+        let resizeTimer;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(initMarquee, 200);
+        });
+    </script>
+</body>
+</html>
