@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -185,30 +184,13 @@
         <div id="philosophy" class="bg-white border border-[#e5e5e5] p-8 md:p-12 shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
             
             <div class="mb-10 border-b border-[#f0f0f0] pb-6">
-                <h3 class="text-lg tracking-widest font-bold text-[#4a4a4a] mb-2">企業理念同意書</h3>
+                <h3 class="text-lg tracking-widest font-bold text-[#4a4a4a] mb-2">芷晴董事長美貌同意書</h3>
                 <p class="text-xs text-[#a3a3a3] tracking-widest">在我們合作之前，請您先同意本集團的核心理念。</p>
             </div>
 
             <div class="space-y-10">
                 
-                <!-- 聯絡人資訊 -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
-                    <div id="card-name" class="relative group">
-                        <label class="block text-xs tracking-widest text-[#737373] mb-2">
-                            姓名 <span class="text-[#c29b8c]">*</span>
-                        </label>
-                        <input type="text" id="input-name" oninput="clearError('name')" class="w-full border-b border-[#cccccc] bg-transparent pb-2 outline-none focus:border-[#8c7366] transition-colors text-sm text-[#4a4a4a]" placeholder="例：王大明">
-                        <p id="error-name" class="text-[#c29b8c] text-xs mt-2 hidden tracking-wide">此為必填項目</p>
-                    </div>
-                    
-                    <div id="card-phone" class="relative group">
-                        <label class="block text-xs tracking-widest text-[#737373] mb-2">
-                            聯絡電話 <span class="text-[#c29b8c]">*</span>
-                        </label>
-                        <input type="tel" id="input-phone" oninput="clearError('phone')" class="w-full border-b border-[#cccccc] bg-transparent pb-2 outline-none focus:border-[#8c7366] transition-colors text-sm text-[#4a4a4a]" placeholder="例：0912-345-678">
-                        <p id="error-phone" class="text-[#c29b8c] text-xs mt-2 hidden tracking-wide">此為必填項目</p>
-                    </div>
-                </div>
+                <!-- 移除了聯絡人資訊 (姓名與手機) 區塊 -->
 
                 <!-- 核心問題 -->
                 <div id="card-beauty" class="bg-[#faf9f6] p-8 border border-[#f0f0f0] transition-colors">
@@ -319,6 +301,20 @@
         </div>
     </div>
 
+    <!-- 系統提示視窗 (取代內建 alert) -->
+    <div id="alert-modal" class="modal fixed inset-0 bg-[#faf9f6]/90 backdrop-blur-sm z-50 items-center justify-center p-6">
+        <div class="bg-white border border-[#e5e5e5] p-8 max-w-sm w-full shadow-[0_10px_40px_rgba(0,0,0,0.05)] text-center relative">
+            <button onclick="closeAlertModal()" class="absolute top-4 right-4 text-[#a3a3a3] hover:text-[#4a4a4a] text-xl font-light">&times;</button>
+            <h2 class="text-lg font-normal tracking-widest text-[#8c7366] mb-4 serif">系統訊息</h2>
+            <p id="alert-msg-text" class="text-sm text-[#4a4a4a] mb-8 tracking-wide font-bold leading-relaxed">
+                <!-- 訊息內容 -->
+            </p>
+            <button onclick="closeAlertModal()" class="bg-[#595757] hover:bg-[#4a4a4a] text-white text-xs tracking-widest py-2 px-8 transition">
+                確認
+            </button>
+        </div>
+    </div>
+
     <script>
         // --- 動態背景：飄浮的極簡玉蘭花 ---
         function createFloatingMagnolias() {
@@ -374,23 +370,22 @@
         btnNo.addEventListener('mouseover', dodge);
         btnNo.addEventListener('touchstart', dodge);
         btnNo.addEventListener('click', () => {
-            alert("系統提示：此選項無效");
+            showAlert("系統提示：此選項無效");
         });
+
+        // --- 自訂提示框邏輯 ---
+        function showAlert(msg) {
+            document.getElementById('alert-msg-text').innerText = msg;
+            document.getElementById('alert-modal').classList.add('show');
+        }
+        function closeAlertModal() {
+            document.getElementById('alert-modal').classList.remove('show');
+        }
 
         // --- 表單邏輯 ---
         let isYesSelected = false;
 
-        function clearError(type) {
-            if (type === 'name') {
-                document.getElementById('error-name').classList.add('hidden');
-                document.getElementById('input-name').classList.remove('border-[#c29b8c]');
-                document.getElementById('input-name').classList.add('border-[#cccccc]');
-            } else if (type === 'phone') {
-                document.getElementById('error-phone').classList.add('hidden');
-                document.getElementById('input-phone').classList.remove('border-[#c29b8c]');
-                document.getElementById('input-phone').classList.add('border-[#cccccc]');
-            }
-        }
+        // 移除了 clearError 函式，因為已經沒有姓名與手機欄位了
 
         function selectYes() {
             isYesSelected = true;
@@ -408,15 +403,12 @@
             const radioYes = document.getElementById('radio-yes');
             radioYes.classList.remove('active');
             
-            document.getElementById('input-name').value = '';
-            document.getElementById('input-phone').value = '';
+            // 移除了清空姓名與手機輸入框的邏輯
 
             document.getElementById('form-error').classList.add('hidden');
-            document.getElementById('error-name').classList.add('hidden');
-            document.getElementById('error-phone').classList.add('hidden');
+            // 移除了隱藏姓名與手機錯誤訊息的邏輯
             
-            document.getElementById('input-name').classList.remove('border-[#c29b8c]');
-            document.getElementById('input-phone').classList.remove('border-[#c29b8c]');
+            // 移除了移除姓名與手機紅框的邏輯
             document.getElementById('card-beauty').classList.remove('border-[#c29b8c]', 'bg-[#fff5f2]');
 
             document.getElementById('success-msg').classList.add('hidden');
@@ -435,22 +427,7 @@
 
         function submitForm() {
             let isValid = true;
-            const nameValue = document.getElementById('input-name').value.trim();
-            const phoneValue = document.getElementById('input-phone').value.trim();
-
-            if (!nameValue) {
-                document.getElementById('error-name').classList.remove('hidden');
-                document.getElementById('input-name').classList.add('border-[#c29b8c]');
-                document.getElementById('input-name').classList.remove('border-[#cccccc]');
-                isValid = false;
-            }
-
-            if (!phoneValue) {
-                document.getElementById('error-phone').classList.remove('hidden');
-                document.getElementById('input-phone').classList.add('border-[#c29b8c]');
-                document.getElementById('input-phone').classList.remove('border-[#cccccc]');
-                isValid = false;
-            }
+            // 移除了取得與檢查姓名、手機值的邏輯
 
             if (!isYesSelected) {
                 document.getElementById('form-error').classList.remove('hidden');
@@ -504,8 +481,9 @@
             
             let cardsHtml = '';
             orders.forEach(order => {
+                // 為每個訂單卡片加入 onclick 事件與 cursor-pointer，點擊時觸發自訂提示框
                 cardsHtml += `
-                    <div class="flex items-center gap-6 px-10 border-r border-[#e5e1d8] whitespace-nowrap">
+                    <div class="flex items-center gap-6 px-10 border-r border-[#e5e1d8] whitespace-nowrap cursor-pointer hover:bg-[#e5e1d8] transition-colors" onclick="showAlert('芷晴真的是美女！')">
                         <span class="text-[#737373] tracking-widest">${order.name}</span>
                         <span class="text-[#a3a3a3] text-[10px]">${order.time}</span>
                         <span class="text-[#8c7366] tracking-widest">玉蘭花 ${order.item}</span>
@@ -523,10 +501,3 @@
 </body>
 </html>
 
-
-
-
-
-
-
-```
