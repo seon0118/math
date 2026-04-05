@@ -29,7 +29,7 @@
         }
         .ticker-content {
             display: flex;
-            animation: ticker 70s linear infinite; /* 調慢訂單跑馬燈速度 (原本 40s 改為 70s) */
+            animation: ticker 70s linear infinite; /* 緩慢優雅的跑馬燈 */
         }
         .ticker-content:hover {
             animation-play-state: paused;
@@ -64,6 +64,20 @@
             }
         }
 
+        /* 阿婆橫幅動畫 */
+        @keyframes banner-scroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        .banner-content {
+            display: flex;
+            animation: banner-scroll 18s linear infinite; /* 加快橫幅滾動速度 */
+            height: 100%;
+        }
+        .banner-content:hover {
+            animation-play-state: paused;
+        }
+
         /* 自訂極簡勾選框 */
         .muji-radio {
             width: 18px;
@@ -88,20 +102,6 @@
         }
         .muji-radio.active .muji-radio-inner {
             opacity: 1;
-        }
-
-        /* 阿婆橫幅動畫 */
-        @keyframes banner-scroll {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
-        }
-        .banner-content {
-            display: flex;
-            animation: banner-scroll 18s linear infinite; /* 加快橫幅滾動速度 (原本 30s 改為 18s) */
-            height: 100%;
-        }
-        .banner-content:hover {
-            animation-play-state: paused;
         }
 
         /* 彈出視窗 */
@@ -189,9 +189,6 @@
             </div>
 
             <div class="space-y-10">
-                
-                <!-- 移除了聯絡人資訊 (姓名與手機) 區塊 -->
-
                 <!-- 核心問題 -->
                 <div id="card-beauty" class="bg-[#faf9f6] p-8 border border-[#f0f0f0] transition-colors">
                     <div class="mb-6">
@@ -212,7 +209,7 @@
                             完全同意
                         </div>
 
-                        <!-- 選項：不是 (會逃跑) -->
+                        <!-- 選項：不是 (會逃跑，且達五次會罰款) -->
                         <div id="btn-no" class="w-full sm:w-auto border border-[#e5e5e5] bg-[#faf9f6] text-[#a3a3a3] text-sm tracking-widest py-3 px-6 cursor-pointer transition-colors hover:text-[#c29b8c] flex items-center justify-center">
                             拒絕認同
                         </div>
@@ -301,8 +298,44 @@
         </div>
     </div>
 
+    <!-- 五次拒絕之天價罰款視窗 -->
+    <div id="fine-modal" class="modal fixed inset-0 bg-[#faf9f6]/95 backdrop-blur-md z-[60] items-center justify-center p-6">
+        <div class="bg-white border border-[#c29b8c] p-10 max-w-sm w-full shadow-[0_15px_50px_rgba(194,155,140,0.15)] text-center relative overflow-hidden">
+            <!-- 步驟一：罰款通知 -->
+            <div id="fine-step-notice" class="transition-opacity duration-300">
+                <h2 class="text-xl font-bold tracking-widest text-[#c29b8c] mb-6 serif border-b border-[#f0f0f0] pb-4">違約罰款通知</h2>
+                <p class="text-sm text-[#737373] mb-6 tracking-wide leading-relaxed font-medium">
+                    系統偵測：您已累計 <span class="text-[#c29b8c] font-bold">5</span> 次拒絕認同芷晴董事長的美貌。<br><br>
+                    根據集團《美貌維護法》規定，<br>
+                    您須立即繳納懲罰性違約金：<br>
+                    <span class="text-3xl text-[#8c7366] block mt-4 font-bold serif">NT$ 5,000,000</span>
+                </p>
+                <div class="flex flex-col gap-4 mb-2">
+                    <button onclick="payFine()" class="w-full border border-[#cccccc] hover:border-[#c29b8c] bg-[#faf9f6] py-3 flex justify-center items-center transition-all opacity-90 hover:opacity-100 group">
+                        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQN0I8bEYgumq_IHqF3CymDBpV3W30zzAVsPu4cZvj-RQ&s=10" alt="Apple Pay" class="h-6 object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-300">
+                    </button>
+                    <button onclick="payFine()" class="w-full border border-[#cccccc] hover:border-[#c29b8c] bg-[#faf9f6] py-3 flex justify-center items-center transition-all opacity-90 hover:opacity-100 group">
+                        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRqDHjLfmTCF6VGwZSO6LKrcwp2nMimsuNm-IDaj64mtQ&s=10" alt="LINE Pay" class="h-6 object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-300">
+                    </button>
+                </div>
+            </div>
+
+            <!-- 步驟二：罰款繳納完成 -->
+            <div id="fine-step-success" class="hidden transition-opacity duration-300">
+                <h2 class="text-lg font-bold tracking-widest text-[#5c7054] mb-4 serif">罰款繳納成功</h2>
+                <p class="text-xs text-[#737373] mb-8 tracking-wide leading-relaxed">
+                    感謝您的配合。<br>
+                    請端正您的態度，並重新簽署同意書。
+                </p>
+                <button onclick="closeFineModal()" class="bg-[#595757] hover:bg-[#4a4a4a] text-white text-xs tracking-widest py-2 px-8 transition">
+                    關閉並深切反省
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- 系統提示視窗 (取代內建 alert) -->
-    <div id="alert-modal" class="modal fixed inset-0 bg-[#faf9f6]/90 backdrop-blur-sm z-50 items-center justify-center p-6">
+    <div id="alert-modal" class="modal fixed inset-0 bg-[#faf9f6]/80 backdrop-blur-sm z-50 items-center justify-center p-6">
         <div class="bg-white border border-[#e5e5e5] p-8 max-w-sm w-full shadow-[0_10px_40px_rgba(0,0,0,0.05)] text-center relative">
             <button onclick="closeAlertModal()" class="absolute top-4 right-4 text-[#a3a3a3] hover:text-[#4a4a4a] text-xl font-light">&times;</button>
             <h2 class="text-lg font-normal tracking-widest text-[#8c7366] mb-4 serif">系統訊息</h2>
@@ -326,24 +359,20 @@
                 </svg>
             `;
 
-            const flowerCount = 12; // 控制背景花朵數量
+            const flowerCount = 12;
 
             for (let i = 0; i < flowerCount; i++) {
                 const flower = document.createElement('div');
                 flower.className = 'magnolia-float';
                 flower.innerHTML = magnoliaSVG;
                 
-                // 隨機大小 (30px 到 80px)
                 const size = Math.random() * 50 + 30;
                 flower.style.width = `${size}px`;
                 flower.style.height = `${size}px`;
-                
-                // 隨機起始位置 (水平)
                 flower.style.left = `${Math.random() * 100}vw`;
                 
-                // 隨機動畫時長與延遲 (讓它們錯開飄動)
-                const duration = Math.random() * 20 + 15; // 15秒 到 35秒
-                const delay = Math.random() * -30; // 負延遲讓花朵一開始就存在於畫面上
+                const duration = Math.random() * 20 + 15;
+                const delay = Math.random() * -30;
                 
                 flower.style.animationDuration = `${duration}s`;
                 flower.style.animationDelay = `${delay}s`;
@@ -353,12 +382,28 @@
         }
         createFloatingMagnolias();
 
-        // --- 閃避按鈕邏輯 (無印極簡風) ---
+        // --- 拒絕次數計算與閃避邏輯 ---
+        let refusalCount = 0;
         const btnNo = document.getElementById('btn-no');
         
         const dodge = (e) => {
             if(e.type === 'touchstart') e.preventDefault();
             
+            // 每次觸摸或滑鼠經過，次數+1
+            refusalCount++;
+            
+            // 如果達到 5 次，開啟罰款視窗
+            if (refusalCount >= 5) {
+                openFineModal();
+                refusalCount = 0; // 重置計數
+                // 將按鈕歸位
+                btnNo.style.transform = `translate(0px, 0px)`;
+                btnNo.style.borderColor = '#e5e5e5';
+                btnNo.style.color = '#a3a3a3';
+                return;
+            }
+
+            // 尚未達到五次，繼續逃跑
             const x = Math.random() * 200 - 100;
             const y = Math.random() * 80 - 40;
             
@@ -370,8 +415,25 @@
         btnNo.addEventListener('mouseover', dodge);
         btnNo.addEventListener('touchstart', dodge);
         btnNo.addEventListener('click', () => {
-            showAlert("系統提示：此選項無效");
+            // 如果很厲害真的點到了，一樣算一次
+            dodge({type: 'click'});
         });
+
+        // --- 罰款視窗邏輯 ---
+        const fineModal = document.getElementById('fine-modal');
+        function openFineModal() {
+            document.getElementById('fine-step-notice').classList.remove('hidden');
+            document.getElementById('fine-step-success').classList.add('hidden');
+            fineModal.classList.add('show');
+        }
+        function closeFineModal() {
+            fineModal.classList.remove('show');
+        }
+        function payFine() {
+            document.getElementById('fine-step-notice').classList.add('hidden');
+            document.getElementById('fine-step-success').classList.remove('hidden');
+        }
+
 
         // --- 自訂提示框邏輯 ---
         function showAlert(msg) {
@@ -385,13 +447,10 @@
         // --- 表單邏輯 ---
         let isYesSelected = false;
 
-        // 移除了 clearError 函式，因為已經沒有姓名與手機欄位了
-
         function selectYes() {
             isYesSelected = true;
             const radioYes = document.getElementById('radio-yes');
             
-            // 啟用極簡勾選框樣式
             radioYes.classList.add('active');
             
             document.getElementById('form-error').classList.add('hidden');
@@ -403,12 +462,7 @@
             const radioYes = document.getElementById('radio-yes');
             radioYes.classList.remove('active');
             
-            // 移除了清空姓名與手機輸入框的邏輯
-
             document.getElementById('form-error').classList.add('hidden');
-            // 移除了隱藏姓名與手機錯誤訊息的邏輯
-            
-            // 移除了移除姓名與手機紅框的邏輯
             document.getElementById('card-beauty').classList.remove('border-[#c29b8c]', 'bg-[#fff5f2]');
 
             document.getElementById('success-msg').classList.add('hidden');
@@ -419,6 +473,8 @@
             btnSubmit.classList.add('hover:bg-[#735c50]', 'bg-[#8c7366]');
             btnSubmit.disabled = false;
             
+            // 重置拒絕按鈕與次數
+            refusalCount = 0;
             btnNo.style.display = 'flex';
             btnNo.style.transform = 'translate(0px, 0px)';
             btnNo.style.borderColor = '#e5e5e5';
@@ -426,16 +482,11 @@
         }
 
         function submitForm() {
-            let isValid = true;
-            // 移除了取得與檢查姓名、手機值的邏輯
-
             if (!isYesSelected) {
                 document.getElementById('form-error').classList.remove('hidden');
                 document.getElementById('card-beauty').classList.add('border-[#c29b8c]', 'bg-[#fff5f2]');
-                isValid = false;
+                return; // 直接中斷
             }
-
-            if (!isValid) return;
 
             document.getElementById('success-msg').classList.remove('hidden');
             
@@ -450,7 +501,6 @@
 
         const modal = document.getElementById('order-modal');
         function openOrderModal() {
-            // 每次打開彈窗時，重置回付款選項步驟
             document.getElementById('modal-step-payment').classList.remove('hidden');
             document.getElementById('modal-step-success').classList.add('hidden');
             modal.classList.add('show');
@@ -459,7 +509,6 @@
             modal.classList.remove('show');
         }
         function processPayment() {
-            // 模擬付款，切換至成功畫面
             document.getElementById('modal-step-payment').classList.add('hidden');
             document.getElementById('modal-step-success').classList.remove('hidden');
         }
@@ -500,4 +549,3 @@
     </script>
 </body>
 </html>
-
