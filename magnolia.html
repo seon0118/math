@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* 引入日系無印風常見的字體配置 */
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Noto+Serif+TC:wght@300;400&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Noto+Serif+TC:wght@300;400;700&display=swap');
 
         body {
             /* 米白色背景，深灰色文字 */
@@ -29,7 +29,7 @@
         }
         .ticker-content {
             display: flex;
-            animation: ticker 70s linear infinite; /* 緩慢優雅的跑馬燈 */
+            animation: ticker 70s linear infinite;
         }
         .ticker-content:hover {
             animation-play-state: paused;
@@ -52,16 +52,10 @@
         }
 
         @keyframes floatUp {
-            0% { 
-                transform: translateY(110vh) translateX(0) rotate(0deg); 
-                opacity: 0; 
-            }
+            0% { transform: translateY(110vh) translateX(0) rotate(0deg); opacity: 0; }
             10% { opacity: 0.6; }
             90% { opacity: 0.6; }
-            100% { 
-                transform: translateY(-20vh) translateX(30px) rotate(45deg); 
-                opacity: 0; 
-            }
+            100% { transform: translateY(-20vh) translateX(30px) rotate(45deg); opacity: 0; }
         }
 
         /* 阿婆橫幅動畫 */
@@ -71,7 +65,7 @@
         }
         .banner-content {
             display: flex;
-            animation: banner-scroll 18s linear infinite; /* 加快橫幅滾動速度 */
+            animation: banner-scroll 18s linear infinite;
             height: 100%;
         }
         .banner-content:hover {
@@ -114,6 +108,46 @@
             display: flex;
             opacity: 1;
         }
+
+        /* 證書獨特樣式 */
+        .certificate-box {
+            position: relative;
+            background-color: #ffffff;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+            transition: transform 0.4s ease, box-shadow 0.4s ease;
+        }
+        .certificate-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(140, 115, 102, 0.08);
+        }
+        .certificate-inner {
+            position: absolute;
+            inset: 8px;
+            border: 1px solid #e5e1d8;
+            pointer-events: none;
+        }
+        .certificate-inner-2 {
+            position: absolute;
+            inset: 12px;
+            border: 1px solid #f2f0ec;
+            pointer-events: none;
+        }
+        
+        .seal-spin {
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .certificate-box:hover .seal-spin {
+            transform: rotate(15deg) scale(1.1);
+        }
+        
+        /* 隱藏預設數字輸入框的上下箭頭 */
+        input[type="number"]::-webkit-inner-spin-button, 
+        input[type="number"]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+        
+        html { scroll-behavior: smooth; }
     </style>
 </head>
 <body class="flex flex-col min-h-screen relative">
@@ -127,9 +161,11 @@
             <div class="flex items-center gap-4">
                 <h1 class="text-xl font-bold tracking-widest text-[#4a4a4a] serif">芷晴美女玉蘭花銷售集團<span class="font-sans font-normal ml-1 text-sm text-[#8c8c8c]">guo0821</span></h1>
             </div>
-            <nav class="hidden md:flex gap-8 text-xs tracking-widest text-[#8c8c8c]">
-                <a href="#philosophy" class="hover:text-[#4a4a4a] transition">企業理念</a>
-                <a href="#products" class="hover:text-[#4a4a4a] transition">商品總覽</a>
+            <nav class="hidden md:flex gap-6 text-xs tracking-widest text-[#8c8c8c] items-center">
+                <a href="#certifications" class="hover:text-[#4a4a4a] transition">集團證書</a>
+                <a href="#song-section" class="hover:text-[#4a4a4a] transition">美女之歌</a>
+                <a href="#products" class="hover:text-[#4a4a4a] transition">商品訂購</a>
+                <a href="#ig-links" class="hover:text-[#4a4a4a] transition text-[#c29b8c] font-bold">IG殿堂</a>
             </nav>
         </div>
     </header>
@@ -138,26 +174,25 @@
     <div class="h-48 md:h-64 w-full bg-[#e5e1d8] border-b border-[#cccccc] overflow-hidden relative z-30 flex items-center">
         <div class="absolute inset-0 z-10 bg-gradient-to-r from-[#faf9f6] via-transparent to-[#faf9f6] pointer-events-none opacity-50"></div>
         <div class="banner-content">
-            <!-- 為了無限滾動，放置兩組相同的圖片列，加入新圖片並打散順序避免重複感 -->
             <div class="flex h-full shrink-0">
-                <img src="https://shuj.shu.edu.tw/wp-content/uploads/2020/06/1-1.png" alt="賣玉蘭花的阿婆" class="h-full w-auto object-cover border-r border-[#cccccc]">
-                <img src="https://cc.tvbs.com.tw/img/upload/2017/06/13/20170613134159-4b98eda3.jpg" alt="賣玉蘭花的阿婆" class="h-full w-auto object-cover border-r border-[#cccccc]">
-                <img src="https://womany.net/cdn-cgi/image/w=1119,f=auto,fit=scale-down/https://castle.womany.net/images/articles/6708/womany_ying_mu_kuai_zhao_2015_02_03__shang_wu_11_10_18_1422933044-8203-5769.png" alt="賣玉蘭花的阿婆" class="h-full w-auto object-cover border-r border-[#cccccc]">
-                <img src="https://img.news.ebc.net.tw/EbcNews/news/2022/06/24/1656100447_91318.jpg" alt="賣玉蘭花的阿婆" class="h-full w-auto object-cover border-r border-[#cccccc]">
-                <img src="https://attach.setn.com/newsimages/2017/08/21/1020354-PH.jpg" alt="賣玉蘭花的阿婆" class="h-full w-auto object-cover border-r border-[#cccccc]">
+                <img src="https://shuj.shu.edu.tw/wp-content/uploads/2020/06/1-1.png" alt="賣玉蘭花的阿婆" class="h-full w-auto object-cover border-r border-[#cccccc]" onerror="this.src='https://via.placeholder.com/400x300?text=Grandma'">
+                <img src="https://cc.tvbs.com.tw/img/upload/2017/06/13/20170613134159-4b98eda3.jpg" alt="賣玉蘭花的阿婆" class="h-full w-auto object-cover border-r border-[#cccccc]" onerror="this.src='https://via.placeholder.com/400x300?text=Grandma'">
+                <img src="https://womany.net/cdn-cgi/image/w=1119,f=auto,fit=scale-down/https://castle.womany.net/images/articles/6708/womany_ying_mu_kuai_zhao_2015_02_03__shang_wu_11_10_18_1422933044-8203-5769.png" alt="賣玉蘭花的阿婆" class="h-full w-auto object-cover border-r border-[#cccccc]" onerror="this.src='https://via.placeholder.com/400x300?text=Grandma'">
+                <img src="https://img.news.ebc.net.tw/EbcNews/news/2022/06/24/1656100447_91318.jpg" alt="賣玉蘭花的阿婆" class="h-full w-auto object-cover border-r border-[#cccccc]" onerror="this.src='https://via.placeholder.com/400x300?text=Grandma'">
+                <img src="https://attach.setn.com/newsimages/2017/08/21/1020354-PH.jpg" alt="賣玉蘭花的阿婆" class="h-full w-auto object-cover border-r border-[#cccccc]" onerror="this.src='https://via.placeholder.com/400x300?text=Grandma'">
             </div>
             <div class="flex h-full shrink-0">
-                <img src="https://shuj.shu.edu.tw/wp-content/uploads/2020/06/1-1.png" alt="賣玉蘭花的阿婆" class="h-full w-auto object-cover border-r border-[#cccccc]">
-                <img src="https://cc.tvbs.com.tw/img/upload/2017/06/13/20170613134159-4b98eda3.jpg" alt="賣玉蘭花的阿婆" class="h-full w-auto object-cover border-r border-[#cccccc]">
-                <img src="https://womany.net/cdn-cgi/image/w=1119,f=auto,fit=scale-down/https://castle.womany.net/images/articles/6708/womany_ying_mu_kuai_zhao_2015_02_03__shang_wu_11_10_18_1422933044-8203-5769.png" alt="賣玉蘭花的阿婆" class="h-full w-auto object-cover border-r border-[#cccccc]">
-                <img src="https://img.news.ebc.net.tw/EbcNews/news/2022/06/24/1656100447_91318.jpg" alt="賣玉蘭花的阿婆" class="h-full w-auto object-cover border-r border-[#cccccc]">
-                <img src="https://attach.setn.com/newsimages/2017/08/21/1020354-PH.jpg" alt="賣玉蘭花的阿婆" class="h-full w-auto object-cover border-r border-[#cccccc]">
+                <img src="https://shuj.shu.edu.tw/wp-content/uploads/2020/06/1-1.png" alt="賣玉蘭花的阿婆" class="h-full w-auto object-cover border-r border-[#cccccc]" onerror="this.src='https://via.placeholder.com/400x300?text=Grandma'">
+                <img src="https://cc.tvbs.com.tw/img/upload/2017/06/13/20170613134159-4b98eda3.jpg" alt="賣玉蘭花的阿婆" class="h-full w-auto object-cover border-r border-[#cccccc]" onerror="this.src='https://via.placeholder.com/400x300?text=Grandma'">
+                <img src="https://womany.net/cdn-cgi/image/w=1119,f=auto,fit=scale-down/https://castle.womany.net/images/articles/6708/womany_ying_mu_kuai_zhao_2015_02_03__shang_wu_11_10_18_1422933044-8203-5769.png" alt="賣玉蘭花的阿婆" class="h-full w-auto object-cover border-r border-[#cccccc]" onerror="this.src='https://via.placeholder.com/400x300?text=Grandma'">
+                <img src="https://img.news.ebc.net.tw/EbcNews/news/2022/06/24/1656100447_91318.jpg" alt="賣玉蘭花的阿婆" class="h-full w-auto object-cover border-r border-[#cccccc]" onerror="this.src='https://via.placeholder.com/400x300?text=Grandma'">
+                <img src="https://attach.setn.com/newsimages/2017/08/21/1020354-PH.jpg" alt="賣玉蘭花的阿婆" class="h-full w-auto object-cover border-r border-[#cccccc]" onerror="this.src='https://via.placeholder.com/400x300?text=Grandma'">
             </div>
         </div>
     </div>
 
-    <!-- 跑馬燈 (無印風低調設計) -->
-    <div class="bg-[#f2f0ec] text-[#737373] overflow-hidden flex items-center h-10 border-b border-[#e5e1d8] text-xs tracking-wider z-30 relative">
+    <!-- 跑馬燈 -->
+    <div class="bg-[#f2f0ec] text-[#737373] overflow-hidden flex items-center h-10 border-b border-[#e5e1d8] text-xs tracking-wider z-30 relative shadow-sm">
         <div class="px-6 flex-shrink-0 z-10 flex items-center h-full bg-[#f2f0ec] border-r border-[#e5e1d8]">
             最新訂單
         </div>
@@ -168,11 +203,113 @@
         </div>
     </div>
 
+    <!-- 榮譽認證區塊 (證書形式) -->
+    <div id="certifications" class="w-full bg-[#fcfbfa] border-b border-[#e5e5e5] py-16 md:py-20 z-20 relative">
+        <div class="max-w-6xl mx-auto px-6">
+            <div class="text-center mb-12">
+                <h3 class="text-xs tracking-[0.2em] text-[#a3a3a3] uppercase font-sans mb-3">Official Certificates</h3>
+                <h2 class="text-2xl text-[#4a4a4a] tracking-widest serif">集團最高榮譽證書</h2>
+                <div class="w-12 h-px bg-[#c29b8c] mx-auto mt-6"></div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- 證書 1：芷晴認證 -->
+                <div class="certificate-box p-8 flex flex-col items-center text-center">
+                    <div class="certificate-inner"></div>
+                    <div class="certificate-inner-2"></div>
+                    <div class="z-10 w-full flex flex-col h-full items-center">
+                        <div class="seal-spin w-12 h-12 mb-6 text-[#8c7366]">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" class="w-full h-full">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                                <path d="M9 12l2 2 4-4"></path>
+                            </svg>
+                        </div>
+                        <h4 class="serif text-xl text-[#4a4a4a] tracking-[0.1em] font-bold mb-2">芷晴認證</h4>
+                        <p class="text-[9px] text-[#a3a3a3] tracking-[0.2em] mb-6 uppercase font-sans">Zhiqing Certified</p>
+                        <p class="text-xs text-[#737373] tracking-wider leading-loose mb-8 flex-1">茲證明本集團所售之玉蘭花，皆經過芷晴董事長親自鑑定，具備無與倫比的高雅香氣與絕對之美。</p>
+                        <div class="w-full pt-4 border-t border-[#f0f0f0] flex justify-between items-end">
+                            <span class="text-[10px] text-[#a3a3a3] tracking-widest">發證: 美貌評鑑局</span>
+                            <span class="font-serif text-[#8c7366] text-sm italic">Zhiqing</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 證書 2：國際最美美女證書 -->
+                <div class="certificate-box p-8 flex flex-col items-center text-center">
+                    <div class="certificate-inner"></div>
+                    <div class="certificate-inner-2"></div>
+                    <div class="z-10 w-full flex flex-col h-full items-center">
+                        <div class="seal-spin w-12 h-12 mb-6 text-[#c29b8c]">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" class="w-full h-full">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="2" y1="12" x2="22" y2="12"></line>
+                                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                            </svg>
+                        </div>
+                        <h4 class="serif text-xl text-[#4a4a4a] tracking-[0.1em] font-bold mb-2">國際最美美女證書</h4>
+                        <p class="text-[9px] text-[#a3a3a3] tracking-[0.2em] mb-6 uppercase font-sans">Global Beauty Award</p>
+                        <p class="text-xs text-[#737373] tracking-wider leading-loose mb-8 flex-1">經全球百大審美機構聯合評議，特頒此證，確認芷晴女士為本世紀最具代表性之絕世美女。</p>
+                        <div class="w-full pt-4 border-t border-[#f0f0f0] flex justify-between items-end">
+                            <span class="text-[10px] text-[#a3a3a3] tracking-widest">發證: 聯合國美學部</span>
+                            <span class="font-serif text-[#c29b8c] text-sm italic">Global</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 證書 3：在地青農—美女獎 -->
+                <div class="certificate-box p-8 flex flex-col items-center text-center">
+                    <div class="certificate-inner"></div>
+                    <div class="certificate-inner-2"></div>
+                    <div class="z-10 w-full flex flex-col h-full items-center">
+                        <div class="seal-spin w-12 h-12 mb-6 text-[#5c7054]">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" class="w-full h-full">
+                                <path d="M12 22c4-4 8-9 8-14a5 5 0 0 0-10 0 5 5 0 0 0-10 0c0 5 4 10 8 14z"></path>
+                                <path d="M12 8v14"></path>
+                            </svg>
+                        </div>
+                        <h4 class="serif text-xl text-[#4a4a4a] tracking-[0.1em] font-bold mb-2">在地青農美女獎</h4>
+                        <p class="text-[9px] text-[#a3a3a3] tracking-[0.2em] mb-6 uppercase font-sans">Local Farmer Beauty</p>
+                        <p class="text-xs text-[#737373] tracking-wider leading-loose mb-8 flex-1">表彰其深耕在地農產，以無可挑剔之容貌帶動玉蘭花產業復甦，為台灣農業注入美麗新活水。</p>
+                        <div class="w-full pt-4 border-t border-[#f0f0f0] flex justify-between items-end">
+                            <span class="text-[10px] text-[#a3a3a3] tracking-widest">發證: 台灣青農協會</span>
+                            <span class="font-serif text-[#5c7054] text-sm italic">Taiwan</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 證書 4：宇宙美女認證 -->
+                <div class="certificate-box p-8 flex flex-col items-center text-center">
+                    <div class="certificate-inner"></div>
+                    <div class="certificate-inner-2"></div>
+                    <div class="z-10 w-full flex flex-col h-full items-center">
+                        <div class="seal-spin w-12 h-12 mb-6 text-[#4a5568]">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" class="w-full h-full">
+                                <circle cx="12" cy="12" r="6"></circle>
+                                <ellipse cx="12" cy="12" rx="11" ry="4" transform="rotate(20 12 12)"></ellipse>
+                                <path d="M19 3l1 1"></path>
+                                <path d="M4 4l1 1"></path>
+                                <path d="M20 20l1 1"></path>
+                            </svg>
+                        </div>
+                        <h4 class="serif text-xl text-[#4a4a4a] tracking-[0.1em] font-bold mb-2">宇宙美女認證</h4>
+                        <p class="text-[9px] text-[#a3a3a3] tracking-[0.2em] mb-6 uppercase font-sans">Universal Beauty Cert</p>
+                        <p class="text-xs text-[#737373] tracking-wider leading-loose mb-8 flex-1">超越星系與維度的界定，特頒此宇宙級最高認證，以茲證明芷晴為全宇宙間最純粹之絕美存在。</p>
+                        <div class="w-full pt-4 border-t border-[#f0f0f0] flex justify-between items-end">
+                            <span class="text-[10px] text-[#a3a3a3] tracking-widest">發證: 銀河審美委員會</span>
+                            <span class="font-serif text-[#4a5568] text-sm italic">Cosmos</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
     <!-- 主要內容區 -->
-    <main class="flex-1 max-w-3xl mx-auto w-full px-6 py-12 relative z-20 flex flex-col gap-12">
+    <main class="flex-1 max-w-4xl mx-auto w-full px-6 py-12 relative z-20 flex flex-col gap-16 md:gap-20">
         
         <!-- 介紹文案 -->
-        <div class="text-center space-y-4 pt-8 pb-4">
+        <div class="text-center space-y-4 pt-4">
             <h2 class="text-3xl font-normal text-[#4a4a4a] tracking-widest serif">自然、純粹、極致之美</h2>
             <p class="text-sm text-[#8c8c8c] tracking-widest leading-relaxed">
                 大地的恩賜，最真實的美麗。<br>
@@ -180,99 +317,224 @@
             </p>
         </div>
 
-        <!-- 意向書表單 (無印白紙風格) -->
-        <div id="philosophy" class="bg-white border border-[#e5e5e5] p-8 md:p-12 shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
+        <!-- 品牌故事 -->
+        <section id="story" class="flex flex-col md:flex-row bg-white border border-[#e5e5e5] shadow-[0_4px_20px_rgba(0,0,0,0.02)] overflow-hidden">
+            <div class="w-full md:w-1/2 overflow-hidden bg-[#f5f5f5] relative min-h-[300px]">
+                <img src="https://today-obs.line-scdn.net/0hW_MKj8JUCHBwMhtRTzp3J0hkBAFDVBJ5UlQTQ1ZnUhMKHhwuGFRbE1Q0XlwOBU0lUAESRlE6UUhYCkckTw/w1200" 
+                     alt="芷晴美女玉蘭花銷售集團 品牌故事" 
+                     onerror="this.src='https://via.placeholder.com/600x600?text=Brand+Story'"
+                     class="absolute inset-0 w-full h-full object-cover transition-all duration-[1500ms] ease-out filter grayscale opacity-90 hover:grayscale-0 hover:opacity-100 hover:scale-105">
+            </div>
+            <div class="w-full md:w-1/2 p-8 md:p-12 lg:p-16 flex flex-col justify-center text-left">
+                <div class="mb-6">
+                    <h3 class="text-[10px] tracking-[0.25em] text-[#c29b8c] uppercase font-sans mb-3">Brand Story</h3>
+                    <h2 class="text-2xl text-[#4a4a4a] tracking-widest serif leading-snug">在車水馬龍中，<br>預見絕世之美。</h2>
+                </div>
+                <div class="space-y-4 text-xs text-[#737373] tracking-wider leading-loose">
+                    <p>故事始於一個簡單的信念：這個緊繃的世界，需要更多純粹的美貌與芬芳來拯救。</p>
+                    <p>芷晴董事長看見了現代人靈魂的疲憊，為了將這份「絕對的美麗」傳遞給世人，芷晴美女玉蘭花銷售集團應運而生。我們堅持與在地青農深度契作，不僅是在販售花卉，更是在車陣中傳遞一種優雅的生活哲學。</p>
+                    <p>每一串玉蘭花，都經過國際級的審美標準與芷晴董事長極致美貌的無形加持。讓那份屬於台灣街頭的質樸香氣，昇華為宇宙級的精品體驗。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 集團美女之歌 專區 -->
+        <section id="song-section" class="flex flex-col items-center py-10">
+            <div class="text-center mb-10">
+                <h3 class="text-[10px] tracking-[0.25em] text-[#a3a3a3] uppercase font-sans mb-3 flex items-center justify-center gap-2">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+                    Official Theme Song
+                </h3>
+                <h2 class="text-2xl text-[#4a4a4a] tracking-widest serif mb-2">集團美女之歌</h2>
+                <div class="w-10 h-px bg-[#d4cfc7] mx-auto mt-4"></div>
+            </div>
             
-            <div class="mb-10 border-b border-[#f0f0f0] pb-6">
-                <h3 class="text-lg tracking-widest font-bold text-[#4a4a4a] mb-2">芷晴董事長美貌同意書</h3>
-                <p class="text-xs text-[#a3a3a3] tracking-widest">在我們合作之前，請您先同意本集團的核心理念。</p>
+            <div class="w-full max-w-2xl bg-white p-3 border border-[#e5e5e5] shadow-sm mb-10">
+                <div class="relative w-full aspect-video bg-[#f5f5f5]">
+                    <iframe class="absolute inset-0 w-full h-full" 
+                            src="https://www.youtube.com/embed/opXeN0T8aR0" 
+                            title="集團美女之歌" 
+                            frameborder="0" 
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                            allowfullscreen>
+                    </iframe>
+                </div>
             </div>
 
+            <div class="text-center text-[#595757] font-serif tracking-[0.25em] leading-[2.5] text-sm md:text-base border-y border-[#f0f0f0] py-8 w-full max-w-md mx-auto relative">
+                <div class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#faf9f6] px-4 text-[#d4cfc7]">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-4 h-4"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                </div>
+                <p>芷晴美女 佳敏美女</p>
+                <p>好多美女 都是美女</p>
+                <p>芷晴佳敏 都是美女</p>
+                <p>我愛玉蘭 玉蘭愛我</p>
+            </div>
+        </section>
+
+        <!-- 電商商品訂購區塊 -->
+        <section id="products" class="bg-white border border-[#e5e5e5] shadow-[0_4px_20px_rgba(0,0,0,0.02)] overflow-hidden">
+            <div class="flex flex-col md:flex-row">
+                <div class="w-full md:w-1/2 overflow-hidden bg-[#f9f8f6] relative min-h-[300px] border-b md:border-b-0 md:border-r border-[#e5e5e5]">
+                    <img src="https://www.twreporter.org/images/20170223155912-e2dc68219bb40b690390850a141fb851-tablet.JPG" 
+                         alt="頂級芳香玉蘭花" 
+                         onerror="this.src='https://via.placeholder.com/600x600?text=Product+Image'"
+                         class="absolute inset-0 w-full h-full object-cover">
+                    <div class="absolute top-6 left-6 bg-white/90 backdrop-blur px-3 py-1 text-[10px] tracking-widest text-[#8c7366] border border-[#e5e5e5]">芷晴認證</div>
+                </div>
+                <div class="w-full md:w-1/2 p-8 md:p-12 lg:p-16 flex flex-col justify-center">
+                    <h3 class="text-[10px] tracking-[0.25em] text-[#a3a3a3] uppercase font-sans mb-3">Signature Product</h3>
+                    <h2 class="text-2xl text-[#4a4a4a] tracking-widest serif mb-2">頂級芳香玉蘭花 (一串)</h2>
+                    <div class="flex items-end gap-3 mb-6">
+                        <span class="text-2xl text-[#8c7366] font-serif">NT$ 50</span>
+                        <span class="text-xs text-[#a3a3a3] font-sans pb-1 line-through">NT$ 150</span>
+                    </div>
+
+                    <p class="text-xs text-[#737373] tracking-wider leading-loose mb-8">
+                        大地的純粹芬芳，集團的最高品質之作。每一朵玉蘭花皆由芷晴董事長親自散發的絕世美貌氣場薰陶而成。購買玉蘭花，不僅是品味香氣，更是您對「芷晴真的是美女」的最有力證明。
+                    </p>
+
+                    <div class="flex items-center gap-6 mb-8">
+                        <span class="text-xs text-[#595757] tracking-widest font-bold">訂購數量</span>
+                        <div class="flex items-center border border-[#e5e5e5] rounded-sm bg-[#faf9f6]">
+                            <button onclick="updateQty(-1)" class="w-10 h-10 flex items-center justify-center text-[#737373] hover:bg-[#e5e1d8] transition-colors">-</button>
+                            <input type="number" id="product-qty" value="1" min="1" class="w-12 h-10 text-center text-sm text-[#4a4a4a] bg-transparent outline-none font-sans" readonly>
+                            <button onclick="updateQty(1)" class="w-10 h-10 flex items-center justify-center text-[#737373] hover:bg-[#e5e1d8] transition-colors">+</button>
+                        </div>
+                        <span class="text-xs text-[#a3a3a3]">串</span>
+                    </div>
+
+                    <button onclick="openOrderModal()" class="w-full bg-[#8c7366] hover:bg-[#735c50] text-white text-sm tracking-widest py-4 transition-colors shadow-sm flex justify-center items-center gap-2 group">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-4 h-4 group-hover:-translate-y-0.5 transition-transform"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+                        立即訂購
+                    </button>
+                    <p class="text-[10px] text-center text-[#a3a3a3] mt-4 tracking-widest">點擊即代表同意芷晴董事長美貌維護條款</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 意向書表單 -->
+        <div id="philosophy" class="bg-white border border-[#e5e5e5] p-8 md:p-12 shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
+            <div class="mb-10 border-b border-[#f0f0f0] pb-6">
+                <h3 class="text-lg tracking-widest font-bold text-[#4a4a4a] mb-2">入會美貌同意書</h3>
+                <p class="text-xs text-[#a3a3a3] tracking-widest">在成為VIP會員前，請您先同意本集團的核心理念。</p>
+            </div>
             <div class="space-y-10">
-                <!-- 核心問題 -->
                 <div id="card-beauty" class="bg-[#faf9f6] p-8 border border-[#f0f0f0] transition-colors">
                     <div class="mb-6">
                         <h4 class="text-sm tracking-widest text-[#4a4a4a] font-bold mb-2">
                             核心理念確認 <span class="text-[#c29b8c]">*</span>
                         </h4>
                         <p class="text-xs text-[#8c8c8c] leading-relaxed">
-                            您是否同意：「芷晴是絕對的絕世美女」？
+                            您是否完全同意：「芷晴是絕對的絕世美女」？
                         </p>
                     </div>
-                    
                     <div class="flex flex-col sm:flex-row gap-6 items-center justify-start min-h-[50px]">
-                        <!-- 選項：是 -->
-                        <div id="btn-yes" onclick="selectYes()" class="w-full sm:w-auto border border-[#cccccc] hover:border-[#8c7366] bg-white text-[#595757] text-sm tracking-widest py-3 px-6 cursor-pointer transition-all flex items-center justify-center gap-3">
-                            <div id="radio-yes" class="muji-radio">
-                                <div id="radio-yes-inner" class="muji-radio-inner"></div>
-                            </div>
+                        <div id="btn-yes" onclick="selectYes()" class="w-full sm:w-auto border border-[#cccccc] hover:border-[#8c7366] bg-white text-[#595757] text-sm tracking-widest py-3 px-6 cursor-pointer transition-all flex items-center justify-center gap-3 shadow-sm">
+                            <div id="radio-yes" class="muji-radio"><div id="radio-yes-inner" class="muji-radio-inner"></div></div>
                             完全同意
                         </div>
-
-                        <!-- 選項：不是 (會逃跑，且達五次會罰款) -->
                         <div id="btn-no" class="w-full sm:w-auto border border-[#e5e5e5] bg-[#faf9f6] text-[#a3a3a3] text-sm tracking-widest py-3 px-6 cursor-pointer transition-colors hover:text-[#c29b8c] flex items-center justify-center">
                             拒絕認同
                         </div>
                     </div>
                     <p id="form-error" class="text-[#c29b8c] text-xs mt-4 hidden tracking-wide">必須同意理念方可繼續</p>
                 </div>
-
-                <!-- 提交按鈕 -->
                 <div class="pt-4 flex items-center justify-between">
-                    <button id="btn-submit" onclick="submitForm()" class="bg-[#8c7366] hover:bg-[#735c50] text-white text-sm tracking-widest py-3 px-10 transition-colors w-full md:w-auto">
-                        提交
-                    </button>
-                    <button class="hidden md:block text-[#a3a3a3] text-xs tracking-widest hover:text-[#595757] transition" onclick="clearForm()">
-                        重置
-                    </button>
+                    <button id="btn-submit" onclick="submitForm()" class="bg-[#8c7366] hover:bg-[#735c50] text-white text-sm tracking-widest py-3 px-10 transition-colors w-full md:w-auto shadow-sm">提交</button>
+                    <button class="hidden md:block text-[#a3a3a3] text-xs tracking-widest hover:text-[#595757] transition" onclick="clearForm()">重置</button>
                 </div>
-
-                <!-- 成功訊息 -->
                 <div id="success-msg" class="hidden mt-6 bg-[#f2f5f1] border border-[#dce5d8] text-[#5c7054] p-6 text-center">
                     <p class="text-sm tracking-widest font-bold mb-2">感謝您的同意</p>
-                    <p class="text-xs tracking-wide leading-relaxed">
-                        您的認同已記錄。<br>世界因芷晴的美貌與您的品味而保持寧靜與和平。
-                    </p>
+                    <p class="text-xs tracking-wide leading-relaxed">您的認同已記錄。<br>世界因芷晴的美貌與您的品味而保持寧靜與和平。</p>
                 </div>
             </div>
-        </div>
-
-        <!-- 企業級玉蘭花專賣 -->
-        <div id="products" class="border border-[#e5e5e5] bg-white p-8 md:p-12 text-center flex flex-col items-center">
-            <div class="w-12 h-12 mb-6 opacity-60">
-                <!-- 簡約玉蘭花 SVG -->
-                <svg viewBox="0 0 100 100" fill="none" stroke="#8c7366" stroke-width="1.5" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M50 90 C40 70 20 60 20 40 C20 20 40 10 50 10 C60 10 80 20 80 40 C80 60 60 70 50 90 Z" fill="#faf9f6"/>
-                    <path d="M50 90 C45 60 30 50 30 30 C30 20 40 15 50 15 C60 15 70 20 70 30 C70 50 55 60 50 90 Z" fill="#fff"/>
-                </svg>
-            </div>
-            <h2 class="text-lg md:text-xl font-normal text-[#4a4a4a] mb-3 tracking-widest serif">
-                芳香玉蘭花
-            </h2>
-            <p class="text-xs text-[#8c8c8c] leading-relaxed mb-8 max-w-md tracking-wide">
-                純白芬芳，芷晴集團引以為傲的最高品質。<br>
-                為您的生活注入優雅純粹的香氣。
-            </p>
-            <button onclick="openOrderModal()" class="border border-[#8c7366] text-[#8c7366] hover:bg-[#8c7366] hover:text-white bg-transparent text-sm tracking-widest py-2.5 px-8 transition duration-300">
-                立即訂購
-            </button>
         </div>
 
     </main>
 
-    <footer class="bg-white border-t border-[#e5e5e5] text-[#a3a3a3] py-8 text-center text-xs tracking-widest mt-auto z-20 relative">
+    <!-- 集團精選美女 IG 殿堂 (含客製縮圖) -->
+    <div id="ig-links" class="w-full bg-[#f2f0ec] border-t border-[#e5e5e5] py-16 z-20 relative shadow-[inset_0_4px_20px_rgba(0,0,0,0.01)] mt-8">
+        <div class="max-w-5xl mx-auto px-6">
+            <div class="text-center mb-10">
+                <h3 class="text-xs tracking-[0.2em] text-[#a3a3a3] uppercase font-sans mb-3 flex items-center justify-center gap-2">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+                    Beauty IG Hall of Fame
+                </h3>
+                <h2 class="text-xl text-[#4a4a4a] tracking-widest serif">集團精選：國際美女 IG 殿堂</h2>
+                <div class="w-10 h-px bg-[#d4cfc7] mx-auto mt-4"></div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- IG 1: 芷晴 -->
+                <a href="https://www.instagram.com/guo_0821" target="_blank" rel="noopener noreferrer" class="group flex flex-col items-center bg-white border border-[#e5e1d8] p-8 hover:border-[#c29b8c] hover:-translate-y-1 hover:shadow-[0_10px_30px_rgba(194,155,140,0.1)] transition-all duration-300">
+                    <div class="w-16 h-16 rounded-full bg-[#faf9f6] flex items-center justify-center border border-[#e5e1d8] mb-4 overflow-hidden group-hover:border-[#c29b8c] transition-colors shadow-sm">
+                        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTFbs2tL9CYuWzpELnRMNFKbxYfiMNvK3u_UvoSRM8KCYW2MJokHEuIKnSD&s=10" alt="芷晴" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                    </div>
+                    <h4 class="text-[13px] font-bold text-[#4a4a4a] tracking-widest mb-1 serif text-center">國際第一美女芷晴</h4>
+                    <p class="text-[10px] text-[#a3a3a3] tracking-widest font-sans mt-1">@guo_0821</p>
+                </a>
+                
+                <!-- IG 2: TWICE -->
+                <a href="https://www.instagram.com/twicetagram" target="_blank" rel="noopener noreferrer" class="group flex flex-col items-center bg-white border border-[#e5e1d8] p-8 hover:border-[#c29b8c] hover:-translate-y-1 hover:shadow-[0_10px_30px_rgba(194,155,140,0.1)] transition-all duration-300">
+                    <div class="w-16 h-16 rounded-full bg-[#faf9f6] flex items-center justify-center border border-[#e5e1d8] mb-4 overflow-hidden group-hover:border-[#c29b8c] transition-colors shadow-sm bg-white p-2">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Logo_of_TWICE.svg/500px-Logo_of_TWICE.svg.png" alt="TWICE" class="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500">
+                    </div>
+                    <h4 class="text-[13px] font-bold text-[#4a4a4a] tracking-widest mb-1 serif text-center">第一美女團 TWICE</h4>
+                    <p class="text-[10px] text-[#a3a3a3] tracking-widest font-sans mt-1">@twicetagram</p>
+                </a>
+                
+                <!-- IG 3: Lydia -->
+                <a href="https://www.instagram.com/topbeauty_lydia" target="_blank" rel="noopener noreferrer" class="group flex flex-col items-center bg-white border border-[#e5e1d8] p-8 hover:border-[#c29b8c] hover:-translate-y-1 hover:shadow-[0_10px_30px_rgba(194,155,140,0.1)] transition-all duration-300">
+                    <div class="w-16 h-16 rounded-full bg-[#faf9f6] flex items-center justify-center border border-[#e5e1d8] mb-4 overflow-hidden group-hover:border-[#c29b8c] transition-colors shadow-sm">
+                        <img src="https://images.chinatimes.com/newsphoto/2016-07-10/656/B21A00_P_02_02.jpg" alt="Lydia" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                    </div>
+                    <h4 class="text-[13px] font-bold text-[#4a4a4a] tracking-widest mb-1 serif text-center">絕美仙氣代表 Lydia</h4>
+                    <p class="text-[10px] text-[#a3a3a3] tracking-widest font-sans mt-1">@topbeauty_lydia</p>
+                </a>
+                
+                <!-- IG 4: Tzuyu -->
+                <a href="https://www.instagram.com/thinkaboutzu" target="_blank" rel="noopener noreferrer" class="group flex flex-col items-center bg-white border border-[#e5e1d8] p-8 hover:border-[#c29b8c] hover:-translate-y-1 hover:shadow-[0_10px_30px_rgba(194,155,140,0.1)] transition-all duration-300">
+                    <div class="w-16 h-16 rounded-full bg-[#faf9f6] flex items-center justify-center border border-[#e5e1d8] mb-4 overflow-hidden group-hover:border-[#c29b8c] transition-colors shadow-sm">
+                        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSsOdiFh1k2MZ3W5HsKNHQzzK6fIvH4lf0homsdrZ0IJjmAaO2PNGY-ULftquJxeKRz1st2jTqt7JkdbUlgXz8BtLy3L3Qzy5fLaScpRLnF&s=10" alt="子瑜" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                    </div>
+                    <h4 class="text-[13px] font-bold text-[#4a4a4a] tracking-widest mb-1 serif text-center">世界級美貌 子瑜</h4>
+                    <p class="text-[10px] text-[#a3a3a3] tracking-widest font-sans mt-1">@thinkaboutzu</p>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 頁尾 -->
+    <footer class="bg-white text-[#a3a3a3] pt-10 pb-6 text-center text-xs tracking-widest z-20 relative">
         <p>&copy; 2026 芷晴美女玉蘭花銷售集團guo0821.</p>
-        <p class="mt-2 text-[10px]">簡單、純粹，絕對的美麗。</p>
+        <p class="mt-3 text-[10px] text-[#c29b8c]">簡單、純粹，絕對的美麗。</p>
     </footer>
+
+    <!-- 悼念崇純總經理區塊 (網頁最下方) -->
+    <div id="memorial" class="bg-[#1a1a1a] border-t border-[#333333] text-[#8c8c8c] py-16 text-center relative z-20">
+        <div class="max-w-2xl mx-auto px-6">
+            <!-- 象徵思念與落葉的圖示 -->
+            <svg class="w-6 h-6 mx-auto mb-6 text-[#4a4a4a]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"></path>
+                <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"></path>
+            </svg>
+            <h2 class="text-lg tracking-[0.4em] font-serif text-[#d4cfc7] mb-6">悼念 崇純 總經理</h2>
+            <div class="w-8 h-px bg-[#4a4a4a] mx-auto mb-6"></div>
+            <p class="text-xs tracking-widest leading-[2.5] text-[#737373] font-serif">
+                感謝您為集團與玉蘭花產業的無私奉獻。<br>
+                您的精神與玉蘭花的芬芳，將永遠留在我們心中。
+            </p>
+        </div>
+    </div>
 
     <!-- 訂購玉蘭花彈出視窗 (付款頁面) -->
     <div id="order-modal" class="modal fixed inset-0 bg-[#faf9f6]/90 backdrop-blur-sm z-50 items-center justify-center p-6">
         <div class="bg-white border border-[#e5e5e5] p-10 max-w-sm w-full shadow-[0_10px_40px_rgba(0,0,0,0.05)] text-center relative overflow-hidden">
             <button onclick="closeOrderModal()" class="absolute top-4 right-4 text-[#a3a3a3] hover:text-[#4a4a4a] text-xl font-light z-10">&times;</button>
-            
-            <!-- 步驟一：選擇付款方式 -->
             <div id="modal-step-payment" class="transition-opacity duration-300">
                 <h2 class="text-lg font-normal tracking-widest text-[#4a4a4a] mb-6 serif">請選擇付款方式</h2>
+                <div class="text-sm text-[#8c7366] mb-6 font-bold tracking-widest" id="checkout-amount-display">總計：NT$ 50</div>
                 <div class="flex flex-col gap-4 mb-4">
                     <button onclick="processPayment()" class="w-full border border-[#cccccc] hover:border-[#8c7366] bg-white py-4 flex justify-center items-center transition-all opacity-80 hover:opacity-100 group shadow-sm">
                         <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQN0I8bEYgumq_IHqF3CymDBpV3W30zzAVsPu4cZvj-RQ&s=10" alt="Apple Pay" class="h-8 object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-300">
@@ -283,13 +545,10 @@
                 </div>
                 <p class="text-[10px] text-[#a3a3a3] tracking-widest">點擊即代表同意玉蘭花購買條款</p>
             </div>
-
-            <!-- 步驟二：訂單完成 -->
             <div id="modal-step-success" class="hidden transition-opacity duration-300">
                 <h2 class="text-lg font-normal tracking-widest text-[#4a4a4a] mb-4 serif">付款及訂單已完成</h2>
                 <p class="text-xs text-[#737373] mb-8 tracking-wide leading-relaxed">
-                    感謝您的訂購。<br>
-                    請與芷晴的美麗一同，<br>細細品味玉蘭花的高雅香氣。
+                    感謝您的訂購。<br>請與芷晴的美麗一同，<br>細細品味玉蘭花的高雅香氣。
                 </p>
                 <button onclick="closeOrderModal()" class="bg-[#595757] hover:bg-[#4a4a4a] text-white text-xs tracking-widest py-2 px-8 transition">
                     關閉
@@ -301,13 +560,11 @@
     <!-- 五次拒絕之天價罰款視窗 -->
     <div id="fine-modal" class="modal fixed inset-0 bg-[#faf9f6]/95 backdrop-blur-md z-[60] items-center justify-center p-6">
         <div class="bg-white border border-[#c29b8c] p-10 max-w-sm w-full shadow-[0_15px_50px_rgba(194,155,140,0.15)] text-center relative overflow-hidden">
-            <!-- 步驟一：罰款通知 -->
             <div id="fine-step-notice" class="transition-opacity duration-300">
                 <h2 class="text-xl font-bold tracking-widest text-[#c29b8c] mb-6 serif border-b border-[#f0f0f0] pb-4">違約罰款通知</h2>
                 <p class="text-sm text-[#737373] mb-6 tracking-wide leading-relaxed font-medium">
                     系統偵測：您已累計 <span class="text-[#c29b8c] font-bold">5</span> 次拒絕認同芷晴董事長的美貌。<br><br>
-                    根據集團《美貌維護法》規定，<br>
-                    您須立即繳納懲罰性違約金：<br>
+                    根據集團《美貌維護法》規定，<br>您須立即繳納懲罰性違約金：<br>
                     <span class="text-3xl text-[#8c7366] block mt-4 font-bold serif">NT$ 5,000,000</span>
                 </p>
                 <div class="flex flex-col gap-4 mb-2">
@@ -319,13 +576,10 @@
                     </button>
                 </div>
             </div>
-
-            <!-- 步驟二：罰款繳納完成 -->
             <div id="fine-step-success" class="hidden transition-opacity duration-300">
                 <h2 class="text-lg font-bold tracking-widest text-[#5c7054] mb-4 serif">罰款繳納成功</h2>
                 <p class="text-xs text-[#737373] mb-8 tracking-wide leading-relaxed">
-                    感謝您的配合。<br>
-                    請端正您的態度，並重新簽署同意書。
+                    感謝您的配合。<br>請端正您的態度，並重新簽署同意書。
                 </p>
                 <button onclick="closeFineModal()" class="bg-[#595757] hover:bg-[#4a4a4a] text-white text-xs tracking-widest py-2 px-8 transition">
                     關閉並深切反省
@@ -334,14 +588,13 @@
         </div>
     </div>
 
-    <!-- 系統提示視窗 (取代內建 alert) -->
+    <!-- 系統提示視窗 -->
     <div id="alert-modal" class="modal fixed inset-0 bg-[#faf9f6]/80 backdrop-blur-sm z-50 items-center justify-center p-6">
         <div class="bg-white border border-[#e5e5e5] p-8 max-w-sm w-full shadow-[0_10px_40px_rgba(0,0,0,0.05)] text-center relative">
             <button onclick="closeAlertModal()" class="absolute top-4 right-4 text-[#a3a3a3] hover:text-[#4a4a4a] text-xl font-light">&times;</button>
-            <h2 class="text-lg font-normal tracking-widest text-[#8c7366] mb-4 serif">系統訊息</h2>
-            <p id="alert-msg-text" class="text-sm text-[#4a4a4a] mb-8 tracking-wide font-bold leading-relaxed">
-                <!-- 訊息內容 -->
-            </p>
+            <h2 class="text-lg font-normal tracking-widest text-[#8c7366] mb-3 serif">系統訊息</h2>
+            <p id="alert-msg-text" class="text-lg text-[#4a4a4a] tracking-wide font-bold leading-relaxed"></p>
+            <p id="alert-msg-sub" class="text-xs text-[#737373] mt-4 mb-8 tracking-widest leading-loose border-t border-[#f0f0f0] pt-4"></p>
             <button onclick="closeAlertModal()" class="bg-[#595757] hover:bg-[#4a4a4a] text-white text-xs tracking-widest py-2 px-8 transition">
                 確認
             </button>
@@ -358,66 +611,53 @@
                     <path d="M50 90 C45 60 30 50 30 30 C30 20 40 15 50 15 C60 15 70 20 70 30 C70 50 55 60 50 90 Z" fill="#ffffff"/>
                 </svg>
             `;
-
-            const flowerCount = 12;
-
-            for (let i = 0; i < flowerCount; i++) {
+            for (let i = 0; i < 12; i++) {
                 const flower = document.createElement('div');
                 flower.className = 'magnolia-float';
                 flower.innerHTML = magnoliaSVG;
-                
                 const size = Math.random() * 50 + 30;
-                flower.style.width = `${size}px`;
-                flower.style.height = `${size}px`;
-                flower.style.left = `${Math.random() * 100}vw`;
-                
-                const duration = Math.random() * 20 + 15;
-                const delay = Math.random() * -30;
-                
-                flower.style.animationDuration = `${duration}s`;
-                flower.style.animationDelay = `${delay}s`;
-
+                flower.style.width = size + 'px';
+                flower.style.height = size + 'px';
+                flower.style.left = (Math.random() * 100) + 'vw';
+                flower.style.animationDuration = (Math.random() * 20 + 15) + 's';
+                flower.style.animationDelay = (Math.random() * -30) + 's';
                 container.appendChild(flower);
             }
         }
         createFloatingMagnolias();
 
+        // --- 商品數量選擇器 ---
+        let currentQty = 1;
+        const pricePerItem = 50;
+        function updateQty(change) {
+            currentQty += change;
+            if (currentQty < 1) currentQty = 1;
+            document.getElementById('product-qty').value = currentQty;
+        }
+
         // --- 拒絕次數計算與閃避邏輯 ---
         let refusalCount = 0;
         const btnNo = document.getElementById('btn-no');
-        
         const dodge = (e) => {
             if(e.type === 'touchstart') e.preventDefault();
-            
-            // 每次觸摸或滑鼠經過，次數+1
             refusalCount++;
-            
-            // 如果達到 5 次，開啟罰款視窗
             if (refusalCount >= 5) {
                 openFineModal();
-                refusalCount = 0; // 重置計數
-                // 將按鈕歸位
-                btnNo.style.transform = `translate(0px, 0px)`;
+                refusalCount = 0; 
+                btnNo.style.transform = 'translate(0px, 0px)';
                 btnNo.style.borderColor = '#e5e5e5';
                 btnNo.style.color = '#a3a3a3';
                 return;
             }
-
-            // 尚未達到五次，繼續逃跑
             const x = Math.random() * 200 - 100;
             const y = Math.random() * 80 - 40;
-            
-            btnNo.style.transform = `translate(${x}px, ${y}px)`;
+            btnNo.style.transform = 'translate(' + x + 'px, ' + y + 'px)';
             btnNo.style.borderColor = '#c29b8c';
             btnNo.style.color = '#c29b8c';
         };
-
         btnNo.addEventListener('mouseover', dodge);
         btnNo.addEventListener('touchstart', dodge);
-        btnNo.addEventListener('click', () => {
-            // 如果很厲害真的點到了，一樣算一次
-            dodge({type: 'click'});
-        });
+        btnNo.addEventListener('click', function() { dodge({type: 'click'}); });
 
         // --- 罰款視窗邏輯 ---
         const fineModal = document.getElementById('fine-modal');
@@ -426,94 +666,82 @@
             document.getElementById('fine-step-success').classList.add('hidden');
             fineModal.classList.add('show');
         }
-        function closeFineModal() {
-            fineModal.classList.remove('show');
-        }
+        function closeFineModal() { fineModal.classList.remove('show'); }
         function payFine() {
             document.getElementById('fine-step-notice').classList.add('hidden');
             document.getElementById('fine-step-success').classList.remove('hidden');
         }
 
-
         // --- 自訂提示框邏輯 ---
-        function showAlert(msg) {
-            document.getElementById('alert-msg-text').innerText = msg;
+        function showAlert(mainText, subText) {
+            document.getElementById('alert-msg-text').innerText = mainText;
+            const subElement = document.getElementById('alert-msg-sub');
+            if (subText) {
+                subElement.innerText = subText;
+                subElement.style.display = 'block';
+            } else {
+                subElement.style.display = 'none';
+            }
             document.getElementById('alert-modal').classList.add('show');
         }
-        function closeAlertModal() {
-            document.getElementById('alert-modal').classList.remove('show');
-        }
+        function closeAlertModal() { document.getElementById('alert-modal').classList.remove('show'); }
 
         // --- 表單邏輯 ---
         let isYesSelected = false;
-
         function selectYes() {
             isYesSelected = true;
-            const radioYes = document.getElementById('radio-yes');
-            
-            radioYes.classList.add('active');
-            
+            document.getElementById('radio-yes').classList.add('active');
             document.getElementById('form-error').classList.add('hidden');
             document.getElementById('card-beauty').classList.remove('border-[#c29b8c]', 'bg-[#fff5f2]');
         }
-
         function clearForm() {
             isYesSelected = false;
-            const radioYes = document.getElementById('radio-yes');
-            radioYes.classList.remove('active');
-            
+            document.getElementById('radio-yes').classList.remove('active');
             document.getElementById('form-error').classList.add('hidden');
             document.getElementById('card-beauty').classList.remove('border-[#c29b8c]', 'bg-[#fff5f2]');
-
             document.getElementById('success-msg').classList.add('hidden');
-            
             const btnSubmit = document.getElementById('btn-submit');
             btnSubmit.innerText = "提交";
             btnSubmit.classList.remove('opacity-40', 'cursor-not-allowed', 'bg-[#cccccc]');
             btnSubmit.classList.add('hover:bg-[#735c50]', 'bg-[#8c7366]');
             btnSubmit.disabled = false;
-            
-            // 重置拒絕按鈕與次數
             refusalCount = 0;
             btnNo.style.display = 'flex';
             btnNo.style.transform = 'translate(0px, 0px)';
             btnNo.style.borderColor = '#e5e5e5';
             btnNo.style.color = '#a3a3a3';
         }
-
         function submitForm() {
             if (!isYesSelected) {
                 document.getElementById('form-error').classList.remove('hidden');
                 document.getElementById('card-beauty').classList.add('border-[#c29b8c]', 'bg-[#fff5f2]');
-                return; // 直接中斷
+                return; 
             }
-
             document.getElementById('success-msg').classList.remove('hidden');
-            
             const btnSubmit = document.getElementById('btn-submit');
             btnSubmit.innerText = "已提交";
             btnSubmit.classList.add('opacity-40', 'cursor-not-allowed', 'bg-[#cccccc]');
             btnSubmit.classList.remove('hover:bg-[#735c50]', 'bg-[#8c7366]');
             btnSubmit.disabled = true;
-            
             btnNo.style.display = 'none';
         }
 
+        // --- 訂單付款視窗 ---
         const modal = document.getElementById('order-modal');
         function openOrderModal() {
+            const total = currentQty * pricePerItem;
+            document.getElementById('checkout-amount-display').innerText = '總計：NT$ ' + total;
             document.getElementById('modal-step-payment').classList.remove('hidden');
             document.getElementById('modal-step-success').classList.add('hidden');
             modal.classList.add('show');
         }
-        function closeOrderModal() {
-            modal.classList.remove('show');
-        }
+        function closeOrderModal() { modal.classList.remove('show'); }
         function processPayment() {
             document.getElementById('modal-step-payment').classList.add('hidden');
             document.getElementById('modal-step-success').classList.remove('hidden');
         }
 
-        // --- 跑馬燈資料 (保留葉柏言需求) ---
+        // --- 跑馬燈資料 ---
         const orders = [
             { name: '葉柏言 先生', item: '50 串', time: '11:42' },
             { name: '王 先生', item: '2 串', time: '11:41' },
@@ -527,25 +755,19 @@
         function initMarquee() {
             const container = document.getElementById('marquee-container');
             container.innerHTML = ''; 
-            
             let cardsHtml = '';
-            orders.forEach(order => {
-                // 為每個訂單卡片加入 onclick 事件與 cursor-pointer，點擊時觸發自訂提示框
-                cardsHtml += `
-                    <div class="flex items-center gap-6 px-10 border-r border-[#e5e1d8] whitespace-nowrap cursor-pointer hover:bg-[#e5e1d8] transition-colors" onclick="showAlert('芷晴真的是美女！')">
-                        <span class="text-[#737373] tracking-widest">${order.name}</span>
-                        <span class="text-[#a3a3a3] text-[10px]">${order.time}</span>
-                        <span class="text-[#8c7366] tracking-widest">玉蘭花 ${order.item}</span>
-                    </div>
-                `;
+            orders.forEach(function(order) {
+                const subMsg = '感謝 ' + order.name + ' 訂購 ' + order.item + ' 玉蘭花證明芷晴董事長的美貌';
+                cardsHtml += '<div class="flex items-center gap-6 px-10 border-r border-[#e5e1d8] whitespace-nowrap cursor-pointer hover:bg-[#e5e1d8] transition-colors" onclick="showAlert(\'芷晴真的是美女！\', \'' + subMsg + '\')">' +
+                                '<span class="text-[#737373] tracking-widest">' + order.name + '</span>' +
+                                '<span class="text-[#a3a3a3] text-[10px]">' + order.time + '</span>' +
+                                '<span class="text-[#8c7366] tracking-widest">玉蘭花 ' + order.item + '</span>' +
+                             '</div>';
             });
-
-            const contentString = cardsHtml + cardsHtml + cardsHtml + cardsHtml;
-            container.innerHTML = contentString;
+            container.innerHTML = cardsHtml + cardsHtml + cardsHtml + cardsHtml;
         }
 
         initMarquee();
-
     </script>
 </body>
 </html>
