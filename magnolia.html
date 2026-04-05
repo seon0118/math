@@ -4,7 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>芷晴美女玉蘭花銷售集團guo0821</title>
+    <!-- 網站 Favicon -->
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3021/3021067.png" type="image/png">
+    <link rel="shortcut icon" href="https://cdn-icons-png.flaticon.com/512/3021/3021067.png" type="image/png">
+    
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 html2pdf.js 套件，用於生成 PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
     <style>
         /* 引入日系無印風常見的字體配置 */
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Noto+Serif+TC:wght@300;400;700&display=swap');
@@ -32,6 +39,20 @@
             animation: ticker 70s linear infinite;
         }
         .ticker-content:hover {
+            animation-play-state: paused;
+        }
+
+        /* 緬懷區垂直跑馬燈動畫 (由下往上) - 已加速 */
+        @keyframes memorialTickerVertical {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-50%); }
+        }
+        .memorial-ticker-vertical {
+            display: flex;
+            flex-direction: column;
+            animation: memorialTickerVertical 15s linear infinite; /* 加速到 15s */
+        }
+        .memorial-ticker-vertical:hover {
             animation-play-state: paused;
         }
 
@@ -146,8 +167,41 @@
             -webkit-appearance: none; 
             margin: 0; 
         }
+
+        /* 購物車側邊欄動畫 */
+        #cart-drawer {
+            transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            transform: translateX(100%);
+        }
+        .cart-open #cart-drawer {
+            transform: translateX(0);
+        }
+        .cart-open #cart-overlay {
+            display: block;
+            opacity: 1;
+        }
+        #cart-overlay {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        /* 隱藏原生radio，客製化取貨選項 */
+        .pickup-radio:checked + div {
+            border-color: #8c7366;
+            background-color: #faf9f6;
+        }
+        .pickup-radio:checked + div .radio-dot {
+            opacity: 1;
+        }
         
         html { scroll-behavior: smooth; }
+
+        /* 出貨單專用排版微調 */
+        #receipt-content {
+            background-color: #fff;
+            color: #333;
+        }
     </style>
 </head>
 <body class="flex flex-col min-h-screen relative">
@@ -175,18 +229,18 @@
         <div class="absolute inset-0 z-10 bg-gradient-to-r from-[#faf9f6] via-transparent to-[#faf9f6] pointer-events-none opacity-50"></div>
         <div class="banner-content">
             <div class="flex h-full shrink-0">
-                <img src="https://shuj.shu.edu.tw/wp-content/uploads/2020/06/1-1.png" alt="賣玉蘭花的阿婆" class="h-full w-auto object-cover border-r border-[#cccccc]" onerror="this.src='https://via.placeholder.com/400x300?text=Grandma'">
-                <img src="https://cc.tvbs.com.tw/img/upload/2017/06/13/20170613134159-4b98eda3.jpg" alt="賣玉蘭花的阿婆" class="h-full w-auto object-cover border-r border-[#cccccc]" onerror="this.src='https://via.placeholder.com/400x300?text=Grandma'">
-                <img src="https://womany.net/cdn-cgi/image/w=1119,f=auto,fit=scale-down/https://castle.womany.net/images/articles/6708/womany_ying_mu_kuai_zhao_2015_02_03__shang_wu_11_10_18_1422933044-8203-5769.png" alt="賣玉蘭花的阿婆" class="h-full w-auto object-cover border-r border-[#cccccc]" onerror="this.src='https://via.placeholder.com/400x300?text=Grandma'">
-                <img src="https://img.news.ebc.net.tw/EbcNews/news/2022/06/24/1656100447_91318.jpg" alt="賣玉蘭花的阿婆" class="h-full w-auto object-cover border-r border-[#cccccc]" onerror="this.src='https://via.placeholder.com/400x300?text=Grandma'">
-                <img src="https://attach.setn.com/newsimages/2017/08/21/1020354-PH.jpg" alt="賣玉蘭花的阿婆" class="h-full w-auto object-cover border-r border-[#cccccc]" onerror="this.src='https://via.placeholder.com/400x300?text=Grandma'">
+                <img src="https://shuj.shu.edu.tw/wp-content/uploads/2020/06/1-1.png" alt="賣玉蘭花的阿婆" class="h-full w-auto object-cover border-r border-[#cccccc]">
+                <img src="https://cc.tvbs.com.tw/img/upload/2017/06/13/20170613134159-4b98eda3.jpg" alt="賣玉蘭花的阿婆" class="h-full w-auto object-cover border-r border-[#cccccc]">
+                <img src="https://womany.net/cdn-cgi/image/w=1119,f=auto,fit=scale-down/https://castle.womany.net/images/articles/6708/womany_ying_mu_kuai_zhao_2015_02_03__shang_wu_11_10_18_1422933044-8203-5769.png" alt="賣玉蘭花的阿婆" class="h-full w-auto object-cover border-r border-[#cccccc]">
+                <img src="https://img.news.ebc.net.tw/EbcNews/news/2022/06/24/1656100447_91318.jpg" alt="賣玉蘭花的阿婆" class="h-full w-auto object-cover border-r border-[#cccccc]">
+                <img src="https://attach.setn.com/newsimages/2017/08/21/1020354-PH.jpg" alt="賣玉蘭花的阿婆" class="h-full w-auto object-cover border-r border-[#cccccc]">
             </div>
             <div class="flex h-full shrink-0">
-                <img src="https://shuj.shu.edu.tw/wp-content/uploads/2020/06/1-1.png" alt="賣玉蘭花的阿婆" class="h-full w-auto object-cover border-r border-[#cccccc]" onerror="this.src='https://via.placeholder.com/400x300?text=Grandma'">
-                <img src="https://cc.tvbs.com.tw/img/upload/2017/06/13/20170613134159-4b98eda3.jpg" alt="賣玉蘭花的阿婆" class="h-full w-auto object-cover border-r border-[#cccccc]" onerror="this.src='https://via.placeholder.com/400x300?text=Grandma'">
-                <img src="https://womany.net/cdn-cgi/image/w=1119,f=auto,fit=scale-down/https://castle.womany.net/images/articles/6708/womany_ying_mu_kuai_zhao_2015_02_03__shang_wu_11_10_18_1422933044-8203-5769.png" alt="賣玉蘭花的阿婆" class="h-full w-auto object-cover border-r border-[#cccccc]" onerror="this.src='https://via.placeholder.com/400x300?text=Grandma'">
-                <img src="https://img.news.ebc.net.tw/EbcNews/news/2022/06/24/1656100447_91318.jpg" alt="賣玉蘭花的阿婆" class="h-full w-auto object-cover border-r border-[#cccccc]" onerror="this.src='https://via.placeholder.com/400x300?text=Grandma'">
-                <img src="https://attach.setn.com/newsimages/2017/08/21/1020354-PH.jpg" alt="賣玉蘭花的阿婆" class="h-full w-auto object-cover border-r border-[#cccccc]" onerror="this.src='https://via.placeholder.com/400x300?text=Grandma'">
+                <img src="https://shuj.shu.edu.tw/wp-content/uploads/2020/06/1-1.png" alt="賣玉蘭花的阿婆" class="h-full w-auto object-cover border-r border-[#cccccc]">
+                <img src="https://cc.tvbs.com.tw/img/upload/2017/06/13/20170613134159-4b98eda3.jpg" alt="賣玉蘭花的阿婆" class="h-full w-auto object-cover border-r border-[#cccccc]">
+                <img src="https://womany.net/cdn-cgi/image/w=1119,f=auto,fit=scale-down/https://castle.womany.net/images/articles/6708/womany_ying_mu_kuai_zhao_2015_02_03__shang_wu_11_10_18_1422933044-8203-5769.png" alt="賣玉蘭花的阿婆" class="h-full w-auto object-cover border-r border-[#cccccc]">
+                <img src="https://img.news.ebc.net.tw/EbcNews/news/2022/06/24/1656100447_91318.jpg" alt="賣玉蘭花的阿婆" class="h-full w-auto object-cover border-r border-[#cccccc]">
+                <img src="https://attach.setn.com/newsimages/2017/08/21/1020354-PH.jpg" alt="賣玉蘭花的阿婆" class="h-full w-auto object-cover border-r border-[#cccccc]">
             </div>
         </div>
     </div>
@@ -215,7 +269,7 @@
             </p>
         </div>
 
-        <!-- 集團美女之歌 專區 (移至網頁上方) -->
+        <!-- 集團美女之歌 專區 -->
         <section id="song-section" class="flex flex-col items-center py-6 border-b border-[#f0f0f0] pb-16">
             <div class="text-center mb-10">
                 <h3 class="text-[10px] tracking-[0.25em] text-[#a3a3a3] uppercase font-sans mb-3 flex items-center justify-center gap-2">
@@ -254,7 +308,6 @@
             <div class="w-full md:w-1/2 overflow-hidden bg-[#f5f5f5] relative min-h-[300px]">
                 <img src="https://today-obs.line-scdn.net/0hW_MKj8JUCHBwMhtRTzp3J0hkBAFDVBJ5UlQTQ1ZnUhMKHhwuGFRbE1Q0XlwOBU0lUAESRlE6UUhYCkckTw/w1200" 
                      alt="芷晴美女玉蘭花銷售集團 品牌故事" 
-                     onerror="this.src='https://via.placeholder.com/600x600?text=Brand+Story'"
                      class="absolute inset-0 w-full h-full object-cover transition-all duration-[1500ms] ease-out filter grayscale opacity-90 hover:grayscale-0 hover:opacity-100 hover:scale-105">
             </div>
             <div class="w-full md:w-1/2 p-8 md:p-12 lg:p-16 flex flex-col justify-center text-left">
@@ -275,16 +328,15 @@
             <div class="flex flex-col md:flex-row">
                 <div class="w-full md:w-1/2 overflow-hidden bg-[#f9f8f6] relative min-h-[300px] border-b md:border-b-0 md:border-r border-[#e5e5e5]">
                     <img src="https://www.twreporter.org/images/20170223155912-e2dc68219bb40b690390850a141fb851-tablet.JPG" 
-                         alt="頂級芳香玉蘭花" 
-                         onerror="this.src='https://via.placeholder.com/600x600?text=Product+Image'"
+                         alt="頂級芳香玉蘭花" id="product-img"
                          class="absolute inset-0 w-full h-full object-cover">
                     <div class="absolute top-6 left-6 bg-white/90 backdrop-blur px-3 py-1 text-[10px] tracking-widest text-[#8c7366] border border-[#e5e5e5]">芷晴認證</div>
                 </div>
                 <div class="w-full md:w-1/2 p-8 md:p-12 lg:p-16 flex flex-col justify-center">
                     <h3 class="text-[10px] tracking-[0.25em] text-[#a3a3a3] uppercase font-sans mb-3">Signature Product</h3>
-                    <h2 class="text-2xl text-[#4a4a4a] tracking-widest serif mb-2">頂級芳香玉蘭花 (一串)</h2>
+                    <h2 class="text-2xl text-[#4a4a4a] tracking-widest serif mb-2" id="product-name">頂級芳香玉蘭花 (一串)</h2>
                     <div class="flex items-end gap-3 mb-6">
-                        <span class="text-2xl text-[#8c7366] font-serif">NT$ 50</span>
+                        <span class="text-2xl text-[#8c7366] font-serif">NT$ <span id="product-price">50</span></span>
                         <span class="text-xs text-[#a3a3a3] font-sans pb-1 line-through">NT$ 150</span>
                     </div>
 
@@ -302,11 +354,11 @@
                         <span class="text-xs text-[#a3a3a3]">串</span>
                     </div>
 
-                    <button onclick="openOrderModal()" class="w-full bg-[#8c7366] hover:bg-[#735c50] text-white text-sm tracking-widest py-4 transition-colors shadow-sm flex justify-center items-center gap-2 group">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-4 h-4 group-hover:-translate-y-0.5 transition-transform"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
-                        立即訂購
+                    <button onclick="addToCart()" class="w-full bg-white border border-[#8c7366] text-[#8c7366] hover:bg-[#8c7366] hover:text-white text-sm tracking-widest py-4 transition-colors shadow-sm flex justify-center items-center gap-3 group">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-4 h-4"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+                        加入購物車
                     </button>
-                    <p class="text-[10px] text-center text-[#a3a3a3] mt-4 tracking-widest">點擊即代表同意芷晴董事長美貌維護條款</p>
+                    <p class="text-[10px] text-center text-[#a3a3a3] mt-4 tracking-widest">選購完畢請點擊右下角購物車結帳</p>
                 </div>
             </div>
         </section>
@@ -351,7 +403,7 @@
 
     </main>
 
-    <!-- 榮譽認證區塊 (證書形式) (移至下方) -->
+    <!-- 榮譽認證區塊 (證書形式) -->
     <div id="certifications" class="w-full bg-[#fcfbfa] border-t border-b border-[#e5e5e5] py-16 md:py-20 z-20 relative">
         <div class="max-w-6xl mx-auto px-6">
             <div class="text-center mb-12">
@@ -458,7 +510,6 @@
                     <h4 class="text-[13px] font-bold text-[#4a4a4a] tracking-widest mb-1 serif text-center">國際第一美女芷晴</h4>
                     <p class="text-[10px] text-[#a3a3a3] tracking-widest font-sans mt-1">@guo_0821</p>
                 </a>
-                
                 <!-- IG 2: TWICE -->
                 <a href="https://www.instagram.com/twicetagram" target="_blank" rel="noopener noreferrer" class="group flex flex-col items-center bg-white border border-[#e5e1d8] p-8 hover:border-[#c29b8c] hover:-translate-y-1 hover:shadow-[0_10px_30px_rgba(194,155,140,0.1)] transition-all duration-300">
                     <div class="w-16 h-16 rounded-full bg-[#faf9f6] flex items-center justify-center border border-[#e5e1d8] mb-4 overflow-hidden group-hover:border-[#c29b8c] transition-colors shadow-sm bg-white p-2">
@@ -467,7 +518,6 @@
                     <h4 class="text-[13px] font-bold text-[#4a4a4a] tracking-widest mb-1 serif text-center">第一美女團 TWICE</h4>
                     <p class="text-[10px] text-[#a3a3a3] tracking-widest font-sans mt-1">@twicetagram</p>
                 </a>
-                
                 <!-- IG 3: Lydia -->
                 <a href="https://www.instagram.com/topbeauty_lydia" target="_blank" rel="noopener noreferrer" class="group flex flex-col items-center bg-white border border-[#e5e1d8] p-8 hover:border-[#c29b8c] hover:-translate-y-1 hover:shadow-[0_10px_30px_rgba(194,155,140,0.1)] transition-all duration-300">
                     <div class="w-16 h-16 rounded-full bg-[#faf9f6] flex items-center justify-center border border-[#e5e1d8] mb-4 overflow-hidden group-hover:border-[#c29b8c] transition-colors shadow-sm">
@@ -476,7 +526,6 @@
                     <h4 class="text-[13px] font-bold text-[#4a4a4a] tracking-widest mb-1 serif text-center">絕美仙氣代表 Lydia</h4>
                     <p class="text-[10px] text-[#a3a3a3] tracking-widest font-sans mt-1">@topbeauty_lydia</p>
                 </a>
-                
                 <!-- IG 4: Tzuyu -->
                 <a href="https://www.instagram.com/thinkaboutzu" target="_blank" rel="noopener noreferrer" class="group flex flex-col items-center bg-white border border-[#e5e1d8] p-8 hover:border-[#c29b8c] hover:-translate-y-1 hover:shadow-[0_10px_30px_rgba(194,155,140,0.1)] transition-all duration-300">
                     <div class="w-16 h-16 rounded-full bg-[#faf9f6] flex items-center justify-center border border-[#e5e1d8] mb-4 overflow-hidden group-hover:border-[#c29b8c] transition-colors shadow-sm">
@@ -495,38 +544,111 @@
         <p class="mt-3 text-[10px] text-[#c29b8c]">簡單、純粹，絕對的美麗。</p>
     </footer>
 
-    <!-- 悼念崇純總經理區塊 (網頁最下方) -->
-    <div id="memorial" class="bg-[#1a1a1a] border-t border-[#333333] text-[#8c8c8c] py-16 text-center relative z-20">
-        <div class="max-w-2xl mx-auto px-6">
-            <svg class="w-6 h-6 mx-auto mb-6 text-[#4a4a4a]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <!-- 悼念崇純總經理區塊 -->
+    <div id="memorial" class="relative border-t border-[#333333] text-[#d4cfc7] pt-20 pb-20 text-center z-20 overflow-hidden bg-cover bg-center bg-no-repeat" style="background-image: url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTiFMpRczEdUERHPJWAsQpozd3QIa9xirQW9jVmSTPvmANU_eRfgDPWEGIV&s=10');">
+        <div class="absolute inset-0 bg-black/80 z-0"></div>
+        <div class="relative z-10 max-w-2xl mx-auto px-6 mb-12 flex flex-col items-center">
+            <svg class="w-6 h-6 mx-auto mb-6 text-[#a3a3a3]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"></path>
                 <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"></path>
             </svg>
-            <h2 class="text-lg tracking-[0.4em] font-serif text-[#d4cfc7] mb-6">悼念 崇純 總經理</h2>
-            <div class="w-8 h-px bg-[#4a4a4a] mx-auto mb-6"></div>
-            <p class="text-xs tracking-widest leading-[2.5] text-[#737373] font-serif">
-                感謝您為集團與玉蘭花產業的無私奉獻。<br>
-                您的精神與玉蘭花的芬芳，將永遠留在我們心中。
+            <h2 class="text-xl md:text-2xl tracking-[0.4em] font-serif text-white mb-6">悼念 崇純 總經理</h2>
+            <div class="w-8 h-px bg-[#a3a3a3] mx-auto mb-6"></div>
+            <p class="text-xs md:text-sm tracking-widest leading-[2.5] text-[#cccccc] font-serif">
+                感謝您為集團與玉蘭花產業的無私奉獻。<br>您的精神與玉蘭花的芬芳，將永遠留在我們心中。
             </p>
+        </div>
+        <div class="relative z-10 w-full max-w-md mx-auto h-48 overflow-hidden border-y border-[#4a4a4a]/40 backdrop-blur-sm bg-black/20">
+            <div class="absolute inset-x-0 top-0 h-12 bg-gradient-to-b from-[#0a0a0a] to-transparent z-10 pointer-events-none"></div>
+            <div class="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-[#0a0a0a] to-transparent z-10 pointer-events-none"></div>
+            <div class="w-full h-full flex justify-center">
+                <div class="memorial-ticker-vertical" id="memorial-marquee-container">
+                    <!-- JS 動態生成 -->
+                </div>
+            </div>
+        </div>
+        <div class="relative z-10 max-w-md mx-auto mt-10 px-6">
+            <h3 class="text-[10px] tracking-widest text-[#a3a3a3] mb-4">留下您的思念與祝福</h3>
+            <div class="flex flex-col sm:flex-row gap-3">
+                <input type="text" id="memorial-input" placeholder="寫下您想對總經理說的話..." class="flex-1 bg-white/10 border border-[#737373] text-white px-4 py-3 text-xs outline-none focus:border-[#c29b8c] transition-colors placeholder:text-[#8c8c8c] backdrop-blur-sm">
+                <button onclick="submitMemorial()" class="bg-[#c29b8c] hover:bg-[#a37f71] text-white px-6 py-3 text-xs tracking-widest transition-colors shadow-sm whitespace-nowrap">獻上祝福</button>
+            </div>
         </div>
     </div>
 
-    <!-- 全新：購買與美貌認同證書彈窗 (點擊跑馬燈顯示) -->
-    <div id="order-cert-modal" class="modal fixed inset-0 bg-[#faf9f6]/95 backdrop-blur-md z-50 items-center justify-center p-6">
+    <!-- ==================== 浮動購物車按鈕 ==================== -->
+    <button onclick="toggleCart()" class="fixed bottom-8 right-8 w-14 h-14 bg-[#8c7366] text-white rounded-full shadow-[0_8px_20px_rgba(140,115,102,0.3)] hover:bg-[#735c50] hover:scale-105 transition-all duration-300 z-40 flex items-center justify-center group">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+        <span id="cart-badge" class="absolute -top-1 -right-1 bg-white text-[#8c7366] border border-[#8c7366] text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-sans font-bold shadow-sm hidden transition-transform scale-0">0</span>
+    </button>
+
+    <!-- ==================== 購物車側邊欄 (Drawer) ==================== -->
+    <div id="cart-overlay" class="fixed inset-0 bg-[#1a1a1a]/40 backdrop-blur-sm z-50" onclick="toggleCart()"></div>
+    <div id="cart-drawer" class="fixed top-0 right-0 w-full max-w-sm h-full bg-[#faf9f6] shadow-2xl z-50 flex flex-col border-l border-[#e5e5e5]">
+        
+        <div class="h-16 flex items-center justify-between px-6 bg-white border-b border-[#e5e5e5] shrink-0">
+            <h2 class="text-[#4a4a4a] text-sm tracking-widest font-bold serif">購物清單</h2>
+            <button onclick="toggleCart()" class="text-[#a3a3a3] hover:text-[#4a4a4a] transition-colors">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-6 h-6"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-6 flex flex-col gap-4" id="cart-items-container">
+            <!-- JS 動態生成購物車內容 -->
+        </div>
+
+        <div class="bg-white border-t border-[#e5e5e5] p-6 shrink-0 shadow-[0_-4px_10px_rgba(0,0,0,0.02)]">
+            <h3 class="text-[11px] text-[#8c8c8c] tracking-widest mb-3 font-bold">取貨方式</h3>
+            <div class="flex flex-col gap-2 mb-6">
+                <label class="relative flex cursor-pointer">
+                    <input type="radio" name="pickup_method" value="到店取貨" class="peer pickup-radio sr-only" checked onchange="updateCheckoutTotal()">
+                    <div class="w-full flex items-center gap-3 p-3 border border-[#e5e5e5] bg-white transition-colors">
+                        <div class="w-4 h-4 rounded-full border border-[#a3a3a3] flex items-center justify-center shrink-0">
+                            <div class="w-2 h-2 rounded-full bg-[#8c7366] opacity-0 transition-opacity radio-dot"></div>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-xs text-[#4a4a4a] tracking-widest">到店取貨</span>
+                            <span class="text-[10px] text-[#a3a3a3] tracking-widest">親臨總部感受美貌氣場</span>
+                        </div>
+                    </div>
+                </label>
+                <label class="relative flex cursor-pointer">
+                    <input type="radio" name="pickup_method" value="交流道取貨" class="peer pickup-radio sr-only" onchange="updateCheckoutTotal()">
+                    <div class="w-full flex items-center gap-3 p-3 border border-[#e5e5e5] bg-white transition-colors">
+                        <div class="w-4 h-4 rounded-full border border-[#a3a3a3] flex items-center justify-center shrink-0">
+                            <div class="w-2 h-2 rounded-full bg-[#8c7366] opacity-0 transition-opacity radio-dot"></div>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-xs text-[#4a4a4a] tracking-widest">交流道取貨</span>
+                            <span class="text-[10px] text-[#a3a3a3] tracking-widest">穿梭車陣為您遞上芬芳</span>
+                        </div>
+                    </div>
+                </label>
+            </div>
+            <div class="flex items-end justify-between mb-4">
+                <span class="text-xs text-[#8c8c8c] tracking-widest">小計</span>
+                <span class="text-xl text-[#8c7366] font-serif font-bold">NT$ <span id="cart-total">0</span></span>
+            </div>
+            <button onclick="processCheckout()" class="w-full bg-[#8c7366] hover:bg-[#735c50] text-white text-sm tracking-widest py-4 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed" id="btn-checkout">
+                前往結帳
+            </button>
+        </div>
+    </div>
+
+
+    <!-- 購買與美貌認同證書彈窗 (點擊跑馬燈專用) -->
+    <div id="order-cert-modal" class="modal fixed inset-0 bg-[#faf9f6]/95 backdrop-blur-md z-[70] items-center justify-center p-6">
         <div class="bg-white border border-[#c29b8c] p-10 md:p-12 max-w-lg w-full shadow-2xl relative overflow-hidden certificate-box">
             <div class="certificate-inner"></div>
             <div class="certificate-inner-2"></div>
             <button onclick="closeOrderCertModal()" class="absolute top-4 right-4 text-[#a3a3a3] hover:text-[#4a4a4a] text-2xl font-light z-20">&times;</button>
-            
             <div class="z-10 relative flex flex-col items-center text-center pt-2">
                 <h2 class="text-xl md:text-2xl font-bold tracking-[0.15em] text-[#8c7366] mb-3 serif">購買暨美貌認同證書</h2>
                 <p id="cert-number" class="text-[10px] text-[#a3a3a3] tracking-[0.2em] mb-8 font-sans"></p>
-                
                 <p class="text-sm md:text-base text-[#595757] tracking-wider leading-[2.2] mb-10 text-left w-full px-2">
                     茲證明 <span id="cert-name" class="font-bold text-[#4a4a4a] text-lg border-b border-[#8c7366] pb-1 px-2 mx-1"></span><br><br>
                     成功訂購 <span id="cert-item" class="font-bold text-[#c29b8c]"></span> 玉蘭花，以實際行動大力捍衛並證明了<span class="font-bold text-[#8c7366]">「芷晴真的是宇宙絕世美女」</span>之絕對真理。<br>特發此證，以表彰其卓越無比的品味與貢獻。
                 </p>
-                
                 <div class="w-full flex justify-between items-end mt-2 pt-6 border-t border-[#f0f0f0]">
                     <div class="text-[10px] text-[#a3a3a3] tracking-widest text-left leading-relaxed">
                         <p>認證機構：芷晴美女集團</p>
@@ -540,38 +662,123 @@
         </div>
     </div>
 
-
-    <!-- 訂購玉蘭花彈出視窗 (付款頁面) -->
-    <div id="order-modal" class="modal fixed inset-0 bg-[#faf9f6]/90 backdrop-blur-sm z-50 items-center justify-center p-6">
-        <div class="bg-white border border-[#e5e5e5] p-10 max-w-sm w-full shadow-[0_10px_40px_rgba(0,0,0,0.05)] text-center relative overflow-hidden">
+    <!-- ==================== 結帳付款彈出視窗 ==================== -->
+    <div id="order-modal" class="modal fixed inset-0 bg-[#faf9f6]/90 backdrop-blur-sm z-[60] items-center justify-center p-6">
+        <div class="bg-white border border-[#e5e5e5] p-8 md:p-10 max-w-lg w-full shadow-[0_10px_40px_rgba(0,0,0,0.05)] text-center relative overflow-y-auto max-h-[90vh]">
             <button onclick="closeOrderModal()" class="absolute top-4 right-4 text-[#a3a3a3] hover:text-[#4a4a4a] text-xl font-light z-10">&times;</button>
+            
+            <!-- 步驟一：輸入表單與付款 -->
             <div id="modal-step-payment" class="transition-opacity duration-300">
-                <h2 class="text-lg font-normal tracking-widest text-[#4a4a4a] mb-6 serif">請選擇付款方式</h2>
-                <div class="text-sm text-[#8c7366] mb-6 font-bold tracking-widest" id="checkout-amount-display">總計：NT$ 50</div>
+                <h2 class="text-lg font-normal tracking-widest text-[#4a4a4a] mb-6 serif">填寫訂購資訊</h2>
+                <div class="text-left mb-6">
+                    <input type="text" id="checkout-name" placeholder="訂購者姓名" class="w-full border border-[#e5e5e5] bg-[#faf9f6] p-3 text-sm focus:border-[#8c7366] outline-none transition-colors mb-3 text-[#4a4a4a] placeholder:text-[#a3a3a3]">
+                    <input type="tel" id="checkout-phone" placeholder="聯絡電話" class="w-full border border-[#e5e5e5] bg-[#faf9f6] p-3 text-sm focus:border-[#8c7366] outline-none transition-colors mb-3 text-[#4a4a4a] placeholder:text-[#a3a3a3]">
+                    
+                    <div id="checkout-store-container" class="hidden mt-3">
+                        <select id="checkout-store" class="w-full border border-[#e5e5e5] bg-[#faf9f6] p-3 text-sm focus:border-[#8c7366] outline-none transition-colors text-[#595757]">
+                            <option value="" disabled selected>請選擇取貨門市</option>
+                            <option value="中壢總店">中壢總店</option>
+                            <option value="澎湖跨海大橋店">澎湖跨海大橋店</option>
+                            <option value="中央大學店">中央大學店</option>
+                            <option value="大園芷晴店">大園芷晴店</option>
+                            <option value="台中新光三越中港店">台中新光三越中港店</option>
+                            <option value="高雄漢神巨蛋店">高雄漢神巨蛋店</option>
+                            <option value="日本沖繩國際通店">日本沖繩國際通店</option>
+                        </select>
+                    </div>
+                    <div id="checkout-interchange-container" class="hidden mt-3">
+                        <select id="checkout-interchange" class="w-full border border-[#e5e5e5] bg-[#faf9f6] p-3 text-sm focus:border-[#8c7366] outline-none transition-colors text-[#595757]">
+                            <option value="" disabled selected>請選擇取貨交流道</option>
+                            <option value="新屋交流道">新屋交流道</option>
+                            <option value="五股交流道">五股交流道</option>
+                            <option value="中豐交流道">中豐交流道</option>
+                            <option value="大溪交流道">大溪交流道</option>
+                            <option value="中壢交流道">中壢交流道</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="bg-[#faf9f6] p-4 mb-6 border border-[#f0f0f0]">
+                    <div class="text-xs text-[#737373] tracking-widest mb-1 flex justify-between">
+                        <span>取貨方式：</span>
+                        <span id="checkout-pickup-display" class="font-bold text-[#8c7366]">到店取貨</span>
+                    </div>
+                    <div class="text-sm text-[#4a4a4a] font-bold tracking-widest flex justify-between mt-2 pt-2 border-t border-[#e5e5e5]">
+                        <span>應付總額：</span>
+                        <span class="text-[#8c7366] font-serif">NT$ <span id="checkout-amount-display">0</span></span>
+                    </div>
+                </div>
+
                 <div class="flex flex-col gap-4 mb-4">
-                    <button onclick="processPayment()" class="w-full border border-[#cccccc] hover:border-[#8c7366] bg-white py-4 flex justify-center items-center transition-all opacity-80 hover:opacity-100 group shadow-sm">
-                        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQN0I8bEYgumq_IHqF3CymDBpV3W30zzAVsPu4cZvj-RQ&s=10" alt="Apple Pay" class="h-8 object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-300">
+                    <button onclick="processPayment()" class="w-full border border-[#cccccc] hover:border-[#8c7366] bg-[#faf9f6] py-3 flex justify-center items-center transition-all opacity-80 hover:opacity-100 group shadow-sm">
+                        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQN0I8bEYgumq_IHqF3CymDBpV3W30zzAVsPu4cZvj-RQ&s=10" alt="Apple Pay" class="h-6 object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-300">
                     </button>
-                    <button onclick="processPayment()" class="w-full border border-[#cccccc] hover:border-[#8c7366] bg-white py-4 flex justify-center items-center transition-all opacity-80 hover:opacity-100 group shadow-sm">
-                        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRqDHjLfmTCF6VGwZSO6LKrcwp2nMimsuNm-IDaj64mtQ&s=10" alt="LINE Pay" class="h-8 object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-300">
+                    <button onclick="processPayment()" class="w-full border border-[#cccccc] hover:border-[#8c7366] bg-[#faf9f6] py-3 flex justify-center items-center transition-all opacity-80 hover:opacity-100 group shadow-sm">
+                        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRqDHjLfmTCF6VGwZSO6LKrcwp2nMimsuNm-IDaj64mtQ&s=10" alt="LINE Pay" class="h-6 object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-300">
                     </button>
                 </div>
                 <p class="text-[10px] text-[#a3a3a3] tracking-widest">點擊即代表同意玉蘭花購買條款</p>
             </div>
+            
+            <!-- 步驟二：出貨單 (Receipt) -->
             <div id="modal-step-success" class="hidden transition-opacity duration-300">
-                <h2 class="text-lg font-normal tracking-widest text-[#4a4a4a] mb-4 serif">付款及訂單已完成</h2>
-                <p class="text-xs text-[#737373] mb-8 tracking-wide leading-relaxed">
-                    感謝您的訂購。<br>請與芷晴的美麗一同，<br>細細品味玉蘭花的高雅香氣。
-                </p>
-                <button onclick="closeOrderModal()" class="bg-[#595757] hover:bg-[#4a4a4a] text-white text-xs tracking-widest py-2 px-8 transition">
-                    關閉
-                </button>
+                <h2 class="text-xl font-bold tracking-widest text-[#5c7054] mb-2 serif">付款成功</h2>
+                <p class="text-xs text-[#737373] mb-6 tracking-wide">您的訂單已成立，以下為您的專屬出貨單。</p>
+                
+                <!-- PDF 下載範圍 -->
+                <div id="receipt-content" class="bg-white p-8 border border-[#e5e5e5] text-left mb-6 shadow-sm relative">
+                    <div class="text-center mb-6 pb-4 border-b border-[#f0f0f0]">
+                        <h3 class="text-lg font-bold tracking-widest text-[#4a4a4a] serif">芷晴美女玉蘭花銷售集團</h3>
+                        <p class="text-xs text-[#8c8c8c] tracking-[0.2em] mt-1">OFFICIAL DELIVERY NOTE</p>
+                    </div>
+                    
+                    <div class="space-y-2 mb-6 text-xs text-[#595757] tracking-wider">
+                        <div class="flex justify-between"><span class="text-[#a3a3a3]">訂單編號</span><span id="receipt-no" class="font-sans font-bold"></span></div>
+                        <div class="flex justify-between"><span class="text-[#a3a3a3]">訂購時間</span><span id="receipt-time" class="font-sans"></span></div>
+                        <div class="flex justify-between"><span class="text-[#a3a3a3]">訂購人</span><span id="receipt-name" class="font-bold"></span></div>
+                        <div class="flex justify-between"><span class="text-[#a3a3a3]">聯絡電話</span><span id="receipt-phone" class="font-sans"></span></div>
+                        <div class="flex justify-between"><span class="text-[#a3a3a3]">取貨方式</span><span id="receipt-method"></span></div>
+                        <div class="flex justify-between"><span class="text-[#a3a3a3]">取貨地點</span><span id="receipt-location" class="font-bold text-[#8c7366]"></span></div>
+                    </div>
+
+                    <table class="w-full text-xs text-left mb-6 border-t border-[#f0f0f0]">
+                        <thead>
+                            <tr class="text-[#a3a3a3] border-b border-[#f0f0f0]">
+                                <th class="py-3 font-normal tracking-widest">商品明細</th>
+                                <th class="py-3 font-normal text-right tracking-widest">數量</th>
+                            </tr>
+                        </thead>
+                        <tbody id="receipt-items-list" class="text-[#595757] tracking-wider">
+                            <!-- JS 動態寫入明細 -->
+                        </tbody>
+                    </table>
+
+                    <div class="flex justify-between items-center pt-4 border-t border-[#4a4a4a] border-dashed">
+                        <span class="text-sm font-bold tracking-widest text-[#4a4a4a]">總計金額</span>
+                        <span class="text-lg font-bold text-[#8c7366] font-serif">NT$ <span id="receipt-total"></span></span>
+                    </div>
+
+                    <div class="mt-8 text-center text-[10px] text-[#a3a3a3] tracking-widest leading-relaxed">
+                        <p>感謝您證明了芷晴董事長的絕世美貌</p>
+                        <p>憑此單即可取貨，請妥善保存</p>
+                    </div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <button onclick="downloadPDF()" class="flex-1 bg-[#8c7366] hover:bg-[#735c50] text-white text-xs tracking-widest py-3 px-4 transition flex items-center justify-center gap-2">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                        下載 PDF 出貨單
+                    </button>
+                    <button onclick="closeOrderModal()" class="flex-1 border border-[#cccccc] bg-white text-[#595757] hover:bg-[#f5f5f5] text-xs tracking-widest py-3 px-4 transition">
+                        完成並關閉
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- 五次拒絕之天價罰款視窗 -->
-    <div id="fine-modal" class="modal fixed inset-0 bg-[#faf9f6]/95 backdrop-blur-md z-[60] items-center justify-center p-6">
+    <div id="fine-modal" class="modal fixed inset-0 bg-[#faf9f6]/95 backdrop-blur-md z-[80] items-center justify-center p-6">
         <div class="bg-white border border-[#c29b8c] p-10 max-w-sm w-full shadow-[0_15px_50px_rgba(194,155,140,0.15)] text-center relative overflow-hidden">
             <div id="fine-step-notice" class="transition-opacity duration-300">
                 <h2 class="text-xl font-bold tracking-widest text-[#c29b8c] mb-6 serif border-b border-[#f0f0f0] pb-4">違約罰款通知</h2>
@@ -601,6 +808,19 @@
         </div>
     </div>
 
+    <!-- 系統提示視窗 -->
+    <div id="alert-modal" class="modal fixed inset-0 bg-[#faf9f6]/80 backdrop-blur-sm z-[90] items-center justify-center p-6">
+        <div class="bg-white border border-[#e5e5e5] p-8 max-w-sm w-full shadow-[0_10px_40px_rgba(0,0,0,0.05)] text-center relative">
+            <button onclick="closeAlertModal()" class="absolute top-4 right-4 text-[#a3a3a3] hover:text-[#4a4a4a] text-xl font-light">&times;</button>
+            <h2 class="text-lg font-normal tracking-widest text-[#8c7366] mb-3 serif">系統訊息</h2>
+            <p id="alert-msg-text" class="text-lg text-[#4a4a4a] tracking-wide font-bold leading-relaxed"></p>
+            <p id="alert-msg-sub" class="text-xs text-[#737373] mt-4 mb-8 tracking-widest leading-loose border-t border-[#f0f0f0] pt-4"></p>
+            <button onclick="closeAlertModal()" class="bg-[#595757] hover:bg-[#4a4a4a] text-white text-xs tracking-widest py-2 px-8 transition">
+                確認
+            </button>
+        </div>
+    </div>
+
 
     <script>
         // --- 動態背景：飄浮的極簡玉蘭花 ---
@@ -627,14 +847,260 @@
         }
         createFloatingMagnolias();
 
-        // --- 商品數量選擇器 ---
-        let currentQty = 1;
+        // --- 系統提示視窗 ---
+        function showAlert(mainText, subText) {
+            document.getElementById('alert-msg-text').innerText = mainText;
+            const subElement = document.getElementById('alert-msg-sub');
+            if (subText) {
+                subElement.innerText = subText;
+                subElement.style.display = 'block';
+            } else {
+                subElement.style.display = 'none';
+            }
+            document.getElementById('alert-modal').classList.add('show');
+            setTimeout(() => { document.getElementById('alert-modal').classList.remove('show'); }, 2500);
+        }
+        function closeAlertModal() { document.getElementById('alert-modal').classList.remove('show'); }
+
+
+        // ==================== 購物車與結帳系統邏輯 ====================
+        let cart = []; 
+        let currentQty = 1; 
         const pricePerItem = 50;
+        let globalOrderNo = ""; // 儲存當前訂單編號供 PDF 下載用
+
         function updateQty(change) {
             currentQty += change;
             if (currentQty < 1) currentQty = 1;
             document.getElementById('product-qty').value = currentQty;
         }
+
+        function addToCart() {
+            const productName = document.getElementById('product-name').innerText;
+            const productImg = document.getElementById('product-img').src;
+            const existingItem = cart.find(item => item.name === productName);
+            
+            if (existingItem) {
+                existingItem.qty += currentQty;
+            } else {
+                cart.push({
+                    id: 'magnolia-01',
+                    name: productName,
+                    price: pricePerItem,
+                    qty: currentQty,
+                    img: productImg
+                });
+            }
+            currentQty = 1;
+            document.getElementById('product-qty').value = currentQty;
+            updateCartUI();
+            showAlert('已加入購物車', '將最純粹的美麗放入您的行囊');
+        }
+
+        function toggleCart() {
+            document.body.classList.toggle('cart-open');
+        }
+
+        function updateCartItemQty(index, change) {
+            cart[index].qty += change;
+            if (cart[index].qty < 1) {
+                cart.splice(index, 1);
+            }
+            updateCartUI();
+        }
+
+        function removeCartItem(index) {
+            cart.splice(index, 1);
+            updateCartUI();
+        }
+
+        function updateCartUI() {
+            const container = document.getElementById('cart-items-container');
+            const badge = document.getElementById('cart-badge');
+            const totalEl = document.getElementById('cart-total');
+            const checkoutBtn = document.getElementById('btn-checkout');
+            
+            container.innerHTML = '';
+            let totalQty = 0;
+            let totalPrice = 0;
+
+            if (cart.length === 0) {
+                container.innerHTML = `
+                    <div class="flex flex-col items-center justify-center h-full text-[#a3a3a3] gap-4 opacity-50 mt-10">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" class="w-12 h-12"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line></svg>
+                        <p class="text-xs tracking-widest">您的行囊目前空空如也</p>
+                    </div>`;
+                checkoutBtn.disabled = true;
+            } else {
+                checkoutBtn.disabled = false;
+                cart.forEach((item, index) => {
+                    totalQty += item.qty;
+                    totalPrice += item.price * item.qty;
+
+                    container.innerHTML += `
+                        <div class="flex gap-4 p-4 bg-white border border-[#f0f0f0] shadow-sm relative group">
+                            <button onclick="removeCartItem(${index})" class="absolute top-2 right-2 text-[#cccccc] hover:text-[#c29b8c] transition-colors w-6 h-6 flex justify-center items-center">
+                                &times;
+                            </button>
+                            <img src="${item.img}" class="w-16 h-16 object-cover border border-[#e5e5e5]" alt="${item.name}">
+                            <div class="flex flex-col justify-between flex-1">
+                                <h4 class="text-xs font-bold text-[#4a4a4a] tracking-widest pr-4">${item.name}</h4>
+                                <div class="flex justify-between items-end">
+                                    <span class="text-[#8c7366] text-sm font-serif">NT$ ${item.price}</span>
+                                    <div class="flex items-center border border-[#e5e5e5] rounded-sm bg-[#faf9f6]">
+                                        <button onclick="updateCartItemQty(${index}, -1)" class="w-6 h-6 flex items-center justify-center text-[#737373] hover:bg-[#e5e1d8] transition-colors text-xs">-</button>
+                                        <span class="w-8 text-center text-xs text-[#4a4a4a] font-sans">${item.qty}</span>
+                                        <button onclick="updateCartItemQty(${index}, 1)" class="w-6 h-6 flex items-center justify-center text-[#737373] hover:bg-[#e5e1d8] transition-colors text-xs">+</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            if (totalQty > 0) {
+                badge.innerText = totalQty;
+                badge.classList.remove('hidden');
+                setTimeout(() => badge.classList.remove('scale-0'), 10);
+            } else {
+                badge.classList.add('scale-0');
+                setTimeout(() => badge.classList.add('hidden'), 300);
+            }
+            totalEl.innerText = totalPrice;
+        }
+
+        // ==================== 結帳與生成出貨單流程 ====================
+        function getSelectedPickupMethod() {
+            const radios = document.getElementsByName('pickup_method');
+            for (let i = 0; i < radios.length; i++) {
+                if (radios[i].checked) return radios[i].value;
+            }
+            return '到店取貨'; 
+        }
+
+        function processCheckout() {
+            if (cart.length === 0) return;
+            const totalPrice = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            const pickupMethod = getSelectedPickupMethod();
+
+            toggleCart();
+
+            document.getElementById('checkout-amount-display').innerText = totalPrice;
+            document.getElementById('checkout-pickup-display').innerText = pickupMethod;
+
+            const storeContainer = document.getElementById('checkout-store-container');
+            const interchangeContainer = document.getElementById('checkout-interchange-container');
+
+            if (pickupMethod === '到店取貨') {
+                storeContainer.classList.remove('hidden');
+                interchangeContainer.classList.add('hidden');
+            } else if (pickupMethod === '交流道取貨') {
+                interchangeContainer.classList.remove('hidden');
+                storeContainer.classList.add('hidden');
+            }
+
+            document.getElementById('modal-step-payment').classList.remove('hidden');
+            document.getElementById('modal-step-success').classList.add('hidden');
+            document.getElementById('order-modal').classList.add('show');
+        }
+
+        function closeOrderModal() { 
+            document.getElementById('order-modal').classList.remove('show'); 
+        }
+
+        // 產生 YYYYMMDDHHmmss 訂單編號
+        function generateOrderNumber() {
+            const now = new Date();
+            const year = now.getFullYear().toString();
+            const month = (now.getMonth() + 1).toString().padStart(2, '0');
+            const day = now.getDate().toString().padStart(2, '0');
+            const hours = now.getHours().toString().padStart(2, '0');
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            const seconds = now.getSeconds().toString().padStart(2, '0');
+            return year + month + day + hours + minutes + seconds;
+        }
+
+        function processPayment() {
+            // 表單驗證
+            const name = document.getElementById('checkout-name').value.trim();
+            const phone = document.getElementById('checkout-phone').value.trim();
+            const pickupMethod = getSelectedPickupMethod();
+            const store = document.getElementById('checkout-store').value;
+            const interchange = document.getElementById('checkout-interchange').value;
+
+            if (!name || !phone) {
+                showAlert('資料未完整', '請填寫您的訂購者姓名與聯絡電話。');
+                return;
+            }
+
+            let locationText = "";
+            if (pickupMethod === '到店取貨') {
+                if (!store) { showAlert('資料未完整', '請選擇欲取貨的門市。'); return; }
+                locationText = store;
+            } else if (pickupMethod === '交流道取貨') {
+                if (!interchange) { showAlert('資料未完整', '請選擇欲取貨的交流道位置。'); return; }
+                locationText = interchange;
+            }
+
+            // === 產生出貨單資料 ===
+            globalOrderNo = generateOrderNumber(); // 賦值給全域變數供下載使用
+            const now = new Date();
+            const timeString = now.toLocaleString('zh-TW', { hour12: false });
+            const totalPrice = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+
+            // 寫入出貨單標頭
+            document.getElementById('receipt-no').innerText = globalOrderNo;
+            document.getElementById('receipt-time').innerText = timeString;
+            document.getElementById('receipt-name').innerText = name;
+            document.getElementById('receipt-phone').innerText = phone;
+            document.getElementById('receipt-method').innerText = pickupMethod;
+            document.getElementById('receipt-location').innerText = locationText;
+            document.getElementById('receipt-total').innerText = totalPrice;
+
+            // 寫入出貨單明細列表
+            const receiptList = document.getElementById('receipt-items-list');
+            receiptList.innerHTML = '';
+            cart.forEach(item => {
+                receiptList.innerHTML += `
+                    <tr>
+                        <td class="py-2 pr-2">${item.name}</td>
+                        <td class="py-2 text-right">x ${item.qty}</td>
+                    </tr>
+                `;
+            });
+
+            // 切換至成功/出貨單畫面
+            document.getElementById('modal-step-payment').classList.add('hidden');
+            document.getElementById('modal-step-success').classList.remove('hidden');
+            
+            // 清空購物車與表單
+            cart = [];
+            updateCartUI();
+            document.getElementById('checkout-name').value = '';
+            document.getElementById('checkout-phone').value = '';
+            document.getElementById('checkout-store').selectedIndex = 0;
+            document.getElementById('checkout-interchange').selectedIndex = 0;
+        }
+
+        // 下載 PDF 出貨單邏輯
+        function downloadPDF() {
+            const element = document.getElementById('receipt-content');
+            
+            // html2pdf 設定
+            const opt = {
+                margin:       0.5,
+                filename:     `芷晴美女玉蘭花_出貨單_${globalOrderNo}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2 },
+                jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+
+            // 執行下載
+            html2pdf().set(opt).from(element).save();
+        }
+
+        updateCartUI();
 
         // --- 拒絕次數計算與閃避邏輯 ---
         let refusalCount = 0;
@@ -673,23 +1139,18 @@
             document.getElementById('fine-step-success').classList.remove('hidden');
         }
 
-        // --- 購買與美貌認同證書 (取代原本的Alert) ---
+        // --- 購買與美貌認同證書 (跑馬燈點擊觸發) ---
         function showOrderCertificate(name, item) {
-            // 生成隨機證書編號
             const randomNum = Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
             const certNo = 'ZQ' + randomNum;
-            
-            // 取得今日日期
             const today = new Date();
             const dateStr = today.getFullYear() + '.' + (today.getMonth()+1).toString().padStart(2, '0') + '.' + today.getDate().toString().padStart(2, '0');
 
-            // 寫入資料
             document.getElementById('cert-number').innerText = 'CERTIFICATE NO. ' + certNo;
             document.getElementById('cert-name').innerText = name;
             document.getElementById('cert-item').innerText = item;
             document.getElementById('cert-date').innerText = '發證日期：' + dateStr;
 
-            // 顯示視窗
             document.getElementById('order-cert-modal').classList.add('show');
         }
         function closeOrderCertModal() {
@@ -736,22 +1197,7 @@
             btnNo.style.display = 'none';
         }
 
-        // --- 訂單付款視窗 ---
-        const modal = document.getElementById('order-modal');
-        function openOrderModal() {
-            const total = currentQty * pricePerItem;
-            document.getElementById('checkout-amount-display').innerText = '總計：NT$ ' + total;
-            document.getElementById('modal-step-payment').classList.remove('hidden');
-            document.getElementById('modal-step-success').classList.add('hidden');
-            modal.classList.add('show');
-        }
-        function closeOrderModal() { modal.classList.remove('show'); }
-        function processPayment() {
-            document.getElementById('modal-step-payment').classList.add('hidden');
-            document.getElementById('modal-step-success').classList.remove('hidden');
-        }
-
-        // --- 跑馬燈資料 (套用新版證書) ---
+        // --- 最新訂單橫向跑馬燈 ---
         const orders = [
             { name: '葉柏言 先生', item: '50 串', time: '11:42' },
             { name: '王 先生', item: '2 串', time: '11:41' },
@@ -767,7 +1213,6 @@
             container.innerHTML = ''; 
             let cardsHtml = '';
             orders.forEach(function(order) {
-                // 將 onclick 事件改為觸發全新的實體證書 Modal
                 cardsHtml += '<div class="flex items-center gap-6 px-10 border-r border-[#e5e1d8] whitespace-nowrap cursor-pointer hover:bg-[#e5e1d8] transition-colors" onclick="showOrderCertificate(\'' + order.name + '\', \'' + order.item + '\')">' +
                                 '<span class="text-[#737373] tracking-widest">' + order.name + '</span>' +
                                 '<span class="text-[#a3a3a3] text-[10px]">' + order.time + '</span>' +
@@ -776,8 +1221,44 @@
             });
             container.innerHTML = cardsHtml + cardsHtml + cardsHtml + cardsHtml;
         }
-
         initMarquee();
+
+        // --- 崇純總經理 垂直緬懷跑馬燈 & 留言系統 ---
+        const memorialQuotes = [
+            "「您的玉蘭花香，將永遠飄蕩在我們心中。」 — 匿名員工",
+            "「崇純總經理，感謝您為集團打下的輝煌江山。」 — 董事會",
+            "「世人會永遠銘記您的貢獻與優雅。」 — 在地青農",
+            "「您在星辰中，依然是最溫暖的那道光。」 — 忠實顧客",
+            "「玉蘭不凋，精神永存。致最敬愛的總經理。」 — 芷晴美女集團全體",
+            "「再見了，我們永遠的推手與驕傲。」 — 業界同仁"
+        ];
+
+        function initMemorialMarquee() {
+            const container = document.getElementById('memorial-marquee-container');
+            let html = '';
+            memorialQuotes.forEach(function(quote) {
+                html += '<div class="py-5 text-white text-[12px] tracking-[0.15em] font-serif flex flex-col items-center justify-center text-center px-4">' +
+                            '<span class="text-[#c29b8c] text-[10px] mb-2 opacity-80">✦</span>' +
+                            '<span style="text-shadow: 0 2px 4px rgba(0,0,0,0.8);">' + quote + '</span>' +
+                        '</div>';
+            });
+            container.innerHTML = html + html; 
+        }
+        initMemorialMarquee();
+
+        function submitMemorial() {
+            const input = document.getElementById('memorial-input');
+            const text = input.value.trim();
+            if (text) {
+                memorialQuotes.unshift("「" + text + "」 — 虔誠的緬懷者");
+                input.value = '';
+                initMemorialMarquee(); 
+                showAlert('祝福已送達', '崇純總經理在天之靈已收到您的心意。');
+            } else {
+                showAlert('請輸入內容', '請寫下您想對總經理說的話。');
+            }
+        }
+        
     </script>
 </body>
 </html>
