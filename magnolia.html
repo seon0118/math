@@ -9,6 +9,7 @@
     <link rel="shortcut icon" href="https://cdn-icons-png.flaticon.com/512/3021/3021067.png" type="image/png">
     
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 html2pdf.js 套件，用於生成 PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <style>
@@ -83,13 +84,15 @@
         .pickup-radio:checked + div { border-color: #8c7366; background-color: #faf9f6; }
         .pickup-radio:checked + div .radio-dot { opacity: 1; }
         
-        /* 美化Checkbox */
         .beauty-checkbox { appearance: none; width: 16px; height: 16px; border: 1px solid #a3a3a3; border-radius: 2px; cursor: pointer; position: relative; transition: all 0.2s; }
         .beauty-checkbox:checked { background-color: #8c7366; border-color: #8c7366; }
         .beauty-checkbox:checked::after { content: '✓'; position: absolute; color: white; font-size: 12px; top: 50%; left: 50%; transform: translate(-50%, -50%); }
 
         html { scroll-behavior: smooth; }
-        #receipt-content { background-color: #fff; color: #333; }
+        
+        /* 確保出貨單在生成 PDF 時的文字排版完美 */
+        #receipt-content { background-color: #fff; color: #333; padding: 40px; }
+        .print-only { display: none; }
     </style>
 </head>
 <body class="flex flex-col min-h-screen relative">
@@ -211,11 +214,12 @@
             </div>
         </section>
 
-        <!-- 電商商品訂購區塊 (改為網格佈局容納多商品) -->
+        <!-- 電商商品訂購區塊 -->
         <section id="products" class="pt-8">
             <div class="text-center mb-12">
                 <h3 class="text-xs tracking-[0.2em] text-[#a3a3a3] uppercase font-sans mb-3">Exclusive Products</h3>
-                <h2 class="text-2xl text-[#4a4a4a] tracking-widest serif">集團嚴選商品</h2>
+                <h2 class="text-2xl text-[#4a4a4a] tracking-widest serif mb-2">集團嚴選商品</h2>
+                <p class="text-xs text-[#c29b8c] tracking-widest">全館結帳滿 $10,000，改送「禪意玉蘭花盆栽」</p>
                 <div class="w-12 h-px bg-[#c29b8c] mx-auto mt-6"></div>
             </div>
 
@@ -226,6 +230,7 @@
                     <div class="relative w-full h-64 bg-[#f9f8f6] overflow-hidden">
                         <img src="https://www.twreporter.org/images/20170223155912-e2dc68219bb40b690390850a141fb851-tablet.JPG" alt="頂級芳香玉蘭花" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
                         <div class="absolute top-4 left-4 bg-white/90 backdrop-blur px-2 py-1 text-[10px] tracking-widest text-[#8c7366] border border-[#e5e5e5]">芷晴認證</div>
+                        <div class="absolute top-4 right-4 bg-[#c29b8c] text-white px-3 py-1 text-[10px] tracking-widest shadow-sm">買十送一</div>
                     </div>
                     <div class="p-8 flex-1 flex flex-col">
                         <h2 class="text-lg text-[#4a4a4a] tracking-widest serif mb-2">頂級芳香玉蘭花 (一串)</h2>
@@ -234,7 +239,7 @@
                             <span class="text-xs text-[#a3a3a3] font-sans pb-0.5 line-through">NT$ 150</span>
                         </div>
                         <p class="text-xs text-[#737373] tracking-wider leading-loose mb-6 flex-1">
-                            大地的純粹芬芳，每一朵皆由芷晴董事長絕世美貌氣場薰陶。購買即是對真理的最有力證明。
+                            大地的純粹芬芳，每一朵皆由芷晴董事長絕世美貌氣場薰陶。單筆購買 10 串自動贈送 1 串。
                         </p>
                         <div class="flex flex-col xl:flex-row items-center gap-4 mt-auto">
                             <div class="flex items-center border border-[#e5e5e5] rounded-sm bg-[#faf9f6] w-full xl:w-auto shrink-0 justify-between px-2 xl:px-0">
@@ -242,7 +247,7 @@
                                 <input type="number" id="qty-1" value="1" min="1" class="w-10 h-10 text-center text-sm text-[#4a4a4a] bg-transparent outline-none font-sans" readonly>
                                 <button onclick="updateQty('qty-1', 1)" class="w-10 h-10 flex items-center justify-center text-[#737373] hover:bg-[#e5e1d8] transition-colors">+</button>
                             </div>
-                            <button onclick="addToCart('item-1', '頂級芳香玉蘭花 (一串)', 50, 'https://www.twreporter.org/images/20170223155912-e2dc68219bb40b690390850a141fb851-tablet.JPG', 'qty-1')" class="w-full bg-[#8c7366] hover:bg-[#735c50] text-white text-xs tracking-widest py-3 transition-colors shadow-sm whitespace-nowrap">
+                            <button onclick="addToCart('item-1', '頂級芳香玉蘭花', 50, 'https://www.twreporter.org/images/20170223155912-e2dc68219bb40b690390850a141fb851-tablet.JPG', 'qty-1')" class="w-full bg-[#8c7366] hover:bg-[#735c50] text-white text-xs tracking-widest py-3 transition-colors shadow-sm whitespace-nowrap">
                                 加入購物車
                             </button>
                         </div>
@@ -268,7 +273,7 @@
                                 <input type="number" id="qty-2" value="1" min="1" class="w-10 h-10 text-center text-sm text-[#4a4a4a] bg-transparent outline-none font-sans" readonly>
                                 <button onclick="updateQty('qty-2', 1)" class="w-10 h-10 flex items-center justify-center text-[#737373] hover:bg-[#e5e1d8] transition-colors">+</button>
                             </div>
-                            <button onclick="addToCart('item-2', '玉蘭乾燥花 (一瓶)', 300, 'https://megapx-assets.dcard.tw/images/a3611673-ff90-4fc8-8cc6-c28d8b7b9cea/640.jpeg', 'qty-2')" class="w-full bg-white border border-[#8c7366] text-[#8c7366] hover:bg-[#8c7366] hover:text-white text-xs tracking-widest py-3 transition-colors shadow-sm whitespace-nowrap">
+                            <button onclick="addToCart('item-2', '玉蘭乾燥花', 300, 'https://megapx-assets.dcard.tw/images/a3611673-ff90-4fc8-8cc6-c28d8b7b9cea/640.jpeg', 'qty-2')" class="w-full bg-[#8c7366] hover:bg-[#735c50] text-white text-xs tracking-widest py-3 transition-colors shadow-sm whitespace-nowrap">
                                 加入購物車
                             </button>
                         </div>
@@ -288,7 +293,7 @@
                             <span class="text-xs text-[#a3a3a3] font-sans pb-0.5 line-through">NT$ 3,800</span>
                         </div>
                         <p class="text-xs text-[#737373] tracking-wider leading-loose mb-6 flex-1">
-                            高濃度萃取，一滴即能喚醒靈魂深處的寧靜。現在購買享<span class="text-[#c29b8c] font-bold">買二送一</span>尊榮優惠 (結帳時自動折抵)。
+                            高濃度萃取，一滴即能喚醒靈魂深處的寧靜。享受尊榮<span class="text-[#c29b8c] font-bold">買二送一</span>優惠 (結帳時自動折抵)。
                         </p>
                         <div class="flex flex-col xl:flex-row items-center gap-4 mt-auto">
                             <div class="flex items-center border border-[#e5e5e5] rounded-sm bg-[#faf9f6] w-full xl:w-auto shrink-0 justify-between px-2 xl:px-0">
@@ -296,7 +301,7 @@
                                 <input type="number" id="qty-3" value="1" min="1" class="w-10 h-10 text-center text-sm text-[#4a4a4a] bg-transparent outline-none font-sans" readonly>
                                 <button onclick="updateQty('qty-3', 1)" class="w-10 h-10 flex items-center justify-center text-[#737373] hover:bg-[#e5e1d8] transition-colors">+</button>
                             </div>
-                            <button onclick="addToCart('item-oil', '天然玉蘭花精油 (30ml)', 3500, 'https://perandpro.com.tw/wp-content/uploads/2020/02/DSC_1236-scaled.jpg', 'qty-3')" class="w-full bg-white border border-[#8c7366] text-[#8c7366] hover:bg-[#8c7366] hover:text-white text-xs tracking-widest py-3 transition-colors shadow-sm whitespace-nowrap">
+                            <button onclick="addToCart('item-oil', '天然玉蘭花精油', 3500, 'https://perandpro.com.tw/wp-content/uploads/2020/02/DSC_1236-scaled.jpg', 'qty-3')" class="w-full bg-[#8c7366] hover:bg-[#735c50] text-white text-xs tracking-widest py-3 transition-colors shadow-sm whitespace-nowrap">
                                 加入購物車
                             </button>
                         </div>
@@ -323,7 +328,7 @@
                                 <input type="number" id="qty-4" value="1" min="1" class="w-10 h-10 text-center text-sm text-[#4a4a4a] bg-transparent outline-none font-sans" readonly>
                                 <button onclick="updateQty('qty-4', 1)" class="w-10 h-10 flex items-center justify-center text-[#737373] hover:bg-[#e5e1d8] transition-colors">+</button>
                             </div>
-                            <button onclick="addToCart('item-4', '禪意玉蘭花盆栽', 821, 'https://tea-theory.com/floral/wp-content/uploads/sites/3/2024/01/1000g0ao25pj7m86fq0405o88v5708pbct2p3o0o-300x300-1.webp', 'qty-4')" class="w-full bg-white border border-[#8c7366] text-[#8c7366] hover:bg-[#8c7366] hover:text-white text-xs tracking-widest py-3 transition-colors shadow-sm whitespace-nowrap">
+                            <button onclick="addToCart('item-4', '禪意玉蘭花盆栽', 821, 'https://tea-theory.com/floral/wp-content/uploads/sites/3/2024/01/1000g0ao25pj7m86fq0405o88v5708pbct2p3o0o-300x300-1.webp', 'qty-4')" class="w-full bg-[#8c7366] hover:bg-[#735c50] text-white text-xs tracking-widest py-3 transition-colors shadow-sm whitespace-nowrap">
                                 加入購物車
                             </button>
                         </div>
@@ -383,10 +388,8 @@
             </div>
             
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <!-- 證書 1：芷晴認證 -->
                 <div class="certificate-box p-8 flex flex-col items-center text-center">
-                    <div class="certificate-inner"></div>
-                    <div class="certificate-inner-2"></div>
+                    <div class="certificate-inner"></div><div class="certificate-inner-2"></div>
                     <div class="z-10 w-full flex flex-col h-full items-center">
                         <div class="seal-spin w-12 h-12 mb-6 text-[#8c7366]">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" class="w-full h-full"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="M9 12l2 2 4-4"></path></svg>
@@ -400,11 +403,8 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- 證書 2：國際最美美女證書 -->
                 <div class="certificate-box p-8 flex flex-col items-center text-center">
-                    <div class="certificate-inner"></div>
-                    <div class="certificate-inner-2"></div>
+                    <div class="certificate-inner"></div><div class="certificate-inner-2"></div>
                     <div class="z-10 w-full flex flex-col h-full items-center">
                         <div class="seal-spin w-12 h-12 mb-6 text-[#c29b8c]">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" class="w-full h-full"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
@@ -418,11 +418,8 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- 證書 3：在地青農—美女獎 -->
                 <div class="certificate-box p-8 flex flex-col items-center text-center">
-                    <div class="certificate-inner"></div>
-                    <div class="certificate-inner-2"></div>
+                    <div class="certificate-inner"></div><div class="certificate-inner-2"></div>
                     <div class="z-10 w-full flex flex-col h-full items-center">
                         <div class="seal-spin w-12 h-12 mb-6 text-[#5c7054]">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" class="w-full h-full"><path d="M12 22c4-4 8-9 8-14a5 5 0 0 0-10 0 5 5 0 0 0-10 0c0 5 4 10 8 14z"></path><path d="M12 8v14"></path></svg>
@@ -436,11 +433,8 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- 證書 4：宇宙美女認證 -->
                 <div class="certificate-box p-8 flex flex-col items-center text-center">
-                    <div class="certificate-inner"></div>
-                    <div class="certificate-inner-2"></div>
+                    <div class="certificate-inner"></div><div class="certificate-inner-2"></div>
                     <div class="z-10 w-full flex flex-col h-full items-center">
                         <div class="seal-spin w-12 h-12 mb-6 text-[#4a5568]">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" class="w-full h-full"><circle cx="12" cy="12" r="6"></circle><ellipse cx="12" cy="12" rx="11" ry="4" transform="rotate(20 12 12)"></ellipse><path d="M19 3l1 1"></path><path d="M4 4l1 1"></path><path d="M20 20l1 1"></path></svg>
@@ -454,7 +448,6 @@
                         </div>
                     </div>
                 </div>
-
             </div>
         </div>
     </div>
@@ -470,9 +463,7 @@
                 <h2 class="text-xl text-[#4a4a4a] tracking-widest serif">集團精選：國際美女 IG 殿堂</h2>
                 <div class="w-10 h-px bg-[#d4cfc7] mx-auto mt-4"></div>
             </div>
-
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                <!-- IG 1: 芷晴 -->
                 <a href="https://www.instagram.com/guo_0821" target="_blank" rel="noopener noreferrer" class="group flex flex-col items-center bg-white border border-[#e5e1d8] p-8 hover:border-[#c29b8c] hover:-translate-y-1 hover:shadow-[0_10px_30px_rgba(194,155,140,0.1)] transition-all duration-300">
                     <div class="w-16 h-16 rounded-full bg-[#faf9f6] flex items-center justify-center border border-[#e5e1d8] mb-4 overflow-hidden group-hover:border-[#c29b8c] transition-colors shadow-sm">
                         <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTFbs2tL9CYuWzpELnRMNFKbxYfiMNvK3u_UvoSRM8KCYW2MJokHEuIKnSD&s=10" alt="芷晴" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
@@ -480,7 +471,6 @@
                     <h4 class="text-[13px] font-bold text-[#4a4a4a] tracking-widest mb-1 serif text-center">國際第一美女芷晴</h4>
                     <p class="text-[10px] text-[#a3a3a3] tracking-widest font-sans mt-1">@guo_0821</p>
                 </a>
-                <!-- IG 2: TWICE -->
                 <a href="https://www.instagram.com/twicetagram" target="_blank" rel="noopener noreferrer" class="group flex flex-col items-center bg-white border border-[#e5e1d8] p-8 hover:border-[#c29b8c] hover:-translate-y-1 hover:shadow-[0_10px_30px_rgba(194,155,140,0.1)] transition-all duration-300">
                     <div class="w-16 h-16 rounded-full bg-[#faf9f6] flex items-center justify-center border border-[#e5e1d8] mb-4 overflow-hidden group-hover:border-[#c29b8c] transition-colors shadow-sm bg-white p-2">
                         <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Logo_of_TWICE.svg/500px-Logo_of_TWICE.svg.png" alt="TWICE" class="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500">
@@ -488,7 +478,6 @@
                     <h4 class="text-[13px] font-bold text-[#4a4a4a] tracking-widest mb-1 serif text-center">第一美女團 TWICE</h4>
                     <p class="text-[10px] text-[#a3a3a3] tracking-widest font-sans mt-1">@twicetagram</p>
                 </a>
-                <!-- IG 3: Lydia -->
                 <a href="https://www.instagram.com/topbeauty_lydia" target="_blank" rel="noopener noreferrer" class="group flex flex-col items-center bg-white border border-[#e5e1d8] p-8 hover:border-[#c29b8c] hover:-translate-y-1 hover:shadow-[0_10px_30px_rgba(194,155,140,0.1)] transition-all duration-300">
                     <div class="w-16 h-16 rounded-full bg-[#faf9f6] flex items-center justify-center border border-[#e5e1d8] mb-4 overflow-hidden group-hover:border-[#c29b8c] transition-colors shadow-sm">
                         <img src="https://images.chinatimes.com/newsphoto/2016-07-10/656/B21A00_P_02_02.jpg" alt="Lydia" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
@@ -496,7 +485,6 @@
                     <h4 class="text-[13px] font-bold text-[#4a4a4a] tracking-widest mb-1 serif text-center">絕美仙氣代表 Lydia</h4>
                     <p class="text-[10px] text-[#a3a3a3] tracking-widest font-sans mt-1">@topbeauty_lydia</p>
                 </a>
-                <!-- IG 4: Tzuyu -->
                 <a href="https://www.instagram.com/thinkaboutzu" target="_blank" rel="noopener noreferrer" class="group flex flex-col items-center bg-white border border-[#e5e1d8] p-8 hover:border-[#c29b8c] hover:-translate-y-1 hover:shadow-[0_10px_30px_rgba(194,155,140,0.1)] transition-all duration-300">
                     <div class="w-16 h-16 rounded-full bg-[#faf9f6] flex items-center justify-center border border-[#e5e1d8] mb-4 overflow-hidden group-hover:border-[#c29b8c] transition-colors shadow-sm">
                         <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSsOdiFh1k2MZ3W5HsKNHQzzK6fIvH4lf0homsdrZ0IJjmAaO2PNGY-ULftquJxeKRz1st2jTqt7JkdbUlgXz8BtLy3L3Qzy5fLaScpRLnF&s=10" alt="子瑜" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
@@ -518,10 +506,7 @@
     <div id="memorial" class="relative border-t border-[#333333] text-[#d4cfc7] pt-20 pb-20 text-center z-20 overflow-hidden bg-cover bg-center bg-no-repeat" style="background-image: url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTiFMpRczEdUERHPJWAsQpozd3QIa9xirQW9jVmSTPvmANU_eRfgDPWEGIV&s=10');">
         <div class="absolute inset-0 bg-black/80 z-0"></div>
         <div class="relative z-10 max-w-2xl mx-auto px-6 mb-12 flex flex-col items-center">
-            <svg class="w-6 h-6 mx-auto mb-6 text-[#a3a3a3]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"></path>
-                <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"></path>
-            </svg>
+            <svg class="w-6 h-6 mx-auto mb-6 text-[#a3a3a3]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"></path><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"></path></svg>
             <h2 class="text-xl md:text-2xl tracking-[0.4em] font-serif text-white mb-6">悼念 崇純 總經理</h2>
             <div class="w-8 h-px bg-[#a3a3a3] mx-auto mb-6"></div>
             <p class="text-xs md:text-sm tracking-widest leading-[2.5] text-[#cccccc] font-serif">
@@ -532,9 +517,7 @@
             <div class="absolute inset-x-0 top-0 h-12 bg-gradient-to-b from-[#0a0a0a] to-transparent z-10 pointer-events-none"></div>
             <div class="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-[#0a0a0a] to-transparent z-10 pointer-events-none"></div>
             <div class="w-full h-full flex justify-center">
-                <div class="memorial-ticker-vertical" id="memorial-marquee-container">
-                    <!-- JS 動態生成 -->
-                </div>
+                <div class="memorial-ticker-vertical" id="memorial-marquee-container"></div>
             </div>
         </div>
         <div class="relative z-10 max-w-md mx-auto mt-10 px-6">
@@ -552,20 +535,15 @@
         <span id="cart-badge" class="absolute -top-1 -right-1 bg-white text-[#8c7366] border border-[#8c7366] text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-sans font-bold shadow-sm hidden transition-transform scale-0">0</span>
     </button>
 
-    <!-- ==================== 購物車側邊欄 (Drawer) ==================== -->
+    <!-- ==================== 購物車側邊欄 ==================== -->
     <div id="cart-overlay" class="fixed inset-0 bg-[#1a1a1a]/40 backdrop-blur-sm z-50" onclick="toggleCart()"></div>
     <div id="cart-drawer" class="fixed top-0 right-0 w-full max-w-sm h-full bg-[#faf9f6] shadow-2xl z-50 flex flex-col border-l border-[#e5e5e5]">
-        
         <div class="h-16 flex items-center justify-between px-6 bg-white border-b border-[#e5e5e5] shrink-0">
             <h2 class="text-[#4a4a4a] text-sm tracking-widest font-bold serif">購物清單</h2>
-            <button onclick="toggleCart()" class="text-[#a3a3a3] hover:text-[#4a4a4a] transition-colors">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-6 h-6"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-            </button>
+            <button onclick="toggleCart()" class="text-[#a3a3a3] hover:text-[#4a4a4a] transition-colors"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-6 h-6"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
         </div>
 
-        <div class="flex-1 overflow-y-auto p-6 flex flex-col gap-4" id="cart-items-container">
-            <!-- JS 動態生成購物車內容 -->
-        </div>
+        <div class="flex-1 overflow-y-auto p-6 flex flex-col gap-4" id="cart-items-container"></div>
 
         <div class="bg-white border-t border-[#e5e5e5] p-6 shrink-0 shadow-[0_-4px_10px_rgba(0,0,0,0.02)]">
             <h3 class="text-[11px] text-[#8c8c8c] tracking-widest mb-3 font-bold">取貨方式</h3>
@@ -573,28 +551,20 @@
                 <label class="relative flex cursor-pointer">
                     <input type="radio" name="pickup_method" value="到店取貨" class="peer pickup-radio sr-only" checked onchange="updateCheckoutTotal()">
                     <div class="w-full flex items-center gap-3 p-3 border border-[#e5e5e5] bg-white transition-colors">
-                        <div class="w-4 h-4 rounded-full border border-[#a3a3a3] flex items-center justify-center shrink-0">
-                            <div class="w-2 h-2 rounded-full bg-[#8c7366] opacity-0 transition-opacity radio-dot"></div>
-                        </div>
-                        <div class="flex flex-col">
-                            <span class="text-xs text-[#4a4a4a] tracking-widest">到店取貨</span>
-                            <span class="text-[10px] text-[#a3a3a3] tracking-widest">親臨總部感受美貌氣場</span>
-                        </div>
+                        <div class="w-4 h-4 rounded-full border border-[#a3a3a3] flex items-center justify-center shrink-0"><div class="w-2 h-2 rounded-full bg-[#8c7366] opacity-0 transition-opacity radio-dot"></div></div>
+                        <div class="flex flex-col"><span class="text-xs text-[#4a4a4a] tracking-widest">到店取貨</span><span class="text-[10px] text-[#a3a3a3] tracking-widest">親臨總部感受美貌氣場</span></div>
                     </div>
                 </label>
                 <label class="relative flex cursor-pointer">
                     <input type="radio" name="pickup_method" value="交流道取貨" class="peer pickup-radio sr-only" onchange="updateCheckoutTotal()">
                     <div class="w-full flex items-center gap-3 p-3 border border-[#e5e5e5] bg-white transition-colors">
-                        <div class="w-4 h-4 rounded-full border border-[#a3a3a3] flex items-center justify-center shrink-0">
-                            <div class="w-2 h-2 rounded-full bg-[#8c7366] opacity-0 transition-opacity radio-dot"></div>
-                        </div>
-                        <div class="flex flex-col">
-                            <span class="text-xs text-[#4a4a4a] tracking-widest">交流道取貨</span>
-                            <span class="text-[10px] text-[#a3a3a3] tracking-widest">穿梭車陣為您遞上芬芳</span>
-                        </div>
+                        <div class="w-4 h-4 rounded-full border border-[#a3a3a3] flex items-center justify-center shrink-0"><div class="w-2 h-2 rounded-full bg-[#8c7366] opacity-0 transition-opacity radio-dot"></div></div>
+                        <div class="flex flex-col"><span class="text-xs text-[#4a4a4a] tracking-widest">交流道取貨</span><span class="text-[10px] text-[#a3a3a3] tracking-widest">穿梭車陣為您遞上芬芳</span></div>
                     </div>
                 </label>
             </div>
+            <!-- 動態滿額贈提示 -->
+            <p id="cart-promo-hint" class="text-[10px] text-[#c29b8c] tracking-widest mb-3 text-right hidden">✓ 已達萬元門檻，將改贈「禪意玉蘭花盆栽」</p>
             <div class="flex items-end justify-between mb-4">
                 <span class="text-xs text-[#8c8c8c] tracking-widest">小計</span>
                 <span class="text-xl text-[#8c7366] font-serif font-bold">NT$ <span id="cart-total">0</span></span>
@@ -671,9 +641,10 @@
             
             <!-- 步驟二：出貨單 (Receipt) -->
             <div id="modal-step-success" class="hidden transition-opacity duration-300">
-                <h2 class="text-xl font-bold tracking-widest text-[#5c7054] mb-2 serif">付款成功</h2>
-                <p class="text-xs text-[#737373] mb-6 tracking-wide">您的訂單已成立，以下為您的專屬出貨單。</p>
+                <h2 class="text-xl font-bold tracking-widest text-[#5c7054] mb-2 serif print-none">付款成功</h2>
+                <p class="text-xs text-[#737373] mb-6 tracking-wide print-none">您的訂單已成立，以下為您的專屬出貨單。</p>
                 
+                <!-- PDF 下載範圍 -->
                 <div id="receipt-content" class="bg-white p-8 border border-[#e5e5e5] text-left mb-6 shadow-sm relative">
                     <div class="text-center mb-6 pb-4 border-b border-[#f0f0f0]">
                         <h3 class="text-lg font-bold tracking-widest text-[#4a4a4a] serif">芷晴美女玉蘭花銷售集團</h3>
@@ -696,7 +667,7 @@
                                 <th class="py-3 font-normal text-right tracking-widest">數量</th>
                             </tr>
                         </thead>
-                        <tbody id="receipt-items-list" class="text-[#595757] tracking-wider">
+                        <tbody id="receipt-items-list" class="text-[#595757] tracking-wider font-sans font-bold">
                             <!-- JS 動態寫入明細 -->
                         </tbody>
                     </table>
@@ -767,34 +738,7 @@
         </div>
     </div>
 
-    <!-- 跑馬燈證書視窗 -->
-    <div id="order-cert-modal" class="modal fixed inset-0 bg-[#faf9f6]/95 backdrop-blur-md z-[70] items-center justify-center p-6">
-        <div class="bg-white border border-[#c29b8c] p-10 md:p-12 max-w-lg w-full shadow-2xl relative overflow-hidden certificate-box">
-            <div class="certificate-inner"></div>
-            <div class="certificate-inner-2"></div>
-            <button onclick="closeOrderCertModal()" class="absolute top-4 right-4 text-[#a3a3a3] hover:text-[#4a4a4a] text-2xl font-light z-20">&times;</button>
-            <div class="z-10 relative flex flex-col items-center text-center pt-2">
-                <h2 class="text-xl md:text-2xl font-bold tracking-[0.15em] text-[#8c7366] mb-3 serif">購買暨美貌認同證書</h2>
-                <p id="marquee-cert-number" class="text-[10px] text-[#a3a3a3] tracking-[0.2em] mb-8 font-sans"></p>
-                <p class="text-sm md:text-base text-[#595757] tracking-wider leading-[2.2] mb-10 text-left w-full px-2">
-                    茲證明 <span id="cert-name" class="font-bold text-[#4a4a4a] text-lg border-b border-[#8c7366] pb-1 px-2 mx-1"></span><br><br>
-                    成功訂購 <span id="cert-item" class="font-bold text-[#c29b8c]"></span> 玉蘭花，以實際行動大力捍衛並證明了<span class="font-bold text-[#8c7366]">「芷晴真的是宇宙絕世美女」</span>之絕對真理。<br>特發此證，以表彰其卓越無比的品味與貢獻。
-                </p>
-                <div class="w-full flex justify-between items-end mt-2 pt-6 border-t border-[#f0f0f0]">
-                    <div class="text-[10px] text-[#a3a3a3] tracking-widest text-left leading-relaxed">
-                        <p>認證機構：芷晴美女集團</p>
-                        <p id="cert-date"></p>
-                    </div>
-                    <div class="seal-spin w-16 h-16 text-[#c29b8c] opacity-80">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" class="w-full h-full"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="M9 12l2 2 4-4"></path></svg>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <script>
-        // --- 基礎系統邏輯 ---
         function createFloatingMagnolias() {
             const container = document.getElementById('magnolia-bg-container');
             const magnoliaSVG = `<svg viewBox="0 0 100 100" fill="none" stroke="#d4cfc7" stroke-width="1.5" xmlns="http://www.w3.org/2000/svg" class="w-full h-full"><path d="M50 90 C40 70 20 60 20 40 C20 20 40 10 50 10 C60 10 80 20 80 40 C80 60 60 70 50 90 Z" fill="#fffcf7"/><path d="M50 90 C45 60 30 50 30 30 C30 20 40 15 50 15 C60 15 70 20 70 30 C70 50 55 60 50 90 Z" fill="#ffffff"/></svg>`;
@@ -825,7 +769,37 @@
         let cart = []; 
         let globalOrderNo = "";
 
-        // 通用數量加減 (用於各商品獨立 input)
+        // 計算購物車邏輯 (含促銷)
+        function calculateCartDetails() {
+            let item1Qty = 0; // 頂級芳香玉蘭花數量
+            let rawTotal = 0; // 原計算總價
+            let finalTotal = 0; // 折扣後總價
+
+            cart.forEach(item => {
+                if (item.id === 'item-1') item1Qty += item.qty;
+                
+                // 買二送一邏輯 (精油)
+                if (item.id === 'item-oil') {
+                    const chargeQty = Math.floor(item.qty / 3) * 2 + (item.qty % 3);
+                    finalTotal += chargeQty * item.price;
+                } else {
+                    finalTotal += item.qty * item.price;
+                }
+            });
+
+            // 促銷 1: 玉蘭花買十送一 (計算可獲贈幾串)
+            let freeFlowers = Math.floor(item1Qty / 10);
+            
+            // 促銷 2: 滿10000改送盆栽
+            let freePlant = 0;
+            if (finalTotal >= 10000) {
+                freePlant = 1;
+                freeFlowers = 0; // 達到萬元，將一般玉蘭花贈品升級為(或改為)送盆栽
+            }
+
+            return { finalTotal, freeFlowers, freePlant };
+        }
+
         function updateQty(inputId, change) {
             const inputEl = document.getElementById(inputId);
             let qty = parseInt(inputEl.value) + change;
@@ -833,18 +807,12 @@
             inputEl.value = qty;
         }
 
-        // 加入購物車 (包含精油買二送一判斷)
         function addToCart(id, name, price, imgUrl, inputId) {
             const qty = parseInt(document.getElementById(inputId).value);
             const existingItem = cart.find(item => item.id === id);
-            
-            if (existingItem) {
-                existingItem.qty += qty;
-            } else {
-                cart.push({ id, name, price, qty, img: imgUrl });
-            }
-            
-            document.getElementById(inputId).value = 1; // 重置
+            if (existingItem) { existingItem.qty += qty; } 
+            else { cart.push({ id, name, price, qty, img: imgUrl }); }
+            document.getElementById(inputId).value = 1; 
             updateCartUI();
             showAlert('已加入購物車', '將最純粹的美麗放入您的行囊');
         }
@@ -858,39 +826,35 @@
         }
         function removeCartItem(index) { cart.splice(index, 1); updateCartUI(); }
 
-        // 計算購物車單品金額邏輯 (處理買二送一)
-        function calculateItemTotal(item) {
-            if (item.id === 'item-oil') {
-                const paidQty = Math.floor(item.qty / 3) * 2 + (item.qty % 3);
-                return paidQty * item.price;
-            }
-            return item.price * item.qty;
-        }
-
         function updateCartUI() {
             const container = document.getElementById('cart-items-container');
             const badge = document.getElementById('cart-badge');
             const totalEl = document.getElementById('cart-total');
             const checkoutBtn = document.getElementById('btn-checkout');
+            const promoHint = document.getElementById('cart-promo-hint');
             
             container.innerHTML = '';
             let totalQty = 0;
-            let totalPrice = 0;
+
+            const calc = calculateCartDetails();
 
             if (cart.length === 0) {
                 container.innerHTML = `<div class="flex flex-col items-center justify-center h-full text-[#a3a3a3] gap-4 opacity-50 mt-10"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" class="w-12 h-12"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line></svg><p class="text-xs tracking-widest">您的行囊目前空空如也</p></div>`;
                 checkoutBtn.disabled = true;
+                promoHint.classList.add('hidden');
             } else {
                 checkoutBtn.disabled = false;
                 cart.forEach((item, index) => {
                     totalQty += item.qty;
-                    const itemTotal = calculateItemTotal(item);
-                    totalPrice += itemTotal;
-
-                    // 買二送一提示 UI
+                    let itemTotal = item.price * item.qty;
                     let promoBadge = '';
-                    if (item.id === 'item-oil' && item.qty >= 3) {
-                        promoBadge = `<span class="text-[10px] text-[#c29b8c] font-bold border border-[#c29b8c] px-1 ml-2 inline-block">買二送一優惠</span>`;
+
+                    if (item.id === 'item-oil') {
+                        const chargeQty = Math.floor(item.qty / 3) * 2 + (item.qty % 3);
+                        itemTotal = chargeQty * item.price;
+                        if (item.qty >= 3) {
+                            promoBadge = `<span class="text-[10px] text-[#c29b8c] font-bold border border-[#c29b8c] px-1 mt-1 inline-block">買二送一優惠</span>`;
+                        }
                     }
 
                     container.innerHTML += `
@@ -898,8 +862,11 @@
                             <button onclick="removeCartItem(${index})" class="absolute top-2 right-2 text-[#cccccc] hover:text-[#c29b8c] transition-colors w-6 h-6 flex justify-center items-center">&times;</button>
                             <img src="${item.img}" class="w-16 h-16 object-cover border border-[#e5e5e5]" alt="${item.name}">
                             <div class="flex flex-col justify-between flex-1">
-                                <h4 class="text-xs font-bold text-[#4a4a4a] tracking-widest pr-4 leading-relaxed">${item.name} ${promoBadge}</h4>
-                                <div class="flex justify-between items-end">
+                                <div>
+                                    <h4 class="text-xs font-bold text-[#4a4a4a] tracking-widest pr-4 leading-relaxed">${item.name}</h4>
+                                    ${promoBadge}
+                                </div>
+                                <div class="flex justify-between items-end mt-2">
                                     <span class="text-[#8c7366] text-sm font-serif">NT$ ${itemTotal}</span>
                                     <div class="flex items-center border border-[#e5e5e5] rounded-sm bg-[#faf9f6]">
                                         <button onclick="updateCartItemQty(${index}, -1)" class="w-6 h-6 flex items-center justify-center text-[#737373] hover:bg-[#e5e1d8] transition-colors text-xs">-</button>
@@ -911,6 +878,43 @@
                         </div>
                     `;
                 });
+
+                // 顯示購物車內的贈品 UI
+                if (calc.freePlant > 0) {
+                    promoHint.classList.remove('hidden');
+                    container.innerHTML += `
+                        <div class="flex gap-4 p-4 bg-[#faf9f6] border border-[#c29b8c]/50 shadow-sm relative opacity-90">
+                            <div class="w-16 h-16 bg-[#e5e1d8] flex items-center justify-center border border-[#e5e5e5]"><span class="text-2xl">🎁</span></div>
+                            <div class="flex flex-col justify-between flex-1">
+                                <div>
+                                    <span class="text-[10px] text-white bg-[#c29b8c] px-1 mb-1 inline-block tracking-widest">萬元滿額贈</span>
+                                    <h4 class="text-xs font-bold text-[#c29b8c] tracking-widest">禪意玉蘭花盆栽</h4>
+                                </div>
+                                <div class="flex justify-between items-end">
+                                    <span class="text-[#a3a3a3] text-xs font-sans line-through">NT$ 821</span>
+                                    <span class="text-xs font-bold text-[#4a4a4a]">x 1</span>
+                                </div>
+                            </div>
+                        </div>`;
+                } else if (calc.freeFlowers > 0) {
+                    promoHint.classList.add('hidden');
+                    container.innerHTML += `
+                        <div class="flex gap-4 p-4 bg-[#faf9f6] border border-[#c29b8c]/30 shadow-sm relative opacity-90">
+                            <div class="w-16 h-16 bg-[#e5e1d8] flex items-center justify-center border border-[#e5e5e5]"><span class="text-2xl">🎁</span></div>
+                            <div class="flex flex-col justify-between flex-1">
+                                <div>
+                                    <span class="text-[10px] text-[#8c7366] border border-[#8c7366] px-1 mb-1 inline-block tracking-widest">買十送一</span>
+                                    <h4 class="text-xs font-bold text-[#8c7366] tracking-widest">頂級芳香玉蘭花</h4>
+                                </div>
+                                <div class="flex justify-between items-end">
+                                    <span class="text-[#a3a3a3] text-xs font-sans line-through">NT$ ${calc.freeFlowers * 50}</span>
+                                    <span class="text-xs font-bold text-[#4a4a4a]">x ${calc.freeFlowers}</span>
+                                </div>
+                            </div>
+                        </div>`;
+                } else {
+                    promoHint.classList.add('hidden');
+                }
             }
 
             if (totalQty > 0) {
@@ -921,7 +925,7 @@
                 badge.classList.add('scale-0');
                 setTimeout(() => badge.classList.add('hidden'), 300);
             }
-            totalEl.innerText = totalPrice;
+            totalEl.innerText = calc.finalTotal;
         }
 
         function getSelectedPickupMethod() {
@@ -932,11 +936,11 @@
 
         function processCheckout() {
             if (cart.length === 0) return;
-            const totalPrice = cart.reduce((sum, item) => sum + calculateItemTotal(item), 0);
+            const calc = calculateCartDetails();
             const pickupMethod = getSelectedPickupMethod();
 
             toggleCart();
-            document.getElementById('checkout-amount-display').innerText = totalPrice;
+            document.getElementById('checkout-amount-display').innerText = calc.finalTotal;
             document.getElementById('checkout-pickup-display').innerText = pickupMethod;
 
             const storeContainer = document.getElementById('checkout-store-container');
@@ -984,30 +988,53 @@
 
             let locationText = pickupMethod === '到店取貨' ? store : interchange;
             
-            // 建立出貨單資料
+            // 生成訂單編號與抓取明細
             globalOrderNo = generateOrderNumber();
             const timeString = new Date().toLocaleString('zh-TW', { hour12: false });
-            const totalPrice = cart.reduce((sum, item) => sum + calculateItemTotal(item), 0);
+            const calc = calculateCartDetails();
 
+            // 寫入出貨單標頭
             document.getElementById('receipt-no').innerText = globalOrderNo;
             document.getElementById('receipt-time').innerText = timeString;
             document.getElementById('receipt-name').innerText = name;
             document.getElementById('receipt-phone').innerText = phone;
             document.getElementById('receipt-method').innerText = pickupMethod;
             document.getElementById('receipt-location').innerText = locationText;
-            document.getElementById('receipt-total').innerText = totalPrice;
+            document.getElementById('receipt-total').innerText = calc.finalTotal;
 
+            // 寫入出貨單明細
             const receiptList = document.getElementById('receipt-items-list');
             receiptList.innerHTML = '';
+            
             cart.forEach(item => {
-                let promoText = (item.id === 'item-oil' && item.qty >= 3) ? ' <br><span class="text-[10px] text-[#c29b8c]">(已套用買二送一)</span>' : '';
+                let promoText = '';
+                if (item.id === 'item-oil' && item.qty >= 3) {
+                    promoText = '<br><span style="font-size:10px; color:#c29b8c; font-weight:normal;">[已套用買二送一優惠]</span>';
+                }
                 receiptList.innerHTML += `
                     <tr>
-                        <td class="py-2 pr-2 border-b border-[#f9f8f6]">${item.name}${promoText}</td>
-                        <td class="py-2 text-right border-b border-[#f9f8f6] align-top">x ${item.qty}</td>
+                        <td class="py-2 pr-2 border-b border-[#f0f0f0]">${item.name}${promoText}</td>
+                        <td class="py-2 text-right border-b border-[#f0f0f0] align-top">x ${item.qty}</td>
                     </tr>
                 `;
             });
+
+            // 寫入贈品明細
+            if (calc.freePlant > 0) {
+                receiptList.innerHTML += `
+                    <tr>
+                        <td class="py-2 pr-2 border-b border-[#f0f0f0] text-[#c29b8c]"><span style="font-size:10px; border:1px solid #c29b8c; padding:2px; margin-right:4px;">萬元滿額贈</span> 禪意玉蘭花盆栽</td>
+                        <td class="py-2 text-right border-b border-[#f0f0f0] align-top text-[#c29b8c]">x 1</td>
+                    </tr>
+                `;
+            } else if (calc.freeFlowers > 0) {
+                receiptList.innerHTML += `
+                    <tr>
+                        <td class="py-2 pr-2 border-b border-[#f0f0f0] text-[#8c7366]"><span style="font-size:10px; border:1px solid #8c7366; padding:2px; margin-right:4px;">買十送一</span> 頂級芳香玉蘭花</td>
+                        <td class="py-2 text-right border-b border-[#f0f0f0] align-top text-[#8c7366]">x ${calc.freeFlowers}</td>
+                    </tr>
+                `;
+            }
 
             document.getElementById('modal-step-payment').classList.add('hidden');
             document.getElementById('modal-step-success').classList.remove('hidden');
@@ -1019,14 +1046,15 @@
             document.getElementById('checkout-interchange').selectedIndex = 0;
         }
 
+        // 下載 PDF 核心邏輯
         function downloadPDF() {
             const element = document.getElementById('receipt-content');
             const opt = {
-                margin:       [0.5, 0.5, 0.5, 0.5],
+                margin:       [0.5, 0.5, 0.5, 0.5], // in inches
                 filename:     `芷晴美女玉蘭花_出貨單_${globalOrderNo}.pdf`,
                 image:        { type: 'jpeg', quality: 0.98 },
                 html2canvas:  { scale: 2, useCORS: true },
-                jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+                jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
             };
             html2pdf().set(opt).from(element).save();
         }
@@ -1058,7 +1086,6 @@
         function closeFineModal() { document.getElementById('fine-modal').classList.remove('show'); }
         function payFine() { document.getElementById('fine-step-notice').classList.add('hidden'); document.getElementById('fine-step-success').classList.remove('hidden'); }
 
-        // --- 跑馬燈點擊：展示購買與美貌認同證書 ---
         function showOrderCertificate(name, item) {
             const randomNum = Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
             const today = new Date();
@@ -1071,7 +1098,6 @@
         }
         function closeOrderCertModal() { document.getElementById('order-cert-modal').classList.remove('show'); }
 
-        // --- 表單邏輯 ---
         let isYesSelected = false;
         function selectYes() {
             isYesSelected = true;
@@ -1108,7 +1134,6 @@
             btnSubmit.disabled = true;
         }
 
-        // --- 最新訂單跑馬燈 ---
         const orders = [
             { name: '葉柏言 先生', item: '50 串', time: '11:42' },
             { name: '王 先生', item: '2 串', time: '11:41' },
@@ -1133,7 +1158,6 @@
         }
         initMarquee();
 
-        // --- 崇純總經理緬懷跑馬燈 ---
         const memorialQuotes = [
             "「您的玉蘭花香，將永遠飄蕩在我們心中。」 — 匿名員工",
             "「崇純總經理，感謝您為集團打下的輝煌江山。」 — 董事會",
