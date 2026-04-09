@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="zh-TW" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>國中幾何：12大倒角模型與例題大全 (排版修復版)</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- MathJax for Math Rendering -->
+    <script>
+        window.MathJax = {
+            tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']] },
+            svg: { fontCache: 'global' }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['"Noto Sans TC"', 'sans-serif'] },
+                    colors: { primary: '#4f46e5', secondary: '#ec4899' }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f8fafc; color: #1e293b; }
+        mjx-container { outline: none !important; }
+        .formula-box { @apply bg-yellow-50 text-rose-600 font-bold px-3 py-2 rounded-lg border border-yellow-200 inline-block shadow-sm text-lg tracking-wide w-full text-center; }
+        /* 移除 h-full 等固定高度，確保卡片能隨內容長高 */
+        .model-card { @apply bg-white rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 border border-slate-200 flex flex-col; }
+        /* 加入 shrink-0 保證圖片區塊絕對不會被壓縮 */
+        .svg-box { @apply bg-slate-50 border-b border-slate-100 p-4 flex justify-center items-center relative min-h-[180px] shrink-0; }
+        .nav-link { @apply text-sm font-bold text-slate-600 hover:text-indigo-600 transition-colors px-3 py-2 rounded-lg hover:bg-slate-100; }
+        
+        details { @apply mt-3 w-full; }
+        details > summary { list-style: none; cursor: pointer; }
+        details > summary::-webkit-details-marker { display: none; }
+        .proof-box { @apply p-4 bg-slate-800 text-slate-100 rounded-xl mt-2 text-sm leading-relaxed border border-slate-700 shadow-inner overflow-x-auto; }
+    </style>
+</head>
+<body class="selection:bg-indigo-200 selection:text-indigo-900">
+
+    <!-- 導覽列 -->
+    <nav class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between overflow-x-auto">
+            <div class="text-xl font-black text-indigo-600 flex-shrink-0 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                幾何倒角模型大全
+            </div>
+            <div class="flex space-x-1 whitespace-nowrap hidden md:flex">
+                <a href="#m-8" class="nav-link">8字系列</a>
+                <a href="#m-dart" class="nav-link">飛鏢系列</a>
+                <a href="#m-bisector" class="nav-link">角平分線</a>
+                <a href="#m-fold" class="nav-link">A字與折角</a>
+                <a href="#m-perp" class="nav-link">垂直倒角</a>
+                <a href="#examples" class="nav-link text-rose-600 bg-rose-50 hover:bg-rose-100">實戰例題</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 頂部橫幅 -->
+    <header class="bg-gradient-to-br from-indigo-800 to-slate-900 text-white py-14 px-4 mb-8 relative overflow-hidden">
+        <div class="max-w-5xl mx-auto text-center relative z-10">
+            <span class="inline-block py-1 px-3 rounded-full bg-emerald-400 text-emerald-900 text-sm font-bold tracking-wider mb-4 shadow-sm">優化版：展開證明不再擋圖！</span>
+            <h1 class="text-3xl md:text-5xl font-black mb-4 leading-tight">三角形神級倒角模型大全</h1>
+            <p class="text-indigo-200 text-lg md:text-xl max-w-2xl mx-auto">12 大模型 ＋ 完整證明 ＋ 經典例題，輕鬆破解任何角度計算！</p>
+        </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-4 pb-20 space-y-12">
+
+        <!-- ================= 核心定理 ================= -->
+        <section id="core" class="scroll-mt-20">
+            <div class="bg-indigo-50 rounded-2xl p-6 border-l-4 border-indigo-500 flex flex-col md:flex-row items-start gap-4">
+                <div class="bg-indigo-600 text-white p-3 rounded-xl shadow-md"><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 14-4-4 4-4"/></svg></div>
+                <div>
+                    <h2 class="text-xl font-bold text-slate-800 mb-1">【基礎核心】三角形外角定理與內角和</h2>
+                    <p class="text-slate-700 font-medium">所有模型的推導基礎：<br>1. 三角形的一個外角，等於其兩個「內對角」的和。<br>2. $\triangle$ 內角和 $= 180^\circ$。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= 系列一：8字模型 ================= -->
+        <section id="m-8" class="scroll-mt-20">
+            <h2 class="text-2xl font-bold text-slate-800 mb-6 flex items-center gap-2 border-b-2 border-slate-200 pb-2">
+                <span class="bg-blue-600 text-white w-8 h-8 rounded-lg flex items-center justify-center text-lg">一</span> 8字模型系列
+            </h2>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- 模型 1 -->
+                <div class="model-card border-t-4 border-t-blue-500">
+                    <div class="svg-box">
+                        <svg viewBox="0 0 150 150" class="w-full h-full max-h-32">
+                            <line x1="20" y1="30" x2="130" y2="30" stroke="#334155" stroke-width="2.5"/><line x1="20" y1="120" x2="130" y2="120" stroke="#334155" stroke-width="2.5"/>
+                            <line x1="20" y1="30" x2="130" y2="120" stroke="#334155" stroke-width="2.5"/><line x1="130" y1="30" x2="20" y2="120" stroke="#334155" stroke-width="2.5"/>
+                            <text x="10" y="25" font-weight="bold">A</text><text x="135" y="25" font-weight="bold">B</text>
+                            <text x="10" y="135" font-weight="bold">C</text><text x="135" y="135" font-weight="bold">D</text>
+                            <text x="25" y="45" font-size="12" fill="#ef4444">1</text><text x="115" y="45" font-size="12" fill="#ef4444">2</text>
+                            <text x="25" y="115" font-size="12" fill="#ef4444">3</text><text x="115" y="115" font-size="12" fill="#ef4444">4</text>
+                            <text x="80" y="70" font-weight="bold">O</text>
+                        </svg>
+                        <span class="absolute top-2 left-2 bg-blue-100 text-blue-700 text-xs font-bold px-2 py-1 rounded">模型 1：基本 8 字</span>
+                    </div>
+                    <div class="p-5 flex-grow flex flex-col">
+                        <div class="formula-box !text-blue-700 !bg-blue-50 !border-blue-200 mt-auto">$\angle 1 + \angle 2 = \angle 3 + \angle 4$</div>
+                        <details>
+                            <summary class="text-sm font-semibold text-blue-700 bg-blue-100/50 hover:bg-blue-100 rounded-lg py-2 text-center transition mt-2">📝 展開證明</summary>
+                            <div class="proof-box">
+                                在 $\triangle AOB$ 中：$\angle 1 + \angle 2 + \angle AOB = 180^\circ$<br>
+                                在 $\triangle COD$ 中：$\angle 3 + \angle 4 + \angle COD = 180^\circ$<br>
+                                又 $\because \angle AOB = \angle COD$ (對頂角相等)<br>
+                                $\therefore \angle 1 + \angle 2 = \angle 3 + \angle 4$
+                            </div>
+                        </details>
+                    </div>
+                </div>
+
+                <!-- 模型 2 -->
+                <div class="model-card border-t-4 border-t-blue-600">
+                    <div class="svg-box">
+                        <svg viewBox="0 0 150 150" class="w-full h-full max-h-32">
+                            <line x1="40" y1="20" x2="130" y2="40" stroke="#334155" stroke-width="2.5"/><line x1="40" y1="130" x2="130" y2="110" stroke="#334155" stroke-width="2.5"/>
+                            <line x1="40" y1="20" x2="130" y2="110" stroke="#334155" stroke-width="2.5"/><line x1="130" y1="40" x2="40" y2="130" stroke="#334155" stroke-width="2.5"/>
+                            <line x1="130" y1="40" x2="15" y2="75" stroke="#f97316" stroke-width="2.5"/><line x1="130" y1="110" x2="15" y2="75" stroke="#f97316" stroke-width="2.5"/>
+                            <text x="35" y="15" font-weight="bold">B</text><text x="35" y="145" font-weight="bold">C</text>
+                            <text x="135" y="35" font-weight="bold">A</text><text x="135" y="125" font-weight="bold">D</text>
+                            <text x="5" y="80" fill="#f97316" font-weight="bold">P</text>
+                        </svg>
+                        <span class="absolute top-2 left-2 bg-blue-100 text-blue-700 text-xs font-bold px-2 py-1 rounded">模型 2：8字 + 角平分線</span>
+                    </div>
+                    <div class="p-5 flex-grow flex flex-col">
+                        <div class="formula-box !text-blue-700 !bg-blue-50 !border-blue-200 mt-auto">$\angle P = \frac{\angle B + \angle C}{2}$</div>
+                        <details>
+                            <summary class="text-sm font-semibold text-blue-700 bg-blue-100/50 hover:bg-blue-100 rounded-lg py-2 text-center transition mt-2">📝 展開證明</summary>
+                            <div class="proof-box">
+                                由 8 字模型可得：<br>
+                                $\angle B + \angle \alpha = \angle P + \angle \beta \Rightarrow \angle \alpha - \angle \beta = \angle P - \angle B$<br>
+                                $\angle P + \angle \alpha = \angle C + \angle \beta \Rightarrow \angle \alpha - \angle \beta = \angle C - \angle P$<br>
+                                兩式相等：$\angle P - \angle B = \angle C - \angle P$<br>
+                                $2\angle P = \angle B + \angle C \Rightarrow \angle P = \frac{\angle B + \angle C}{2}$
+                            </div>
+                        </details>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= 系列二：飛鏢模型 ================= -->
+        <section id="m-dart" class="scroll-mt-20">
+            <h2 class="text-2xl font-bold text-slate-800 mb-6 flex items-center gap-2 border-b-2 border-slate-200 pb-2">
+                <span class="bg-rose-500 text-white w-8 h-8 rounded-lg flex items-center justify-center text-lg">二</span> 飛鏢(凹四邊形)系列
+            </h2>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- 模型 3 -->
+                <div class="model-card border-t-4 border-t-rose-400">
+                    <div class="svg-box">
+                        <svg viewBox="0 0 150 150" class="w-full h-full max-h-32">
+                            <polygon points="75,20 20,120 75,85 130,120" fill="none" stroke="#334155" stroke-width="2.5" stroke-linejoin="round"/>
+                            <line x1="75" y1="20" x2="75" y2="120" stroke="#f43f5e" stroke-width="1.5" stroke-dasharray="3"/>
+                            <text x="70" y="15" font-weight="bold">A</text><text x="5" y="125" font-weight="bold">B</text>
+                            <text x="135" y="125" font-weight="bold">C</text><text x="65" y="105" fill="#f43f5e" font-weight="bold">D</text>
+                        </svg>
+                        <span class="absolute top-2 left-2 bg-rose-100 text-rose-700 text-xs font-bold px-2 py-1 rounded">模型 3：基本飛鏢</span>
+                    </div>
+                    <div class="p-5 flex-grow flex flex-col">
+                        <div class="formula-box text-rose-600 !text-base mt-auto">$\angle BDC = \angle A + \angle B + \angle C$</div>
+                        <details>
+                            <summary class="text-xs font-semibold text-rose-700 bg-rose-100/50 hover:bg-rose-100 rounded-lg py-2 text-center transition mt-2">📝 展開證明</summary>
+                            <div class="proof-box">
+                                在 $\triangle ABD$ 中，外角 $\angle 5 = \angle 1 + \angle 3$<br>
+                                在 $\triangle ACD$ 中，外角 $\angle 6 = \angle 2 + \angle 4$<br>
+                                $\therefore \angle BDC = \angle 5 + \angle 6$<br>
+                                $= \angle 1 + \angle 2 + \angle 3 + \angle 4$<br>
+                                $= \angle B + \angle C + \angle A$
+                            </div>
+                        </details>
+                    </div>
+                </div>
+
+                <!-- 模型 4 -->
+                <div class="model-card border-t-4 border-t-rose-500">
+                    <div class="svg-box">
+                        <svg viewBox="0 0 150 150" class="w-full h-full max-h-32">
+                            <polygon points="75,20 20,120 75,95 130,120" fill="none" stroke="#334155" stroke-width="2.5" stroke-linejoin="round"/>
+                            <line x1="20" y1="120" x2="75" y2="65" stroke="#06b6d4" stroke-width="2.5"/><line x1="130" y1="120" x2="75" y2="65" stroke="#06b6d4" stroke-width="2.5"/>
+                            <text x="70" y="15" font-weight="bold">A</text><text x="70" y="112" font-weight="bold">C</text>
+                            <text x="10" y="125" font-weight="bold">B</text><text x="135" y="125" font-weight="bold">D</text>
+                            <text x="70" y="55" fill="#0891b2" font-weight="bold">P</text>
+                        </svg>
+                        <span class="absolute top-2 left-2 bg-rose-100 text-rose-700 text-xs font-bold px-2 py-1 rounded">模型 4：內平分線</span>
+                    </div>
+                    <div class="p-5 flex-grow flex flex-col">
+                        <div class="formula-box text-rose-600 !text-base mt-auto">$\angle P = \frac{\angle A + \angle C}{2}$</div>
+                        <details>
+                            <summary class="text-xs font-semibold text-rose-700 bg-rose-100/50 hover:bg-rose-100 rounded-lg py-2 text-center transition mt-2">📝 展開證明</summary>
+                            <div class="proof-box">
+                                由飛鏢模型可得：<br>
+                                小飛鏢：$\angle P = \angle \alpha + \angle A + \angle \beta$<br>
+                                $\Rightarrow \angle \alpha + \angle \beta = \angle P - \angle A$<br>
+                                大飛鏢：$\angle C = 2\angle \alpha + \angle A + 2\angle \beta$<br>
+                                $\Rightarrow 2(\angle \alpha + \angle \beta) = \angle C - \angle A$<br>
+                                兩式合併：$2(\angle P - \angle A) = \angle C - \angle A$<br>
+                                證得 $\angle P = \frac{\angle A + \angle C}{2}$
+                            </div>
+                        </details>
+                    </div>
+                </div>
+
+                <!-- 模型 5 (特殊) -->
+                <div class="model-card border-t-4 border-t-rose-600">
+                    <div class="svg-box">
+                        <svg viewBox="0 0 150 150" class="w-full h-full max-h-32">
+                            <polygon points="75,20 20,100 75,70 130,100" fill="none" stroke="#334155" stroke-width="2.5" stroke-linejoin="round"/>
+                            <line x1="75" y1="20" x2="75" y2="130" stroke="#8b5cf6" stroke-width="2"/>
+                            <!-- Inner reflex bisector -->
+                            <line x1="75" y1="70" x2="75" y2="130" stroke="#8b5cf6" stroke-width="2"/>
+                            <text x="70" y="15" font-weight="bold">A</text><text x="70" y="65" font-weight="bold">C</text>
+                            <text x="10" y="105" font-weight="bold">B</text><text x="135" y="105" font-weight="bold">D</text>
+                            <text x="80" y="135" fill="#8b5cf6" font-weight="bold">P</text>
+                        </svg>
+                        <span class="absolute top-2 left-2 bg-rose-100 text-rose-700 text-xs font-bold px-2 py-1 rounded">模型 5：上下平分線</span>
+                    </div>
+                    <div class="p-5 flex-grow flex flex-col">
+                        <div class="formula-box text-rose-600 !text-base mt-auto">$\angle P = \frac{\angle D - \angle B}{2}$</div>
+                        <details>
+                            <summary class="text-xs font-semibold text-rose-700 bg-rose-100/50 hover:bg-rose-100 rounded-lg py-2 text-center transition mt-2">📝 展開證明</summary>
+                            <div class="proof-box text-xs">
+                                大飛鏢 $ABCD$：$\angle BCD = \angle B + \angle BAD + \angle D$<br>
+                                即 $2\angle \beta = \angle B + 2\angle \alpha + \angle D$<br>
+                                $\Rightarrow \angle \beta - \angle \alpha = \frac{\angle B + \angle D}{2}$<br>
+                                飛鏢 $ABCP$：$\angle BCP = \angle B + \angle P + \angle BAP$<br>
+                                即 $\angle \beta = \angle B + \angle P + \angle \alpha$<br>
+                                $\Rightarrow \angle \beta - \angle \alpha = \angle B + \angle P$<br>
+                                兩式相等：$\frac{\angle B + \angle D}{2} = \angle B + \angle P$<br>
+                                證得 $\angle P = \frac{\angle D - \angle B}{2}$
+                            </div>
+                        </details>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= 系列三：角平分線模型 ================= -->
+        <section id="m-bisector" class="scroll-mt-20">
+            <h2 class="text-2xl font-bold text-slate-800 mb-6 flex items-center gap-2 border-b-2 border-slate-200 pb-2">
+                <span class="bg-purple-500 text-white w-8 h-8 rounded-lg flex items-center justify-center text-lg">三</span> 角平分線模型系列
+            </h2>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- 模型 6 -->
+                <div class="model-card border-t-4 border-t-purple-400">
+                    <div class="svg-box">
+                        <svg viewBox="0 0 200 160" class="w-full h-full max-h-36">
+                            <polygon points="100,30 30,130 170,130" fill="none" stroke="#334155" stroke-width="2.5"/>
+                            <line x1="30" y1="130" x2="100" y2="95" stroke="#10b981" stroke-width="2.5"/><line x1="170" y1="130" x2="100" y2="95" stroke="#10b981" stroke-width="2.5"/>
+                            <text x="95" y="20" font-weight="bold">A</text><text x="95" y="85" fill="#10b981" font-weight="bold">P</text>
+                        </svg>
+                        <span class="absolute top-2 left-2 bg-purple-100 text-purple-700 text-xs font-bold px-2 py-1 rounded">模型 6：內角平分線</span>
+                    </div>
+                    <div class="p-5 flex-grow flex flex-col">
+                        <div class="formula-box !text-purple-700 !bg-purple-50 !border-purple-200 mt-auto">$\angle P = 90^\circ + \frac{1}{2}\angle A$</div>
+                        <details>
+                            <summary class="text-xs font-semibold text-purple-700 bg-purple-100/50 hover:bg-purple-100 rounded-lg py-2 text-center transition mt-2">📝 展開證明</summary>
+                            <div class="proof-box text-xs">
+                                在 $\triangle ABC$ 中：$\angle A + 2\angle \alpha + 2\angle \beta = 180^\circ$<br>
+                                $\Rightarrow \angle \alpha + \angle \beta = 90^\circ - \frac{1}{2}\angle A$<br>
+                                在 $\triangle PBC$ 中：$\angle P + \angle \alpha + \angle \beta = 180^\circ$<br>
+                                $\Rightarrow \angle P = 180^\circ - (\angle \alpha + \angle \beta)$<br>
+                                代入得 $\angle P = 180^\circ - (90^\circ - \frac{1}{2}\angle A) = 90^\circ + \frac{1}{2}\angle A$
+                            </div>
+                        </details>
+                    </div>
+                </div>
+
+                <!-- 模型 7 -->
+                <div class="model-card border-t-4 border-t-purple-500">
+                    <div class="svg-box">
+                        <svg viewBox="0 0 200 160" class="w-full h-full max-h-36">
+                            <polygon points="100,20 60,80 140,80" fill="none" stroke="#334155" stroke-width="2.5"/>
+                            <line x1="60" y1="80" x2="20" y2="140" stroke="#334155" stroke-width="1.5"/><line x1="140" y1="80" x2="180" y2="140" stroke="#334155" stroke-width="1.5"/>
+                            <line x1="60" y1="80" x2="100" y2="140" stroke="#f43f5e" stroke-width="2.5"/><line x1="140" y1="80" x2="100" y2="140" stroke="#f43f5e" stroke-width="2.5"/>
+                            <text x="95" y="15" font-weight="bold">A</text><text x="95" y="155" fill="#f43f5e" font-weight="bold">P</text>
+                        </svg>
+                        <span class="absolute top-2 left-2 bg-purple-100 text-purple-700 text-xs font-bold px-2 py-1 rounded">模型 7：外角平分線</span>
+                    </div>
+                    <div class="p-5 flex-grow flex flex-col">
+                        <div class="formula-box !text-purple-700 !bg-purple-50 !border-purple-200 mt-auto">$\angle P = 90^\circ - \frac{1}{2}\angle A$</div>
+                        <details>
+                            <summary class="text-xs font-semibold text-purple-700 bg-purple-100/50 hover:bg-purple-100 rounded-lg py-2 text-center transition mt-2">📝 展開證明</summary>
+                            <div class="proof-box text-xs">
+                                <span class="text-yellow-300">※利用 A 字模型秒證：</span><br>
+                                $\angle MBC + \angle NCB = 180^\circ + \angle A$<br>
+                                $2\angle \alpha + 2\angle \beta = 180^\circ + \angle A$<br>
+                                $\Rightarrow \angle \alpha + \angle \beta = 90^\circ + \frac{1}{2}\angle A$<br>
+                                在 $\triangle BCP$ 中：$\angle P + \angle \alpha + \angle \beta = 180^\circ$<br>
+                                $\angle P = 180^\circ - (90^\circ + \frac{1}{2}\angle A) = 90^\circ - \frac{1}{2}\angle A$
+                            </div>
+                        </details>
+                    </div>
+                </div>
+
+                <!-- 模型 8 -->
+                <div class="model-card border-t-4 border-t-purple-600">
+                    <div class="svg-box">
+                        <svg viewBox="0 0 200 160" class="w-full h-full max-h-36">
+                            <polygon points="60,30 20,120 100,120" fill="none" stroke="#334155" stroke-width="2.5"/>
+                            <line x1="100" y1="120" x2="180" y2="120" stroke="#334155" stroke-width="1.5"/>
+                            <line x1="20" y1="120" x2="140" y2="60" stroke="#a855f7" stroke-width="2.5"/><line x1="100" y1="120" x2="140" y2="60" stroke="#a855f7" stroke-width="2.5"/>
+                            <text x="55" y="20" font-weight="bold">A</text><text x="145" y="55" fill="#a855f7" font-weight="bold">P</text>
+                        </svg>
+                        <span class="absolute top-2 left-2 bg-purple-100 text-purple-700 text-xs font-bold px-2 py-1 rounded">模型 8：內外分模型</span>
+                    </div>
+                    <div class="p-5 flex-grow flex flex-col">
+                        <div class="formula-box !text-purple-700 !bg-purple-50 !border-purple-200 mt-auto">$\angle P = \frac{1}{2}\angle A$</div>
+                        <details>
+                            <summary class="text-xs font-semibold text-purple-700 bg-purple-100/50 hover:bg-purple-100 rounded-lg py-2 text-center transition mt-2">📝 展開證明</summary>
+                            <div class="proof-box text-xs">
+                                $\angle ACM$ 是 $\triangle ABC$ 的外角：<br>
+                                $\angle ACM = \angle A + \angle ABC$<br>
+                                $\Rightarrow 2\angle \beta = \angle A + 2\angle \alpha$<br>
+                                $\Rightarrow \angle \beta - \angle \alpha = \frac{1}{2}\angle A$<br><br>
+                                $\angle PCM$ 是 $\triangle PBC$ 的外角：<br>
+                                $\angle PCM = \angle P + \angle PBC$<br>
+                                $\Rightarrow \angle \beta = \angle P + \angle \alpha \Rightarrow \angle P = \angle \beta - \angle \alpha$<br>
+                                證得 $\angle P = \frac{1}{2}\angle A$
+                            </div>
+                        </details>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= 系列四：A字與折角 ================= -->
+        <section id="m-fold" class="scroll-mt-20">
+            <h2 class="text-2xl font-bold text-slate-800 mb-6 flex items-center gap-2 border-b-2 border-slate-200 pb-2">
+                <span class="bg-indigo-500 text-white w-8 h-8 rounded-lg flex items-center justify-center text-lg">四</span> A字模型與折角模型
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- 模型 9 -->
+                <div class="model-card border-t-4 border-t-indigo-500">
+                    <div class="svg-box">
+                        <svg viewBox="0 0 150 150" class="w-full h-full max-h-40">
+                            <polygon points="75,20 30,130 120,130" fill="none" stroke="#334155" stroke-width="2.5"/>
+                            <line x1="20" y1="80" x2="140" y2="100" stroke="#ef4444" stroke-width="3"/>
+                            <text x="70" y="15" font-weight="bold">A</text><text x="35" y="70" font-weight="bold">B</text><text x="115" y="85" font-weight="bold">C</text>
+                            <text x="25" y="95" fill="#ef4444" font-weight="bold">∠2</text><text x="120" y="115" fill="#ef4444" font-weight="bold">∠3</text>
+                        </svg>
+                        <span class="absolute top-2 left-2 bg-indigo-100 text-indigo-700 text-xs font-bold px-2 py-1 rounded">模型 9：A 字模型</span>
+                    </div>
+                    <div class="p-6 flex-grow flex flex-col">
+                        <div class="formula-box !text-indigo-600 !bg-indigo-50 !border-indigo-200 mt-auto">$\angle 2 + \angle 3 = \angle A + 180^\circ$</div>
+                        <details>
+                            <summary class="text-sm font-semibold text-indigo-700 bg-indigo-100/50 hover:bg-indigo-100 rounded-lg py-2 text-center transition mt-4">📝 展開證明</summary>
+                            <div class="proof-box">
+                                在 $\triangle ABC$ 中：<br>
+                                外角 $\angle 2 = \angle A + \angle ACB$<br>
+                                外角 $\angle 3 = \angle A + \angle ABC$<br><br>
+                                將兩式相加：<br>
+                                $\angle 2 + \angle 3 = \angle A + \angle ACB + \angle A + \angle ABC$<br>
+                                $= \angle A + (\angle A + \angle ABC + \angle ACB)$<br>
+                                $\because \triangle$ 內角和 $= 180^\circ$<br>
+                                $\therefore \angle 2 + \angle 3 = \angle A + 180^\circ$
+                            </div>
+                        </details>
+                    </div>
+                </div>
+
+                <!-- 模型 10 -->
+                <div class="model-card border-t-4 border-t-purple-500">
+                    <div class="grid grid-cols-2 border-b border-slate-100">
+                        <div class="svg-box border-r border-slate-100 relative">
+                            <svg viewBox="0 0 150 150" class="w-full h-full max-h-32">
+                                <line x1="75" y1="10" x2="30" y2="140" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="3"/><line x1="75" y1="10" x2="120" y2="140" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="3"/>
+                                <line x1="30" y1="140" x2="50" y2="70" stroke="#334155" stroke-width="2"/><line x1="120" y1="140" x2="100" y2="70" stroke="#334155" stroke-width="2"/>
+                                <polygon points="50,70 100,70 75,120" fill="none" stroke="#8b5cf6" stroke-width="2"/>
+                                <text x="70" y="10" fill="#94a3b8" font-weight="bold">A</text><text x="70" y="135" fill="#8b5cf6" font-weight="bold">A'</text>
+                                <text x="25" y="100" fill="#ef4444" font-weight="bold">∠1</text><text x="115" y="100" fill="#ef4444" font-weight="bold">∠2</text>
+                            </svg>
+                            <span class="absolute top-1 left-1 text-xs text-slate-500 font-bold">折在內</span>
+                        </div>
+                        <div class="svg-box relative">
+                            <svg viewBox="0 0 150 150" class="w-full h-full max-h-32">
+                                <line x1="75" y1="130" x2="20" y2="30" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="3"/><line x1="75" y1="130" x2="130" y2="30" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="3"/>
+                                <line x1="20" y1="30" x2="55" y2="90" stroke="#334155" stroke-width="2"/><line x1="130" y1="30" x2="95" y2="90" stroke="#334155" stroke-width="2"/>
+                                <polygon points="55,90 95,90 120,130" fill="none" stroke="#f43f5e" stroke-width="2"/>
+                                <text x="70" y="145" fill="#94a3b8" font-weight="bold">A</text><text x="125" y="140" fill="#f43f5e" font-weight="bold">A'</text>
+                                <text x="40" y="70" fill="#ef4444" font-weight="bold">∠1</text><text x="100" y="70" fill="#ef4444" font-weight="bold">∠2</text>
+                            </svg>
+                            <span class="absolute top-1 left-1 text-xs text-slate-500 font-bold">折在外</span>
+                        </div>
+                        <span class="absolute top-2 left-2 bg-purple-100 text-purple-700 text-xs font-bold px-2 py-1 rounded shadow-sm">模型 10：折角模型</span>
+                    </div>
+                    <div class="p-4 flex-grow flex flex-col">
+                        <div class="space-y-2 mt-auto">
+                            <div class="flex justify-between items-center bg-purple-50 p-2 rounded-lg border border-purple-100">
+                                <span class="text-sm font-bold text-slate-700">折內：</span><span class="font-bold text-purple-600">$\angle 1 + \angle 2 = 2\angle A$</span>
+                            </div>
+                            <div class="flex justify-between items-center bg-rose-50 p-2 rounded-lg border border-rose-100">
+                                <span class="text-sm font-bold text-slate-700">折外：</span><span class="font-bold text-rose-600">$\angle 1 - \angle 2 = 2\angle A$</span>
+                            </div>
+                        </div>
+                        <details>
+                            <summary class="text-sm font-semibold text-purple-700 bg-purple-100/50 hover:bg-purple-100 rounded-lg py-2 text-center transition mt-3">📝 展開證明</summary>
+                            <div class="proof-box text-sm">
+                                <p class="text-yellow-300 font-bold mb-1">【神級輔助線證明法】</p>
+                                連接 $\mathbf{AA'}$ 作輔助線。<br>
+                                以「折在角內」為例：<br>
+                                左邊 $\triangle$ 外角：$\angle 1 = \angle (\text{左}A) + \angle (\text{左}A')$<br>
+                                右邊 $\triangle$ 外角：$\angle 2 = \angle (\text{右}A) + \angle (\text{右}A')$<br><br>
+                                兩式相加：$\angle 1 + \angle 2 = \text{整顆}\angle A + \text{整顆}\angle A'$<br>
+                                因為摺疊，$\angle A = \angle A'$。<br>
+                                $\therefore \angle 1 + \angle 2 = 2\angle A$ (折在外同理，只是方向相反相減)。
+                            </div>
+                        </details>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= 系列五：垂直倒角 ================= -->
+        <section id="m-perp" class="scroll-mt-20">
+            <h2 class="text-2xl font-bold text-slate-800 mb-6 flex items-center gap-2 border-b-2 border-slate-200 pb-2">
+                <span class="bg-emerald-500 text-white w-8 h-8 rounded-lg flex items-center justify-center text-lg">五</span> 垂直倒角系列
+            </h2>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- 模型 11 -->
+                <div class="model-card border-t-4 border-t-emerald-400">
+                    <div class="svg-box">
+                        <svg viewBox="0 0 150 150" class="w-full h-full max-h-36">
+                            <polygon points="50,20 20,120 130,120" fill="none" stroke="#334155" stroke-width="2.5"/>
+                            <line x1="50" y1="20" x2="50" y2="120" stroke="#10b981" stroke-width="2.5"/><polyline points="50,110 60,110 60,120" fill="none" stroke="#10b981" stroke-width="1.5"/>
+                            <line x1="50" y1="20" x2="70" y2="120" stroke="#3b82f6" stroke-width="2.5" stroke-dasharray="3"/>
+                            <text x="45" y="15" font-weight="bold">A</text><text x="45" y="135" fill="#10b981" font-weight="bold">D</text><text x="70" y="135" fill="#3b82f6" font-weight="bold">E</text>
+                        </svg>
+                        <span class="absolute top-2 left-2 bg-emerald-100 text-emerald-700 text-xs font-bold px-2 py-1 rounded">模型 11：高線與角平分線</span>
+                    </div>
+                    <div class="p-5 flex-grow flex flex-col">
+                        <div class="formula-box !text-emerald-700 !bg-emerald-50 !border-emerald-200 !text-base mt-auto">$\angle DAE = \frac{1}{2}(\angle B - \angle C)$</div>
+                        <details>
+                            <summary class="text-xs font-semibold text-emerald-700 bg-emerald-100/50 hover:bg-emerald-100 rounded-lg py-2 text-center transition mt-2">📝 展開證明</summary>
+                            <div class="proof-box text-xs">
+                                $\because AD \perp BC \Rightarrow \angle DAB = 90^\circ - \angle B$<br>
+                                $\because AE$ 平分 $\angle BAC \Rightarrow \angle BAE = \frac{1}{2}(180^\circ - \angle B - \angle C) = 90^\circ - \frac{1}{2}\angle B - \frac{1}{2}\angle C$<br>
+                                夾角 $\angle DAE = \angle BAE - \angle DAB$<br>
+                                $= \frac{1}{2}\angle B - \frac{1}{2}\angle C = \frac{1}{2}(\angle B - \angle C)$
+                            </div>
+                        </details>
+                    </div>
+                </div>
+
+                <!-- 模型 12 -->
+                <div class="model-card border-t-4 border-t-emerald-500">
+                    <div class="svg-box">
+                        <svg viewBox="0 0 150 150" class="w-full h-full max-h-36">
+                            <!-- B, C, D on a line -->
+                            <line x1="20" y1="120" x2="140" y2="120" stroke="#334155" stroke-width="2.5"/>
+                            <polygon points="80,40 20,120 140,120" fill="none" stroke="#334155" stroke-width="2.5"/>
+                            <!-- AC altitude -->
+                            <line x1="80" y1="40" x2="80" y2="120" stroke="#10b981" stroke-width="2.5"/>
+                            <!-- Right angles -->
+                            <polyline points="70,40 70,50 80,50" fill="none" stroke="#10b981" stroke-width="1.5"/>
+                            <polyline points="80,110 90,110 90,120" fill="none" stroke="#10b981" stroke-width="1.5"/>
+                            <text x="75" y="30" font-weight="bold">A</text>
+                            <text x="15" y="135" font-weight="bold">B</text><text x="75" y="135" font-weight="bold">C</text><text x="135" y="135" font-weight="bold">D</text>
+                            <text x="35" y="110" font-size="12" fill="#ef4444">1</text><text x="65" y="60" font-size="12" fill="#ef4444">2</text>
+                            <text x="90" y="60" font-size="12" fill="#3b82f6">3</text><text x="115" y="110" font-size="12" fill="#3b82f6">4</text>
+                        </svg>
+                        <span class="absolute top-2 left-2 bg-emerald-100 text-emerald-700 text-xs font-bold px-2 py-1 rounded">模型 12：雙垂直倒角</span>
+                    </div>
+                    <div class="p-5 flex-grow flex flex-col">
+                        <div class="formula-box !text-emerald-700 !bg-emerald-50 !border-emerald-200 !text-base mt-auto">$\angle 1 = \angle 3, \quad \angle 2 = \angle 4$</div>
+                        <details>
+                            <summary class="text-xs font-semibold text-emerald-700 bg-emerald-100/50 hover:bg-emerald-100 rounded-lg py-2 text-center transition mt-2">📝 展開證明</summary>
+                            <div class="proof-box text-xs">
+                                條件：$AB \perp AD, AC \perp BD$<br>
+                                在 $\triangle ABC$ 中，$\angle 1 + \angle 2 = 90^\circ$<br>
+                                在 $\triangle ACD$ 中，$\angle 3 + \angle 4 = 90^\circ$<br>
+                                又 $\because \angle BAC + \angle CAD = 90^\circ$ 即 $\angle 2 + \angle 3 = 90^\circ$<br>
+                                $\therefore \angle 1 = 90^\circ - \angle 2 = \angle 3$<br>
+                                $\angle 4 = 90^\circ - \angle 3 = \angle 2$
+                            </div>
+                        </details>
+                    </div>
+                </div>
+
+                <!-- 模型 13 -->
+                <div class="model-card border-t-4 border-t-emerald-600">
+                    <div class="svg-box">
+                        <svg viewBox="0 0 150 150" class="w-full h-full max-h-36">
+                            <!-- Line B-C-D -->
+                            <line x1="20" y1="120" x2="140" y2="120" stroke="#334155" stroke-width="2.5"/>
+                            <line x1="20" y1="40" x2="20" y2="120" stroke="#334155" stroke-width="2.5"/>
+                            <line x1="140" y1="60" x2="140" y2="120" stroke="#334155" stroke-width="2.5"/>
+                            <line x1="20" y1="40" x2="80" y2="120" stroke="#334155" stroke-width="2.5"/>
+                            <line x1="80" y1="120" x2="140" y2="60" stroke="#334155" stroke-width="2.5"/>
+                            <polyline points="20,110 30,110 30,120" fill="none" stroke="#10b981" stroke-width="1.5"/>
+                            <polyline points="130,120 130,110 140,110" fill="none" stroke="#10b981" stroke-width="1.5"/>
+                            <!-- Right angle at C -->
+                            <polygon points="80,120 74.4,115.8 80,108.3 85.6,112.5" fill="none" stroke="#10b981" stroke-width="1.5"/>
+                            <text x="15" y="30" font-weight="bold">A</text><text x="10" y="135" font-weight="bold">B</text>
+                            <text x="75" y="135" font-weight="bold">C</text><text x="145" y="135" font-weight="bold">D</text><text x="145" y="55" font-weight="bold">E</text>
+                            <text x="30" y="60" font-size="12" fill="#ef4444">1</text><text x="50" y="115" font-size="12" fill="#ef4444">2</text>
+                            <text x="100" y="115" font-size="12" fill="#3b82f6">3</text><text x="120" y="75" font-size="12" fill="#3b82f6">4</text>
+                        </svg>
+                        <span class="absolute top-2 left-2 bg-emerald-100 text-emerald-700 text-xs font-bold px-2 py-1 rounded shadow-sm">模型 13：三垂直倒角 (K字)</span>
+                    </div>
+                    <div class="p-5 flex-grow flex flex-col">
+                        <div class="formula-box !text-emerald-700 !bg-emerald-50 !border-emerald-200 !text-base mt-auto">$\angle 1 = \angle 3, \quad \angle 2 = \angle 4$</div>
+                        <details>
+                            <summary class="text-xs font-semibold text-emerald-700 bg-emerald-100/50 hover:bg-emerald-100 rounded-lg py-2 text-center transition mt-2">📝 展開證明</summary>
+                            <div class="proof-box text-xs">
+                                條件：$AB\perp BD, ED\perp BD, AC\perp CE$<br>
+                                在 $\triangle ABC$ 中，$\angle 1 + \angle 2 = 90^\circ$<br>
+                                在 $\triangle CDE$ 中，$\angle 3 + \angle 4 = 90^\circ$<br>
+                                直線 $BCD$ 上的平角：$\angle 2 + \angle 3 + 90^\circ = 180^\circ$<br>
+                                即 $\angle 2 + \angle 3 = 90^\circ$<br>
+                                $\therefore \angle 1 = 90^\circ - \angle 2 = \angle 3$<br>
+                                $\angle 4 = 90^\circ - \angle 3 = \angle 2$
+                            </div>
+                        </details>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= 經典例題區 ================= -->
+        <section id="examples" class="scroll-mt-20 pt-8 border-t-4 border-rose-500">
+            <h2 class="text-3xl font-black text-rose-600 mb-8 flex items-center gap-3">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                實戰演練：原筆記經典題型解析
+            </h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- 例11 -->
+                <div class="bg-white rounded-2xl shadow-md border border-slate-200 overflow-hidden">
+                    <div class="bg-rose-50 border-b border-rose-100 p-3 font-bold text-rose-800">例 11. 三角板重疊問題</div>
+                    <div class="p-5 flex flex-col gap-4">
+                        <div class="flex items-center gap-4">
+                            <div class="w-24 h-24 flex-shrink-0">
+                                <svg viewBox="0 0 100 100" class="w-full h-full">
+                                    <polygon points="10,90 90,90 90,10" fill="none" stroke="#334155" stroke-width="2"/>
+                                    <polygon points="10,90 90,10 40,10" fill="none" stroke="#3b82f6" stroke-width="2"/>
+                                    <text x="5" y="95" font-size="10">A</text><text x="95" y="95" font-size="10">B</text><text x="95" y="10" font-size="10">C</text>
+                                    <text x="35" y="10" font-size="10" fill="#3b82f6">D</text><text x="5" y="90" font-size="10" fill="#3b82f6">F</text>
+                                    <text x="65" y="45" font-size="10" fill="#f43f5e">E</text>
+                                </svg>
+                            </div>
+                            <div class="text-sm text-slate-700">
+                                <p><strong>已知：</strong>直角頂點重合。$\angle B=90^\circ, \angle A=45^\circ, \angle D=30^\circ$。</p>
+                                <p class="mt-1"><strong>求：</strong>$\angle AEF$ 的度數。</p>
+                            </div>
+                        </div>
+                        <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 text-sm">
+                            <p class="font-bold text-indigo-600 mb-1">【解題步驟】</p>
+                            <p>1. 外角定理：$\angle BFE = \angle A + \angle AEF$</p>
+                            <p>2. 在 $\triangle BDF$ 中，$\angle BFE = 90^\circ - \angle D = 60^\circ$</p>
+                            <p>3. $60^\circ = 45^\circ + \angle AEF \Rightarrow \mathbf{\angle AEF = 15^\circ}$</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 例12 -->
+                <div class="bg-white rounded-2xl shadow-md border border-slate-200 overflow-hidden">
+                    <div class="bg-rose-50 border-b border-rose-100 p-3 font-bold text-rose-800">例 12. 正五角星角度和</div>
+                    <div class="p-5 flex flex-col gap-4">
+                        <div class="flex items-center gap-4">
+                            <div class="w-24 h-24 flex-shrink-0">
+                                <svg viewBox="0 0 100 100" class="w-full h-full text-indigo-600">
+                                    <polygon points="50,5 61,35 95,35 68,55 78,85 50,65 22,85 32,55 5,35 39,35" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                                    <text x="47" y="15" font-size="10">A</text><text x="10" y="45" font-size="10">B</text>
+                                </svg>
+                            </div>
+                            <div class="text-sm text-slate-700">
+                                <p><strong>已知：</strong>$\angle B, \angle E=27^\circ, \angle C, \angle D=31^\circ$。</p>
+                                <p class="mt-1"><strong>求：</strong>$\angle A$ 的度數。</p>
+                            </div>
+                        </div>
+                        <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 text-sm">
+                            <p class="font-bold text-indigo-600 mb-1">【解題步驟】</p>
+                            <p>1. 將五角用「外角」集中到 $\triangle AFG$ 內：$\angle AFG = \angle C + \angle E$</p>
+                            <p>2. $\angle A + (\angle C+\angle E) + (\angle B+\angle D) = 180^\circ$ (五角星內角和)</p>
+                            <p>3. $\angle A = 180^\circ - 54^\circ - 62^\circ = \mathbf{64^\circ}$</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- 頁尾 -->
+    <footer class="bg-slate-900 text-slate-400 py-10 px-4 text-center mt-10">
+        <div class="max-w-4xl mx-auto">
+            <p class="text-xl font-bold text-white mb-3">✅ 恭喜！您已經掌握了最完整的幾何倒角模型！</p>
+            <p class="leading-relaxed">排版問題已修復，現在您可以自由展開每一項證明，不會有任何圖形被遮擋！<br>考場上善用「畫輔助線」搭配「外角定理」，任何變形都難不倒您！</p>
+        </div>
+    </footer>
+
+</body>
+</html>
