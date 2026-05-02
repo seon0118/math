@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TRIANGLE X 全等召喚 - 多人連線版</title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Orbitron:wght@600;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <style>
+    body {
+      background: linear-gradient(135deg, #0f1527 0%, #1a1033 100%);
+      color: white;
+      font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+    
+    .glass-panel {
+      background: linear-gradient(135deg, rgba(13, 17, 23, 0.85) 0%, rgba(28, 25, 52, 0.85) 100%);
+      border: 1px solid rgba(123, 97, 255, 0.4);
+      box-shadow: 0 0 20px rgba(76, 0, 255, 0.2);
+      border-radius: 12px;
+      backdrop-filter: blur(10px);
+    }
+    
+    canvas {
+      background: linear-gradient(145deg, rgba(10, 14, 32, 0.7) 0%, rgba(20, 30, 60, 0.7) 100%);
+      border: 1px solid #4361ee;
+      border-radius: 8px;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(145deg, #4f46e5 0%, #3730a3 100%);
+      color: white;
+      transition: all 0.2s;
+    }
+    
+    .btn-primary:hover:not(:disabled) {
+      background: linear-gradient(145deg, #6366f1 0%, #4338ca 100%);
+      box-shadow: 0 0 15px rgba(99, 102, 241, 0.6);
+      transform: translateY(-2px);
+    }
+    
+    .btn-primary:disabled { background: #374151; color: #9ca3af; box-shadow: none; cursor: not-allowed; transform: none; }
+    
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(99, 102, 241, 0.5); border-radius: 4px; }
+
+    @keyframes rgbAnimation {
+        0%, 100% { color: #ff3366; text-shadow: 0 0 10px #ff3366, 0 0 20px #ff3366; }
+        33% { color: #33ccff; text-shadow: 0 0 10px #33ccff, 0 0 20px #33ccff; }
+        66% { color: #cc33ff; text-shadow: 0 0 10px #cc33ff, 0 0 20px #cc33ff; }
+    }
+    .rgb-text {
+        animation: rgbAnimation 5s linear infinite;
+        font-family: 'Audiowide', sans-serif;
+        font-weight: bold;
+    }
+    
+    .leaderboard-row:nth-child(1) .rank { color: #ffd700; text-shadow: 0 0 10px #ffd700; font-size: 1.2rem; }
+    .leaderboard-row:nth-child(2) .rank { color: #c0c0c0; text-shadow: 0 0 10px #c0c0c0; font-size: 1.1rem;}
+    .leaderboard-row:nth-child(3) .rank { color: #cd7f32; text-shadow: 0 0 10px #cd7f32; font-size: 1.05rem;}
+  </style>
+</head>
+
+<body class="flex flex-col items-center justify-start p-2 md:p-6 space-y-6">
+
+  <!-- 標題區域 -->
+  <div class="text-center w-full max-w-7xl">
+    <div class="flex items-center justify-center flex-wrap gap-4">
+      <svg class="w-12 h-12 md:w-16 md:h-16 text-indigo-500 drop-shadow-[0_0_15px_rgba(99,102,241,0.8)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2L2 22h20L12 2z"></path>
+        <path d="M12 10v4"></path>
+        <path d="M12 18h.01"></path>
+      </svg>
+      <h1 class="text-3xl md:text-5xl font-bold text-indigo-700 rgb-text tracking-wider">
+        TRIANGLE <span class="text-5xl md:text-7xl">X</span> 競技場
+      </h1>
+    </div>
+    <div id="systemStatus" class="text-center text-xs text-yellow-400 animate-pulse mt-2 font-bold">
+      連線至全球伺服器中...
+    </div>
+  </div>
+
+  <!-- 主體兩欄佈局 -->
+  <div class="w-full max-w-7xl flex flex-col lg:flex-row gap-6 items-start">
+    
+    <!-- 左側主畫面區 (會隨狀態切換) -->
+    <div class="flex-1 w-full relative">
+      
+      <!-- ================= 1. 主選單 ================= -->
+      <div id="menuScreen" class="glass-panel p-6 flex flex-col justify-center space-y-6 w-full max-w-2xl mx-auto">
+        <div class="text-center">
+          <h2 class="text-2xl font-bold text-white mb-2">準備連線</h2>
+          <p class="text-gray-400 text-sm">請先登入帳號，以記錄您的輝煌戰績。</p>
+        </div>
+
+        <div class="space-y-4">
+          <!-- 登入與使用者資訊區塊 -->
+          <div id="authSection" class="bg-gray-900/50 p-4 rounded-xl border border-gray-600/50 flex flex-col items-center justify-center">
+            <div id="loginPrompt" class="flex flex-col items-center">
+               <button onclick="loginWithGoogle()" class="bg-white text-gray-900 hover:bg-gray-200 font-bold py-3 px-6 rounded-lg shadow-md flex items-center gap-3 transition-colors">
+                 <svg class="w-5 h-5" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                 </svg>
+                 使用 Google 帳號登入
+               </button>
+            </div>
+            
+            <div id="userInfo" class="hidden flex flex-col items-center w-full">
+              <div class="flex items-center gap-3 w-full justify-center mb-4">
+                 <img id="userAvatar" src="" alt="Avatar" class="w-10 h-10 rounded-full border-2 border-indigo-500">
+                 <div class="text-left">
+                    <div class="text-xs text-indigo-300">特工代號</div>
+                    <div class="font-bold text-lg text-white" id="displayUserName">使用者</div>
+                 </div>
+                 <button onclick="logout()" class="ml-auto text-xs text-gray-400 hover:text-white underline">登出</button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 遊戲操作區塊 (登入後才會完全啟用) -->
+          <div id="gameActions" class="flex flex-col gap-4 pt-2 opacity-50 pointer-events-none transition-opacity duration-300">
+            <!-- 教師區 -->
+            <div class="bg-indigo-900/30 p-4 rounded-xl border border-indigo-500/50">
+              <div class="flex items-center gap-2 mb-3">
+                <span class="text-xl">👨‍🏫</span>
+                <h3 class="font-bold text-indigo-300">教師專區</h3>
+              </div>
+              <button onclick="createRoom()" class="btn-primary w-full py-3 rounded-lg font-bold text-lg">
+                建立遊戲房間
+              </button>
+            </div>
+
+            <!-- 學生區 -->
+            <div class="bg-gray-800/60 p-4 rounded-xl border border-gray-600">
+              <div class="flex items-center gap-2 mb-3">
+                <span class="text-xl">🎓</span>
+                <h3 class="font-bold text-gray-300">學生加入</h3>
+              </div>
+              <div class="flex gap-2">
+                <input type="text" id="roomInput" placeholder="輸入5碼房號" class="w-2/3 px-4 py-3 bg-gray-900 border border-gray-600 rounded-lg text-white uppercase focus:outline-none focus:border-indigo-500 text-center text-lg font-bold">
+                <button onclick="joinRoom()" class="btn-primary w-1/3 rounded-lg font-bold text-lg">加入</button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 個人紀錄區塊 -->
+          <div id="personalHistorySection" class="hidden mt-4">
+             <h3 class="text-indigo-300 font-bold text-sm border-b border-gray-600 pb-2 mb-2">📜 我的最近戰績</h3>
+             <div id="personalHistoryList" class="space-y-2 max-h-40 overflow-y-auto custom-scrollbar pr-2">
+                <div class="text-center text-gray-500 text-sm">載入中...</div>
+             </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ================= 2. 房間等待大廳 ================= -->
+      <div id="lobbyScreen" class="hidden glass-panel p-6 flex flex-col justify-center space-y-6 w-full max-w-2xl mx-auto text-center">
+        <h2 id="lobbyTitle" class="text-3xl font-bold text-indigo-300">連線集結區</h2>
+        
+        <div class="bg-gray-900/80 p-4 rounded-lg border border-indigo-500/30">
+          <p class="text-gray-400 text-sm mb-2">請將此房號告訴其他玩家：</p>
+          <div class="text-5xl font-bold text-white tracking-widest py-2" id="displayRoomId">-----</div>
+        </div>
+
+        <div>
+          <h3 class="text-indigo-400 font-bold mb-2 text-left">目前已加入名單 (<span id="playerCount">1</span>)</h3>
+          <div id="lobbyPlayerList" class="flex flex-wrap gap-2 justify-center max-h-40 overflow-y-auto custom-scrollbar">
+            <!-- 玩家名單 -->
+          </div>
+        </div>
+
+        <div class="pt-4 flex gap-4">
+          <button onclick="leaveRoom()" class="bg-gray-700 hover:bg-gray-600 text-white py-3 px-6 rounded-xl font-bold flex-1">
+            離開房間
+          </button>
+          <button id="startGameBtn" onclick="startGame()" class="btn-primary py-3 px-6 rounded-xl font-bold flex-1 hidden">
+            開始遊戲
+          </button>
+          <div id="waitingHostMsg" class="flex-1 flex items-center justify-center text-yellow-400 font-bold animate-pulse hidden bg-gray-800 rounded-xl">
+            等待教師開始遊戲...
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= 3. 遊戲進行畫面 ================= -->
+      <div id="playingScreen" class="hidden w-full flex-col justify-center items-center space-y-4">
+        
+        <!-- 頂部資訊與計時 -->
+        <div class="glass-panel p-4 w-full flex-none relative">
+          <div class="flex justify-between items-center border-b border-indigo-500/50 pb-2 mb-2">
+            <div class="text-left w-1/3">
+              <div class="text-xs text-indigo-300">個人得分</div>
+              <div class="text-3xl font-bold text-green-400 drop-shadow-[0_0_10px_rgba(74,222,128,0.5)]" id="gameLocalScore">0</div>
+            </div>
+            <div class="text-center w-1/3">
+              <div class="text-xs text-indigo-300">剩餘時間</div>
+              <div class="text-3xl md:text-4xl font-bold text-red-400 tracking-wider" id="gameTimer">60s</div>
+            </div>
+            <div class="text-right w-1/3">
+              <div class="text-xs text-indigo-300">連續答對</div>
+              <div class="text-2xl font-bold text-yellow-400" id="gameCombo">0</div>
+            </div>
+          </div>
+          
+          <!-- 題目顯示 -->
+          <div class="text-center bg-gray-900/60 rounded-lg py-3 mt-2 border border-gray-700 min-h-[4rem] flex flex-col justify-center">
+            <span class="text-sm text-gray-400 mb-1">已知條件：</span>
+            <span id="gameQuestion" class="text-xl md:text-2xl font-bold text-yellow-400 tracking-wider transition-transform duration-200 inline-block">載入中...</span>
+          </div>
+          
+          <!-- 動態提示訊息 -->
+          <div id="gameSystemMsg" class="absolute top-24 left-1/2 transform -translate-x-1/2 text-sm md:text-lg font-bold drop-shadow-md w-max whitespace-nowrap transition-all z-20 pointer-events-none opacity-0">
+            提示訊息
+          </div>
+        </div>
+        
+        <div class="flex flex-col md:flex-row w-full gap-4">
+          <!-- 左半部：靜態圖形參考與作答區 -->
+          <div class="flex-1 flex flex-col gap-4">
+            <!-- 靜態參考圖形 -->
+            <div class="w-full flex gap-4 justify-center">
+              <div class="relative w-1/2 max-w-[200px] aspect-square bg-gray-900/40 rounded-xl p-2 border border-indigo-500/20 shadow-inner">
+                <div class="absolute -top-3 left-0 w-full text-center text-[10px] text-gray-400">參考圖 1</div>
+                <canvas id="triangleS1" class="w-full h-full"></canvas>
+              </div>
+              <div class="relative w-1/2 max-w-[200px] aspect-square bg-gray-900/40 rounded-xl p-2 border border-indigo-500/20 shadow-inner">
+                <div class="absolute -top-3 left-0 w-full text-center text-[10px] text-gray-400">參考圖 2</div>
+                <canvas id="triangleS2" class="w-full h-full"></canvas>
+              </div>
+            </div>
+            
+            <!-- 答題按鈕 -->
+            <div class="w-full bg-gray-900/80 p-4 rounded-xl border border-indigo-500/30 flex-none shadow-[0_0_20px_rgba(79,70,229,0.15)]">
+              <div class="text-center text-sm text-indigo-300 mb-4 font-bold">直接點擊對應的全等性質：</div>
+              <div class="grid grid-cols-3 gap-3">
+                <button class="btn-primary py-4 rounded-lg font-bold text-xl md:text-2xl shadow-lg active:scale-95" onclick="submitAnswer('SSS')">SSS</button>
+                <button class="btn-primary py-4 rounded-lg font-bold text-xl md:text-2xl shadow-lg active:scale-95" onclick="submitAnswer('SAS')">SAS</button>
+                <button class="btn-primary py-4 rounded-lg font-bold text-xl md:text-2xl shadow-lg active:scale-95" onclick="submitAnswer('ASA')">ASA</button>
+                <button class="btn-primary py-4 rounded-lg font-bold text-xl md:text-2xl shadow-lg active:scale-95" onclick="submitAnswer('AAS')">AAS</button>
+                <button class="btn-primary py-4 rounded-lg font-bold text-xl md:text-2xl shadow-lg active:scale-95" onclick="submitAnswer('RHS')">RHS</button>
+                <button class="bg-gray-700 hover:bg-gray-600 text-white py-4 rounded-lg font-bold text-lg md:text-xl border border-gray-500 active:scale-95" onclick="submitAnswer('NOT')">不一定</button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 右半部：房間內即時排行 -->
+          <div class="w-full md:w-64 glass-panel p-4 flex flex-col">
+            <h3 class="text-center text-indigo-300 font-bold border-b border-indigo-500/30 pb-2 mb-2 text-sm">🔥 房間即時戰況</h3>
+            <div id="roomLiveRankings" class="flex-1 overflow-y-auto space-y-2">
+              <!-- 房間排名動態插入 -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= 5. 教師監控畫面 ================= -->
+      <div id="monitorScreen" class="hidden w-full flex-col justify-center items-center space-y-4 px-2">
+        <div class="glass-panel p-4 w-full max-w-7xl text-center mt-2 flex flex-col h-[85vh] md:h-[90vh]">
+          <div class="flex justify-between items-center mb-4 px-2 md:px-4">
+              <h2 class="text-2xl md:text-3xl font-bold text-pink-400">👨‍🏫 遊戲監控中心</h2>
+              <div class="text-right">
+                  <div class="text-sm text-indigo-300">剩餘時間</div>
+                  <div class="text-3xl md:text-4xl font-bold text-red-400 tracking-wider" id="monitorTimer">60s</div>
+              </div>
+          </div>
+          
+          <div class="bg-gray-900/60 rounded-xl p-4 border border-gray-700 flex-1 overflow-hidden flex flex-col">
+             <h3 class="text-lg font-bold text-indigo-300 mb-4 text-left">📡 學生即時操作畫面</h3>
+             <div id="monitorLiveGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 overflow-y-auto custom-scrollbar pr-2 flex-1 content-start">
+               <!-- 監控卡片動態插入 -->
+               <div class="col-span-full text-center text-gray-500 mt-10">等待遊戲開始...</div>
+             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= 4. 結算畫面 ================= -->
+      <div id="resultScreen" class="hidden glass-panel p-8 flex flex-col justify-center items-center space-y-6 w-full max-w-2xl mx-auto text-center mt-10">
+        <h2 id="resultTitle" class="text-4xl font-bold text-pink-400 mb-2">比賽結束！</h2>
+        <p id="resultSubtitle" class="text-gray-300 mb-4">成績已自動上傳至全球排行榜 (若大於0分)</p>
+        
+        <div class="w-full bg-gray-900/60 rounded-xl p-4 border border-gray-700 mb-4">
+          <h3 class="text-xl font-bold text-indigo-300 mb-4">房間最終排名</h3>
+          <div id="finalRoomRankings" class="space-y-2 text-left max-h-60 overflow-y-auto custom-scrollbar">
+            <!-- 最終排行 -->
+          </div>
+        </div>
+        
+        <button onclick="returnToMenu()" class="btn-primary w-full py-4 rounded-xl font-bold text-lg">
+          返回大廳
+        </button>
+      </div>
+
+    </div>
+
+    <!-- 右側：全球即時排行榜 (獨立直欄) -->
+    <div class="w-full lg:w-80 glass-panel p-5 flex flex-col h-[500px] lg:h-[80vh] sticky top-6">
+      <h2 class="text-xl font-bold text-indigo-300 mb-3 flex justify-between items-center border-b border-indigo-500/30 pb-3">
+        <span class="flex items-center gap-2">🏆 全球排行榜</span>
+        <span class="text-xs font-normal bg-indigo-900/50 px-2 py-1 rounded">TOP 15</span>
+      </h2>
+      
+      <div class="flex-1 overflow-hidden flex flex-col">
+        <div class="flex text-[10px] text-gray-400 mb-2 px-2">
+          <div class="w-8 text-center">排名</div>
+          <div class="flex-1">特工代號</div>
+          <div class="w-12 text-center">分數</div>
+        </div>
+        
+        <div id="leaderboardContent" class="flex-1 overflow-y-auto custom-scrollbar space-y-2 pr-2 pb-2">
+          <div class="text-center text-gray-500 mt-10 text-sm">載入排行榜中...</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 自訂提示框 (取代 alert) -->
+  <div id="customModal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-[100] backdrop-blur-sm">
+      <div class="glass-panel p-6 max-w-sm w-full text-center shadow-[0_0_30px_rgba(99,102,241,0.3)]">
+          <h3 class="text-xl font-bold mb-4 text-white" id="customModalTitle">提示</h3>
+          <p class="mb-6 text-gray-300" id="customModalText">訊息內容</p>
+          <div class="flex gap-4 justify-center" id="customModalActions"></div>
+      </div>
+  </div>
+
+  <script type="module">
+    // ==========================================
+    // Firebase 初始化與設定
+    // ==========================================
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, collection, doc, setDoc, getDoc, updateDoc, addDoc, onSnapshot, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
+    const db = getFirestore(app);
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+    // 系統狀態
+    let currentUser = null;
+    let currentMode = 'menu'; // menu, lobby, playing, result, monitor
+    let myName = '';
+    
+    // 房間與遊戲狀態
+    let currentRoomId = null;
+    let isHost = false;
+    let localScore = 0;
+    let comboCount = 0;
+    let gameTimerInterval = null;
+    let roomUnsubscribe = null;
+    let leaderboardUnsubscribe = null;
+    let historyUnsubscribe = null;
+    let hasUploadedScore = false;
+    let systemMsgTimeout = null;
+    let currentQuestionObj = null;
+    let lastPlayersData = null; 
+
+    // ==========================================
+    // 遊戲題庫
+    // ==========================================
+    // 核心連線邏輯與認證
+    // ==========================================
+    
+    // 監聽登入狀態
+    onAuthStateChanged(auth, (user) => {
+      currentUser = user;
+      const statusEl = document.getElementById('systemStatus');
+      const loginPrompt = document.getElementById('loginPrompt');
+      const userInfo = document.getElementById('userInfo');
+      const gameActions = document.getElementById('gameActions');
+      const historySection = document.getElementById('personalHistorySection');
+
+      if (user) {
+        statusEl.innerText = "🟢 已連線至全球伺服器";
+        statusEl.classList.replace('text-yellow-400', 'text-green-500');
+        statusEl.classList.remove('animate-pulse');
+        
+        myName = user.displayName || '無名特工';
+        
+        // 更新 UI 顯示已登入
+        loginPrompt.classList.add('hidden');
+        userInfo.classList.remove('hidden');
+        document.getElementById('displayUserName').innerText = myName;
+        document.getElementById('userAvatar').src = user.photoURL || 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%239ca3af"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>';
+        
+        // 啟用遊戲區塊
+        gameActions.classList.remove('opacity-50', 'pointer-events-none');
+        historySection.classList.remove('hidden');
+
+        setupLeaderboardListener();
+        setupPersonalHistoryListener();
+      } else {
+        statusEl.innerText = "🟡 等待登入中...";
+        statusEl.classList.replace('text-green-500', 'text-yellow-400');
+        statusEl.classList.add('animate-pulse');
+        
+        // 更新 UI 顯示未登入
+        loginPrompt.classList.remove('hidden');
+        userInfo.classList.add('hidden');
+        
+        // 停用遊戲區塊
+        gameActions.classList.add('opacity-50', 'pointer-events-none');
+        historySection.classList.add('hidden');
+        
+        if (leaderboardUnsubscribe) { leaderboardUnsubscribe(); leaderboardUnsubscribe = null; }
+        if (historyUnsubscribe) { historyUnsubscribe(); historyUnsubscribe = null; }
+        document.getElementById('leaderboardContent').innerHTML = '<div class="text-center text-gray-500 mt-10 text-sm">請先登入</div>';
+      }
+    });
+
+    window.loginWithGoogle = async () => {
+       try {
+           await signInWithPopup(auth, provider);
+       } catch (error) {
+           console.error("Login Error:", error);
+           showCustomModal("登入失敗", "請確認網路連線或稍後再試。", [{ text: "確定", class: "btn-primary px-6 py-2 rounded font-bold", onClick: ()=>{} }]);
+       }
+    };
+
+    window.logout = async () => {
+        try {
+            await signOut(auth);
+        } catch (error) {
+            console.error("Logout Error:", error);
+        }
+    };
+
+
+    // ==========================================
+    // 畫面切換與 UI 元件
+    // ==========================================
+    window.showScreen = (screenId) => {
+      currentMode = screenId.replace('Screen', '');
+      const screens = ['menuScreen', 'lobbyScreen', 'playingScreen', 'resultScreen', 'monitorScreen'];
+      screens.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          if (screenId === id) {
+            el.classList.remove('hidden');
+            if (id === 'playingScreen' || id === 'resultScreen' || id === 'monitorScreen') el.classList.add('flex');
+          } else {
+            el.classList.add('hidden');
+            if (id === 'playingScreen' || id === 'resultScreen' || id === 'monitorScreen') el.classList.remove('flex');
+          }
+        }
+      });
+    };
+
+    function showCustomModal(title, text, actions) {
+        document.getElementById('customModalTitle').innerText = title;
+        document.getElementById('customModalText').innerText = text;
+        const actionContainer = document.getElementById('customModalActions');
+        actionContainer.innerHTML = '';
+        actions.forEach(action => {
+            const btn = document.createElement('button');
+            btn.className = action.class;
+            btn.innerText = action.text;
+            btn.onclick = () => { action.onClick(); document.getElementById('customModal').classList.add('hidden'); };
+            actionContainer.appendChild(btn);
+        });
+        document.getElementById('customModal').classList.remove('hidden');
+    }
+
+    function showGameMsg(msg, isSuccess = true) {
+      const el = document.getElementById('gameSystemMsg');
+      el.innerText = msg;
+      el.className = `absolute top-28 left-1/2 transform -translate-x-1/2 text-lg md:text-2xl font-bold w-max transition-all z-20 pointer-events-none ${isSuccess ? 'text-green-400 drop-shadow-[0_0_10px_rgba(74,222,128,0.8)]' : 'text-red-500 drop-shadow-[0_0_10px_rgba(239,68,68,0.8)]'}`;
+      
+      // 動畫
+      el.style.opacity = '1';
+      el.style.transform = 'translate(-50%, -20px) scale(1.2)';
+      
+      if(systemMsgTimeout) clearTimeout(systemMsgTimeout);
+      systemMsgTimeout = setTimeout(() => { 
+        el.style.opacity = '0'; 
+        el.style.transform = 'translate(-50%, 0) scale(1)';
+      }, 800);
+    }
+
+    // ==========================================
+    // 多人房間邏輯 (Lobby)
+    // ==========================================
+
+    window.createRoom = async () => {
+      if (!currentUser) return showCustomModal("提示", "請先登入。", [{ text: "確定", class: "btn-primary px-6 py-2 rounded font-bold", onClick: ()=>{} }]);
+      
+      currentRoomId = Math.random().toString(36).substring(2, 7).toUpperCase();
+      isHost = true;
+      
+      try {
+        const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', currentRoomId);
+        await setDoc(roomRef, {
+          status: 'waiting', // waiting, playing, finished
+          hostId: currentUser.uid,
+          createdAt: Date.now(),
+          players: {} // 教師不參與遊戲，不將自己加入玩家名單
+        });
+        
+        setupRoomListener();
+        document.getElementById('lobbyTitle').innerText = '👨‍🏫 教師控制台';
+        document.getElementById('displayRoomId').innerText = currentRoomId;
+        
+        document.getElementById('startGameBtn').classList.remove('hidden');
+        document.getElementById('waitingHostMsg').classList.add('hidden');
+        
+        showScreen('lobbyScreen');
+      } catch (e) {
+        console.error(e);
+        showCustomModal("錯誤", "無法建立房間，請重試。", [{ text: "確定", class: "btn-primary px-6 py-2 rounded font-bold", onClick: ()=>{} }]);
+      }
+    };
+
+    window.joinRoom = async () => {
+      if (!currentUser) return showCustomModal("提示", "請先登入。", [{ text: "確定", class: "btn-primary px-6 py-2 rounded font-bold", onClick: ()=>{} }]);
+      
+      const inputId = document.getElementById('roomInput').value.trim().toUpperCase();
+      if (!inputId || inputId.length !== 5) {
+        return showCustomModal("提示", "請輸入完整的5碼房號。", [{ text: "確定", class: "btn-primary px-6 py-2 rounded font-bold", onClick: ()=>{} }]);
+      }
+      
+      try {
+        const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', inputId);
+        const snap = await getDoc(roomRef);
+        
+        if (!snap.exists()) {
+          return showCustomModal("提示", "找不到該房間，請確認房號。", [{ text: "確定", class: "btn-primary px-6 py-2 rounded font-bold", onClick: ()=>{} }]);
+        }
+        
+        const data = snap.data();
+        if (data.status !== 'waiting') {
+          return showCustomModal("提示", "該房間遊戲已開始或已結束。", [{ text: "確定", class: "btn-primary px-6 py-2 rounded font-bold", onClick: ()=>{} }]);
+        }
+        
+        // 加入房間 (初始化更完整的學生狀態供監控)
+        await updateDoc(roomRef, {
+          [`players.${currentUser.uid}`]: { 
+              name: myName, 
+              score: 0, 
+              combo: 0, 
+              question: '等待開始...', 
+              lastAction: '', 
+              actionTime: 0 
+          }
+        });
+        
+        currentRoomId = inputId;
+        isHost = false;
+        
+        setupRoomListener();
+        document.getElementById('lobbyTitle').innerText = '🎓 學生等待區';
+        document.getElementById('displayRoomId').innerText = currentRoomId;
+        
+        document.getElementById('startGameBtn').classList.add('hidden');
+        document.getElementById('waitingHostMsg').classList.remove('hidden');
+        
+        showScreen('lobbyScreen');
+        
+      } catch (e) {
+        console.error(e);
+        showCustomModal("錯誤", "無法加入房間，請重試。", [{ text: "確定", class: "btn-primary px-6 py-2 rounded font-bold", onClick: ()=>{} }]);
+      }
+    };
+
+    window.leaveRoom = () => {
+      if (roomUnsubscribe) { roomUnsubscribe(); roomUnsubscribe = null; }
+      currentRoomId = null;
+      isHost = false;
+      showScreen('menuScreen');
+    };
+
+    function setupRoomListener() {
+      if (roomUnsubscribe) roomUnsubscribe();
+      
+      const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', currentRoomId);
+      roomUnsubscribe = onSnapshot(roomRef, (snap) => {
+        if (!snap.exists()) {
+           if (currentMode === 'lobby' || currentMode === 'playing') {
+               showCustomModal("提示", "房間已被解散。", [{ text: "確定", class: "btn-primary px-6 py-2 rounded font-bold", onClick: leaveRoom }]);
+           }
+           return;
+        }
+        
+        const data = snap.data();
+        
+        // 更新大廳名單
+        if (currentMode === 'lobby') {
+          updateLobbyPlayers(data.players);
+        }
+        
+        // 更新遊戲中排行
+        if (currentMode === 'playing') {
+          updateLiveRankings(data.players);
+        }
+
+        // 更新監控中排行與狀態
+        if (currentMode === 'monitor') {
+          lastPlayersData = data.players;
+          updateMonitorGrid(data.players);
+        }
+        
+        // 狀態轉換
+        if (data.status === 'playing' && currentMode === 'lobby') {
+           if (isHost) {
+               startTeacherMonitor(data.endTime);
+           } else {
+               startClientGame(data.endTime);
+           }
+        } else if (data.status === 'finished' && (currentMode === 'playing' || currentMode === 'monitor')) {
+           finishClientGame(data.players);
+        }
+      }, (err) => {
+        console.error("Room listener error:", err);
+      });
+    }
+
+    function updateLobbyPlayers(playersObj) {
+      const container = document.getElementById('lobbyPlayerList');
+      container.innerHTML = '';
+      
+      const players = Object.values(playersObj || {});
+      document.getElementById('playerCount').innerText = players.length;
+
+      if (players.length === 0) {
+        container.innerHTML = `<div class="text-gray-500 text-sm mt-2">尚未有學生加入</div>`;
+        return;
+      }
+      
+      players.forEach(p => {
+        const el = document.createElement('div');
+        el.className = 'bg-gray-800 border border-indigo-500/50 px-4 py-2 rounded-full text-indigo-100 font-bold shadow';
+        el.innerText = p.name;
+        container.appendChild(el);
+      });
+    }
+
+    // ==========================================
+    // 遊戲進行邏輯 (Playing)
+    // ==========================================
+    window.startGame = async () => {
+      if (!isHost || !currentRoomId) return;
+      
+      const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', currentRoomId);
+      const gameDuration = 60000; // 60秒
+      
+      try {
+        await updateDoc(roomRef, {
+          status: 'playing',
+          endTime: Date.now() + gameDuration
+        });
+      } catch (e) {
+        console.error("Start game failed", e);
+      }
+    };
+
+    function startClientGame(endTime) {
+      currentMode = 'playing';
+      localScore = 0;
+      comboCount = 0;
+      hasUploadedScore = false;
+      
+      document.getElementById('gameLocalScore').innerText = '0';
+      document.getElementById('gameCombo').innerText = '0';
+      document.getElementById('gameCombo').className = "text-2xl font-bold text-gray-400";
+      
+      showScreen('playingScreen');
+      loadNextQuestion();
+      
+      // 同步初始題目給教師
+      syncPlayerStateToRoom('start');
+      
+      // 繪製靜態參考圖形
+      drawStaticTriangles();
+      
+      // 啟動倒數計時
+      if (gameTimerInterval) clearInterval(gameTimerInterval);
+      
+      gameTimerInterval = setInterval(() => {
+        const now = Date.now();
+        const rem = Math.max(0, Math.floor((endTime - now) / 1000));
+        
+        const timerEl = document.getElementById('gameTimer');
+        timerEl.innerText = rem + 's';
+        
+        if (rem <= 10) {
+          timerEl.classList.add('animate-pulse', 'text-red-500');
+        } else {
+          timerEl.classList.remove('animate-pulse', 'text-red-500');
+        }
+        
+        if (rem <= 0) {
+          clearInterval(gameTimerInterval);
+          if (isHost) {
+            // 房主負責將房間標記為結束
+            const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', currentRoomId);
+            updateDoc(roomRef, { status: 'finished' }).catch(e=>console.error(e));
+          }
+        }
+      }, 500);
+    }
+
+    // 教師專用的監控計時器
+    function startTeacherMonitor(endTime) {
+      currentMode = 'monitor';
+      showScreen('monitorScreen');
+      
+      if (gameTimerInterval) clearInterval(gameTimerInterval);
+      
+      gameTimerInterval = setInterval(() => {
+        const now = Date.now();
+        const rem = Math.max(0, Math.floor((endTime - now) / 1000));
+        
+        const timerEl = document.getElementById('monitorTimer');
+        timerEl.innerText = rem + 's';
+        
+        if (rem <= 10) timerEl.classList.add('animate-pulse');
+        else timerEl.classList.remove('animate-pulse');
+        
+        // 定期重繪以清除超過一秒的特效
+        if (lastPlayersData) {
+            updateMonitorGrid(lastPlayersData);
+        }
+        
+        if (rem <= 0) {
+          clearInterval(gameTimerInterval);
+          const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', currentRoomId);
+          updateDoc(roomRef, { status: 'finished' }).catch(e=>console.error(e));
+        }
+      }, 500);
+    }
+
+    function loadNextQuestion() {
+      currentQuestionObj = getRandomQuestion();
+      
+      const qEl = document.getElementById('gameQuestion');
+      qEl.innerText = currentQuestionObj.known;
+      
+      // 換題小特效
+      qEl.classList.add('scale-110', 'text-white');
+      setTimeout(() => qEl.classList.remove('scale-110', 'text-white'), 150);
+    }
+
+    window.submitAnswer = (ans) => {
+      if (currentMode !== 'playing' || !currentQuestionObj) return;
+      
+      let isCorrect = (ans === currentQuestionObj.correct);
+      
+      if (isCorrect) {
+        // 答對
+        comboCount++;
+        let points = 10 + Math.min(comboCount * 2, 10); // 連擊加成
+        localScore += points;
+        showGameMsg(`+${points} 正確！`, true);
+        
+        const comboEl = document.getElementById('gameCombo');
+        comboEl.innerText = comboCount;
+        if(comboCount >= 3) comboEl.className = "text-2xl font-bold text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]";
+        
+      } else {
+        // 答錯
+        comboCount = 0;
+        localScore = Math.max(0, localScore - 5); // 扣分機制
+        showGameMsg(`-5 錯誤！`, false);
+        
+        document.getElementById('gameCombo').innerText = '0';
+        document.getElementById('gameCombo').className = "text-2xl font-bold text-gray-400";
+      }
+      
+      // 更新本機分數 UI
+      const scoreEl = document.getElementById('gameLocalScore');
+      scoreEl.innerText = localScore;
+      scoreEl.classList.add('text-white', 'scale-125');
+      setTimeout(() => scoreEl.classList.remove('text-white', 'scale-125'), 150);
+      
+      // 立刻換下一題，然後同步所有狀態至房間 (供教師監控)
+      loadNextQuestion();
+      syncPlayerStateToRoom(isCorrect ? 'correct' : 'wrong');
+    };
+
+    // 同步玩家的完整狀態到房間，讓教師看到最新操作畫面
+    function syncPlayerStateToRoom(actionStr) {
+      if (!currentUser || !currentRoomId) return;
+      const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', currentRoomId);
+      updateDoc(roomRef, {
+        [`players.${currentUser.uid}.score`]: localScore,
+        [`players.${currentUser.uid}.combo`]: comboCount,
+        [`players.${currentUser.uid}.question`]: currentQuestionObj ? currentQuestionObj.known : '',
+        [`players.${currentUser.uid}.lastAction`]: actionStr || '',
+        [`players.${currentUser.uid}.actionTime`]: Date.now()
+      }).catch(e => console.error("State sync failed", e));
+    }
+
+    function updateLiveRankings(playersObj) {
+      const container = document.getElementById('roomLiveRankings');
+      container.innerHTML = '';
+      
+      const players = Object.values(playersObj || {});
+      players.sort((a, b) => b.score - a.score);
+      
+      players.forEach((p, idx) => {
+        const isMe = p.name === myName;
+        const bgClass = isMe ? 'bg-indigo-600/50 border border-indigo-400' : 'bg-gray-800/60 border border-gray-700';
+        const html = `
+          <div class="flex justify-between items-center px-3 py-2 rounded ${bgClass}">
+            <div class="flex items-center gap-2 truncate">
+              <span class="text-xs font-bold text-gray-400 w-4">${idx + 1}</span>
+              <span class="font-bold text-white text-sm truncate">${p.name}</span>
+            </div>
+            <span class="font-bold ${isMe ? 'text-green-300' : 'text-indigo-300'}">${p.score}</span>
+          </div>
+        `;
+        container.insertAdjacentHTML('beforeend', html);
+      });
+    }
+
+    // 更新教師監控畫面的卡片網格 (顯示各學生的操作畫面)
+    function updateMonitorGrid(playersObj) {
+      const container = document.getElementById('monitorLiveGrid');
+      if (!container) return;
+      container.innerHTML = '';
+      
+      const players = Object.values(playersObj || {});
+      if (players.length === 0) {
+          container.innerHTML = '<div class="col-span-full text-center text-gray-500 mt-10">尚未有學生紀錄</div>';
+          return;
+      }
+
+      // 依分數高低排序卡片
+      players.sort((a, b) => b.score - a.score);
+      
+      const now = Date.now();
+
+      players.forEach((p, idx) => {
+        let statusText = '🤔 思考中...';
+        let statusColor = 'text-gray-400';
+        let bgFlashClass = 'border-gray-700 bg-gray-800/60';
+        
+        // 判斷是否在 1.5 秒內有作答動作，藉此給予視覺回饋
+        if (p.actionTime && (now - p.actionTime < 1500)) {
+           if (p.lastAction === 'correct') {
+               statusText = '✅ 答對！';
+               statusColor = 'text-green-400';
+               bgFlashClass = 'border-green-500 bg-green-900/30';
+           } else if (p.lastAction === 'wrong') {
+               statusText = '❌ 答錯！';
+               statusColor = 'text-red-400';
+               bgFlashClass = 'border-red-500 bg-red-900/30';
+           } else if (p.lastAction === 'start') {
+               statusText = '🎮 開始解題';
+               statusColor = 'text-indigo-300';
+           }
+        }
+
+        const html = `
+          <div class="rounded-xl p-4 flex flex-col relative overflow-hidden border transition-all duration-300 ${bgFlashClass}">
+            <div class="flex justify-between items-center border-b border-gray-700/50 pb-2 mb-2">
+              <div class="flex items-center gap-2">
+                 <span class="text-sm font-bold text-gray-400 bg-gray-900 px-2 py-0.5 rounded">#${idx + 1}</span>
+                 <span class="font-bold text-white text-lg truncate w-24" title="${p.name}">${p.name}</span>
+              </div>
+              <span class="font-black text-2xl text-green-400">${p.score}</span>
+            </div>
+            
+            <div class="text-xs text-indigo-300 mb-1">正在解題：</div>
+            <div class="text-yellow-400 font-bold text-center h-14 flex items-center justify-center bg-gray-900/80 rounded border border-gray-700/50 p-2 text-sm break-words shadow-inner">
+              ${p.question || '等待中...'}
+            </div>
+            
+            <div class="mt-3 flex justify-between items-center text-sm border-t border-gray-700/50 pt-2">
+              <span class="text-indigo-300">連擊: <span class="font-bold ${p.combo >= 3 ? 'text-yellow-400' : 'text-white'}">${p.combo || 0}</span></span>
+              <span class="font-bold ${statusColor}">${statusText}</span>
+            </div>
+          </div>
+        `;
+        container.insertAdjacentHTML('beforeend', html);
+      });
+    }
+
+    // ==========================================
+    // 結算與排行榜邏輯
+    // ==========================================
+    function finishClientGame(playersObj) {
+      currentMode = 'result';
+      if (gameTimerInterval) clearInterval(gameTimerInterval);
+      
+      showScreen('resultScreen');
+
+      // 根據身分變更標題
+      document.getElementById('resultTitle').innerText = isHost ? "👨‍🏫 測驗結束！" : "比賽結束！";
+      document.getElementById('resultSubtitle').innerText = isHost ? "以下為所有學生的最終成績" : "成績已自動記錄。";
+      
+      // 繪製最終排名
+      const container = document.getElementById('finalRoomRankings');
+      container.innerHTML = '';
+      
+      const players = Object.values(playersObj || {});
+      players.sort((a, b) => b.score - a.score);
+      
+      players.forEach((p, idx) => {
+        let rankStr = `${idx + 1}`;
+        if(idx===0) rankStr='🥇'; if(idx===1) rankStr='🥈'; if(idx===2) rankStr='🥉';
+        
+        const isMe = p.name === myName;
+        const html = `
+          <div class="flex justify-between items-center px-4 py-3 rounded-lg ${isMe ? 'bg-indigo-900/60 border border-indigo-400' : 'bg-gray-800/40'}">
+            <div class="flex items-center gap-3">
+              <span class="text-xl w-6 text-center">${rankStr}</span>
+              <span class="font-bold text-lg ${isMe ? 'text-white' : 'text-gray-300'}">${p.name}</span>
+            </div>
+            <span class="font-black text-xl text-green-400">${p.score} <span class="text-xs text-gray-400">PTS</span></span>
+          </div>
+        `;
+        container.insertAdjacentHTML('beforeend', html);
+      });
+      
+      // 記錄成績 (教師身分不執行)
+      if (!isHost && !hasUploadedScore && currentUser) {
+        hasUploadedScore = true;
+        const timestamp = Date.now();
+        
+        // 1. 上傳至全球公開排行榜 (只在分數 > 0 時)
+        if (localScore > 0) {
+            const lbCol = collection(db, 'artifacts', appId, 'public', 'data', 'leaderboard');
+            addDoc(lbCol, {
+              name: myName,
+              score: localScore,
+              timestamp: timestamp,
+              userId: currentUser.uid
+            }).catch(e => console.error("Leaderboard upload failed", e));
+        }
+
+        // 2. 記錄至個人私有歷史紀錄 (無論幾分都記錄)
+        const historyCol = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'game_history');
+        addDoc(historyCol, {
+             score: localScore,
+             timestamp: timestamp,
+             roomId: currentRoomId
+        }).catch(e => console.error("History upload failed", e));
+      }
+    }
+
+    window.returnToMenu = () => {
+      leaveRoom();
+    };
+
+    function setupLeaderboardListener() {
+      if (!currentUser) return;
+      const lbCol = collection(db, 'artifacts', appId, 'public', 'data', 'leaderboard');
+      
+      if (leaderboardUnsubscribe) leaderboardUnsubscribe();
+
+      // 監聽全局排行榜
+      leaderboardUnsubscribe = onSnapshot(lbCol, (snapshot) => {
+        const data = [];
+        snapshot.forEach(doc => data.push({ id: doc.id, ...doc.data() }));
+        
+        data.sort((a, b) => {
+          if (b.score !== a.score) return b.score - a.score;
+          return a.timestamp - b.timestamp; 
+        });
+        
+        renderLeaderboard(data.slice(0, 15));
+      }, (error) => {
+        console.error("Leaderboard fetch error:", error);
+      });
+    }
+
+    function renderLeaderboard(data) {
+      const container = document.getElementById('leaderboardContent');
+      container.innerHTML = '';
+      
+      if (data.length === 0) {
+        container.innerHTML = `<div class="text-center text-gray-500 mt-10 text-sm">目前尚無紀錄</div>`;
+        return;
+      }
+      
+      data.forEach((entry, index) => {
+        let rankDisplay = `#${index + 1}`;
+        if (index === 0) rankDisplay = '🥇';
+        if (index === 1) rankDisplay = '🥈';
+        if (index === 2) rankDisplay = '🥉';
+        
+        // 標記自己的名字
+        const isMe = entry.userId === currentUser?.uid;
+        const nameClass = isMe ? 'text-yellow-300 font-black' : 'text-indigo-100 font-bold';
+        const bgClass = isMe ? 'bg-indigo-900/40 border-indigo-500/50' : 'bg-gray-800/40 border-gray-700/30';
+
+        const row = document.createElement('div');
+        row.className = `leaderboard-row flex items-center px-2 py-1.5 rounded-lg border hover:bg-gray-700/50 transition-colors ${bgClass}`;
+        row.innerHTML = `
+          <div class="w-8 text-center rank font-bold text-sm">${rankDisplay}</div>
+          <div class="flex-1 ${nameClass} text-sm truncate pr-2">${entry.name} ${isMe?'(你)':''}</div>
+          <div class="w-12 text-right font-black text-green-400 text-sm">${entry.score}</div>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    // 監聽個人紀錄
+    function setupPersonalHistoryListener() {
+        if (!currentUser) return;
+        const historyCol = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'game_history');
+        
+        if (historyUnsubscribe) historyUnsubscribe();
+
+        historyUnsubscribe = onSnapshot(historyCol, (snapshot) => {
+            const historyData = [];
+            snapshot.forEach(doc => historyData.push({ id: doc.id, ...doc.data() }));
+            
+            // 依時間排序 (最新在最上面)
+            historyData.sort((a, b) => b.timestamp - a.timestamp);
+            
+            renderPersonalHistory(historyData.slice(0, 5)); // 顯示最近 5 筆
+        }, (error) => {
+            console.error("Personal history fetch error:", error);
+        });
+    }
+
+    function renderPersonalHistory(data) {
+        const container = document.getElementById('personalHistoryList');
+        container.innerHTML = '';
+
+        if (data.length === 0) {
+            container.innerHTML = `<div class="text-center text-gray-500 text-sm">尚未有遊玩紀錄</div>`;
+            return;
+        }
+
+        data.forEach((entry) => {
+            const date = new Date(entry.timestamp);
+            const dateStr = `${date.getMonth()+1}/${date.getDate()} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+            
+            const html = `
+               <div class="flex justify-between items-center bg-gray-800/50 px-3 py-2 rounded border border-gray-700/50">
+                  <div class="text-xs text-gray-400">${dateStr} <span class="ml-2 bg-gray-700 px-1 rounded text-[10px]">房號:${entry.roomId}</span></div>
+                  <div class="font-bold text-green-400">${entry.score} PTS</div>
+               </div>
+            `;
+            container.insertAdjacentHTML('beforeend', html);
+        });
+    }
+
+    // ==========================================
+    // 靜態圖形繪製 (僅供參考，無互動)
+    // ==========================================
+    function drawStaticTriangles() {
+      const drawT = (id, isRight) => {
+        const canvas = document.getElementById(id);
+        if(!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const size = Math.min(canvas.parentElement.clientWidth, canvas.parentElement.clientHeight) || 150;
+        canvas.width = size; canvas.height = size;
+        
+        ctx.clearRect(0,0,size,size);
+        
+        const px = size * 0.2, pyTop = size * 0.25, pyBot = size * 0.2, w = size - px, h = size - pyBot;
+        const labels = isRight ? ['D','E','F'] : ['A','B','C'];
+        const pts = [ {x:px,y:h}, {x:w,y:h}, {x:size/2,y:pyTop} ];
+        
+        // 畫邊
+        ctx.beginPath();
+        ctx.moveTo(pts[0].x, pts[0].y); ctx.lineTo(pts[1].x, pts[1].y); ctx.lineTo(pts[2].x, pts[2].y); ctx.closePath();
+        ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        
+        // 畫頂點與標籤
+        ctx.fillStyle = 'rgba(255,255,255,0.8)';
+        ctx.font = 'bold 16px sans-serif';
+        pts.forEach((p, i) => {
+          ctx.beginPath(); ctx.arc(p.x, p.y, 4, 0, Math.PI*2); ctx.fill();
+          let tx = p.x - 5, ty = p.y;
+          if(i===2) ty -= 12; else ty += 20;
+          ctx.fillText(labels[i], tx, ty);
+        });
+      };
+      
+      drawT('triangleS1', false);
+      drawT('triangleS2', true);
+    }
+    
+    // 視窗縮放時重繪靜態圖
+    window.addEventListener('resize', () => { 
+       if(currentMode === 'playing') drawStaticTriangles();
+    });
+
+  </script>
+</body>
+</html>
