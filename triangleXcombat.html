@@ -322,6 +322,7 @@
     let currentUser = null;
     let currentMode = 'menu'; // menu, lobby, playing, result, monitor
     let myName = '';
+    let authFailed = false; // 新增：用於記錄是否發生致命連線錯誤
     
     // 房間與遊戲狀態
     let currentRoomId = null;
@@ -379,23 +380,35 @@
     }
 
     // ==========================================
-    // 核心連線邏輯與認證
+    // 核心連線邏輯與認證 (強化容錯機制)
     // ==========================================
     
-    // 初始化 Firebase Auth (背景匿名登入)
     const initAuth = async () => {
-      try {
-        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+      let customTokenSuccess = false;
+      
+      // 1. 優先嘗試使用系統注入的 Custom Token 連線
+      if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+        try {
           await signInWithCustomToken(auth, __initial_auth_token);
-        } else {
-          await signInAnonymously(auth);
+          customTokenSuccess = true;
+        } catch (error) {
+          console.warn("Custom token auth failed, will fallback to anonymous:", error);
         }
-      } catch (error) {
-        console.error("Auth Error:", error);
-        const statusEl = document.getElementById('systemStatus');
-        statusEl.innerText = "🔴 無法連接至伺服器";
-        statusEl.classList.replace('text-yellow-400', 'text-red-500');
-        statusEl.classList.remove('animate-pulse');
+      }
+      
+      // 2. 若 Custom Token 失敗或不存在，強制啟用匿名連線
+      if (!customTokenSuccess) {
+        try {
+          await signInAnonymously(auth);
+        } catch (error) {
+          console.error("Anonymous Auth Error:", error);
+          authFailed = true; // 標記為致命失敗，阻止 UI 覆蓋錯誤訊息
+          const statusEl = document.getElementById('systemStatus');
+          statusEl.innerText = "🔴 無法連接至伺服器: " + (error.code || "驗證失敗");
+          statusEl.classList.remove('text-yellow-400', 'text-green-500');
+          statusEl.classList.add('text-red-500');
+          statusEl.classList.remove('animate-pulse');
+        }
       }
     };
     
@@ -406,8 +419,10 @@
       const gameActions = document.getElementById('gameActions');
 
       if (user) {
+        authFailed = false;
         statusEl.innerText = "🟢 已連線至全球伺服器";
-        statusEl.classList.replace('text-yellow-400', 'text-green-500');
+        statusEl.classList.remove('text-yellow-400', 'text-red-500');
+        statusEl.classList.add('text-green-500');
         statusEl.classList.remove('animate-pulse');
         
         // 啟用遊戲區塊
@@ -415,9 +430,13 @@
         
         setupLeaderboardListener();
       } else {
-        statusEl.innerText = "🟡 等待連線中...";
-        statusEl.classList.replace('text-green-500', 'text-yellow-400');
-        statusEl.classList.add('animate-pulse');
+        // 只有在非致命失敗的狀況下，才顯示「等待連線中」
+        if (!authFailed) {
+            statusEl.innerText = "🟡 等待連線中...";
+            statusEl.classList.remove('text-green-500', 'text-red-500');
+            statusEl.classList.add('text-yellow-400');
+            statusEl.classList.add('animate-pulse');
+        }
         
         // 停用遊戲區塊
         gameActions.classList.add('opacity-50', 'pointer-events-none');
