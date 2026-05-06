@@ -50,6 +50,29 @@
     .combo-text {
       animation: pulse-fast 0.6s infinite;
     }
+    
+    /* 燃燒特效 (10連擊以上) */
+    @keyframes fireGlow {
+      0%, 100% {
+        box-shadow: 0 0 15px 5px rgba(255, 69, 0, 0.7), inset 0 0 10px rgba(255, 140, 0, 0.5);
+        border-color: rgba(255, 69, 0, 0.8);
+      }
+      50% {
+        box-shadow: 0 0 30px 15px rgba(255, 140, 0, 0.9), inset 0 0 20px rgba(255, 215, 0, 0.7);
+        border-color: rgba(255, 215, 0, 1);
+      }
+    }
+    .on-fire-container {
+      animation: fireGlow 0.4s infinite ease-in-out;
+      background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,69,0,0.25)) !important;
+    }
+    @keyframes textFire {
+      0%, 100% { text-shadow: 0 0 10px rgba(255,69,0,0.8), 0 0 20px rgba(255,69,0,0.8); color: #fff3e0; }
+      50% { text-shadow: 0 0 20px rgba(255,215,0,0.9), 0 0 40px rgba(255,140,0,0.9); color: #ffffff; }
+    }
+    .on-fire-text {
+      animation: textFire 0.4s infinite ease-in-out;
+    }
   </style>
 </head>
 <body class="bg-slate-900 text-white font-sans overflow-hidden h-screen w-full">
@@ -376,6 +399,7 @@
         } else {
           // 練習模式：錯了進入檢討
           pState.isReviewing = true;
+          pState.isReady = false; // 強制取消準備狀態，必須確實看完檢討
         }
       }
       // 因為setTimeout會有延遲重繪，這裡先強制重繪一次確保狀態更新
@@ -437,21 +461,34 @@
       const container = document.getElementById(`p${pNum}-area`);
       const isPractice = (state.stage === 1 || state.stage === 3);
       
-      // 決定背景回饋顏色
+      // 1. 固定背景色，移除原本刺眼的背景切換與縮放動畫
       let bgClass = pNum === 1 ? 'bg-rose-900' : 'bg-blue-900';
-      if (pState.feedback === 'correct') bgClass = 'bg-emerald-500 scale-[1.02] z-20 shadow-2xl'; // 答對時更強烈的視覺回饋
-      if (pState.feedback === 'wrong') bgClass = 'bg-red-600 scale-[0.98]';
       
-      // 若為練習模式，下方增加空間給「準備按鈕」
-      container.className = `flex-1 relative transition-all duration-200 flex flex-col items-center justify-center p-6 ${isPractice ? 'pb-24 md:pb-28' : ''} ${bgClass}`;
+      // 2. 移除 transition-all 與 scale，讓版面保持穩定不跳動
+      container.className = `flex-1 relative flex flex-col items-center justify-center p-6 ${isPractice ? 'pb-24 md:pb-28' : ''} ${bgClass}`;
 
       let html = '';
 
+      // 3. 改用「柔和的半透明光暈層」來代替整面閃屏
+      let overlayColor = 'bg-transparent';
+      if (pState.feedback === 'correct') overlayColor = 'bg-green-300/10'; // 答對時只給 10% 透明度的微綠光
+      if (pState.feedback === 'wrong') overlayColor = 'bg-red-500/25';    // 答錯時給 25% 透明度的微紅光
+      
+      html += `<div class="absolute inset-0 ${overlayColor} z-0 pointer-events-none transition-colors duration-300"></div>`;
+
       // 正增強浮動動畫 (Praise Popup)
       if (pState.showPraise) {
-        let praiseText = '✨ 太棒了!';
-        if (pState.combo >= 5) praiseText = '🌟 神乎其技!';
-        else if (pState.combo >= 3) praiseText = '🔥 勢不可擋!';
+        const level1 = ['✨ 太棒了!', '✨ 你真棒!', '✨ 你真的好棒!'];
+        const level2 = ['🔥 勢不可擋!', '🔥 好帥好帥!'];
+        const level3 = ['🌟 神乎其技!', '🌟 你是傳說!'];
+        
+        let praiseText = '';
+        // 利用 animId (時間戳) 當作隨機種子，確保該次答對的文字在動畫期間不會因為重繪而閃動變化
+        const randIdx = pState.animId; 
+        
+        if (pState.combo >= 5) praiseText = level3[randIdx % level3.length];
+        else if (pState.combo >= 3) praiseText = level2[randIdx % level2.length];
+        else praiseText = level1[randIdx % level1.length];
 
         html += `
           <div class="absolute inset-0 z-50 flex items-center justify-center pointer-events-none">
@@ -533,14 +570,23 @@
 
         let stageTip = state.stage <= 2 ? '加減移項' : '乘除移項 (注意變號)';
 
+        // 判斷是否達成 10 連擊燃燒狀態
+        let qBoxClass = "bg-white/10 backdrop-blur-sm rounded-2xl px-6 md:px-12 py-8 w-full text-center shadow-lg border border-white/10 mb-8";
+        let qTextClass = "text-6xl lg:text-7xl font-bold text-white tracking-widest font-serif";
+        if (pState.combo >= 10) {
+          qBoxClass += " on-fire-container scale-[1.05] transition-transform duration-300";
+          qTextClass += " on-fire-text";
+          stageTip = '<span class="text-yellow-300 animate-pulse">🔥 火力全開！</span> ' + stageTip;
+        }
+
         html += `
           ${wrongsIndicators}
           <div class="z-10 flex flex-col items-center w-full max-w-2xl fade-in">
             <div class="text-white/60 text-sm md:text-base font-bold tracking-wider mb-2 uppercase text-center flex items-center gap-2">
               ${isPractice ? '🎯 練習模式' : '🔥 競賽模式'} : ${stageTip}
             </div>
-            <div class="bg-white/10 backdrop-blur-sm rounded-2xl px-6 md:px-12 py-8 w-full text-center shadow-lg border border-white/10 mb-8">
-              <h2 class="text-6xl lg:text-7xl font-bold text-white tracking-widest font-serif">
+            <div class="${qBoxClass}">
+              <h2 class="${qTextClass}">
                 ${pState.question.text}
               </h2>
             </div>
@@ -555,8 +601,8 @@
         `;
       }
 
-      // 如果是練習模式，加入「準備進入下一關」按鈕
-      if (isPractice) {
+      // 如果是練習模式，加入「準備進入下一關」按鈕 (檢討中不可見)
+      if (isPractice && !pState.isReviewing) {
         html += `
           <div class="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 w-full px-6 flex justify-center fade-in">
             <button onclick="toggleReady(${pNum})" class="px-8 py-3 md:py-4 rounded-full font-bold text-lg md:text-xl transition-all shadow-xl border-2 ${pState.isReady ? 'bg-green-500 border-green-400 text-white shadow-green-500/40 animate-pulse' : 'bg-slate-800 border-slate-600 text-white/80 hover:bg-slate-700 hover:text-white'}">
