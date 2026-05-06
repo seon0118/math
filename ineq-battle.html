@@ -1,0 +1,392 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import { Play, Trophy, RotateCcw, AlertCircle, Clock } from 'lucide-react';
+
+const STAGE_DURATION = 120; // 每個階段 120 秒 (2分鐘)
+
+// 工具函數：隨機整數
+const getRandomInt = (min, max) => {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+};
+
+// 工具函數：陣列洗牌
+const shuffleArray = (array) => {
+  const newArr = [...array];
+  for (let i = newArr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [newArr[i], newArr[j]] = [newArr[j], newArr[i]];
+  }
+  return newArr;
+};
+
+// 工具函數：翻轉不等式符號
+const flipOperator = (op) => {
+  const flips = { '>': '<', '<': '>', '≥': '≤', '≤': '≥' };
+  return flips[op];
+};
+
+// 獨立題目產生器 (移出 App 組件以利重複呼叫)
+const generateSingleQuestion = (stage) => {
+  const operators = ['>', '<', '≥', '≤'];
+  const op = operators[getRandomInt(0, 3)];
+  
+  let qText = '';
+  let correctVal = 0;
+  let correctOp = op;
+  let a, b, c;
+  let explanation = []; // 新增：解題步驟說明
+
+  if (stage === 1) {
+    // 第一階段: 加減移項 (x + a > b)
+    c = getRandomInt(-10, 10); // 正確答案的值 x > c
+    a = getRandomInt(-10, 10);
+    while (a === 0) a = getRandomInt(-10, 10);
+    b = c + a;
+    
+    let left = 'x';
+    if (a > 0) left += ` + ${a}`;
+    else left += ` - ${Math.abs(a)}`;
+    
+    qText = `${left} ${op} ${b}`;
+    correctVal = c;
+    correctOp = op; // 加減不變號
+
+    // 產生第一階段檢討步驟
+    explanation.push(`1️⃣ 題目：${qText}`);
+    const invA = a > 0 ? `- ${a}` : `+ ${Math.abs(a)}`;
+    explanation.push(`2️⃣ 移項：將 ${a > 0 ? `+ ${a}` : `- ${Math.abs(a)}`} 移到右邊變成 ${invA}`);
+    explanation.push(`3️⃣ 計算：x ${op} ${b} ${invA}`);
+
+  } else {
+    // 第二階段: 乘除移項 (ax > b)
+    c = getRandomInt(-10, 10);
+    a = getRandomInt(-10, 10);
+    while (a === 0 || a === 1) a = getRandomInt(-10, 10); // 確保需除以係數，且可能為負
+    b = a * c;
+    
+    let left = `${a}x`;
+    if (a === -1) left = `-x`;
+    
+    qText = `${left} ${op} ${b}`;
+    correctVal = c;
+    if (a < 0) {
+      correctOp = flipOperator(op); // 除以負數要變號
+    } else {
+      correctOp = op;
+    }
+
+    // 產生第二階段檢討步驟
+    explanation.push(`1️⃣ 題目：${qText}`);
+    explanation.push(`2️⃣ 移項：兩邊同除以 ${a}`);
+    if (a < 0) {
+      explanation.push(`⚠️ 陷阱：除以負數，不等號「${op}」必須變號為「${correctOp}」！`);
+    } else {
+      explanation.push(`💡 提示：除以正數，不等號方向不變。`);
+    }
+  }
+
+  // 產生選項
+  const formatOpt = (o, v) => `x ${o} ${v}`;
+  const optionsSet = new Set();
+  const correctStr = formatOpt(correctOp, correctVal);
+  optionsSet.add(correctStr);
+  
+  // 加上最後一步解答說明
+  explanation.push(`✅ 答案：${correctStr}`);
+
+  // 誘答1: 忘記變號或亂變號
+  optionsSet.add(formatOpt(flipOperator(correctOp), correctVal));
+  
+  // 誘答2: 加減算錯
+  let wrongVal1 = correctVal + (getRandomInt(1, 3) * (Math.random() > 0.5 ? 1 : -1));
+  optionsSet.add(formatOpt(correctOp, wrongVal1));
+  
+  // 誘答3: 亂數
+  while (optionsSet.size < 4) {
+    let rndVal = correctVal + getRandomInt(-5, 5);
+    let rndOp = operators[getRandomInt(0, 3)];
+    optionsSet.add(formatOpt(rndOp, rndVal));
+  }
+
+  return {
+    text: qText,
+    correctAnswer: correctStr,
+    options: shuffleArray(Array.from(optionsSet)),
+    stage: stage,
+    explanation: explanation
+  };
+};
+
+export default function App() {
+  const [gameState, setGameState] = useState('menu'); // 'menu', 'playing', 'gameover'
+  const [currentStage, setCurrentStage] = useState(1);
+  const [timeLeft, setTimeLeft] = useState(STAGE_DURATION);
+  
+  const [p1Score, setP1Score] = useState(0); // 玩家1 (左側)
+  const [p2Score, setP2Score] = useState(0); // 玩家2 (右側)
+  const [p1Question, setP1Question] = useState(null); 
+  const [p2Question, setP2Question] = useState(null);
+  
+  const [p1Reviewing, setP1Reviewing] = useState(false); // 玩家1是否在檢討模式
+  const [p2Reviewing, setP2Reviewing] = useState(false); // 玩家2是否在檢討模式
+  const [feedback, setFeedback] = useState(null); 
+
+  // 計時器邏輯
+  useEffect(() => {
+    if (gameState !== 'playing') return;
+
+    const timerId = setInterval(() => {
+      setTimeLeft(prev => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+
+    return () => clearInterval(timerId);
+  }, [gameState]);
+
+  // 階段切換與結束邏輯
+  useEffect(() => {
+    if (gameState === 'playing' && timeLeft === 0) {
+      if (currentStage === 1) {
+        // 進入第二階段
+        setCurrentStage(2);
+        setTimeLeft(STAGE_DURATION);
+        setP1Reviewing(false); // 強制解除檢討模式
+        setP2Reviewing(false);
+        setP1Question(generateSingleQuestion(2));
+        setP2Question(generateSingleQuestion(2));
+      } else {
+        // 遊戲結束
+        setGameState('gameover');
+      }
+    }
+  }, [timeLeft, currentStage, gameState]);
+
+  // 初始化遊戲
+  const startGame = () => {
+    setP1Score(0);
+    setP2Score(0);
+    setCurrentStage(1);
+    setTimeLeft(STAGE_DURATION);
+    setP1Reviewing(false);
+    setP2Reviewing(false);
+    setP1Question(generateSingleQuestion(1));
+    setP2Question(generateSingleQuestion(1));
+    setGameState('playing');
+  };
+
+  // 處理作答
+  const handleAnswer = (player, answer) => {
+    if (gameState !== 'playing') return;
+
+    const currentQuestion = player === 1 ? p1Question : p2Question;
+    const isCorrect = answer === currentQuestion.correctAnswer;
+    
+    setFeedback({ player, status: isCorrect ? 'correct' : 'wrong' });
+    setTimeout(() => setFeedback(null), 300);
+
+    if (isCorrect) {
+      if (player === 1) {
+        setP1Score(s => s + 1);
+        setP1Question(generateSingleQuestion(currentStage));
+      } else {
+        setP2Score(s => s + 1);
+        setP2Question(generateSingleQuestion(currentStage));
+      }
+    } else {
+      // 答錯扣1分，並進入檢討模式
+      if (player === 1) {
+        setP1Score(s => Math.max(0, s - 1));
+        setP1Reviewing(true);
+      } else {
+        setP2Score(s => Math.max(0, s - 1));
+        setP2Reviewing(true);
+      }
+    }
+  };
+
+  // 解除檢討模式並給予新題目
+  const dismissReview = (player) => {
+    if (player === 1) {
+      setP1Reviewing(false);
+      setP1Question(generateSingleQuestion(currentStage));
+    } else {
+      setP2Reviewing(false);
+      setP2Question(generateSingleQuestion(currentStage));
+    }
+  };
+
+  // --- 畫面組件 ---
+
+  if (gameState === 'menu') {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-slate-900 text-white p-4 font-sans">
+        <div className="max-w-md w-full bg-slate-800 rounded-3xl p-8 shadow-2xl border border-slate-700 text-center">
+          <Clock className="w-20 h-20 mx-auto text-yellow-400 mb-6" />
+          <h1 className="text-4xl font-bold mb-2">不等式限時戰</h1>
+          <p className="text-slate-400 mb-8">同側並排雙人觸控遊戲</p>
+          
+          <div className="bg-slate-700/50 rounded-xl p-4 mb-8 text-left text-sm space-y-2">
+            <h3 className="font-bold text-lg mb-2 text-center text-blue-300">遊戲規則</h3>
+            <p>1. 兩人坐在同一側，分為左右兩邊各自刷題。</p>
+            <p>2. 答對得 1 分，<span className="text-red-400 font-bold">答錯扣 1 分並強制進入檢討模式</span>。</p>
+            <p>3. <b>第一階段 (2分鐘)</b>：基礎加減移項。</p>
+            <p>4. <b>第二階段 (2分鐘)</b>：乘除移項，注意負數變號！</p>
+            <p className="text-center font-bold text-yellow-400 mt-4 !text-base">時間內爭取最高分！</p>
+          </div>
+
+          <button 
+            onClick={startGame}
+            className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white font-bold py-4 px-8 rounded-full text-xl flex items-center justify-center gap-2 transition-transform active:scale-95 shadow-lg shadow-green-500/30"
+          >
+            <Play fill="currentColor" /> 開始計時對戰
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (gameState === 'gameover') {
+    let winnerText = '';
+    let winnerColor = 'text-yellow-400';
+    if (p1Score > p2Score) {
+      winnerText = '玩家 1 (左側) 獲勝！';
+      winnerColor = 'text-red-400';
+    } else if (p2Score > p1Score) {
+      winnerText = '玩家 2 (右側) 獲勝！';
+      winnerColor = 'text-blue-400';
+    } else {
+      winnerText = '雙方平手！';
+    }
+
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-slate-900 text-white p-4">
+        <div className="max-w-md w-full bg-slate-800 rounded-3xl p-8 shadow-2xl border border-slate-700 text-center">
+          <Trophy className={`w-24 h-24 mx-auto mb-6 ${winnerColor}`} />
+          <h1 className="text-5xl font-bold mb-4">時間到！</h1>
+          <p className="text-2xl mb-8">
+            <span className={`font-bold ${winnerColor}`}>{winnerText}</span>
+          </p>
+          
+          <div className="flex justify-center gap-8 mb-10 text-xl">
+            <div className="text-red-400 font-bold">玩家1: {p1Score} 分</div>
+            <div className="text-blue-400 font-bold">玩家2: {p2Score} 分</div>
+          </div>
+
+          <button 
+            onClick={startGame}
+            className="w-full bg-slate-700 hover:bg-slate-600 text-white font-bold py-4 px-8 rounded-full text-xl flex items-center justify-center gap-2 transition-transform active:scale-95"
+          >
+            <RotateCcw /> 再挑戰一次
+          </button>
+          <button 
+            onClick={() => setGameState('menu')}
+            className="w-full mt-4 text-slate-400 hover:text-white py-2"
+          >
+            回主畫面
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // 遊戲畫面：共用的玩家區域組件
+  const PlayerArea = ({ playerId, score, question, bgColor, isReviewing }) => {
+    const isFeedbackActive = feedback?.player === playerId;
+    const feedbackBg = isFeedbackActive 
+      ? (feedback.status === 'correct' ? 'bg-green-500/80' : 'bg-red-500/80') 
+      : 'bg-transparent';
+
+    return (
+      <div className={`relative flex-1 flex flex-col items-center justify-center p-6 ${bgColor} transition-colors duration-300`}>
+        {/* 背景回饋層 */}
+        <div className={`absolute inset-0 ${feedbackBg} transition-colors duration-200 pointer-events-none z-0`}></div>
+        
+        {/* 分數顯示 */}
+        <div className="absolute top-4 left-6 z-10 text-white/80 font-bold text-2xl flex items-center gap-2">
+          <span>玩家 {playerId}</span>
+          <span className="bg-white/20 px-3 py-1 rounded-lg text-white">{score} 分</span>
+        </div>
+
+        {/* 題目與作答區 */}
+        <div className="z-10 flex flex-col items-center w-full max-w-2xl">
+          {isReviewing ? (
+            // --- 檢討模式面板 ---
+            <div className="bg-slate-800/95 border-2 border-red-500/50 rounded-3xl p-6 md:p-8 w-full shadow-2xl flex flex-col items-center animate-in fade-in zoom-in duration-300">
+              <h3 className="text-red-400 font-bold mb-6 text-2xl md:text-3xl flex items-center gap-2">
+                <AlertCircle size={32} /> 答錯囉！一起來檢討
+              </h3>
+              <div className="text-left w-full space-y-3 mb-8">
+                {question?.explanation.map((step, idx) => (
+                  <div key={idx} className={`text-white text-lg md:text-xl p-3 rounded-lg ${step.includes('⚠️') ? 'bg-red-900/50 border border-red-500/30' : 'bg-slate-700/50'}`}>
+                    {step}
+                  </div>
+                ))}
+              </div>
+              <button
+                onClick={() => dismissReview(playerId)}
+                className="bg-green-600 hover:bg-green-500 text-white font-bold py-4 px-12 rounded-xl text-xl md:text-2xl transition-transform active:scale-95 w-full shadow-lg"
+              >
+                我懂了，下一題！
+              </button>
+            </div>
+          ) : (
+            // --- 正常作答模式 ---
+            <>
+              <div className="text-white/60 text-sm font-bold tracking-wider mb-2 uppercase text-center">
+                {currentStage === 1 ? '⭐ 第一階段 (加減)' : '⚠️ 第二階段 (注意變號)'}
+              </div>
+              <div className="bg-white/10 backdrop-blur-sm rounded-2xl px-8 md:px-12 py-8 w-full text-center shadow-lg border border-white/10 mb-8">
+                <h2 className="text-5xl lg:text-7xl font-bold text-white tracking-widest font-serif">
+                  {question?.text}
+                </h2>
+              </div>
+
+              {/* 選項區 */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+                {question?.options.map((opt, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => handleAnswer(playerId, opt)}
+                    className="bg-white hover:bg-gray-100 text-slate-800 text-3xl md:text-4xl font-bold py-6 rounded-2xl shadow-md transition-transform active:scale-95 active:bg-gray-300 font-serif"
+                  >
+                    {opt}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="flex flex-row h-screen w-full overflow-hidden bg-slate-900 font-sans select-none">
+      {/* 玩家 1 區域 (左側) */}
+      <PlayerArea 
+        playerId={1} 
+        score={p1Score} 
+        question={p1Question}
+        bgColor="bg-rose-900" 
+        isReviewing={p1Reviewing}
+      />
+
+      {/* 中央分隔線與計時器 */}
+      <div className="w-4 md:w-6 bg-slate-800 h-full relative z-20 flex flex-col items-center justify-center shadow-2xl border-x-2 border-slate-900">
+         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-900 border-2 border-yellow-400 text-white px-4 py-6 rounded-full font-bold flex flex-col items-center shadow-[0_0_20px_rgba(250,204,21,0.4)] whitespace-nowrap">
+            <span className="text-xs md:text-sm text-yellow-400 mb-1 tracking-widest">STAGE {currentStage}</span>
+            <span className="text-3xl md:text-4xl font-mono text-white">
+              {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
+            </span>
+         </div>
+      </div>
+
+      {/* 玩家 2 區域 (右側) */}
+      <PlayerArea 
+        playerId={2} 
+        score={p2Score} 
+        question={p2Question}
+        bgColor="bg-blue-900" 
+        isReviewing={p2Reviewing}
+      />
+    </div>
+  );
+}
