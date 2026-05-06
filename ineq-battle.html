@@ -32,6 +32,24 @@
       from { opacity: 0; transform: scale(0.95); }
       to { opacity: 1; transform: scale(1); }
     }
+    
+    /* 正增強動畫 */
+    @keyframes popOut {
+      0% { opacity: 0; transform: scale(0.5) translateY(20px); }
+      50% { opacity: 1; transform: scale(1.2) translateY(-10px); }
+      100% { opacity: 0; transform: scale(1) translateY(-40px); }
+    }
+    .animate-pop-out {
+      animation: popOut 0.8s ease-out forwards;
+      pointer-events: none;
+    }
+    @keyframes pulse-fast {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+    .combo-text {
+      animation: pulse-fast 0.6s infinite;
+    }
   </style>
 </head>
 <body class="bg-slate-900 text-white font-sans overflow-hidden h-screen w-full">
@@ -45,9 +63,9 @@
       
       <div class="bg-slate-700/50 rounded-xl p-6 mb-8 text-left text-sm md:text-base space-y-3">
         <h3 class="font-bold text-xl mb-3 text-center text-blue-300">🎮 遊戲規則 (共 6 分鐘)</h3>
-        <p><span class="text-green-400 font-bold">階段一 (1分鐘)：加減練習</span> ➜ 不計分，錯題即時檢討。</p>
+        <p><span class="text-green-400 font-bold">階段一 (1分鐘)：加減練習</span> ➜ 不計分，錯題即時檢討。<b>(雙方OK可跳過)</b></p>
         <p><span class="text-red-400 font-bold">階段二 (2分鐘)：加減競賽</span> ➜ 答對+1，答錯-1。<b>連錯3題凍結10秒！</b></p>
-        <p><span class="text-green-400 font-bold">階段三 (1分鐘)：乘除練習</span> ➜ 不計分，錯題即時檢討 (注意變號)。</p>
+        <p><span class="text-green-400 font-bold">階段三 (1分鐘)：乘除練習</span> ➜ 不計分，錯題即時檢討。<b>(雙方OK可跳過)</b></p>
         <p><span class="text-red-400 font-bold">階段四 (2分鐘)：乘除競賽</span> ➜ 答對+1，答錯-1。<b>連錯3題凍結10秒！</b></p>
       </div>
 
@@ -107,8 +125,8 @@
       stage: 1,
       timeLeft: 0,
       timerId: null,
-      p1: { score: 0, question: null, isReviewing: false, wrongs: 0, freezeTime: 0, feedback: null },
-      p2: { score: 0, question: null, isReviewing: false, wrongs: 0, freezeTime: 0, feedback: null }
+      p1: { score: 0, question: null, isReviewing: false, wrongs: 0, freezeTime: 0, feedback: null, isReady: false, combo: 0, showPraise: false, lastGain: 0, animId: 0 },
+      p2: { score: 0, question: null, isReviewing: false, wrongs: 0, freezeTime: 0, feedback: null, isReady: false, combo: 0, showPraise: false, lastGain: 0, animId: 0 }
     };
 
     // === 工具函數 ===
@@ -211,6 +229,9 @@
         p.isReviewing = false;
         p.wrongs = 0;
         p.freezeTime = 0;
+        p.isReady = false;
+        p.combo = 0;
+        p.showPraise = false;
         p.question = generateQuestion(1); // 階段1是加減
       });
 
@@ -254,22 +275,29 @@
         renderCenter();
       } else {
         // 階段切換
-        if (state.stage < 4) {
-          state.stage++;
-          state.timeLeft = STAGE_TIMES[state.stage - 1];
-          
-          const qType = (state.stage === 1 || state.stage === 2) ? 1 : 2;
-          [state.p1, state.p2].forEach(p => {
-            p.isReviewing = false;
-            p.wrongs = 0;
-            p.freezeTime = 0;
-            p.question = generateQuestion(qType);
-          });
-          renderAll();
-        } else {
-          // 遊戲結束
-          endGame();
-        }
+        goToNextStage();
+      }
+    }
+
+    function goToNextStage() {
+      if (state.stage < 4) {
+        state.stage++;
+        state.timeLeft = STAGE_TIMES[state.stage - 1];
+        
+        const qType = (state.stage === 1 || state.stage === 2) ? 1 : 2;
+        [state.p1, state.p2].forEach(p => {
+          p.isReviewing = false;
+          p.wrongs = 0;
+          p.freezeTime = 0;
+          p.isReady = false; // 重置準備狀態
+          p.combo = 0;
+          p.showPraise = false;
+          p.question = generateQuestion(qType);
+        });
+        renderAll();
+      } else {
+        // 遊戲結束
+        endGame();
       }
     }
 
@@ -313,10 +341,31 @@
       }, 300);
 
       if (isCorrect) {
-        if (!isPractice) pState.score++;
+        pState.combo++;
+        let points = 1;
+        // 連擊加分系統：連對3題+2分，連對5題+3分
+        if (pState.combo >= 5) points = 3;
+        else if (pState.combo >= 3) points = 2;
+
+        if (!isPractice) pState.score += points;
+        
+        pState.lastGain = points;
+        pState.showPraise = true;
         pState.wrongs = 0;
+        
+        // 設定獨立ID防止快速點擊導致的動畫提早消失
+        const currentAnimId = Date.now();
+        pState.animId = currentAnimId;
+        setTimeout(() => {
+          if (pState.animId === currentAnimId) {
+            pState.showPraise = false;
+            if (state.view === 'playing') renderPlayer(pNum);
+          }
+        }, 800);
+
         pState.question = generateQuestion(qType);
       } else {
+        pState.combo = 0; // 答錯中斷連擊
         if (!isPractice) {
           pState.score = Math.max(0, pState.score - 1);
           pState.wrongs++;
@@ -339,6 +388,20 @@
       pState.isReviewing = false;
       pState.question = generateQuestion(qType);
       renderPlayer(pNum);
+    };
+
+    window.toggleReady = function(pNum) {
+      if (state.stage !== 1 && state.stage !== 3) return; // 僅限練習階段可跳過
+      
+      const pState = pNum === 1 ? state.p1 : state.p2;
+      pState.isReady = !pState.isReady; // 切換準備狀態
+
+      // 檢查是否雙方都準備好了
+      if (state.p1.isReady && state.p2.isReady) {
+        goToNextStage();
+      } else {
+        renderPlayer(pNum);
+      }
     };
 
     // === 渲染邏輯 ===
@@ -376,11 +439,43 @@
       
       // 決定背景回饋顏色
       let bgClass = pNum === 1 ? 'bg-rose-900' : 'bg-blue-900';
-      if (pState.feedback === 'correct') bgClass = 'bg-green-600';
-      if (pState.feedback === 'wrong') bgClass = 'bg-red-600';
-      container.className = `flex-1 relative transition-colors duration-200 flex flex-col items-center justify-center p-6 ${bgClass}`;
+      if (pState.feedback === 'correct') bgClass = 'bg-emerald-500 scale-[1.02] z-20 shadow-2xl'; // 答對時更強烈的視覺回饋
+      if (pState.feedback === 'wrong') bgClass = 'bg-red-600 scale-[0.98]';
+      
+      // 若為練習模式，下方增加空間給「準備按鈕」
+      container.className = `flex-1 relative transition-all duration-200 flex flex-col items-center justify-center p-6 ${isPractice ? 'pb-24 md:pb-28' : ''} ${bgClass}`;
 
       let html = '';
+
+      // 正增強浮動動畫 (Praise Popup)
+      if (pState.showPraise) {
+        let praiseText = '✨ 太棒了!';
+        if (pState.combo >= 5) praiseText = '🌟 神乎其技!';
+        else if (pState.combo >= 3) praiseText = '🔥 勢不可擋!';
+
+        html += `
+          <div class="absolute inset-0 z-50 flex items-center justify-center pointer-events-none">
+            <div class="animate-pop-out text-5xl md:text-7xl font-black text-yellow-300 drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)] flex flex-col items-center">
+              <span>${praiseText}</span>
+              ${!isPractice ? `<span class="text-4xl md:text-5xl text-green-300 mt-2 font-mono">+${pState.lastGain}</span>` : ''}
+            </div>
+          </div>
+        `;
+      }
+
+      // 連擊顯示標籤
+      if (pState.combo >= 2) {
+        let bonusTip = '';
+        if (!isPractice) {
+          if (pState.combo >= 5) bonusTip = '<span class="text-xs ml-1 text-yellow-200">(每題+3分)</span>';
+          else if (pState.combo >= 3) bonusTip = '<span class="text-xs ml-1 text-yellow-200">(每題+2分)</span>';
+        }
+        html += `
+          <div class="absolute top-16 z-20 bg-gradient-to-r from-orange-500 to-red-600 text-white px-5 py-1.5 rounded-full font-black text-xl md:text-2xl shadow-[0_0_15px_rgba(249,115,22,0.8)] combo-text border-2 border-yellow-300">
+            🔥 ${pState.combo} 連擊! ${bonusTip}
+          </div>
+        `;
+      }
 
       // 左上角資訊列
       html += `
@@ -456,6 +551,17 @@
                 </button>
               `).join('')}
             </div>
+          </div>
+        `;
+      }
+
+      // 如果是練習模式，加入「準備進入下一關」按鈕
+      if (isPractice) {
+        html += `
+          <div class="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 w-full px-6 flex justify-center fade-in">
+            <button onclick="toggleReady(${pNum})" class="px-8 py-3 md:py-4 rounded-full font-bold text-lg md:text-xl transition-all shadow-xl border-2 ${pState.isReady ? 'bg-green-500 border-green-400 text-white shadow-green-500/40 animate-pulse' : 'bg-slate-800 border-slate-600 text-white/80 hover:bg-slate-700 hover:text-white'}">
+              ${pState.isReady ? '✅ 已準備好，等待對手...' : '👌 練習夠了，進入競賽'}
+            </button>
           </div>
         `;
       }
