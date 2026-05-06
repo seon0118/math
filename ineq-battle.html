@@ -63,15 +63,14 @@
       }
     }
     .on-fire-container {
-      animation: fireGlow 0.4s infinite ease-in-out;
+      /* 將外框動畫從原本極快的 0.4s 改為舒緩的 1.5s 呼吸燈效果 */
+      animation: fireGlow 1.5s infinite ease-in-out;
       background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,69,0,0.25)) !important;
     }
-    @keyframes textFire {
-      0%, 100% { text-shadow: 0 0 10px rgba(255,69,0,0.8), 0 0 20px rgba(255,69,0,0.8); color: #fff3e0; }
-      50% { text-shadow: 0 0 20px rgba(255,215,0,0.9), 0 0 40px rgba(255,140,0,0.9); color: #ffffff; }
-    }
     .on-fire-text {
-      animation: textFire 0.4s infinite ease-in-out;
+      /* 移除文字閃爍動畫，改為固定的高溫發光文字陰影 */
+      color: #fff3e0;
+      text-shadow: 0 0 15px rgba(255,69,0,0.8), 0 0 30px rgba(255,140,0,0.8);
     }
   </style>
 </head>
