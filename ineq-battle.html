@@ -3,17 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>不等式四階段對戰</title>
+  <title>一元一次不等式：學習與對戰</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    /* 避免觸控設備的文字選取與雙擊放大 */
     body {
       user-select: none;
       -webkit-user-select: none;
       touch-action: manipulation;
     }
     
-    /* 凍結動畫 */
+    /* 動畫區 */
     @keyframes freezePulse {
       0% { background-color: rgba(14, 165, 233, 0.8); }
       50% { background-color: rgba(56, 189, 248, 0.9); }
@@ -23,17 +22,13 @@
       animation: freezePulse 2s infinite;
       backdrop-filter: blur(8px);
     }
-
-    /* 淡入動畫 (僅保留給檢討畫面與彈出按鈕使用) */
     .fade-in {
-      animation: fadeIn 0.3s ease-in-out;
+      animation: fadeIn 0.5s ease-out forwards;
     }
     @keyframes fadeIn {
-      from { opacity: 0; transform: scale(0.95); }
-      to { opacity: 1; transform: scale(1); }
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 1; transform: translateY(0); }
     }
-    
-    /* 正增強動畫 */
     @keyframes popOut {
       0% { opacity: 0; transform: scale(0.5) translateY(20px); }
       50% { opacity: 1; transform: scale(1.2) translateY(-10px); }
@@ -53,14 +48,8 @@
     
     /* 燃燒特效 (10連擊以上) */
     @keyframes fireGlow {
-      0%, 100% {
-        box-shadow: 0 0 15px 5px rgba(255, 69, 0, 0.7), inset 0 0 10px rgba(255, 140, 0, 0.5);
-        border-color: rgba(255, 69, 0, 0.8);
-      }
-      50% {
-        box-shadow: 0 0 30px 15px rgba(255, 140, 0, 0.9), inset 0 0 20px rgba(255, 215, 0, 0.7);
-        border-color: rgba(255, 215, 0, 1);
-      }
+      0%, 100% { box-shadow: 0 0 15px 5px rgba(255, 69, 0, 0.7), inset 0 0 10px rgba(255, 140, 0, 0.5); border-color: rgba(255, 69, 0, 0.8); }
+      50% { box-shadow: 0 0 30px 15px rgba(255, 140, 0, 0.9), inset 0 0 20px rgba(255, 215, 0, 0.7); border-color: rgba(255, 215, 0, 1); }
     }
     .on-fire-container {
       animation: fireGlow 1.5s infinite ease-in-out;
@@ -77,10 +66,8 @@
       100% { opacity: 1; transform: scale(1) translateY(0); }
     }
     .animate-panel-in {
-      /* 帶有彈性的果凍出場效果，並且會停留在最後狀態 */
       animation: panelEntrance 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
     }
-
     @keyframes confettiFall {
       0% { transform: translateY(-10vh) rotate(0deg) scale(1); opacity: 1; }
       100% { transform: translateY(110vh) rotate(720deg) scale(0.5); opacity: 0; }
@@ -108,6 +95,21 @@
       -webkit-backdrop-filter: blur(16px);
       border: 1px solid rgba(255, 255, 255, 0.15);
     }
+
+    /* 學習操作區特效 */
+    @keyframes signFlip {
+      0% { transform: rotateX(0deg) scale(1); color: #fff; }
+      50% { transform: rotateX(90deg) scale(1.8); color: #fbbf24; text-shadow: 0 0 20px rgba(251, 191, 36, 1); }
+      100% { transform: rotateX(180deg) scale(1.2); color: #ef4444; text-shadow: 0 0 15px rgba(239, 68, 68, 0.8); }
+    }
+    .animate-flip {
+      animation: signFlip 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+      display: inline-block;
+    }
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
   </style>
 </head>
 <body class="bg-slate-900 text-white font-sans overflow-hidden h-screen w-full">
@@ -115,58 +117,93 @@
   <!-- ================= 主選單 ================= -->
   <div id="menu-screen" class="absolute inset-0 z-50 flex flex-col items-center justify-center bg-slate-900 p-4">
     <div class="max-w-xl w-full bg-slate-800 rounded-3xl p-8 shadow-2xl border border-slate-700 text-center">
-      <svg class="w-20 h-20 mx-auto text-yellow-400 mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-      <h1 class="text-4xl md:text-5xl font-bold mb-4">不等式：四階段極限挑戰</h1>
-      <p class="text-slate-400 mb-8 text-lg">同側並排・雙人觸控・刷題與競賽</p>
+      <svg class="w-20 h-20 mx-auto text-blue-400 mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+      <h1 class="text-4xl md:text-5xl font-bold mb-4">一元一次不等式</h1>
+      <p class="text-slate-400 mb-8 text-lg">概念操作演示 × 四階段極限挑戰</p>
       
-      <div class="bg-slate-700/50 rounded-xl p-6 mb-8 text-left text-sm md:text-base space-y-3">
-        <h3 class="font-bold text-xl mb-3 text-center text-blue-300">🎮 遊戲規則 (共 6 分鐘)</h3>
-        <p><span class="text-green-400 font-bold">階段一 (1分鐘)：加減練習</span> ➜ 不計分，錯題即時檢討。<b>(雙方OK可跳過)</b></p>
-        <p><span class="text-red-400 font-bold">階段二 (2分鐘)：加減競賽</span> ➜ 答對+1，答錯-1。<b>連錯3題凍結10秒！</b></p>
-        <p><span class="text-green-400 font-bold">階段三 (1分鐘)：乘除練習</span> ➜ 不計分，錯題即時檢討。<b>(雙方OK可跳過)</b></p>
-        <p><span class="text-red-400 font-bold">階段四 (2分鐘)：乘除競賽</span> ➜ 答對+1，答錯-1。<b>連錯3題凍結10秒！</b></p>
-      </div>
+      <div class="flex flex-col gap-4 mt-6">
+        <button onclick="goToOperation()" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-4 px-8 rounded-2xl text-2xl flex items-center justify-center gap-3 transition-transform active:scale-95 shadow-lg shadow-blue-500/30">
+          <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+          📖 學習操作篇 (含隨堂練習)
+        </button>
 
-      <button onclick="startGame()" class="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white font-bold py-5 px-8 rounded-full text-2xl flex items-center justify-center gap-3 transition-transform active:scale-95 shadow-lg shadow-green-500/30">
-        <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path></svg>
-        開始四階段挑戰
-      </button>
+        <div class="flex flex-col md:flex-row gap-4 w-full">
+          <button onclick="startGame('single')" class="flex-1 bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-400 hover:to-teal-400 text-white font-bold py-4 px-4 rounded-2xl text-xl md:text-2xl flex items-center justify-center gap-2 transition-transform active:scale-95 shadow-lg shadow-cyan-500/30">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+            單人練習
+          </button>
+          <button onclick="startGame('dual')" class="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white font-bold py-4 px-4 rounded-2xl text-xl md:text-2xl flex items-center justify-center gap-2 transition-transform active:scale-95 shadow-lg shadow-green-500/30">
+            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"></path></svg>
+            雙人對戰
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- ================= 遊戲畫面 ================= -->
-  <div id="game-screen" class="hidden flex flex-row h-full w-full">
-    <!-- 玩家 1 (左側) -->
-    <div id="p1-area" class="flex-1 relative bg-rose-900 transition-colors duration-300 flex flex-col items-center justify-center p-6"></div>
+  <!-- ================= 學習操作篇 ================= -->
+  <div id="operation-screen" class="hidden absolute inset-0 z-50 bg-slate-900 flex flex-col overflow-y-auto scroll-smooth">
+    <div class="w-full bg-slate-800/90 backdrop-blur-md p-4 border-b border-slate-700 flex justify-between items-center sticky top-0 z-30 shadow-md">
+      <h2 class="text-xl md:text-2xl font-bold flex items-center gap-2"><span class="text-blue-400">📖 學習操作篇</span>：移項大解密</h2>
+      <button onclick="goToMenu()" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-sm font-bold transition-colors">返回主選單</button>
+    </div>
 
-    <!-- 中央分隔線與計時器 -->
-    <div class="w-4 md:w-6 bg-slate-800 h-full relative z-20 flex flex-col items-center justify-center shadow-2xl border-x-2 border-slate-900">
+    <div class="flex justify-center flex-wrap gap-2 md:gap-4 p-4 mt-2 sticky top-16 z-20 bg-slate-900/95 backdrop-blur-sm border-b border-slate-800 shadow-sm">
+      <button id="tab-addsub" onclick="setDemoType('addsub')" class="px-6 py-2 rounded-full font-bold text-base md:text-lg transition-all border-2 border-transparent">加減移項篇</button>
+      <button id="tab-multdiv" onclick="setDemoType('multdiv')" class="px-6 py-2 rounded-full font-bold text-base md:text-lg transition-all border-2 border-transparent">乘除移項篇</button>
+      <button id="tab-mixed" onclick="setDemoType('mixed')" class="px-6 py-2 rounded-full font-bold text-base md:text-lg transition-all border-2 border-transparent">綜合移項篇</button>
+    </div>
+
+    <div id="demo-dynamic-content" class="flex-1 w-full max-w-5xl mx-auto p-4 md:p-8 flex flex-col gap-6">
+      <!-- 內容由 JS 產生 -->
+    </div>
+
+    <div class="w-full max-w-5xl mx-auto p-4 md:p-8 pb-20 flex flex-col items-center">
+      <button id="btn-demo-next" onclick="nextDemoStep()" class="w-full md:w-auto md:min-w-[300px] px-10 py-5 bg-yellow-500 hover:bg-yellow-400 text-slate-900 font-black rounded-full text-xl md:text-2xl transition-transform active:scale-95 shadow-[0_0_20px_rgba(234,179,8,0.4)]">
+        下一步 ⏭
+      </button>
+
+      <div id="btn-go-game" class="hidden w-full flex flex-col md:flex-row gap-4 mt-4 animate-panel-in">
+        <button onclick="startGame('single')" class="flex-1 px-8 py-5 bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-400 hover:to-teal-400 text-white font-bold rounded-full text-xl md:text-2xl transition-transform active:scale-95 shadow-[0_0_20px_rgba(6,182,212,0.4)] flex items-center justify-center gap-2">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+          前往單人練習
+        </button>
+        <button onclick="startGame('dual')" class="flex-1 px-8 py-5 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white font-bold rounded-full text-xl md:text-2xl transition-transform active:scale-95 shadow-[0_0_20px_rgba(16,185,129,0.4)] flex items-center justify-center gap-2">
+          <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"></path></svg>
+          邀請對手對戰
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= 遊戲篇 (實戰挑戰) ================= -->
+  <div id="game-screen" class="hidden flex h-full w-full">
+    <!-- 左側 (P1 / 單人) -->
+    <div id="p1-area" class="flex-1 relative transition-colors duration-300 flex flex-col items-center justify-center p-6"></div>
+
+    <!-- 中央分隔線與計時器 (雙人專用) -->
+    <div id="center-timer-area" class="w-4 md:w-6 bg-slate-800 h-full relative z-20 flex flex-col items-center justify-center shadow-2xl border-x-2 border-slate-900">
       <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-900 border-2 border-yellow-400 text-white px-6 py-8 rounded-full font-bold flex flex-col items-center shadow-[0_0_20px_rgba(250,204,21,0.5)] whitespace-nowrap">
         <span id="center-stage-text" class="text-sm md:text-base text-yellow-400 mb-2 tracking-widest font-black">STAGE 1</span>
         <span id="center-time-text" class="text-4xl md:text-5xl font-mono text-white">1:00</span>
       </div>
     </div>
 
-    <!-- 玩家 2 (右側) -->
-    <div id="p2-area" class="flex-1 relative bg-blue-900 transition-colors duration-300 flex flex-col items-center justify-center p-6"></div>
+    <!-- 右側 (P2) -->
+    <div id="p2-area" class="flex-1 relative transition-colors duration-300 flex flex-col items-center justify-center p-6"></div>
   </div>
 
   <!-- ================= 結算畫面 ================= -->
   <div id="gameover-screen" class="hidden absolute inset-0 z-50 flex flex-col items-center justify-center p-4 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-slate-800 to-slate-950 overflow-hidden">
-    
-    <!-- 彩帶容器 -->
     <div id="confetti-container" class="absolute inset-0 pointer-events-none z-40"></div>
-
-    <!-- 這裡將 animate-pop-out 改成了專屬的 animate-panel-in -->
+    
     <div class="max-w-2xl w-full glass-panel rounded-[2.5rem] p-10 md:p-14 shadow-[0_0_50px_rgba(0,0,0,0.6)] text-center relative z-50 animate-panel-in">
-      
       <svg id="gameover-trophy" class="w-32 h-32 mx-auto mb-6 drop-shadow-2xl" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path></svg>
-      
       <h2 class="text-2xl md:text-3xl font-bold text-white/80 mb-2 tracking-widest uppercase">挑戰結束</h2>
-      <div id="winner-text" class="mb-10"></div>
+      <div id="winner-text" class="mb-8"></div>
       
-      <!-- 分數展示卡片 -->
-      <div class="flex justify-center gap-6 md:gap-10 mb-12">
+      <!-- 雙人分數版面 -->
+      <div id="dual-score-board" class="flex justify-center gap-6 md:gap-10 mb-10 hidden">
         <div class="flex-1 bg-red-950/40 border-2 border-red-500/30 rounded-3xl p-6 shadow-[0_0_20px_rgba(225,29,72,0.2)]">
           <div class="text-red-400 font-bold text-lg md:text-xl mb-2">玩家 1 (左側)</div>
           <div class="text-5xl md:text-6xl font-black text-white" id="final-p1-score"></div>
@@ -177,35 +214,52 @@
         </div>
       </div>
 
+      <!-- 單人分數版面 -->
+      <div id="single-score-board" class="flex flex-col items-center justify-center mb-10 hidden">
+         <div class="bg-cyan-950/40 border-2 border-cyan-500/30 rounded-3xl p-8 shadow-[0_0_30px_rgba(6,182,212,0.2)] w-full max-w-sm">
+            <div id="single-title" class="text-2xl md:text-3xl font-bold mb-4 drop-shadow-md"></div>
+            <div class="text-7xl md:text-8xl font-black text-white drop-shadow-lg" id="final-single-score"></div>
+            <div class="text-slate-400 mt-4 text-lg font-bold tracking-widest">總得分</div>
+         </div>
+      </div>
+
       <div class="flex flex-col md:flex-row gap-4 justify-center items-center px-4">
-        <button onclick="startGame()" class="w-full md:w-auto flex-1 bg-gradient-to-r from-yellow-400 to-amber-600 hover:from-yellow-300 hover:to-amber-500 text-slate-900 font-black py-4 px-8 rounded-full text-xl flex items-center justify-center gap-2 transition-transform active:scale-95 shadow-[0_0_20px_rgba(251,191,36,0.4)]">
-          <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path></svg>
+        <button id="btn-replay" class="w-full md:w-auto flex-1 bg-gradient-to-r from-yellow-400 to-amber-600 hover:from-yellow-300 hover:to-amber-500 text-slate-900 font-black py-4 px-8 rounded-full text-xl flex items-center justify-center gap-2 transition-transform active:scale-95 shadow-[0_0_20px_rgba(251,191,36,0.4)]">
           再挑戰一次
         </button>
         <button onclick="goToMenu()" class="w-full md:w-auto px-8 py-4 text-white/60 hover:text-white hover:bg-white/10 rounded-full font-bold text-lg transition-colors">
-          回主畫面
+          回主選單
         </button>
       </div>
     </div>
   </div>
 
   <script>
-    // === 遊戲設定 ===
+    // ==========================================
+    // === 狀態管理 ===
+    // ==========================================
     const STAGE_TIMES = [60, 120, 60, 120]; 
     
-    // === 狀態管理 (移除了短暫動畫專用的變數，改以獨立函數控制) ===
     let state = {
       view: 'menu',
+      mode: 'dual', // 'single' 或 'dual'
       stage: 1,
       timeLeft: 0,
       timerId: null,
       p1: { score: 0, question: null, isReviewing: false, wrongs: 0, freezeTime: 0, isReady: false, combo: 0 },
-      p2: { score: 0, question: null, isReviewing: false, wrongs: 0, freezeTime: 0, isReady: false, combo: 0 }
+      p2: { score: 0, question: null, isReviewing: false, wrongs: 0, freezeTime: 0, isReady: false, combo: 0 },
+      demo: { 
+        type: 'addsub', 
+        step: 0, 
+        maxSteps: { addsub: 4, multdiv: 3, mixed: 3 },
+        practice: {} 
+      } 
     };
 
+    // ==========================================
     // === 工具函數 ===
+    // ==========================================
     const getRandomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
-    
     const shuffleArray = (array) => {
       let newArr = [...array];
       for (let i = newArr.length - 1; i > 0; i--) {
@@ -214,13 +268,311 @@
       }
       return newArr;
     };
-
     const flipOperator = (op) => {
       const flips = { '>': '<', '<': '>', '≥': '≤', '≤': '≥' };
       return flips[op];
     };
+    const frac = (top, bot) => `<span class="inline-flex flex-col items-center align-middle text-[0.7em] mx-1 leading-none"><span class="border-b-2 border-current px-1 pb-[2px] mb-[2px]">${top}</span><span>${bot}</span></span>`;
 
-    // === 題目產生器 ===
+    // ==========================================
+    // === 學習操作篇邏輯 ===
+    // ==========================================
+    function goToOperation() {
+      state.view = 'operation';
+      document.getElementById('menu-screen').classList.add('hidden');
+      document.getElementById('game-screen').classList.add('hidden');
+      document.getElementById('gameover-screen').classList.add('hidden');
+      document.getElementById('operation-screen').classList.remove('hidden');
+      setDemoType('addsub'); 
+    }
+
+    function setDemoType(type) {
+      state.demo.type = type;
+      state.demo.step = 0;
+      state.demo.practice = {}; 
+      
+      const tabs = ['addsub', 'multdiv', 'mixed'];
+      tabs.forEach(t => {
+        const el = document.getElementById(`tab-${t}`);
+        if (t === type) el.className = 'px-6 py-2 rounded-full font-bold text-base md:text-lg transition-all border-2 border-transparent bg-blue-600 text-white shadow-lg shadow-blue-500/40';
+        else el.className = 'px-6 py-2 rounded-full font-bold text-base md:text-lg transition-all border-2 border-slate-600 text-slate-400 hover:bg-slate-800';
+      });
+      renderDemo();
+    }
+
+    function nextDemoStep() {
+      const max = state.demo.maxSteps[state.demo.type];
+      if (state.demo.step < max) {
+        state.demo.step++;
+        renderDemo();
+        setTimeout(() => {
+          const container = document.getElementById('operation-screen');
+          container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
+        }, 50);
+      }
+    }
+
+    window.answerPrac = function(qId, opt) {
+      if (state.demo.practice[qId]) return; 
+      state.demo.practice[qId] = opt;
+      renderDemo();
+    };
+
+    function getBtnClass(qId, opt, correctOpt) {
+      const ans = state.demo.practice[qId];
+      if (!ans) return "bg-slate-700 hover:bg-slate-600 text-white shadow-md hover:shadow-lg";
+      if (opt === correctOpt) return "bg-green-600 text-white ring-2 ring-green-300 shadow-[0_0_15px_rgba(22,163,74,0.6)] font-black scale-105";
+      if (ans === opt) return "bg-red-600 text-white line-through opacity-80";
+      return "bg-slate-800 text-slate-500 opacity-50 cursor-not-allowed";
+    }
+
+    function renderDemo() {
+      const contentArea = document.getElementById('demo-dynamic-content');
+      const btnNext = document.getElementById('btn-demo-next');
+      const btnGame = document.getElementById('btn-go-game');
+      const step = state.demo.step;
+      let html = '';
+
+      if (state.demo.type === 'addsub') {
+        if (step >= 0) {
+          html += `
+            <div class="bg-slate-800 rounded-3xl p-6 md:p-8 shadow-xl border border-slate-700 fade-in">
+              <h3 class="text-2xl font-bold text-blue-400 mb-4 flex items-center gap-2"><span>1️⃣</span> 【觀念演示】加法與減法移項</h3>
+              <p class="text-slate-300 mb-6 text-lg">如同天平的等量公理，不等號的兩邊同加或同減一個數，大小關係<span class="text-green-400 font-bold mx-1">不變</span>。</p>
+              <div class="flex flex-col md:flex-row gap-6">
+                <div class="flex-1 bg-slate-900 rounded-2xl p-6 border-t-4 border-slate-500 shadow-inner">
+                   <div class="text-center text-slate-400 mb-6 font-bold tracking-widest text-lg">一元一次方程式</div>
+                   <div class="text-3xl md:text-4xl text-center font-serif space-y-5">
+                     <div>y + 2 = 3</div>
+                     ${step >= 1 ? `<div class="fade-in text-slate-400">y = 3 <span class="text-red-400 font-sans font-bold">- 2</span></div>` : ''}
+                     ${step >= 2 ? `<div class="fade-in text-green-400 font-bold border-t border-slate-700 pt-4 mt-2">y = 1</div>` : ''}
+                   </div>
+                </div>
+                <div class="flex-1 bg-slate-900 rounded-2xl p-6 border-t-4 border-blue-500 relative shadow-inner">
+                   <div class="text-center text-blue-400 mb-6 font-bold tracking-widest text-lg">一元一次不等式</div>
+                   <div class="text-3xl md:text-4xl text-center font-serif space-y-5">
+                     <div>x + 2 > 3</div>
+                     ${step >= 1 ? `<div class="fade-in text-slate-400">x > 3 <span class="text-red-400 font-sans font-bold">- 2</span></div>` : ''}
+                     ${step >= 2 ? `<div class="fade-in text-green-400 font-bold border-t border-slate-700 pt-4 mt-2">x > 1</div>` : ''}
+                   </div>
+                </div>
+              </div>
+              ${step >= 2 ? `<div class="mt-8 text-center text-yellow-300 font-bold text-xl fade-in bg-yellow-500/10 py-4 rounded-xl border border-yellow-500/30 shadow-[0_0_15px_rgba(234,179,8,0.1)]">💡 結論：加減移項時，不等號的方向【維持不變】！</div>` : ''}
+            </div>
+          `;
+        }
+        if (step >= 3) {
+          html += `
+            <div class="bg-slate-800 rounded-3xl p-6 md:p-8 shadow-xl border border-slate-700 fade-in">
+              <h3 class="text-2xl font-bold text-emerald-400 mb-6 flex items-center gap-2"><span>2️⃣</span> 【課本例題 1】利用移項法則解不等式</h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-2xl font-serif">
+                 <div class="bg-slate-900 p-6 rounded-2xl border-l-4 border-emerald-500">
+                   <div class="font-sans font-bold mb-6 text-slate-400 text-lg">(1) 解不等式 <span class="text-white mx-2 font-serif text-2xl">x + 2 < -5</span></div>
+                   <div class="space-y-4 ml-4">
+                     <div>x < -5 <span class="text-red-400 font-sans font-bold">- 2</span></div>
+                     <div class="text-green-400 font-bold pt-2">x < -7</div>
+                   </div>
+                 </div>
+                 <div class="bg-slate-900 p-6 rounded-2xl border-l-4 border-emerald-500">
+                   <div class="font-sans font-bold mb-6 text-slate-400 text-lg">(2) 解不等式 <span class="text-white mx-2 font-serif text-2xl">x - 3 &ge; 10</span></div>
+                   <div class="space-y-4 ml-4">
+                     <div>x &ge; 10 <span class="text-red-400 font-sans font-bold">+ 3</span></div>
+                     <div class="text-green-400 font-bold pt-2">x &ge; 13</div>
+                   </div>
+                 </div>
+              </div>
+            </div>
+          `;
+        }
+        if (step >= 4) {
+          html += `
+            <div class="bg-slate-800 rounded-3xl p-6 md:p-8 shadow-xl border border-slate-700 fade-in">
+              <h3 class="text-2xl font-bold text-orange-400 mb-6 flex items-center gap-2"><span>3️⃣</span> 【隨堂練習】試試看！點擊選項作答</h3>
+              <div class="space-y-6">
+                <div class="bg-slate-900 p-6 md:p-8 rounded-2xl">
+                  <div class="font-bold mb-6 text-xl">(1) 解不等式 <span class="font-serif text-3xl mx-3 text-white">x - 2 &ge; 4</span></div>
+                  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 font-serif text-2xl">
+                     <button class="py-4 rounded-xl transition-all ${getBtnClass('addsub1', 'A', 'C')}" onclick="answerPrac('addsub1', 'A')">x &ge; 2</button>
+                     <button class="py-4 rounded-xl transition-all ${getBtnClass('addsub1', 'B', 'C')}" onclick="answerPrac('addsub1', 'B')">x &le; 2</button>
+                     <button class="py-4 rounded-xl transition-all ${getBtnClass('addsub1', 'C', 'C')}" onclick="answerPrac('addsub1', 'C')">x &ge; 6</button>
+                     <button class="py-4 rounded-xl transition-all ${getBtnClass('addsub1', 'D', 'C')}" onclick="answerPrac('addsub1', 'D')">x &le; 6</button>
+                  </div>
+                  ${state.demo.practice['addsub1'] ? '<div class="mt-4 text-green-400 fade-in font-bold">解析：將 -2 移過去變成 +2，x &ge; 4 + 2，所以 x &ge; 6。</div>' : ''}
+                </div>
+                <div class="bg-slate-900 p-6 md:p-8 rounded-2xl">
+                  <div class="font-bold mb-6 text-xl">(2) 解不等式 <span class="font-serif text-3xl mx-3 text-white">x + 3 < -5</span></div>
+                  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 font-serif text-2xl">
+                     <button class="py-4 rounded-xl transition-all ${getBtnClass('addsub2', 'A', 'A')}" onclick="answerPrac('addsub2', 'A')">x < -8</button>
+                     <button class="py-4 rounded-xl transition-all ${getBtnClass('addsub2', 'B', 'A')}" onclick="answerPrac('addsub2', 'B')">x > -8</button>
+                     <button class="py-4 rounded-xl transition-all ${getBtnClass('addsub2', 'C', 'A')}" onclick="answerPrac('addsub2', 'C')">x < -2</button>
+                     <button class="py-4 rounded-xl transition-all ${getBtnClass('addsub2', 'D', 'A')}" onclick="answerPrac('addsub2', 'D')">x > -2</button>
+                  </div>
+                  ${state.demo.practice['addsub2'] ? '<div class="mt-4 text-green-400 fade-in font-bold">解析：將 +3 移過去變成 -3，x < -5 - 3，所以 x < -8。</div>' : ''}
+                </div>
+              </div>
+            </div>
+          `;
+        }
+      }
+
+      else if (state.demo.type === 'multdiv') {
+        if (step >= 0) {
+          html += `
+            <div class="bg-slate-800 rounded-3xl p-6 md:p-8 shadow-xl border border-slate-700 fade-in">
+              <h3 class="text-2xl font-bold text-blue-400 mb-4 flex items-center gap-2"><span>1️⃣</span> 【觀念演示】乘法與除法移項</h3>
+              <p class="text-slate-300 mb-6 text-lg">這是不等式中<span class="text-red-400 font-bold mx-1">最容易犯錯的陷阱</span>！請仔細觀察除以「正數」與「負數」的差別。</p>
+              <div class="flex flex-col md:flex-row gap-6">
+                <div class="flex-1 bg-slate-900 rounded-2xl p-6 border-t-4 border-green-500 shadow-inner">
+                   <div class="text-center text-green-400 mb-6 font-bold tracking-widest text-lg">同除以「正數」</div>
+                   <div class="text-3xl md:text-4xl text-center font-serif space-y-5">
+                     <div>2x > 6</div>
+                     ${step >= 1 ? `<div class="fade-in text-slate-400">x > 6 <span class="text-red-400 font-sans font-bold">&divide; 2</span></div>` : ''}
+                     ${step >= 1 ? `<div class="fade-in text-green-400 font-bold border-t border-slate-700 pt-4 mt-2">x > 3</div>` : ''}
+                   </div>
+                   ${step >= 1 ? `<div class="mt-8 text-center text-slate-400 text-base">除以正數 2，不等號方向<span class="text-green-400 font-bold mx-1">不變</span></div>` : ''}
+                </div>
+                <div class="flex-1 bg-slate-900 rounded-2xl p-6 border-t-4 border-red-500 relative shadow-inner">
+                   <div class="text-center text-red-400 mb-6 font-bold tracking-widest text-lg">同除以「負數」</div>
+                   <div class="text-3xl md:text-4xl text-center font-serif space-y-5">
+                     <div>-2x > 6</div>
+                     ${step >= 1 ? `<div class="fade-in text-slate-400">x <span class="text-red-500 font-black animate-flip inline-block px-2">&lt;</span> 6 <span class="text-red-400 font-sans font-bold">&divide; (-2)</span></div>` : ''}
+                     ${step >= 1 ? `<div class="fade-in text-green-400 font-bold border-t border-slate-700 pt-4 mt-2">x &lt; -3</div>` : ''}
+                   </div>
+                   ${step >= 1 ? `<div class="mt-8 text-center text-slate-400 text-base">除以負數 -2，不等號必須<span class="text-red-400 font-bold mx-1">變號 (反轉)</span></div>` : ''}
+                </div>
+              </div>
+              ${step >= 1 ? `<div class="mt-8 text-center text-red-300 font-bold text-xl fade-in bg-red-900/40 py-4 rounded-xl border border-red-500/30 shadow-[0_0_15px_rgba(239,68,68,0.2)]">⚠️ 結論：不等式同乘或同除以一個「負數」時，不等號必須【變號】！</div>` : ''}
+            </div>
+          `;
+        }
+        if (step >= 2) {
+          html += `
+            <div class="bg-slate-800 rounded-3xl p-6 md:p-8 shadow-xl border border-slate-700 fade-in">
+              <h3 class="text-2xl font-bold text-emerald-400 mb-6 flex items-center gap-2"><span>2️⃣</span> 【課本例題 2】同乘除一個數解不等式</h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-2xl font-serif">
+                 <div class="bg-slate-900 p-6 rounded-2xl border-l-4 border-emerald-500">
+                   <div class="font-sans font-bold mb-6 text-slate-400 text-lg">(1) 解不等式 <span class="text-white mx-2 font-serif text-2xl">${frac(1,3)}x > 2</span></div>
+                   <div class="space-y-4 ml-4">
+                     <div class="text-slate-400">x > 2 <span class="text-red-400 font-sans font-bold">&times; 3</span> <span class="text-sm font-sans text-green-500 ml-2">(乘正數不變號)</span></div>
+                     <div class="text-green-400 font-bold pt-2">x > 6</div>
+                   </div>
+                 </div>
+                 <div class="bg-slate-900 p-6 rounded-2xl border-2 border-red-900/80 shadow-[0_0_15px_rgba(239,68,68,0.15)] relative overflow-hidden">
+                   <div class="absolute top-0 right-0 bg-red-600 text-white text-xs font-bold px-3 py-1 font-sans rounded-bl-lg">陷阱題</div>
+                   <div class="font-sans font-bold mb-6 text-slate-400 text-lg">(2) 解不等式 <span class="text-white mx-2 font-serif text-2xl">-3x &ge; 8</span></div>
+                   <div class="space-y-4 ml-4">
+                     <div class="text-slate-400">x <span class="text-red-500 font-bold mx-1">&le;</span> 8 <span class="text-red-400 font-sans font-bold">&divide; (-3)</span> <span class="text-sm font-sans text-red-400 ml-2">(除負數要變號!)</span></div>
+                     <div class="text-green-400 font-bold pt-2">x &le; -${frac(8,3)}</div>
+                   </div>
+                 </div>
+              </div>
+            </div>
+          `;
+        }
+        if (step >= 3) {
+          html += `
+            <div class="bg-slate-800 rounded-3xl p-6 md:p-8 shadow-xl border border-slate-700 fade-in">
+              <h3 class="text-2xl font-bold text-orange-400 mb-6 flex items-center gap-2"><span>3️⃣</span> 【隨堂練習】注意正負數陷阱！</h3>
+              <div class="space-y-6">
+                <div class="bg-slate-900 p-6 md:p-8 rounded-2xl border border-slate-700">
+                  <div class="font-bold mb-6 text-xl">(1) 解不等式 <span class="font-serif text-3xl mx-3 text-white">4x &le; -12</span></div>
+                  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 font-serif text-2xl">
+                     <button class="py-4 rounded-xl transition-all ${getBtnClass('multdiv1', 'A', 'A')}" onclick="answerPrac('multdiv1', 'A')">x &le; -3</button>
+                     <button class="py-4 rounded-xl transition-all ${getBtnClass('multdiv1', 'B', 'A')}" onclick="answerPrac('multdiv1', 'B')">x &ge; -3</button>
+                     <button class="py-4 rounded-xl transition-all ${getBtnClass('multdiv1', 'C', 'A')}" onclick="answerPrac('multdiv1', 'C')">x &le; -8</button>
+                     <button class="py-4 rounded-xl transition-all ${getBtnClass('multdiv1', 'D', 'A')}" onclick="answerPrac('multdiv1', 'D')">x &ge; -8</button>
+                  </div>
+                  ${state.demo.practice['multdiv1'] ? '<div class="mt-4 text-green-400 fade-in font-bold">解析：同除以「正數」4，不用變號。x &le; -12 &divide; 4，得 x &le; -3。</div>' : ''}
+                </div>
+                <div class="bg-slate-900 p-6 md:p-8 rounded-2xl border border-red-900/60">
+                  <div class="font-bold mb-6 text-xl">(2) 解不等式 <span class="font-serif text-3xl mx-3 text-white">-${frac('x',4)} < 1</span></div>
+                  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 font-serif text-2xl">
+                     <button class="py-4 rounded-xl transition-all ${getBtnClass('multdiv2', 'A', 'B')}" onclick="answerPrac('multdiv2', 'A')">x < -4</button>
+                     <button class="py-4 rounded-xl transition-all ${getBtnClass('multdiv2', 'B', 'B')}" onclick="answerPrac('multdiv2', 'B')">x > -4</button>
+                     <button class="py-4 rounded-xl transition-all ${getBtnClass('multdiv2', 'C', 'B')}" onclick="answerPrac('multdiv2', 'C')">x < 4</button>
+                     <button class="py-4 rounded-xl transition-all ${getBtnClass('multdiv2', 'D', 'B')}" onclick="answerPrac('multdiv2', 'D')">x > 4</button>
+                  </div>
+                  ${state.demo.practice['multdiv2'] ? '<div class="mt-4 text-red-400 fade-in font-bold">解析：同乘以「負數」-4，<span class="text-white">必須變號！</span> x > 1 &times; (-4)，得 x > -4。</div>' : ''}
+                </div>
+              </div>
+            </div>
+          `;
+        }
+      }
+
+      else if (state.demo.type === 'mixed') {
+        if (step >= 0) {
+          html += `
+            <div class="bg-slate-800 rounded-3xl p-6 md:p-8 shadow-xl border border-slate-700 fade-in">
+              <h3 class="text-2xl font-bold text-blue-400 mb-4 flex items-center gap-2"><span>1️⃣</span> 【課本例題 3 & 4】綜合移項法則</h3>
+              <p class="text-slate-300 mb-6 text-lg">遇到兩邊都有未知數時，先將 $x$ 移到一邊，常數移到另一邊。</p>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-slate-900 rounded-2xl p-6 border-t-4 border-blue-500 shadow-inner">
+                  <div class="font-sans font-bold mb-6 text-slate-400 text-lg">解不等式 <span class="text-white mx-2 font-serif text-2xl">7x - 5 &le; 5x + 1</span></div>
+                  <div class="text-2xl font-serif space-y-4 ml-4">
+                    ${step >= 1 ? `<div class="fade-in text-slate-300">7x <span class="text-red-400 font-sans font-bold">- 5x</span> &le; 1 <span class="text-red-400 font-sans font-bold">+ 5</span></div>` : '<div class="text-slate-500">（點擊下一步看過程）</div>'}
+                    ${step >= 1 ? `<div class="fade-in text-slate-300 border-t border-slate-700 pt-3">2x &le; 6</div>` : ''}
+                    ${step >= 2 ? `<div class="fade-in text-green-400 font-bold border-t border-slate-700 pt-3">x &le; 3</div>` : ''}
+                  </div>
+                </div>
+                <div class="bg-slate-900 rounded-2xl p-6 border-t-4 border-indigo-500 shadow-inner">
+                  <div class="font-sans font-bold mb-6 text-slate-400 text-lg">解不等式 <span class="text-white mx-2 font-serif text-2xl">3x + 7 &le; 8x + 11</span></div>
+                  <div class="text-2xl font-serif space-y-4 ml-4">
+                    ${step >= 1 ? `<div class="fade-in text-slate-300">3x <span class="text-red-400 font-sans font-bold">- 8x</span> &le; 11 <span class="text-red-400 font-sans font-bold">- 7</span></div>` : '<div class="text-slate-500">（點擊下一步看過程）</div>'}
+                    ${step >= 1 ? `<div class="fade-in text-slate-300 border-t border-slate-700 pt-3">-5x &le; 4</div>` : ''}
+                    ${step >= 2 ? `<div class="fade-in text-green-400 font-bold border-t border-slate-700 pt-3">x <span class="text-red-400">&ge;</span> -${frac(4,5)} <span class="text-sm font-sans text-red-400 ml-1">(變號!)</span></div>` : ''}
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+        if (step >= 3) {
+          html += `
+            <div class="bg-slate-800 rounded-3xl p-6 md:p-8 shadow-xl border border-slate-700 fade-in">
+              <h3 class="text-2xl font-bold text-orange-400 mb-6 flex items-center gap-2"><span>2️⃣</span> 【隨堂練習】綜合實力挑戰</h3>
+              <div class="space-y-6">
+                <div class="bg-slate-900 p-6 md:p-8 rounded-2xl">
+                  <div class="font-bold mb-6 text-xl">(1) 解不等式 <span class="font-serif text-3xl mx-3 text-white">5x - 7 < 2x + 5</span></div>
+                  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 font-serif text-2xl">
+                     <button class="py-4 rounded-xl transition-all ${getBtnClass('mixed1', 'A', 'A')}" onclick="answerPrac('mixed1', 'A')">x < 4</button>
+                     <button class="py-4 rounded-xl transition-all ${getBtnClass('mixed1', 'B', 'A')}" onclick="answerPrac('mixed1', 'B')">x > 4</button>
+                     <button class="py-4 rounded-xl transition-all ${getBtnClass('mixed1', 'C', 'A')}" onclick="answerPrac('mixed1', 'C')">x < 12</button>
+                     <button class="py-4 rounded-xl transition-all ${getBtnClass('mixed1', 'D', 'A')}" onclick="answerPrac('mixed1', 'D')">x > 12</button>
+                  </div>
+                  ${state.demo.practice['mixed1'] ? '<div class="mt-4 text-green-400 fade-in font-bold">解析：移項得 5x - 2x < 5 + 7，化簡 3x < 12，解得 x < 4。</div>' : ''}
+                </div>
+                <div class="bg-slate-900 p-6 md:p-8 rounded-2xl">
+                  <div class="font-bold mb-6 text-xl">(2) 解不等式 <span class="font-serif text-3xl mx-3 text-white">6x + 11 &ge; 2x + 3</span></div>
+                  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 font-serif text-2xl">
+                     <button class="py-4 rounded-xl transition-all ${getBtnClass('mixed2', 'A', 'A')}" onclick="answerPrac('mixed2', 'A')">x &ge; -2</button>
+                     <button class="py-4 rounded-xl transition-all ${getBtnClass('mixed2', 'B', 'A')}" onclick="answerPrac('mixed2', 'B')">x &le; -2</button>
+                     <button class="py-4 rounded-xl transition-all ${getBtnClass('mixed2', 'C', 'A')}" onclick="answerPrac('mixed2', 'C')">x &ge; 2</button>
+                     <button class="py-4 rounded-xl transition-all ${getBtnClass('mixed2', 'D', 'A')}" onclick="answerPrac('mixed2', 'D')">x &le; 2</button>
+                  </div>
+                  ${state.demo.practice['mixed2'] ? '<div class="mt-4 text-green-400 fade-in font-bold">解析：移項得 6x - 2x &ge; 3 - 11，化簡 4x &ge; -8，解得 x &ge; -2。</div>' : ''}
+                </div>
+              </div>
+            </div>
+          `;
+        }
+      }
+
+      contentArea.innerHTML = html;
+
+      const max = state.demo.maxSteps[state.demo.type];
+      if (step >= max) {
+        btnNext.classList.add('hidden');
+        btnGame.classList.remove('hidden');
+      } else {
+        btnNext.classList.remove('hidden');
+        btnGame.classList.add('hidden');
+      }
+    }
+
+    // ==========================================
+    // === 遊戲篇控制 (對戰/單人系統) ===
+    // ==========================================
     const generateQuestion = (type) => {
       const operators = ['>', '<', '≥', '≤'];
       const op = operators[getRandomInt(0, 3)];
@@ -229,7 +581,7 @@
       let a, b, c;
       let explanation = []; 
 
-      if (type === 1) { // 加減
+      if (type === 1) { 
         c = getRandomInt(-10, 10); 
         a = getRandomInt(-10, 10);
         while (a === 0) a = getRandomInt(-10, 10);
@@ -245,7 +597,7 @@
         explanation.push(`2️⃣ 移項：將 ${a > 0 ? `+ ${a}` : `- ${Math.abs(a)}`} 移過去變成 ${invA}`);
         explanation.push(`3️⃣ 計算：x ${op} ${b} ${invA}`);
 
-      } else { // 乘除
+      } else { 
         c = getRandomInt(-10, 10);
         a = getRandomInt(-10, 10);
         while (a === 0 || a === 1) a = getRandomInt(-10, 10); 
@@ -290,9 +642,9 @@
       };
     };
 
-    // === 遊戲流程控制 ===
-    function startGame() {
+    function startGame(mode = 'dual') {
       state.view = 'playing';
+      state.mode = mode;
       state.stage = 1;
       state.timeLeft = STAGE_TIMES[0];
       
@@ -307,8 +659,23 @@
       });
 
       document.getElementById('menu-screen').classList.add('hidden');
+      document.getElementById('operation-screen').classList.add('hidden');
       document.getElementById('gameover-screen').classList.add('hidden');
-      document.getElementById('game-screen').classList.remove('hidden');
+      
+      const gameScreen = document.getElementById('game-screen');
+      gameScreen.classList.remove('hidden');
+      
+      // 根據模式設定排版
+      if (mode === 'single') {
+        document.getElementById('center-timer-area').classList.add('hidden');
+        document.getElementById('p2-area').classList.add('hidden');
+      } else {
+        document.getElementById('center-timer-area').classList.remove('hidden');
+        document.getElementById('p2-area').classList.remove('hidden');
+      }
+
+      // 重設結束畫面按鈕綁定
+      document.getElementById('btn-replay').onclick = () => startGame(mode);
 
       if (state.timerId) clearInterval(state.timerId);
       state.timerId = setInterval(gameTick, 1000);
@@ -317,7 +684,9 @@
     }
 
     function goToMenu() {
+      state.view = 'menu';
       clearInterval(state.timerId);
+      document.getElementById('operation-screen').classList.add('hidden');
       document.getElementById('gameover-screen').classList.add('hidden');
       document.getElementById('game-screen').classList.add('hidden');
       document.getElementById('menu-screen').classList.remove('hidden');
@@ -326,7 +695,9 @@
     function gameTick() {
       if (state.view !== 'playing') return;
 
-      [state.p1, state.p2].forEach((p, idx) => {
+      const playersToTick = state.mode === 'single' ? [state.p1] : [state.p1, state.p2];
+      
+      playersToTick.forEach((p, idx) => {
         if (p.freezeTime > 0) {
           p.freezeTime--;
           if (p.freezeTime === 0) {
@@ -340,6 +711,7 @@
       if (state.timeLeft > 0) {
         state.timeLeft--;
         renderCenter();
+        if(state.mode === 'single') renderPlayer(1); // 單人模式計時器在 p1 內，需要更新
       } else {
         goToNextStage();
       }
@@ -370,32 +742,28 @@
       container.innerHTML = '';
       const colors = ['#facc15', '#ef4444', '#3b82f6', '#10b981', '#a855f7', '#ec4899', '#ffffff'];
       
-      // 產生 120 片隨機彩帶
       for (let i = 0; i < 120; i++) {
         const conf = document.createElement('div');
         conf.className = 'confetti-piece';
         conf.style.left = Math.random() * 100 + 'vw';
         conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
         
-        // 隨機大小、下落時間、延遲
         const w = Math.random() * 8 + 6;
         const h = Math.random() * 16 + 8;
         conf.style.width = w + 'px';
         conf.style.height = h + 'px';
         
-        const duration = Math.random() * 3 + 2.5; // 2.5s ~ 5.5s
-        const delay = Math.random() * 1.5; // 0s ~ 1.5s
+        const duration = Math.random() * 3 + 2.5; 
+        const delay = Math.random() * 1.5; 
         
         conf.style.animationDuration = duration + 's';
         conf.style.animationDelay = delay + 's';
         
-        // 偶爾加入圓形亮片
         if (Math.random() > 0.7) {
           conf.style.borderRadius = '50%';
           conf.style.width = w + 'px';
           conf.style.height = w + 'px';
         }
-        
         container.appendChild(conf);
       }
     }
@@ -407,36 +775,70 @@
       document.getElementById('game-screen').classList.add('hidden');
       document.getElementById('gameover-screen').classList.remove('hidden');
 
-      document.getElementById('final-p1-score').innerText = state.p1.score;
-      document.getElementById('final-p2-score').innerText = state.p2.score;
-
       const winnerTextEl = document.getElementById('winner-text');
       const trophyIcon = document.getElementById('gameover-trophy');
-      
-      if (state.p1.score > state.p2.score) {
-        winnerTextEl.innerHTML = '玩家 1 <span class="text-2xl md:text-3xl block mt-2 text-white/90 drop-shadow-none">左側霸主</span>';
-        winnerTextEl.className = 'text-6xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-rose-600 animate-pulse drop-shadow-[0_0_15px_rgba(225,29,72,0.8)]';
-        trophyIcon.className = 'w-36 h-36 mx-auto text-red-500 mb-6 animate-tada drop-shadow-[0_0_30px_rgba(225,29,72,0.6)]';
-      } else if (state.p2.score > state.p1.score) {
-        winnerTextEl.innerHTML = '玩家 2 <span class="text-2xl md:text-3xl block mt-2 text-white/90 drop-shadow-none">右側霸主</span>';
-        winnerTextEl.className = 'text-6xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-600 animate-pulse drop-shadow-[0_0_15px_rgba(37,99,235,0.8)]';
-        trophyIcon.className = 'w-36 h-36 mx-auto text-blue-500 mb-6 animate-tada drop-shadow-[0_0_30px_rgba(37,99,235,0.6)]';
+
+      if (state.mode === 'single') {
+         document.getElementById('dual-score-board').classList.add('hidden');
+         document.getElementById('single-score-board').classList.remove('hidden');
+         
+         document.getElementById('final-single-score').innerText = state.p1.score;
+         winnerTextEl.innerHTML = '個人挑戰結果';
+         winnerTextEl.className = 'text-xl md:text-2xl font-bold text-white/80';
+         
+         let title = '再接再厲';
+         let colorClass = 'text-slate-400';
+         trophyIcon.className = 'w-32 h-32 mx-auto text-slate-400 mb-4 animate-tada';
+
+         if (state.p1.score >= 30) { 
+           title = '✨ 不等式之神 ✨'; 
+           colorClass = 'text-yellow-400'; 
+           trophyIcon.className = 'w-36 h-36 mx-auto text-yellow-400 mb-6 animate-tada drop-shadow-[0_0_30px_rgba(250,204,21,0.6)]';
+         }
+         else if (state.p1.score >= 15) { 
+           title = '🌟 不等式達人 🌟'; 
+           colorClass = 'text-cyan-400'; 
+           trophyIcon.className = 'w-32 h-32 mx-auto text-cyan-400 mb-6 animate-tada drop-shadow-[0_0_30px_rgba(34,211,238,0.6)]';
+         }
+         else if (state.p1.score >= 5) { 
+           title = '👍 觀念清晰 👍'; 
+           colorClass = 'text-emerald-400'; 
+           trophyIcon.className = 'w-32 h-32 mx-auto text-emerald-400 mb-6 animate-tada';
+         }
+         
+         document.getElementById('single-title').innerHTML = title;
+         document.getElementById('single-title').className = `text-3xl md:text-4xl font-bold mb-4 drop-shadow-md ${colorClass}`;
+
       } else {
-        winnerTextEl.innerHTML = '雙方平手 <span class="text-2xl md:text-3xl block mt-2 text-white/90 drop-shadow-none">旗鼓相當</span>';
-        winnerTextEl.className = 'text-6xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-500 animate-pulse drop-shadow-[0_0_15px_rgba(250,204,21,0.8)]';
-        trophyIcon.className = 'w-36 h-36 mx-auto text-yellow-400 mb-6 animate-tada drop-shadow-[0_0_30px_rgba(250,204,21,0.6)]';
+         document.getElementById('dual-score-board').classList.remove('hidden');
+         document.getElementById('single-score-board').classList.add('hidden');
+         
+         document.getElementById('final-p1-score').innerText = state.p1.score;
+         document.getElementById('final-p2-score').innerText = state.p2.score;
+         
+         if (state.p1.score > state.p2.score) {
+           winnerTextEl.innerHTML = '玩家 1 <span class="text-2xl md:text-3xl block mt-2 text-white/90 drop-shadow-none">左側霸主</span>';
+           winnerTextEl.className = 'text-6xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-rose-600 animate-pulse drop-shadow-[0_0_15px_rgba(225,29,72,0.8)]';
+           trophyIcon.className = 'w-36 h-36 mx-auto text-red-500 mb-6 animate-tada drop-shadow-[0_0_30px_rgba(225,29,72,0.6)]';
+         } else if (state.p2.score > state.p1.score) {
+           winnerTextEl.innerHTML = '玩家 2 <span class="text-2xl md:text-3xl block mt-2 text-white/90 drop-shadow-none">右側霸主</span>';
+           winnerTextEl.className = 'text-6xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-600 animate-pulse drop-shadow-[0_0_15px_rgba(37,99,235,0.8)]';
+           trophyIcon.className = 'w-36 h-36 mx-auto text-blue-500 mb-6 animate-tada drop-shadow-[0_0_30px_rgba(37,99,235,0.6)]';
+         } else {
+           winnerTextEl.innerHTML = '雙方平手 <span class="text-2xl md:text-3xl block mt-2 text-white/90 drop-shadow-none">旗鼓相當</span>';
+           winnerTextEl.className = 'text-6xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-500 animate-pulse drop-shadow-[0_0_15px_rgba(250,204,21,0.8)]';
+           trophyIcon.className = 'w-36 h-36 mx-auto text-yellow-400 mb-6 animate-tada drop-shadow-[0_0_30px_rgba(250,204,21,0.6)]';
+         }
       }
 
-      // 觸發彩帶動畫
       createConfetti();
     }
 
-    // === 動畫與特效分離控制 (解決閃屏與跳動問題的核心) ===
+    // === 動畫與特效分離控制 ===
     function triggerCorrectFeedback(pNum, combo, points, isPractice) {
       const overlay = document.getElementById(`p${pNum}-feedback-overlay`);
       const praiseContainer = document.getElementById(`p${pNum}-praise-container`);
       
-      // 獨立背景綠光閃爍
       if (overlay) {
         overlay.className = 'absolute inset-0 z-0 pointer-events-none transition-colors duration-300 bg-green-300/20';
         setTimeout(() => {
@@ -444,7 +846,6 @@
         }, 300);
       }
 
-      // 獨立跳出文字動畫
       if (praiseContainer) {
         const level1 = ['✨ 太棒了!', '✨ 你真棒!', '✨ 你真的好棒!'];
         const level2 = ['🔥 勢不可擋!', '🔥 好帥好帥!'];
@@ -478,8 +879,8 @@
       }
     }
 
-    // === 互動處理 ===
-    window.handleAnswer = function(pNum, answer) {
+    // === 遊戲內部互動處理 ===
+    window.handleGameAnswer = function(pNum, answer) {
       const pState = pNum === 1 ? state.p1 : state.p2;
       
       if (pState.freezeTime > 0 || pState.isReviewing) return;
@@ -499,9 +900,7 @@
         pState.wrongs = 0;
         pState.question = generateQuestion(qType);
         
-        // 先繪製新題目框 (確保無縫)
         renderPlayer(pNum);
-        // 再獨立呼叫特效圖層 (不干擾排版)
         triggerCorrectFeedback(pNum, pState.combo, points, isPractice);
 
       } else {
@@ -534,24 +933,27 @@
     window.toggleReady = function(pNum) {
       if (state.stage !== 1 && state.stage !== 3) return; 
       
-      const pState = pNum === 1 ? state.p1 : state.p2;
-      pState.isReady = !pState.isReady; 
-
-      if (state.p1.isReady && state.p2.isReady) {
-        goToNextStage();
+      if (state.mode === 'single') {
+         // 單人模式直接跳下一關
+         goToNextStage();
       } else {
-        renderPlayer(pNum);
+         // 雙人模式需等待對方
+         const pState = pNum === 1 ? state.p1 : state.p2;
+         pState.isReady = !pState.isReady; 
+         if (state.p1.isReady && state.p2.isReady) goToNextStage();
+         else renderPlayer(pNum);
       }
     };
 
     // === 渲染邏輯 ===
     function renderAll() {
-      renderCenter();
+      if (state.mode === 'dual') renderCenter();
       renderPlayer(1);
-      renderPlayer(2);
+      if (state.mode === 'dual') renderPlayer(2);
     }
 
     function renderCenter() {
+      if (state.mode === 'single') return; // 單人模式計時器放在 p1 內
       const stageTextEl = document.getElementById('center-stage-text');
       const timeTextEl = document.getElementById('center-time-text');
       
@@ -575,17 +977,30 @@
       const pState = pNum === 1 ? state.p1 : state.p2;
       const container = document.getElementById(`p${pNum}-area`);
       const isPractice = (state.stage === 1 || state.stage === 3);
+      const isSingle = state.mode === 'single';
       
-      let bgClass = pNum === 1 ? 'bg-rose-900' : 'bg-blue-900';
+      // 單人模式統一用深藍色背景，雙人維持紅藍對抗色
+      let bgClass = isSingle ? 'bg-indigo-950' : (pNum === 1 ? 'bg-rose-900' : 'bg-blue-900');
       container.className = `flex-1 relative flex flex-col items-center justify-center p-6 ${isPractice ? 'pb-24 md:pb-28' : ''} ${bgClass}`;
 
-      // 將背景特效與讚美特效獨立置頂，避免影響正常排版
       let html = `
         <div id="p${pNum}-feedback-overlay" class="absolute inset-0 bg-transparent z-0 pointer-events-none transition-colors duration-300"></div>
         <div id="p${pNum}-praise-container" class="absolute inset-0 z-50 flex items-center justify-center pointer-events-none"></div>
       `;
 
-      // 連擊顯示標籤
+      // 單人模式的計時器 (放在畫面上方)
+      if (isSingle && pNum === 1) {
+        const m = Math.floor(state.timeLeft / 60);
+        const s = (state.timeLeft % 60).toString().padStart(2, '0');
+        const timeColor = state.timeLeft <= 10 ? 'text-red-500 animate-pulse' : 'text-white';
+        html += `
+          <div class="absolute top-6 z-20 flex flex-col items-center">
+             <span class="text-sm md:text-base text-cyan-400 font-black tracking-widest bg-slate-900/60 px-4 py-1 rounded-full mb-1 border border-cyan-500/30">STAGE ${state.stage}</span>
+             <span class="text-4xl md:text-5xl font-mono font-black ${timeColor} drop-shadow-md">${m}:${s}</span>
+          </div>
+        `;
+      }
+
       if (pState.combo >= 2) {
         let bonusTip = '';
         if (!isPractice) {
@@ -593,7 +1008,7 @@
           else if (pState.combo >= 3) bonusTip = '<span class="text-xs ml-1 text-yellow-200">(每題+2分)</span>';
         }
         html += `
-          <div class="absolute top-16 z-20 bg-gradient-to-r from-orange-500 to-red-600 text-white px-5 py-1.5 rounded-full font-black text-xl md:text-2xl shadow-[0_0_15px_rgba(249,115,22,0.8)] combo-text border-2 border-yellow-300">
+          <div class="absolute top-24 md:top-28 z-20 bg-gradient-to-r from-orange-500 to-red-600 text-white px-5 py-1.5 rounded-full font-black text-xl md:text-2xl shadow-[0_0_15px_rgba(249,115,22,0.8)] combo-text border-2 border-yellow-300">
             🔥 ${pState.combo} 連擊! ${bonusTip}
           </div>
         `;
@@ -602,35 +1017,33 @@
       // 左上角資訊列
       html += `
         <div class="absolute top-4 left-6 z-10 text-white/80 font-bold text-xl md:text-2xl flex items-center gap-3">
-          <span>玩家 ${pNum}</span>
+          ${!isSingle ? `<span>玩家 ${pNum}</span>` : '<span class="text-cyan-400">👤 單人實戰</span>'}
           ${isPractice 
             ? `<span class="bg-slate-700/80 px-3 py-1 rounded-lg text-slate-300 text-sm md:text-base flex items-center gap-1"><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 2a4 4 0 00-4 4v1H5a1 1 0 00-.994.89l-1 9A1 1 0 004 18h12a1 1 0 00.994-1.11l-1-9A1 1 0 0015 7h-1V6a4 4 0 00-4-4zm2 5V6a2 2 0 10-4 0v1h4zm-6 3a1 1 0 112 0 1 1 0 01-2 0zm7-1a1 1 0 100 2 1 1 0 000-2z" clip-rule="evenodd"></path></svg> 練習不計分</span>`
-            : `<span class="bg-white/20 px-4 py-1 rounded-lg text-white shadow-sm">分數: ${pState.score}</span>`
+            : `<span class="bg-white/20 px-4 py-1 rounded-lg text-white shadow-sm border border-white/10">分數: ${pState.score}</span>`
           }
         </div>
       `;
 
-      // 狀態 1: 凍結中
       if (pState.freezeTime > 0) {
         html += `
           <div class="absolute inset-0 z-40 frozen-overlay flex flex-col items-center justify-center text-white p-6 text-center">
-            <svg class="w-24 h-24 text-blue-200 mb-6 animate-spin" style="animation-duration: 3s;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2v20M17 5l-5 5-5-5M17 19l-5-5-5 5M2 12h20M5 17l5-5-5-5M19 17l-5-5 5-5"></path></svg>
-            <h2 class="text-4xl md:text-5xl font-black mb-4 drop-shadow-lg text-blue-100">連續答錯！大腦凍結</h2>
-            <p class="text-3xl md:text-4xl font-bold bg-blue-900/50 px-8 py-4 rounded-full border border-blue-400/30">解凍倒數 <span class="text-red-400 font-mono text-5xl">${pState.freezeTime}</span> 秒</p>
+            <svg class="w-24 h-24 text-cyan-200 mb-6 animate-spin" style="animation-duration: 3s;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2v20M17 5l-5 5-5-5M17 19l-5-5-5 5M2 12h20M5 17l5-5-5-5M19 17l-5-5 5-5"></path></svg>
+            <h2 class="text-4xl md:text-5xl font-black mb-4 drop-shadow-lg text-cyan-100">連續答錯！大腦凍結</h2>
+            <p class="text-3xl md:text-4xl font-bold bg-slate-900/50 px-8 py-4 rounded-full border border-cyan-400/30">解凍倒數 <span class="text-red-400 font-mono text-5xl">${pState.freezeTime}</span> 秒</p>
           </div>
         `;
       } 
-      // 狀態 2: 檢討模式 (僅限練習階段)
       else if (pState.isReviewing) {
         html += `
-          <div class="z-10 bg-slate-800/95 border-2 border-red-500/50 rounded-3xl p-6 md:p-8 w-full max-w-2xl shadow-2xl flex flex-col items-center fade-in">
+          <div class="z-10 bg-slate-800/95 border-2 border-red-500/50 rounded-3xl p-6 md:p-8 w-full max-w-3xl shadow-2xl flex flex-col items-center fade-in">
             <h3 class="text-red-400 font-bold mb-6 text-2xl md:text-3xl flex items-center gap-2">
               <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
               哎呀答錯了！解題步驟
             </h3>
             <div class="text-left w-full space-y-3 mb-8">
               ${pState.question.explanation.map(step => 
-                `<div class="text-white text-lg md:text-xl p-3 rounded-lg ${step.includes('⚠️') ? 'bg-red-900/60 border border-red-500/40' : 'bg-slate-700/50'}">${step}</div>`
+                `<div class="text-white text-lg md:text-2xl p-4 rounded-xl ${step.includes('⚠️') ? 'bg-red-900/60 border border-red-500/40' : 'bg-slate-700/50'}">${step}</div>`
               ).join('')}
             </div>
             <button onclick="dismissReview(${pNum})" class="bg-green-600 hover:bg-green-500 text-white font-bold py-4 px-12 rounded-xl text-xl md:text-2xl transition-transform active:scale-95 w-full shadow-lg">
@@ -639,7 +1052,6 @@
           </div>
         `;
       } 
-      // 狀態 3: 正常作答模式
       else {
         let wrongsIndicators = '';
         if (!isPractice) {
@@ -653,10 +1065,9 @@
         }
 
         let stageTip = state.stage <= 2 ? '加減移項' : '乘除移項 (注意變號)';
-
-        // 題目主視覺框 (加入 min-h-[140px] 鎖定高度，避免上下跳動)
         let qBoxClass = "bg-white/10 backdrop-blur-sm rounded-2xl px-6 md:px-12 py-4 w-full min-h-[140px] flex items-center justify-center text-center shadow-lg border border-white/10 mb-8";
-        let qTextClass = "text-6xl lg:text-7xl font-bold text-white tracking-widest font-serif leading-none";
+        // 單人模式空間大，字體可以再稍微加大
+        let qTextClass = `font-bold text-white tracking-widest font-serif leading-none ${isSingle ? 'text-7xl lg:text-8xl' : 'text-6xl lg:text-7xl'}`;
         
         if (pState.combo >= 10) {
           qBoxClass += " on-fire-container scale-[1.05] transition-transform duration-300";
@@ -664,11 +1075,10 @@
           stageTip = '<span class="text-yellow-300 animate-pulse">🔥 火力全開！</span> ' + stageTip;
         }
 
-        // 移除這邊容器的 fade-in，讓換題是無縫銜接
         html += `
           ${wrongsIndicators}
-          <div class="z-10 flex flex-col items-center w-full max-w-2xl">
-            <div class="text-white/60 text-sm md:text-base font-bold tracking-wider mb-2 uppercase text-center flex items-center gap-2">
+          <div class="z-10 flex flex-col items-center w-full ${isSingle ? 'max-w-4xl mt-12' : 'max-w-2xl'}">
+            <div class="text-white/60 text-sm md:text-lg font-bold tracking-wider mb-3 uppercase text-center flex items-center gap-2">
               ${isPractice ? '🎯 練習模式' : '🔥 競賽模式'} : ${stageTip}
             </div>
             <div class="${qBoxClass}">
@@ -676,9 +1086,9 @@
                 ${pState.question.text}
               </h2>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 w-full">
               ${pState.question.options.map(opt => `
-                <button onclick="handleAnswer(${pNum}, '${opt.replace(/'/g, "\\'")}')" class="bg-white hover:bg-gray-100 text-slate-800 text-4xl md:text-5xl font-bold py-6 rounded-2xl shadow-md transition-transform active:scale-95 active:bg-gray-300 font-serif">
+                <button onclick="handleGameAnswer(${pNum}, '${opt.replace(/'/g, "\\'")}')" class="bg-white hover:bg-gray-100 text-slate-800 text-4xl ${isSingle ? 'md:text-6xl py-8' : 'md:text-5xl py-6'} font-bold rounded-2xl shadow-md transition-transform active:scale-95 active:bg-gray-300 font-serif">
                   ${opt}
                 </button>
               `).join('')}
@@ -688,10 +1098,11 @@
       }
 
       if (isPractice && !pState.isReviewing) {
+        let btnText = isSingle ? '👌 練習夠了，進入下一階段' : (pState.isReady ? '✅ 已準備好，等待對手...' : '👌 練習夠了，進入競賽');
         html += `
           <div class="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 w-full px-6 flex justify-center fade-in">
-            <button onclick="toggleReady(${pNum})" class="px-8 py-3 md:py-4 rounded-full font-bold text-lg md:text-xl transition-all shadow-xl border-2 ${pState.isReady ? 'bg-green-500 border-green-400 text-white shadow-green-500/40 animate-pulse' : 'bg-slate-800 border-slate-600 text-white/80 hover:bg-slate-700 hover:text-white'}">
-              ${pState.isReady ? '✅ 已準備好，等待對手...' : '👌 練習夠了，進入競賽'}
+            <button onclick="toggleReady(${pNum})" class="px-8 py-3 md:py-4 rounded-full font-bold text-lg md:text-xl transition-all shadow-xl border-2 ${pState.isReady && !isSingle ? 'bg-green-500 border-green-400 text-white shadow-green-500/40 animate-pulse' : 'bg-slate-800 border-slate-600 text-white/80 hover:bg-slate-700 hover:text-white'}">
+              ${btnText}
             </button>
           </div>
         `;
