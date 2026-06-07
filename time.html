@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>計時碼表 (9分短鈴 / 10分長鈴)</title>
+    <style>
+        body {
+            font-family: "Microsoft JhengHei", Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f4f4f9;
+            margin: 0;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        #display {
+            font-size: 80px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 30px;
+            font-variant-numeric: tabular-nums;
+        }
+        .controls, .test-controls {
+            margin-bottom: 20px;
+        }
+        button {
+            font-size: 18px;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .btn-start { background-color: #4CAF50; color: white; }
+        .btn-start:hover { background-color: #45a049; }
+        .btn-pause { background-color: #f0ad4e; color: white; }
+        .btn-pause:hover { background-color: #ec971f; }
+        .btn-reset { background-color: #d9534f; color: white; }
+        .btn-reset:hover { background-color: #c9302c; }
+        
+        .btn-test { background-color: #5bc0de; color: white; font-size: 16px; }
+        .btn-test:hover { background-color: #31b0d5; }
+
+        hr {
+            border: 0;
+            height: 1px;
+            background: #ddd;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="display">00:00</div>
+    
+    <div class="controls">
+        <button class="btn-start" onclick="startTimer()">開始</button>
+        <button class="btn-pause" onclick="pauseTimer()">暫停</button>
+        <button class="btn-reset" onclick="resetTimer()">重置</button>
+    </div>
+
+    <hr>
+
+    <div class="test-controls">
+        <p><strong>音效測試區</strong></p>
+        <button class="btn-test" onclick="testSound('short')">測試：9分鐘短鈴</button>
+        <button class="btn-test" onclick="testSound('long')">測試：10分鐘長鈴</button>
+    </div>
+</div>
+
+<audio id="shortBell" src="https://raw.githubusercontent.com/seon0118/math/main/%E7%9F%AD%E9%88%B4.wav" preload="auto"></audio>
+<audio id="longBell" src="https://raw.githubusercontent.com/seon0118/math/main/%E9%95%B7%E9%88%B4.wav" preload="auto"></audio>
+
+<script>
+    let timerInterval;
+    let seconds = 0;
+    let isRunning = false;
+    
+    // 標記是否已經響過鈴，避免重複播放
+    let shortBellPlayed = false; 
+    let longBellPlayed = false;
+
+    const display = document.getElementById('display');
+    const shortBellAudio = document.getElementById('shortBell');
+    const longBellAudio = document.getElementById('longBell');
+
+    function updateDisplay() {
+        let mins = Math.floor(seconds / 60);
+        let secs = seconds % 60;
+        
+        // 格式化為 mm:ss
+        display.textContent = 
+            `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+
+        // 檢查並播放音效
+        checkAlarms();
+    }
+
+    function checkAlarms() {
+        // 9分鐘 = 540秒
+        if (seconds === 540 && !shortBellPlayed) {
+            shortBellAudio.currentTime = 0;
+            shortBellAudio.play();
+            shortBellPlayed = true;
+        }
+        
+        // 10分鐘 = 600秒
+        if (seconds === 600 && !longBellPlayed) {
+            longBellAudio.currentTime = 0;
+            longBellAudio.play();
+            longBellPlayed = true;
+        }
+    }
+
+    function startTimer() {
+        if (!isRunning) {
+            isRunning = true;
+            timerInterval = setInterval(() => {
+                seconds++;
+                updateDisplay();
+            }, 1000); // 每 1000 毫秒（1秒）更新一次
+        }
+    }
+
+    function pauseTimer() {
+        isRunning = false;
+        clearInterval(timerInterval);
+    }
+
+    function resetTimer() {
+        isRunning = false;
+        clearInterval(timerInterval);
+        seconds = 0;
+        shortBellPlayed = false;
+        longBellPlayed = false;
+        updateDisplay();
+    }
+
+    // 測試音效功能
+    function testSound(type) {
+        if (type === 'short') {
+            shortBellAudio.currentTime = 0; // 將音訊調回開頭
+            shortBellAudio.play();
+        } else if (type === 'long') {
+            longBellAudio.currentTime = 0;
+            longBellAudio.play();
+        }
+    }
+</script>
+
+</body>
+</html>
