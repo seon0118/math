@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>計時碼表 (暗黑模式/自訂時間/螢幕長亮)</title>
+    <title>精準計時碼表 (毫秒顯示/暗黑模式/螢幕長亮)</title>
     <style>
         /* 黑色系主題設定 */
         body {
@@ -29,7 +29,8 @@
             max-width: 450px;
         }
         #display {
-            font-size: 85px;
+            /* 字體稍微縮小以容納毫秒顯示 */
+            font-size: 70px; 
             font-weight: bold;
             color: #ffffff;
             margin-bottom: 20px;
@@ -97,7 +98,7 @@
 <body>
 
 <div class="container">
-    <div id="display">00:00</div>
+    <div id="display">00:00.00</div>
     
     <div class="controls">
         <button class="btn-start" onclick="startTimer()">開始</button>
@@ -139,7 +140,8 @@
 
 <script>
     let timerInterval;
-    let seconds = 0;
+    let startTime = 0;
+    let elapsedTime = 0; // 記錄總經過的毫秒數
     let isRunning = false;
     let shortBellPlayed = false; 
     let longBellPlayed = false;
@@ -195,7 +197,6 @@
                 wakeLockStatus.textContent = '螢幕長亮：啟用中 💡';
                 wakeLockStatus.classList.add('status-active');
                 
-                // 處理螢幕鎖定意外釋放 (例如切換視窗再切回來)
                 wakeLock.addEventListener('release', () => {
                     wakeLockStatus.textContent = '螢幕長亮：已解除';
                     wakeLockStatus.classList.remove('status-active');
@@ -217,7 +218,6 @@
         }
     }
 
-    // 處理頁面可見性改變 (若切換回網頁且計時器運行中，重新要求長亮)
     document.addEventListener('visibilitychange', async () => {
         if (wakeLock !== null && document.visibilityState === 'visible' && isRunning) {
             requestWakeLock();
@@ -226,27 +226,36 @@
 
     // 碼表與時間判斷邏輯
     function updateDisplay() {
-        let mins = Math.floor(seconds / 60);
-        let secs = seconds % 60;
-        display.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-        checkAlarms();
+        // 使用系統時間計算精準經過的毫秒數
+        elapsedTime = Date.now() - startTime;
+
+        let totalSeconds = Math.floor(elapsedTime / 1000);
+        let mins = Math.floor(totalSeconds / 60);
+        let secs = totalSeconds % 60;
+        // 計算百分之一秒 (00~99)
+        let centiseconds = Math.floor((elapsedTime % 1000) / 10);
+
+        display.textContent = 
+            `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}.${centiseconds.toString().padStart(2, '0')}`;
+
+        checkAlarms(totalSeconds);
     }
 
-    function checkAlarms() {
-        // 抓取設定區的自訂時間 (轉換為總秒數)
+    function checkAlarms(totalSeconds) {
         const shortTarget = (parseInt(document.getElementById('shortMin').value) || 0) * 60 + 
                             (parseInt(document.getElementById('shortSec').value) || 0);
         const longTarget =  (parseInt(document.getElementById('longMin').value) || 0) * 60 + 
                             (parseInt(document.getElementById('longSec').value) || 0);
 
-        if (seconds === shortTarget && !shortBellPlayed) {
+        // 確保總秒數大於 0 才觸發，避免剛按開始就誤響
+        if (totalSeconds === shortTarget && totalSeconds > 0 && !shortBellPlayed) {
             ensureAudioContext();
             shortBellAudio.currentTime = 0;
             shortBellAudio.play();
             shortBellPlayed = true;
         }
         
-        if (seconds === longTarget && !longBellPlayed) {
+        if (totalSeconds === longTarget && totalSeconds > 0 && !longBellPlayed) {
             ensureAudioContext();
             longBellAudio.currentTime = 0;
             longBellAudio.play();
@@ -258,28 +267,29 @@
         ensureAudioContext();
         if (!isRunning) {
             isRunning = true;
-            requestWakeLock(); // 啟動螢幕長亮
-            timerInterval = setInterval(() => {
-                seconds++;
-                updateDisplay();
-            }, 1000);
+            // 記錄開始計時的基準點（扣除之前可能已經跑過的 elapsedTime）
+            startTime = Date.now() - elapsedTime;
+            requestWakeLock();
+            
+            // 將更新頻率調高為每 10 毫秒更新一次畫面
+            timerInterval = setInterval(updateDisplay, 10);
         }
     }
 
     function pauseTimer() {
         isRunning = false;
         clearInterval(timerInterval);
-        releaseWakeLock(); // 暫停時解除螢幕長亮
+        releaseWakeLock();
     }
 
     function resetTimer() {
         isRunning = false;
         clearInterval(timerInterval);
-        seconds = 0;
+        elapsedTime = 0;
         shortBellPlayed = false;
         longBellPlayed = false;
-        updateDisplay();
-        releaseWakeLock(); // 重置時解除螢幕長亮
+        display.textContent = "00:00.00";
+        releaseWakeLock();
     }
 
     function testSound(type) {
