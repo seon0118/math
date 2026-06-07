@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>計時碼表 (9分短鈴 / 10分長鈴)</title>
+    <title>計時碼表 (音量加強版)</title>
     <style>
         body {
             font-family: "Microsoft JhengHei", Arial, sans-serif;
@@ -21,6 +21,7 @@
             border-radius: 15px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
             text-align: center;
+            width: 400px;
         }
         #display {
             font-size: 80px;
@@ -29,13 +30,13 @@
             margin-bottom: 30px;
             font-variant-numeric: tabular-nums;
         }
-        .controls, .test-controls {
+        .controls, .test-controls, .volume-controls {
             margin-bottom: 20px;
         }
         button {
             font-size: 18px;
             padding: 10px 20px;
-            margin: 0 10px;
+            margin: 5px;
             border: none;
             border-radius: 8px;
             cursor: pointer;
@@ -50,6 +51,16 @@
         
         .btn-test { background-color: #5bc0de; color: white; font-size: 16px; }
         .btn-test:hover { background-color: #31b0d5; }
+
+        .volume-controls {
+            background-color: #eef;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        input[type="range"] {
+            width: 100%;
+            margin-top: 10px;
+        }
 
         hr {
             border: 0;
@@ -70,6 +81,11 @@
         <button class="btn-reset" onclick="resetTimer()">重置</button>
     </div>
 
+    <div class="volume-controls">
+        <label for="volumeSlider"><strong>強制放大音量：<span id="volumeValue">3</span> 倍</strong></label>
+        <input type="range" id="volumeSlider" min="1" max="10" step="0.5" value="3" onchange="updateVolume(this.value)">
+    </div>
+
     <hr>
 
     <div class="test-controls">
@@ -79,44 +95,80 @@
     </div>
 </div>
 
-<audio id="shortBell" src="https://raw.githubusercontent.com/seon0118/math/main/%E7%9F%AD%E9%88%B4.wav" preload="auto"></audio>
-<audio id="longBell" src="https://raw.githubusercontent.com/seon0118/math/main/%E9%95%B7%E9%88%B4.wav" preload="auto"></audio>
+<audio id="shortBell" crossorigin="anonymous" src="https://raw.githubusercontent.com/seon0118/math/main/%E7%9F%AD%E9%88%B4.wav" preload="auto"></audio>
+<audio id="longBell" crossorigin="anonymous" src="https://raw.githubusercontent.com/seon0118/math/main/%E9%95%B7%E9%88%B4.wav" preload="auto"></audio>
 
 <script>
     let timerInterval;
     let seconds = 0;
     let isRunning = false;
-    
-    // 標記是否已經響過鈴，避免重複播放
     let shortBellPlayed = false; 
     let longBellPlayed = false;
+
+    // Web Audio API 變數
+    let audioCtx;
+    let gainNode;
+    let audioInitialized = false;
 
     const display = document.getElementById('display');
     const shortBellAudio = document.getElementById('shortBell');
     const longBellAudio = document.getElementById('longBell');
+    const volumeValueDisplay = document.getElementById('volumeValue');
+
+    // 初始化音訊放大器
+    function initAudio() {
+        if (audioInitialized) return; // 避免重複初始化
+        
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AudioContext();
+        gainNode = audioCtx.createGain();
+
+        // 設定初始放大倍率
+        gainNode.gain.value = document.getElementById('volumeSlider').value;
+
+        // 綁定音檔與放大器
+        const shortSource = audioCtx.createMediaElementSource(shortBellAudio);
+        const longSource = audioCtx.createMediaElementSource(longBellAudio);
+
+        shortSource.connect(gainNode).connect(audioCtx.destination);
+        longSource.connect(gainNode).connect(audioCtx.destination);
+
+        audioInitialized = true;
+    }
+
+    // 處理音訊狀態，確保瀏覽器允許發聲
+    function ensureAudioContext() {
+        initAudio();
+        if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+    }
+
+    // 更新放大倍率
+    function updateVolume(value) {
+        volumeValueDisplay.textContent = value;
+        if (gainNode) {
+            gainNode.gain.value = value;
+        }
+    }
 
     function updateDisplay() {
         let mins = Math.floor(seconds / 60);
         let secs = seconds % 60;
-        
-        // 格式化為 mm:ss
-        display.textContent = 
-            `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-
-        // 檢查並播放音效
+        display.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
         checkAlarms();
     }
 
     function checkAlarms() {
-        // 9分鐘 = 540秒
         if (seconds === 540 && !shortBellPlayed) {
+            ensureAudioContext();
             shortBellAudio.currentTime = 0;
             shortBellAudio.play();
             shortBellPlayed = true;
         }
         
-        // 10分鐘 = 600秒
         if (seconds === 600 && !longBellPlayed) {
+            ensureAudioContext();
             longBellAudio.currentTime = 0;
             longBellAudio.play();
             longBellPlayed = true;
@@ -124,12 +176,13 @@
     }
 
     function startTimer() {
+        ensureAudioContext(); // 使用者點擊時解除音效封鎖
         if (!isRunning) {
             isRunning = true;
             timerInterval = setInterval(() => {
                 seconds++;
                 updateDisplay();
-            }, 1000); // 每 1000 毫秒（1秒）更新一次
+            }, 1000);
         }
     }
 
@@ -147,10 +200,10 @@
         updateDisplay();
     }
 
-    // 測試音效功能
     function testSound(type) {
+        ensureAudioContext(); // 使用者點擊時解除音效封鎖
         if (type === 'short') {
-            shortBellAudio.currentTime = 0; // 將音訊調回開頭
+            shortBellAudio.currentTime = 0;
             shortBellAudio.play();
         } else if (type === 'long') {
             longBellAudio.currentTime = 0;
