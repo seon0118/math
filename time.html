@@ -3,71 +3,95 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>計時碼表 (音量加強版)</title>
+    <title>計時碼表 (暗黑模式/自訂時間/螢幕長亮)</title>
     <style>
+        /* 黑色系主題設定 */
         body {
             font-family: "Microsoft JhengHei", Arial, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
-            background-color: #f4f4f9;
+            min-height: 100vh;
+            background-color: #121212;
+            color: #e0e0e0;
             margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
         }
         .container {
-            background: white;
-            padding: 40px;
+            background: #1e1e1e;
+            padding: 30px;
             border-radius: 15px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.6);
             text-align: center;
-            width: 400px;
+            width: 100%;
+            max-width: 450px;
         }
         #display {
-            font-size: 80px;
+            font-size: 85px;
             font-weight: bold;
-            color: #333;
-            margin-bottom: 30px;
-            font-variant-numeric: tabular-nums;
-        }
-        .controls, .test-controls, .volume-controls {
+            color: #ffffff;
             margin-bottom: 20px;
+            font-variant-numeric: tabular-nums;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
         }
+        
+        /* 控制面板區塊 */
+        .panel {
+            background-color: #2a2a2a;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: left;
+            border: 1px solid #333;
+        }
+        .panel p { margin: 0 0 10px 0; font-weight: bold; color: #4CAF50; }
+        .setting-row { margin-bottom: 10px; display: flex; align-items: center; }
+        .setting-row label { width: 100px; }
+        input[type="number"] {
+            width: 50px;
+            background: #121212;
+            color: #fff;
+            border: 1px solid #555;
+            border-radius: 5px;
+            padding: 5px;
+            text-align: center;
+            margin: 0 5px;
+        }
+        input[type="range"] { width: 100%; margin-top: 10px; }
+
+        .controls { margin-bottom: 20px; }
         button {
-            font-size: 18px;
-            padding: 10px 20px;
+            font-size: 16px;
+            padding: 10px 18px;
             margin: 5px;
             border: none;
             border-radius: 8px;
             cursor: pointer;
-            transition: background-color 0.2s;
+            transition: all 0.2s;
+            font-weight: bold;
         }
+        button:active { transform: scale(0.95); }
+        
         .btn-start { background-color: #4CAF50; color: white; }
         .btn-start:hover { background-color: #45a049; }
         .btn-pause { background-color: #f0ad4e; color: white; }
         .btn-pause:hover { background-color: #ec971f; }
         .btn-reset { background-color: #d9534f; color: white; }
         .btn-reset:hover { background-color: #c9302c; }
-        
-        .btn-test { background-color: #5bc0de; color: white; font-size: 16px; }
+        .btn-test { background-color: #5bc0de; color: white; width: 100%; margin: 5px 0; }
         .btn-test:hover { background-color: #31b0d5; }
 
-        .volume-controls {
-            background-color: #eef;
-            padding: 15px;
-            border-radius: 8px;
+        hr { border: 0; height: 1px; background: #444; margin: 20px 0; }
+        
+        /* 螢幕長亮狀態提示 */
+        #wakeLockStatus {
+            font-size: 12px;
+            color: #888;
+            margin-top: 15px;
         }
-        input[type="range"] {
-            width: 100%;
-            margin-top: 10px;
-        }
-
-        hr {
-            border: 0;
-            height: 1px;
-            background: #ddd;
-            margin: 20px 0;
-        }
+        .status-active { color: #4CAF50 !important; }
     </style>
 </head>
 <body>
@@ -81,18 +105,33 @@
         <button class="btn-reset" onclick="resetTimer()">重置</button>
     </div>
 
-    <div class="volume-controls">
-        <label for="volumeSlider"><strong>強制放大音量：<span id="volumeValue">3</span> 倍</strong></label>
+    <div class="panel">
+        <p>🕒 鈴響時間設定</p>
+        <div class="setting-row">
+            <label>短鈴時間：</label>
+            <input type="number" id="shortMin" value="9" min="0"> 分
+            <input type="number" id="shortSec" value="0" min="0" max="59"> 秒
+        </div>
+        <div class="setting-row">
+            <label>長鈴時間：</label>
+            <input type="number" id="longMin" value="10" min="0"> 分
+            <input type="number" id="longSec" value="0" min="0" max="59"> 秒
+        </div>
+    </div>
+
+    <div class="panel">
+        <p>🔊 強制放大音量：<span id="volumeValue">3</span> 倍</p>
         <input type="range" id="volumeSlider" min="1" max="10" step="0.5" value="3" onchange="updateVolume(this.value)">
     </div>
 
     <hr>
 
     <div class="test-controls">
-        <p><strong>音效測試區</strong></p>
-        <button class="btn-test" onclick="testSound('short')">測試：9分鐘短鈴</button>
-        <button class="btn-test" onclick="testSound('long')">測試：10分鐘長鈴</button>
+        <button class="btn-test" onclick="testSound('short')">測試：短鈴音效</button>
+        <button class="btn-test" onclick="testSound('long')">測試：長鈴音效</button>
     </div>
+
+    <div id="wakeLockStatus">螢幕長亮：待命 (點擊開始後啟動)</div>
 </div>
 
 <audio id="shortBell" crossorigin="anonymous" src="https://raw.githubusercontent.com/seon0118/math/main/%E7%9F%AD%E9%88%B4.wav" preload="auto"></audio>
@@ -105,28 +144,28 @@
     let shortBellPlayed = false; 
     let longBellPlayed = false;
 
-    // Web Audio API 變數
+    // Web Audio API
     let audioCtx;
     let gainNode;
     let audioInitialized = false;
+
+    // Wake Lock API (螢幕長亮)
+    let wakeLock = null;
 
     const display = document.getElementById('display');
     const shortBellAudio = document.getElementById('shortBell');
     const longBellAudio = document.getElementById('longBell');
     const volumeValueDisplay = document.getElementById('volumeValue');
+    const wakeLockStatus = document.getElementById('wakeLockStatus');
 
-    // 初始化音訊放大器
+    // 初始化音效
     function initAudio() {
-        if (audioInitialized) return; // 避免重複初始化
-        
+        if (audioInitialized) return;
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         audioCtx = new AudioContext();
         gainNode = audioCtx.createGain();
-
-        // 設定初始放大倍率
         gainNode.gain.value = document.getElementById('volumeSlider').value;
 
-        // 綁定音檔與放大器
         const shortSource = audioCtx.createMediaElementSource(shortBellAudio);
         const longSource = audioCtx.createMediaElementSource(longBellAudio);
 
@@ -136,7 +175,6 @@
         audioInitialized = true;
     }
 
-    // 處理音訊狀態，確保瀏覽器允許發聲
     function ensureAudioContext() {
         initAudio();
         if (audioCtx.state === 'suspended') {
@@ -144,14 +182,49 @@
         }
     }
 
-    // 更新放大倍率
     function updateVolume(value) {
         volumeValueDisplay.textContent = value;
-        if (gainNode) {
-            gainNode.gain.value = value;
+        if (gainNode) gainNode.gain.value = value;
+    }
+
+    // 螢幕長亮功能 (Wake Lock)
+    async function requestWakeLock() {
+        try {
+            if ('wakeLock' in navigator) {
+                wakeLock = await navigator.wakeLock.request('screen');
+                wakeLockStatus.textContent = '螢幕長亮：啟用中 💡';
+                wakeLockStatus.classList.add('status-active');
+                
+                // 處理螢幕鎖定意外釋放 (例如切換視窗再切回來)
+                wakeLock.addEventListener('release', () => {
+                    wakeLockStatus.textContent = '螢幕長亮：已解除';
+                    wakeLockStatus.classList.remove('status-active');
+                });
+            } else {
+                wakeLockStatus.textContent = '您的瀏覽器不支援螢幕長亮功能';
+            }
+        } catch (err) {
+            console.error(`${err.name}, ${err.message}`);
+            wakeLockStatus.textContent = '螢幕長亮：權限被拒絕或發生錯誤';
         }
     }
 
+    function releaseWakeLock() {
+        if (wakeLock !== null) {
+            wakeLock.release().then(() => {
+                wakeLock = null;
+            });
+        }
+    }
+
+    // 處理頁面可見性改變 (若切換回網頁且計時器運行中，重新要求長亮)
+    document.addEventListener('visibilitychange', async () => {
+        if (wakeLock !== null && document.visibilityState === 'visible' && isRunning) {
+            requestWakeLock();
+        }
+    });
+
+    // 碼表與時間判斷邏輯
     function updateDisplay() {
         let mins = Math.floor(seconds / 60);
         let secs = seconds % 60;
@@ -160,14 +233,20 @@
     }
 
     function checkAlarms() {
-        if (seconds === 540 && !shortBellPlayed) {
+        // 抓取設定區的自訂時間 (轉換為總秒數)
+        const shortTarget = (parseInt(document.getElementById('shortMin').value) || 0) * 60 + 
+                            (parseInt(document.getElementById('shortSec').value) || 0);
+        const longTarget =  (parseInt(document.getElementById('longMin').value) || 0) * 60 + 
+                            (parseInt(document.getElementById('longSec').value) || 0);
+
+        if (seconds === shortTarget && !shortBellPlayed) {
             ensureAudioContext();
             shortBellAudio.currentTime = 0;
             shortBellAudio.play();
             shortBellPlayed = true;
         }
         
-        if (seconds === 600 && !longBellPlayed) {
+        if (seconds === longTarget && !longBellPlayed) {
             ensureAudioContext();
             longBellAudio.currentTime = 0;
             longBellAudio.play();
@@ -176,9 +255,10 @@
     }
 
     function startTimer() {
-        ensureAudioContext(); // 使用者點擊時解除音效封鎖
+        ensureAudioContext();
         if (!isRunning) {
             isRunning = true;
+            requestWakeLock(); // 啟動螢幕長亮
             timerInterval = setInterval(() => {
                 seconds++;
                 updateDisplay();
@@ -189,6 +269,7 @@
     function pauseTimer() {
         isRunning = false;
         clearInterval(timerInterval);
+        releaseWakeLock(); // 暫停時解除螢幕長亮
     }
 
     function resetTimer() {
@@ -198,10 +279,11 @@
         shortBellPlayed = false;
         longBellPlayed = false;
         updateDisplay();
+        releaseWakeLock(); // 重置時解除螢幕長亮
     }
 
     function testSound(type) {
-        ensureAudioContext(); // 使用者點擊時解除音效封鎖
+        ensureAudioContext();
         if (type === 'short') {
             shortBellAudio.currentTime = 0;
             shortBellAudio.play();
