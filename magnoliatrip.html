@@ -1,0 +1,1122 @@
+```react
+import React, { useState, useMemo } from 'react';
+
+// --- 行程資料結構 ---
+const ITINERARY_DATA = [
+  {
+    day: 1,
+    title: "啟程與潮流探索",
+    date: "Day 1",
+    theme: "抵達機場 ➔ 原宿 ➔ 澀谷",
+    spots: [
+      {
+        id: "d1-0",
+        time: "出發前提醒",
+        name: "填寫入境表 & 地鐵確認",
+        category: "transport",
+        address: "網路填寫：Visit Japan Web",
+        details: "出發前記得上網填寫入境表。注意：東京地鐵營業時間為 05:00 ~ 23:30。",
+        tips: "建議在台灣就先填好 Visit Japan Web，通關更快速！",
+        metroLine: "提醒"
+      },
+      {
+        id: "d1-1",
+        time: "中午/下午",
+        name: "成田機場 ➔ 淺草 (寄放行李)",
+        category: "transport",
+        address: "成田機場第二航廈",
+        details: "抵達成田機場搭到第二航廈，一路跟著鐵道指標走。可搭乘 Skyliner 或 Access 特快（可直接刷西瓜卡進站）。進站後到第一月台搭乘，到淺草站寄放行李。",
+        tips: "Access特快可直通淺草不需轉乘，非常方便！"
+      },
+      {
+        id: "d1-2",
+        time: "最晚 16:00",
+        name: "明治神宮",
+        category: "sightseeing",
+        address: "〒151-8557 東京都渋谷区代々木神園町1-1",
+        details: "從淺草搭地鐵銀座線到「表參道站」轉乘。搭山手線到「原宿 JR 車站」出站走西口即可抵達明治神宮。",
+        tips: "明治神宮的鳥居非常壯觀，步行在林蔭大道十分舒適。"
+      },
+      {
+        id: "d1-3",
+        time: "11:00 ~ 21:00",
+        name: "午餐：邁泉豬排 青音樂本店",
+        category: "food",
+        address: "〒150-0001 東京都渋谷区神宮前4丁目8-5",
+        details: "經典炸豬排排隊名店，環境古色古香，肉質鮮嫩多汁。",
+        tips: "招牌膳與黑豚豬排是必點推薦。"
+      },
+      {
+        id: "d1-4",
+        time: "下午",
+        name: "原宿商圈散步與購物",
+        category: "shopping",
+        address: "竹下通 ➔ 表參道 ➔ 明治通 ➔ 澀谷",
+        details: "從原宿車站東口出發，經過熱鬧的竹下通、時尚的表參道，再沿著明治通一路散步走到澀谷。沿途推薦必逛：\n* Kiddy Land (必逛，〒150-0001 日本東京都渋谷区神宮前6-1-9)\n* ONE PIECE MUGIWARA STORE HARAJUKU (航海王專賣店，〒150-0001 Tokyo, Shibuya, Jingumae, 6 Chome-31-21 東急プラザ原宿「ハラカド」G階)",
+        tips: "這條路線非常考驗腳力，但一路上全都是最潮的店鋪！"
+      },
+      {
+        id: "d1-5",
+        time: "10:00 ~ 22:30",
+        name: "澀谷 SKY",
+        category: "sightseeing",
+        address: "〒150-6145 東京都渋谷区渋谷2丁目24-12 スクランブルスクエア 14階・45階 46階・屋上",
+        details: "澀谷站八公廣場 A8 出口往右手邊直走，或地鐵 B6 出口。門口左手邊有專用電梯直達。樓下退稅在 3 樓（未稅滿 5000 日圓可退稅）。建議黃昏或晚上看夜景。",
+        tips: "強烈建議事先買好門票，尤其是黃昏時段（熱門時段常搶空）！",
+        highlight: true
+      },
+      {
+        id: "d1-6",
+        time: "11:00 ~ 21:00",
+        name: "澀谷 PARCO",
+        category: "shopping",
+        address: "〒150-8377 Tokyo, Shibuya, Udagawacho, 15-1 渋谷パルコ・ヒューリックビル B1-10階",
+        details: "時尚指標百貨。6樓有任天堂官方直營店 (Nintendo TOKYO)、寶可夢中心、卡普空等，是動漫遊戲迷的天堂！",
+        tips: "必逛景點，即便是平日人潮也很多。"
+      },
+      {
+        id: "d1-7",
+        time: "10:00 ~ 21:00",
+        name: "MAGNET by SHIBUYA109",
+        category: "shopping",
+        address: "〒150-0041 日本東京都渋谷区神南1丁目23-10",
+        details: "位於澀谷十字路口旁，頂樓有觀景台可以俯瞰整個澀谷十字路口經典畫面。",
+        tips: "必逛，潮流服飾與美食聚集地。"
+      },
+      {
+        id: "d1-8",
+        time: "12:00 ~ 00:00",
+        name: "晚餐：Yakiton Takichi 澀谷店",
+        category: "food",
+        address: "〒150-0042 Tokyo, Shibuya, Udagawacho, 24-4 サン渋谷ビル",
+        details: "當地的美味居酒屋（烤豬肉串燒），氣氛熱烈，非常適合體驗日本下班後的居酒屋文化。",
+        tips: "烤串搭配生啤酒是絕配！"
+      },
+      {
+        id: "d1-9",
+        time: "最晚 23:30",
+        name: "返回飯店 Asakusa Hanabi Mercure",
+        category: "hotel",
+        address: "淺草花日美居 1 & 2 (〒111-0032 東京都台東区浅草3-29-1)",
+        details: "逛完後搭乘銀座線回到淺草站，步行或搭車至飯店辦理入住手續。",
+        tips: "銀座線末班車通常在 23:30 左右，請留意時間。"
+      }
+    ]
+  },
+  {
+    day: 2,
+    title: "富士山壯麗一日遊",
+    date: "Day 2",
+    theme: "富士山 ➔ 新宿血拼",
+    spots: [
+      {
+        id: "d2-1",
+        time: "06:30 出發",
+        name: "富士山一日遊 (事先買票)",
+        category: "sightseeing",
+        address: "集合地點：東京車站",
+        details: "一日遊行程，需提早出發。從飯店（淺草站）搭地鐵銀座線到上野站，轉乘 JR 線到東京車站集合出發。回程在新宿解散。",
+        tips: "富士山行程必須提前在 Klook 或 KKday 等平台預訂，並在出發前一天確認天氣與集合位置！",
+        highlight: true
+      },
+      {
+        id: "d2-2",
+        time: "最晚 23:00",
+        name: "新宿商圈繁華夜",
+        category: "shopping",
+        address: "新宿站東口站前廣場 & 歌舞伎町一番街",
+        details: "下車後在新宿展開購物行程：\n* Bic Camera 電器衣服 (10:00~22:00, 〒160-0022 東京都新宿区新宿3丁目29-1)\n* 唐吉訶德 24hr (〒160-0022 東京都新宿区新宿3丁目36-16)\n* 新宿丸井 本館 (11:00~20:00, 必逛, 〒160-0022 東京都新宿区新宿3丁目30-13)\n* 新宿站商圈『EATo LUMINE』 (08:00~22:00, 從新宿站地下下一樓往西改札口就到)",
+        tips: "新宿的藥妝、電器非常齊全。唐吉訶德是 24 小時營業，可以放在最後一站！"
+      },
+      {
+        id: "d2-3",
+        time: "15:00 ~ 08:00",
+        name: "晚餐：Monja Sakaba Dashiya",
+        category: "food",
+        address: "〒160-0021 日本東京都新宿区歌舞伎町1丁目11-14",
+        details: "位於歌舞伎町櫻花通的美味文字燒 (Monjayaki) 店，營業至清晨，玩多晚都吃得到！",
+        tips: "文字燒配上手作美味煎餅，體驗經典江戶平民美食。"
+      },
+      {
+        id: "d2-4",
+        time: "夜間",
+        name: "返回淺草飯店",
+        category: "transport",
+        address: "新宿站 ➔ 藏前站 ➔ 淺草",
+        details: "回程搭乘都營大江戶線，從「新宿站」搭到「藏前站」，再轉乘或步行回到淺草飯店。",
+        tips: "注意都營地下鐵的轉乘路線，部分車站轉乘需要出站走一段路。"
+      }
+    ]
+  },
+  {
+    day: 3,
+    title: "下町風情與晴空美景",
+    date: "Day 3",
+    theme: "淺草 ➔ 上野 ➔ 晴空塔",
+    spots: [
+      {
+        id: "d3-1",
+        time: "最晚 09:00",
+        name: "淺草雷門與仲見世通",
+        category: "sightseeing",
+        address: "〒111-0032 東京都台東区浅草2丁目3-1",
+        details: "清晨人潮較少時遊覽淺草雷門，沿著仲見世商店街散步，品嚐現烤仙貝、人形燒等點心。",
+        tips: "早點去可以拍到沒有太多觀光客的雷門大燈籠喔！"
+      },
+      {
+        id: "d3-2",
+        time: "12:15 預約",
+        name: "午餐：江戸肉割烹 さゝや 浅草",
+        category: "food",
+        address: "〒111-0032 東京都台東区浅草",
+        details: "精緻好吃的壽喜燒/肉割烹料理。吃飽後搭乘銀座線去「上野站」，從六號出口出站。",
+        tips: "壽喜燒的肉質鮮美，沾生蛋黃滑嫩無比，記得預約！"
+      },
+      {
+        id: "d3-3",
+        time: "最晚 16:00",
+        name: "上野商圈購物趣",
+        category: "shopping",
+        address: "上野阿美橫町 & 周邊商場",
+        details: "上野是購物狂的天堂，重點地標：\n* 玩具店 Yamashiroya (10:00~21:30, 必逛, 七層樓玩具天堂, 〒110-0005 東京都台東区上野6-14-6)\n* are 商場 (Atre) (10:00~21:00, 位於車站中央大廳右手邊, 〒110-0005 東京都台東区上野7丁目1-1)\n* 上野丸井 OIOI (11:00~20:00, 位於中央大廳一直往前走即可看到, 〒110-8502 東京都台東区上野6丁目15-1)\n* 阿美橫町街 (車站出來一直直走可抵達)",
+        tips: "阿美橫町買藥妝和零食極便宜，還可以順便買伴手禮。"
+      },
+      {
+        id: "d3-4",
+        time: "18:00 晚餐",
+        name: "晚餐：敘敘苑 燒肉 (Skytree 店)",
+        category: "food",
+        address: "〒131-0045 東京スカイツリータウン・ソラマチ 30F",
+        details: "預約 18:00 敘敘苑。搭銀座線回到淺草站，轉乘都營淺草線到「押上站」即可抵達晴空塔 Solamachi 百貨 30F。靠窗席位可以直接俯瞰絕佳東京夜景！",
+        tips: "30樓的靠窗席位景觀無敵，吃完後剛好上晴空塔走廊看 360 度奢華夜景。",
+        highlight: true
+      },
+      {
+        id: "d3-5",
+        time: "最晚 23:00",
+        name: "晴空塔展望台 & 夜景",
+        category: "sightseeing",
+        address: "〒131-0045 東京都墨田区押上1丁目1-2",
+        details: "登上晴空塔展望迴廊，居高臨下欣賞整個關東地區的璀璨夜景。",
+        tips: "搭乘特製高速電梯，速度極快且平穩。結束後搭地鐵回淺草飯店。"
+      }
+    ]
+  },
+  {
+    day: 4,
+    title: "築地美味與東京雙塔",
+    date: "Day 4",
+    theme: "築地 ➔ 銀座 ➔ 東京鐵塔 ➔ 台場",
+    spots: [
+      {
+        id: "d4-1",
+        time: "07:30 出發",
+        name: "築地市場 & 築地本願寺",
+        category: "sightseeing",
+        address: "〒104-0045 東京都中央区築地3丁目15-1 (本願寺)",
+        details: "從藏前站搭大江戶線直達「築地市場站」。\n* 早餐：Tsumugi 咖啡廳 (〒104-0045 Tokyo, Chuo City, Tsukiji, 3 Chome-15-1 本願寺インフォメーションセンター棟内カフェ区画。招牌是著名的 18 道粥品早餐)\n* 逛築地市場 & 參觀極具異國風情的築地本願寺。",
+        tips: "Tsumugi 的 18 品粥非常精緻，常需排隊，建議儘早抵達！"
+      },
+      {
+        id: "d4-2",
+        time: "11:00 ~ 15:30",
+        name: "銀座奢華散步 & 五代目花山烏龍麵",
+        category: "shopping",
+        address: "從築地市場走路約 15 分鐘到銀座",
+        details: "高檔精品與百貨聚集地。必排美食：\n* 中餐：五代目 花山烏冬 銀座店 (〒104-0061 東京都中央区銀座3丁目14-13。超寬烏龍麵極具特色)\n* 下午茶/甜點：Ginza Orions (〒104-0061 Tokyo, Chuo City, Ginza, 7 Chome-3-13 ニューギンザビル 10階。13:00~23:00，美味布丁)",
+        tips: "花山烏冬非常熱門，建議提早於開門前去拿號碼牌。"
+      },
+      {
+        id: "d4-3",
+        time: "最晚 16:00",
+        name: "東京鐵塔打卡 (妙定院前)",
+        category: "sightseeing",
+        address: "〒105-0011 東京都港区芝公園4丁目1-8 (妙定院前)",
+        details: "從銀座走到「日比谷站」搭三田線到「芝公園站」。或搭到「赤羽橋站」。從赤羽橋站口出來右轉直直走，看到「妙定院」前面，是與東京鐵塔合照極棒的網美打卡點！",
+        tips: "此處可以拍到完整的東京鐵塔紅色鋼骨架構，是攝影師激推的私房角度！",
+        highlight: true
+      },
+      {
+        id: "d4-4",
+        time: "最晚 22:00",
+        name: "台場 DiverCity & Aqua City",
+        category: "sightseeing",
+        address: "〒135-0064 東京都江東区青海1丁目1-10",
+        details: "東京鐵塔旁的「赤羽橋站」搭乘都營大江戶線至「汐留站」，轉乘超有科技感的無人駕駛「百合海鷗號」直達台場地區。逛 Diver City (有巨大獨角獸鋼彈) 與 Aqua City。\n* 晚餐：Sapporo Miso 札幌拉麵 (11:00~22:00, 〒135-0091 日本港区台場1丁目7-1 Daiba)",
+        tips: "台場海濱公園可以看見自由女神像與彩虹大橋，是觀賞東京夕陽和夜景的浪漫首選。"
+      },
+      {
+        id: "d4-5",
+        time: "夜間",
+        name: "返回淺草",
+        category: "transport",
+        address: "台場 ➔ 新橋站 ➔ 淺草",
+        details: "搭百合海鷗線回到「新橋站」，再轉乘都營淺草線回到淺草站。",
+        tips: "地鐵一日券不適用於百合海鷗號，需另外刷西瓜卡或購票。"
+      }
+    ]
+  },
+  {
+    day: 5,
+    title: "動漫聖地與東京車站伴手禮",
+    date: "Day 5",
+    theme: "池袋 ➔ 秋葉原 ➔ 東京車站",
+    spots: [
+      {
+        id: "d5-1",
+        time: "09:30 出發",
+        name: "池袋動漫與太陽城購物",
+        category: "shopping",
+        address: "〒170-0013 日本東京都豊島区東池袋",
+        details: "搭地鐵到上野站，轉乘 JR 山手線直達「池袋站」。必逛景點：\n* animate 池袋總店 (10:00~21:00, 動漫迷天堂, 〒170-0013 Tokyo, Toshima City, Higashiikebukuro, 1 Chome-20-7)\n* 太陽城 Sunshine City (10:00~21:00，內有水族館、寶可夢旗艦店)\n* 池袋 PARCO 百貨 (11:00~21:00)\n* 中餐：Negishi 烤牛舌 池袋東口店 (11:00~22:30, 〒170-0013 Tokyo, Toshima City, Higashiikebukuro, 1 Chome-11-1 地下1階。除了烤牛舌，也有烤豬肉跟雞肉套餐)",
+        tips: "池袋是動漫周邊、女性向同人精品以及各類潮流商品的超級聚集地。"
+      },
+      {
+        id: "d5-2",
+        time: "下午 (彈性)",
+        name: "秋葉原電器動漫街 (若有時間)",
+        category: "shopping",
+        address: "秋葉原 JR 車站周邊",
+        details: "如果體力與時間允許，可以搭乘 JR 山手線到秋葉原站，逛逛秋葉原的電器、扭蛋、模型店與女僕咖啡廳。",
+        tips: "秋葉原的收訊與店鋪分佈較廣，建議鎖定特定無線電大樓（如 Radio Kaikan）逛會比較有效率。"
+      },
+      {
+        id: "d5-3",
+        time: "最晚 22:00",
+        name: "東京車站一番街與 GRANSTA 伴手禮",
+        category: "shopping",
+        address: "東京車站內 B1",
+        details: "搭 JR 山手線到東京車站。\n* 東京車站一番街 (動漫人物街，10:00~20:30)。八重洲中央口出站後，往 B1 樓走即可抵達。\n* GRANSTA 東京 (伴手禮聖地，08:00~22:00)。在這裡可以買齊東京最紅的所有伴手禮。\n* 晚餐：壽司郎 (Sushiro) 八重洲地下街店 (11:00~22:30, 〒104-0028 Tokyo, Chuo City, Yaesu, 2 Chome-1-1 B1)。",
+        tips: "東京車站非常像迷宮，記得沿著「八重洲地下街」或「一番街」的黃色指示牌走。",
+        highlight: true
+      },
+      {
+        id: "d5-4",
+        time: "夜間",
+        name: "返回淺草",
+        category: "transport",
+        address: "東京車站 ➔ 上野 ➔ 淺草",
+        details: "搭山手線到「上野站」，轉乘銀座線回到「淺草站」。打包行李，準備隔天回程。",
+        tips: "今天會買很多伴手禮，回飯店後可以先將行李打包秤重。"
+      }
+    ]
+  },
+  {
+    day: 6,
+    title: "漫遊與完美歸途",
+    date: "Day 6",
+    theme: "成田機場 ➔ 溫暖的家",
+    spots: [
+      {
+        id: "d6-1",
+        time: "最晚 09:30 出發",
+        name: "淺草 ➔ 成田機場",
+        category: "transport",
+        address: "淺草站 ➔ 成田機場",
+        details: "從淺草搭 Access 特快直達成田機場第二航廈，再搭乘接駁車前往第一航廈（或直接於二航搭機）。",
+        tips: "出發前一定要再次確認自己的航班在哪個航廈，避免跑錯！"
+      },
+      {
+        id: "d6-2",
+        time: "中午",
+        name: "午餐：川豐 鰻魚飯 (成田機場店)",
+        category: "food",
+        address: "〒286-0111 千葉県成田市三里塚御料牧場1-1 第1航廈新中央棟 4階",
+        details: "成田山百年鰻魚飯名店「川豐」在機場的分店，回國前最後一次享受香噴噴的現烤鰻魚飯！",
+        tips: "醬汁香濃、魚肉無刺即化，是完美的機場結尾美食！"
+      },
+      {
+        id: "d6-3",
+        time: "下午",
+        name: "機場最後巡禮 & 登機",
+        category: "shopping",
+        address: "成田機場免稅店",
+        details: "逛第一、二航廈的伴手禮店。特別推薦：\n* 寶可夢商店 (Pokemon Store) 成田機場店。\n逛完第二航廈伴手禮後，如果搭乘廉價航空（如台灣虎航、捷星等），再坐接駁車到第三航廈登機。",
+        tips: "免稅店依然可以買到薯條三兄弟、白色戀人等伴手禮，液体免稅品要記得用密封袋裝好。"
+      }
+    ]
+  }
+];
+
+const DEFAULT_CHECKLIST = [
+  { id: "c1", text: "上網填寫入境表 (Visit Japan Web)", checked: false, category: "prepare" },
+  { id: "c2", text: "預訂 澀谷 SKY 門票 (Day 1)", checked: false, category: "ticket" },
+  { id: "c3", text: "預訂 富士山一日遊車票 (Day 2)", checked: false, category: "ticket" },
+  { id: "c4", text: "預約 江戸肉割烹 さゝや 壽喜燒 (Day 3)", checked: false, category: "ticket" },
+  { id: "c5", text: "預約 敘敘苑 燒肉 Skytree店 (Day 3)", checked: false, category: "ticket" },
+  { id: "c6", text: "租借/購買日本上網網卡或 eSIM", checked: false, category: "prepare" },
+  { id: "c7", text: "準備西瓜卡 (Suica) 或下載 Apple Pay 電子西瓜卡", checked: false, category: "prepare" },
+  { id: "c8", text: "準備日圓現金、海外高回饋信用卡", checked: false, category: "prepare" },
+];
+
+export default function App() {
+  const [activeDay, setActiveDay] = useState(0); // 0 = 全部, 1~6
+  const [searchQuery, setSearchQuery] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [viewMode, setViewMode] = useState('timeline');
+
+  // 匯率與記帳狀態
+  const [exchangeRate, setExchangeRate] = useState(0.21);
+  const [expenses, setExpenses] = useState([
+    { id: 1, day: 1, name: "Access 機場特快車票", costJpy: 2500, category: "transport" },
+    { id: 2, day: 1, name: "邁泉豬排午餐", costJpy: 3200, category: "food" },
+    { id: 3, day: 1, name: "澀谷 SKY 門票", costJpy: 2200, category: "sightseeing" },
+    { id: 4, day: 2, name: "富士山一日遊", costJpy: 7500, category: "sightseeing" },
+    { id: 5, day: 3, name: "敘敘苑燒肉晚餐", costJpy: 9000, category: "food" },
+    { id: 6, day: 4, name: "五代目花山烏龍麵", costJpy: 1800, category: "food" },
+  ]);
+  const [newExpenseName, setNewExpenseName] = useState('');
+  const [newExpenseCost, setNewExpenseCost] = useState('');
+  const [newExpenseDay, setNewExpenseDay] = useState(1);
+  const [newExpenseCategory, setNewExpenseCategory] = useState('food');
+
+  // 備忘錄
+  const [checklist, setChecklist] = useState(DEFAULT_CHECKLIST);
+  const [newCheckItem, setNewCheckItem] = useState('');
+
+  // 景點解鎖狀態
+  const [visitedSpots, setVisitedSpots] = useState(new Set());
+  const [copiedId, setCopiedId] = useState(null);
+
+  // 複製地址
+  const handleCopyAddress = (id, text) => {
+    const el = document.createElement('textarea');
+    el.value = text;
+    document.body.appendChild(el);
+    el.select();
+    document.execCommand('copy');
+    document.body.removeChild(el);
+
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const toggleVisited = (id) => {
+    const newVisited = new Set(visitedSpots);
+    if (newVisited.has(id)) {
+      newVisited.delete(id);
+    } else {
+      newVisited.add(id);
+    }
+    setVisitedSpots(newVisited);
+  };
+
+  const toggleCheckItem = (id) => {
+    setChecklist(checklist.map(item => 
+      item.id === id ? { ...item, checked: !item.checked } : item
+    ));
+  };
+
+  const addCheckItem = (e) => {
+    e.preventDefault();
+    if (!newCheckItem.trim()) return;
+    setChecklist([...checklist, {
+      id: 'custom-' + Date.now(),
+      text: newCheckItem,
+      checked: false,
+      category: 'custom'
+    }]);
+    setNewCheckItem('');
+  };
+
+  const deleteCheckItem = (id) => {
+    setChecklist(checklist.filter(item => item.id !== id));
+  };
+
+  const addExpense = (e) => {
+    e.preventDefault();
+    if (!newExpenseName.trim() || !newExpenseCost || isNaN(newExpenseCost)) return;
+    setExpenses([...expenses, {
+      id: Date.now(),
+      day: Number(newExpenseDay),
+      name: newExpenseName,
+      costJpy: Number(newExpenseCost),
+      category: newExpenseCategory
+    }]);
+    setNewExpenseName('');
+    setNewExpenseCost('');
+  };
+
+  const deleteExpense = (id) => {
+    setExpenses(expenses.filter(exp => exp.id !== id));
+  };
+
+  // 篩選行程
+  const filteredDays = useMemo(() => {
+    let rawData = ITINERARY_DATA;
+    if (activeDay > 0) {
+      rawData = rawData.filter(d => d.day === activeDay);
+    }
+
+    return rawData.map(dayGroup => {
+      const filteredSpots = dayGroup.spots.filter(spot => {
+        const matchesSearch = 
+          spot.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+          spot.address.toLowerCase().includes(searchQuery.toLowerCase()) || 
+          spot.details.toLowerCase().includes(searchQuery.toLowerCase());
+        
+        const matchesCategory = categoryFilter === 'all' || spot.category === categoryFilter;
+        
+        return matchesSearch && matchesCategory;
+      });
+
+      return {
+        ...dayGroup,
+        spots: filteredSpots
+      };
+    }).filter(dayGroup => dayGroup.spots.length > 0);
+  }, [activeDay, searchQuery, categoryFilter]);
+
+  const totalSpotsCount = useMemo(() => {
+    return ITINERARY_DATA.reduce((acc, d) => acc + d.spots.length, 0);
+  }, []);
+
+  const visitedProgressPercent = useMemo(() => {
+    if (totalSpotsCount === 0) return 0;
+    return Math.round((visitedSpots.size / totalSpotsCount) * 100);
+  }, [visitedSpots, totalSpotsCount]);
+
+  // 玉蘭花綻放階段描述
+  const bloomStatus = useMemo(() => {
+    const p = visitedProgressPercent;
+    if (p === 0) return { stage: "含苞待放", desc: "玉蘭猶抱蕊，靜待東京風。", color: "text-[#8E7E7A]" };
+    if (p < 30) return { stage: "微露芬芳", desc: "枝頭吐新芽，旅程初探尋。", color: "text-[#A98387]" };
+    if (p < 70) return { stage: "含笑吐蕊", desc: "幽香半繾綣，繁華入眼簾。", color: "text-[#B87A80]" };
+    if (p < 100) return { stage: "繁花似錦", desc: "素雅冠群芳，暢遊意未盡。", color: "text-[#C75C66]" };
+    return { stage: "白玉滿枝", desc: "十里盡清芬，圓滿歸鄉里。", color: "text-[#D93D4E]" };
+  }, [visitedProgressPercent]);
+
+  // 預算統計
+  const totalJpy = useMemo(() => expenses.reduce((acc, curr) => acc + curr.costJpy, 0), [expenses]);
+  const totalTwd = useMemo(() => Math.round(totalJpy * exchangeRate), [totalJpy, exchangeRate]);
+
+  // 玉蘭花配色映射
+  const getCategoryStyle = (cat) => {
+    switch (cat) {
+      case 'sightseeing': // 景點：淡玉蘭粉
+        return { 
+          bg: 'bg-[#FDF6F6] border-[#F2D7D9] text-[#A66E74]', 
+          badge: 'bg-[#A66E74] text-white', 
+          label: '景點' 
+        };
+      case 'food': // 美食：焦糖奶茶金
+        return { 
+          bg: 'bg-[#FAF6F0] border-[#E8D8C8] text-[#8C6D58]', 
+          badge: 'bg-[#8C6D58] text-white', 
+          label: '美食' 
+        };
+      case 'shopping': // 購物：暮紫粉
+        return { 
+          bg: 'bg-[#F9F5F8] border-[#E6D5E3] text-[#8A637C]', 
+          badge: 'bg-[#8A637C] text-white', 
+          label: '購物' 
+        };
+      case 'transport': // 交通：黛綠葉色
+        return { 
+          bg: 'bg-[#F3F7F5] border-[#D3E2DB] text-[#4E7262]', 
+          badge: 'bg-[#4E7262] text-white', 
+          label: '交通' 
+        };
+      case 'hotel': // 住宿：優雅暖灰
+        return { 
+          bg: 'bg-[#F6F6F6] border-[#DFDFDF] text-[#606060]', 
+          badge: 'bg-[#606060] text-white', 
+          label: '住宿' 
+        };
+      default:
+        return { 
+          bg: 'bg-white border-[#EBE4D8] text-[#6E6E6E]', 
+          badge: 'bg-[#6E6E6E] text-white', 
+          label: '其他' 
+        };
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-[#FDFBF7] text-[#3D2C2E] font-serif antialiased pb-12">
+      
+      {/* 頂部玉蘭花古典橫幅 */}
+      <header className="relative bg-[#F4EDE4] border-b border-[#E3D4C4] text-[#3D2C2E] py-14 px-4 sm:px-6 lg:px-8 overflow-hidden shadow-sm">
+        {/* 背景玉蘭花瓣裝飾 SVG */}
+        <div className="absolute top-0 right-0 w-80 h-full opacity-10 pointer-events-none">
+          <svg viewBox="0 0 100 100" className="w-full h-full fill-current text-[#A66E74]">
+            <path d="M70,20 C60,40 50,45 40,65 C35,75 42,85 55,80 C68,75 80,60 85,45 C90,30 80,10 70,20 Z" />
+            <path d="M25,40 C20,55 18,65 30,75 C42,85 50,75 52,60 C54,45 40,30 25,40 Z" opacity="0.7"/>
+          </svg>
+        </div>
+        
+        {/* 左側淡雅水墨枝幹背景 */}
+        <div className="absolute bottom-0 left-0 w-72 h-40 opacity-5 pointer-events-none">
+          <svg viewBox="0 0 100 100" className="w-full h-full stroke-current text-[#3D2C2E]" strokeWidth="1.5" fill="none">
+            <path d="M0,90 Q30,70 50,85 T90,60" />
+            <path d="M30,76 Q45,55 40,40" />
+            <circle cx="40" cy="40" r="1.5" fill="currentColor"/>
+          </svg>
+        </div>
+
+        <div className="max-w-7xl mx-auto relative z-10">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-8">
+            <div className="space-y-4">
+              <div className="inline-flex items-center gap-2 bg-[#FAF6F0] border border-[#E8D8C8] rounded-full px-4 py-1 text-xs font-semibold text-[#A66E74]">
+                <span className="w-2 h-2 rounded-full bg-[#A66E74] animate-pulse"></span>
+                白玉蘭花絮 · 旅人手札
+              </div>
+              <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-[#3D2C2E] font-serif">
+                東京六日 · 優雅漫步提案
+              </h1>
+              <p className="text-[#6B5558] max-w-2xl text-sm sm:text-base leading-relaxed font-sans">
+                踏入清雅悠然而精緻的東京之旅。本行程由原宿潮流至澀谷之巔，漫步富士山雪冠，再至晴空塔、築地與優雅台場，為您打造極具溫潤美感的行旅助手。
+              </p>
+            </div>
+
+            {/* 玉蘭綻放進度卡 */}
+            <div className="bg-[#FAF6F0] border border-[#E8D8C8] rounded-2xl p-5 md:w-80 shadow-md shadow-[#E8D8C8]/20 text-sans">
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-xs font-bold text-[#8E7E7A] tracking-wider uppercase">玉蘭綻放進度</span>
+                <span className="text-xs font-serif font-bold text-[#A66E74]">{visitedSpots.size} / {totalSpotsCount} 景點</span>
+              </div>
+              
+              <div className="flex items-center gap-3">
+                {/* 手繪感玉蘭花 SVG 圖示 */}
+                <div className="shrink-0">
+                  <svg viewBox="0 0 24 24" className={`w-8 h-8 transition-transform duration-500 ${bloomStatus.color}`} fill="currentColor">
+                    {/* 玉蘭花苞與花瓣融合 */}
+                    <path d="M12 2C11.5 5 9 8 9 12C9 15.5 11 18 12 18C13 18 15 15.5 15 12C15 8 12.5 5 12 2Z"/>
+                    <path d="M12 8C10 10 7.5 12 7.5 15C7.5 17.5 9.5 19 12 19C14.5 19 16.5 17.5 16.5 15C16.5 12 14 10 12 8Z" opacity="0.6"/>
+                    <path d="M12 15C11 16 10 17 12 19C14 17 13 16 12 15Z" opacity="0.9"/>
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <span className={`text-sm font-bold font-serif ${bloomStatus.color}`}>{bloomStatus.stage}</span>
+                  <p className="text-[11px] text-[#8E7E7A] italic mt-0.5">{bloomStatus.desc}</p>
+                </div>
+              </div>
+
+              <div className="w-full bg-[#EBE4D8] rounded-full h-2 mt-3 overflow-hidden">
+                <div 
+                  className="bg-gradient-to-r from-[#E2B6B9] to-[#A66E74] h-full transition-all duration-700 rounded-full"
+                  style={{ width: `${visitedProgressPercent}%` }}
+                ></div>
+              </div>
+              <div className="flex justify-between items-center mt-2 text-[10px] text-[#8E7E7A]">
+                <span>綻放率: {visitedProgressPercent}%</span>
+                <span>{visitedProgressPercent === 100 ? "🌸 圓滿旅途" : "🌸 行行止止"}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* 核心內容區 */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 font-sans">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          
+          {/* 左側：典雅控制儀表板 */}
+          <div className="lg:col-span-1 space-y-8">
+            
+            {/* 1. 日程選擇 */}
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-[#EBE4D8] relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-16 h-16 opacity-5 pointer-events-none">
+                <svg viewBox="0 0 100 100" className="w-full h-full fill-current text-[#3D2C2E]">
+                  <path d="M50,10 L90,90 L10,90 Z" />
+                </svg>
+              </div>
+
+              <h2 className="text-base sm:text-lg font-bold text-[#3D2C2E] mb-4 flex items-center gap-2 border-b border-[#FAF6F0] pb-3 font-serif">
+                <span className="text-[#A66E74] font-serif">✿</span> 旅程日程導航
+              </h2>
+
+              {/* 天數按鈕群組 - 古典粉米色調 */}
+              <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-3 gap-2.5 mb-6">
+                <button
+                  onClick={() => setActiveDay(0)}
+                  className={`py-2.5 px-3 text-xs font-bold rounded-xl transition-all font-serif ${
+                    activeDay === 0
+                      ? 'bg-[#A66E74] text-white shadow-md shadow-[#A66E74]/15'
+                      : 'bg-[#FAF6F0] hover:bg-[#F4EDE4] text-[#6B5558]'
+                  }`}
+                >
+                  全日程總覽
+                </button>
+                {[1, 2, 3, 4, 5, 6].map(d => (
+                  <button
+                    key={d}
+                    onClick={() => setActiveDay(d)}
+                    className={`py-2.5 px-2 text-xs font-bold rounded-xl transition-all font-serif ${
+                      activeDay === d
+                        ? 'bg-[#A66E74] text-white shadow-md shadow-[#A66E74]/15'
+                        : 'bg-[#FAF6F0] hover:bg-[#F4EDE4] text-[#6B5558]'
+                    }`}
+                  >
+                    Day {d} 記
+                  </button>
+                ))}
+              </div>
+
+              {/* 搜尋欄 */}
+              <div className="mb-4">
+                <label className="block text-[11px] font-bold text-[#8E7E7A] uppercase tracking-wider mb-2 font-serif">
+                  尋覓行程景點
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="如：澀谷 SKY、拉麵、牛舌..."
+                    className="w-full pl-9 pr-4 py-2.5 text-xs rounded-xl border border-[#EBE4D8] focus:outline-none focus:ring-1 focus:ring-[#A66E74] bg-[#FDFBF7]"
+                  />
+                  <span className="absolute left-3 top-3 text-[#A98387]">
+                    🔍
+                  </span>
+                </div>
+              </div>
+
+              {/* 類別篩選 */}
+              <div>
+                <label className="block text-[11px] font-bold text-[#8E7E7A] uppercase tracking-wider mb-2 font-serif">
+                  風情分類
+                </label>
+                <div className="flex flex-wrap gap-1.5">
+                  {[
+                    { id: 'all', label: '皆可' },
+                    { id: 'sightseeing', label: '景點' },
+                    { id: 'food', label: '美食' },
+                    { id: 'shopping', label: '購物' },
+                    { id: 'transport', label: '交通' },
+                    { id: 'hotel', label: '下榻' },
+                  ].map(cat => (
+                    <button
+                      key={cat.id}
+                      onClick={() => setCategoryFilter(cat.id)}
+                      className={`text-[11px] px-3 py-1.5 rounded-lg border transition-all ${
+                        categoryFilter === cat.id
+                          ? 'bg-[#3D2C2E] border-[#3D2C2E] text-white'
+                          : 'bg-white border-[#EBE4D8] hover:border-[#D1C7B7] text-[#6B5558]'
+                      }`}
+                    >
+                      {cat.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* 2. 行前備忘與票券 (玉蘭剪影背景) */}
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-[#EBE4D8]">
+              <h2 className="text-base sm:text-lg font-bold text-[#3D2C2E] mb-4 flex items-center justify-between border-b border-[#FAF6F0] pb-3 font-serif">
+                <span className="flex items-center gap-2">
+                  <span className="text-[#A66E74]">✿</span> 行前備忘 checklist
+                </span>
+                <span className="text-[11px] bg-[#FAF6F0] text-[#A66E74] border border-[#E8D8C8] px-2 py-0.5 rounded-full font-serif">
+                  {checklist.filter(c => c.checked).length} / {checklist.length}
+                </span>
+              </h2>
+
+              {/* 備忘項目 */}
+              <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
+                {checklist.map(item => (
+                  <div key={item.id} className="flex items-start justify-between group text-xs">
+                    <label className="flex items-start gap-3 cursor-pointer text-[#6B5558] hover:text-[#3D2C2E] select-none flex-1">
+                      <input
+                        type="checkbox"
+                        checked={item.checked}
+                        onChange={() => toggleCheckItem(item.id)}
+                        className="mt-0.5 rounded text-[#A66E74] focus:ring-[#A66E74] border-[#EBE4D8] w-4.5 h-4.5 bg-[#FAF6F0]"
+                      />
+                      <span className={`transition-all leading-relaxed ${item.checked ? 'line-through text-slate-300 font-light' : 'text-[#5C4649]'}`}>
+                        {item.text}
+                      </span>
+                    </label>
+                    <button
+                      onClick={() => deleteCheckItem(item.id)}
+                      className="text-slate-300 hover:text-[#A66E74] lg:opacity-0 group-hover:opacity-100 transition-opacity ml-2"
+                      title="拋棄"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              {/* 自訂備忘 */}
+              <form onSubmit={addCheckItem} className="mt-4 flex gap-2">
+                <input
+                  type="text"
+                  value={newCheckItem}
+                  onChange={(e) => setNewCheckItem(e.target.value)}
+                  placeholder="自訂添置備忘..."
+                  className="flex-1 px-3 py-2 text-xs rounded-xl border border-[#EBE4D8] focus:outline-none focus:ring-1 focus:ring-[#A66E74] bg-[#FAF6F0]/40"
+                />
+                <button
+                  type="submit"
+                  className="bg-[#A66E74] hover:bg-[#8F5B61] text-white font-bold px-3 py-2 rounded-xl text-xs transition-colors font-serif"
+                >
+                  添加
+                </button>
+              </form>
+            </div>
+
+            {/* 3. 玉蘭記帳簿 (Jpy to Twd) */}
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-[#EBE4D8]">
+              <h2 className="text-base sm:text-lg font-bold text-[#3D2C2E] mb-2 flex items-center gap-2 border-b border-[#FAF6F0] pb-3 font-serif">
+                <span className="text-[#A66E74]">✿</span> 日圓金流與消費記
+              </h2>
+
+              {/* 匯率微調 */}
+              <div className="flex items-center justify-between gap-4 bg-[#FAF6F0] p-3 rounded-xl mb-4 text-xs">
+                <span className="text-[#6B5558] font-semibold">自訂日圓匯率:</span>
+                <div className="flex items-center gap-1.5 font-sans">
+                  <span className="text-[#8E7E7A]">1 JPY =</span>
+                  <input
+                    type="number"
+                    step="0.001"
+                    value={exchangeRate}
+                    onChange={(e) => setExchangeRate(Math.max(0.01, parseFloat(e.target.value) || 0.21))}
+                    className="w-14 px-1 py-0.5 text-center rounded border border-[#EBE4D8] focus:outline-none focus:ring-1 focus:ring-[#A66E74] text-xs bg-white text-[#3D2C2E]"
+                  />
+                  <span className="text-[#6B5558] font-semibold">TWD</span>
+                </div>
+              </div>
+
+              {/* 金額看板 */}
+              <div className="grid grid-cols-2 gap-3 mb-5">
+                <div className="bg-[#FAF6F0] p-3 rounded-xl border border-[#E8D8C8]">
+                  <span className="text-[10px] text-[#8C6D58] block mb-0.5 font-serif">日幣預計花費</span>
+                  <span className="text-lg font-extrabold text-[#8C6D58] font-mono">¥{totalJpy.toLocaleString()}</span>
+                </div>
+                <div className="bg-[#FDF6F6] p-3 rounded-xl border border-[#F2D7D9]">
+                  <span className="text-[10px] text-[#A66E74] block mb-0.5 font-serif">折合台幣 (約)</span>
+                  <span className="text-lg font-extrabold text-[#A66E74] font-mono">NT${totalTwd.toLocaleString()}</span>
+                </div>
+              </div>
+
+              {/* 記帳清單 */}
+              <div className="space-y-2 max-h-48 overflow-y-auto mb-4 pr-1 text-xs">
+                {expenses.map(exp => (
+                  <div key={exp.id} className="flex justify-between items-center border-b border-[#FAF6F0] py-2 hover:bg-[#FAF6F0]/30 transition-colors">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-1.5">
+                        <span className="bg-[#F4EDE4] text-[#8E7E7A] rounded px-1 text-[9px] font-bold">D{exp.day}</span>
+                        <span className="font-semibold text-[#5C4649]">{exp.name}</span>
+                      </div>
+                      <span className="text-[#8E7E7A] text-[10px] font-sans">NT$ {Math.round(exp.costJpy * exchangeRate).toLocaleString()}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono font-bold text-[#3D2C2E]">¥{exp.costJpy.toLocaleString()}</span>
+                      <button 
+                        onClick={() => deleteExpense(exp.id)}
+                        className="text-[#C7A8AB] hover:text-[#A66E74] transition-colors"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* 新增消費 */}
+              <form onSubmit={addExpense} className="space-y-3 bg-[#FAF6F0]/40 p-3 rounded-xl border border-[#FAF6F0]">
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <select
+                    value={newExpenseDay}
+                    onChange={(e) => setNewExpenseDay(e.target.value)}
+                    className="bg-white rounded-lg border border-[#EBE4D8] py-1 px-2 text-[#6B5558] focus:outline-none"
+                  >
+                    {[1, 2, 3, 4, 5, 6].map(d => (
+                      <option key={d} value={d}>Day {d}</option>
+                    ))}
+                  </select>
+                  <select
+                    value={newExpenseCategory}
+                    onChange={(e) => setNewExpenseCategory(e.target.value)}
+                    className="bg-white rounded-lg border border-[#EBE4D8] py-1 px-2 text-[#6B5558] focus:outline-none"
+                  >
+                    <option value="food">美食</option>
+                    <option value="transport">交通</option>
+                    <option value="sightseeing">景點</option>
+                    <option value="shopping">購物</option>
+                    <option value="hotel">下榻</option>
+                  </select>
+                </div>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    required
+                    placeholder="項目 (如：拉麵)"
+                    value={newExpenseName}
+                    onChange={(e) => setNewExpenseName(e.target.value)}
+                    className="flex-1 text-xs px-2.5 py-1.5 rounded-lg border border-[#EBE4D8] bg-white text-[#3D2C2E]"
+                  />
+                  <input
+                    type="number"
+                    required
+                    placeholder="日圓 (¥)"
+                    value={newExpenseCost}
+                    onChange={(e) => setNewExpenseCost(e.target.value)}
+                    className="w-16 text-xs px-2 py-1.5 rounded-lg border border-[#EBE4D8] bg-white font-mono text-right text-[#3D2C2E]"
+                  />
+                  <button 
+                    type="submit" 
+                    className="bg-[#A66E74] hover:bg-[#8F5B61] text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-colors font-serif"
+                  >
+                    登帳
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            {/* 4. 東京地鐵路線速覽 */}
+            <div className="bg-[#FAF6F0]/50 rounded-2xl p-5 border border-[#EBE4D8] text-xs">
+              <h3 className="font-serif font-bold text-[#3D2C2E] mb-3 pb-1 border-b border-[#FAF6F0]">
+                行旅地下鐵色彩對照
+              </h3>
+              <div className="grid grid-cols-2 gap-2 text-[11px]">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-orange-400 block"></span>
+                  <span className="text-[#6B5558]">G 銀座線 (淺草/表參道)</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-rose-600 block"></span>
+                  <span className="text-[#6B5558]">E 大江戶線 (築地/新宿)</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-rose-400 block"></span>
+                  <span className="text-[#6B5558]">A 淺草線 (押上/雷門)</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-lime-500 block"></span>
+                  <span className="text-[#6B5558]">JY 山手線 (JR環狀線)</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          {/* 右側：時光與景點詳細時程 */}
+          <div className="lg:col-span-2 space-y-6">
+            
+            {/* 詳細看板頂部切換 */}
+            <div className="flex items-center justify-between bg-white rounded-2xl p-4 shadow-sm border border-[#EBE4D8]">
+              <div className="flex items-center gap-3">
+                <span className="text-base sm:text-lg font-bold text-[#3D2C2E] font-serif">
+                  {activeDay === 0 ? "🌸 尋幽總覽" : `🌸 Day ${activeDay} 尋幽詳記`}
+                </span>
+                <span className="text-[10px] bg-[#FAF6F0] text-[#A66E74] border border-[#E8D8C8] px-2.5 py-0.5 rounded-full font-serif font-bold">
+                  共 {filteredDays.reduce((acc, curr) => acc + curr.spots.length, 0)} 處
+                </span>
+              </div>
+              <div className="flex bg-[#FAF6F0] rounded-lg p-1 border border-[#E8D8C8]/50">
+                <button
+                  onClick={() => setViewMode('timeline')}
+                  className={`px-3 py-1 text-xs font-bold rounded-md transition-all font-serif ${
+                    viewMode === 'timeline' ? 'bg-[#A66E74] text-white shadow-sm' : 'text-[#8E7E7A] hover:text-[#3D2C2E]'
+                  }`}
+                >
+                  古典時間軸
+                </button>
+                <button
+                  onClick={() => setViewMode('grid')}
+                  className={`px-3 py-1 text-xs font-bold rounded-md transition-all font-serif ${
+                    viewMode === 'grid' ? 'bg-[#A66E74] text-white shadow-sm' : 'text-[#8E7E7A] hover:text-[#3D2C2E]'
+                  }`}
+                >
+                  簡約卡片
+                </button>
+              </div>
+            </div>
+
+            {/* 若篩選無結果 */}
+            {filteredDays.length === 0 && (
+              <div className="bg-white rounded-2xl p-12 text-center border border-[#EBE4D8]">
+                <span className="text-3xl block mb-2">🌸</span>
+                <h3 className="text-base font-bold text-[#6B5558] mb-1 font-serif">此處無玉蘭蹤影</h3>
+                <p className="text-slate-400 text-xs">請嘗試搜尋其他景點，或更改風情分類篩選。</p>
+              </div>
+            )}
+
+            {/* 日程群組 */}
+            <div className="space-y-12">
+              {filteredDays.map(dayGroup => (
+                <div key={dayGroup.day} className="space-y-6">
+                  
+                  {/* 天數優雅大標 */}
+                  <div className="flex items-center justify-between bg-gradient-to-r from-[#FAF6F0] to-white border-l-4 border-[#A66E74] py-3.5 px-5 rounded-r-xl shadow-sm">
+                    <div className="flex items-center gap-3">
+                      <span className="font-serif text-lg font-extrabold text-[#A66E74]">
+                        {dayGroup.date}
+                      </span>
+                      <div>
+                        <h3 className="font-bold font-serif text-[#3D2C2E] text-sm sm:text-base">{dayGroup.title}</h3>
+                        <p className="text-[11px] text-[#8E7E7A] tracking-wider">{dayGroup.theme}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 視圖切換渲染 */}
+                  {viewMode === 'timeline' ? (
+                    // --- 古典時間軸模式 ---
+                    <div className="relative border-l-2 border-[#EBE4D8] ml-4 sm:ml-6 pl-6 sm:pl-8 space-y-8">
+                      {dayGroup.spots.map((spot, spotIdx) => {
+                        const style = getCategoryStyle(spot.category);
+                        const isVisited = visitedSpots.has(spot.id);
+
+                        return (
+                          <div key={spot.id} className="relative group">
+                            
+                            {/* 花形時間點圓圈 */}
+                            <span 
+                              onClick={() => toggleVisited(spot.id)}
+                              className={`absolute -left-[35px] sm:-left-[43px] top-1 flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 transition-all cursor-pointer ${
+                                isVisited 
+                                  ? 'bg-[#A66E74] border-[#A66E74] text-white' 
+                                  : 'bg-white border-[#EBE4D8] text-[#8E7E7A] hover:border-[#A66E74]'
+                              }`}
+                            >
+                              {isVisited ? (
+                                <span className="text-[10px]">✿</span>
+                              ) : (
+                                <span className="text-[9px] font-bold font-mono">{spotIdx + 1}</span>
+                              )}
+                            </span>
+
+                            {/* 卡片本體 */}
+                            <div className={`bg-white rounded-2xl border p-5 transition-all shadow-sm group-hover:shadow-md ${
+                              spot.highlight ? 'ring-1 ring-[#A66E74]/30' : ''
+                            } ${isVisited ? 'border-[#F2D7D9] bg-[#FAF6F0]/20 opacity-80' : 'border-[#EBE4D8]'}`}>
+                              
+                              {/* 標籤頭部 */}
+                              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#FAF6F0] pb-3 mb-3 text-xs">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-bold text-[#8E7E7A] font-serif">
+                                    時分：{spot.time}
+                                  </span>
+                                  <span className={`text-[10px] font-serif font-bold px-2 py-0.5 rounded-lg ${style.badge}`}>
+                                    {style.label}
+                                  </span>
+                                  {spot.highlight && (
+                                    <span className="text-[9px] bg-[#E2B6B9] text-[#5C3235] font-bold px-1.5 py-0.5 rounded font-serif">
+                                      精選景點
+                                    </span>
+                                  )}
+                                </div>
+
+                                <button
+                                  onClick={() => toggleVisited(spot.id)}
+                                  className={`flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-bold transition-all border ${
+                                    isVisited
+                                      ? 'bg-[#FDF6F6] border-[#F2D7D9] text-[#A66E74]'
+                                      : 'bg-[#FAF6F0] border-[#E8D8C8] text-[#6B5558] hover:bg-[#F4EDE4]'
+                                  }`}
+                                >
+                                  {isVisited ? "✓ 已探尋" : "標記造訪"}
+                                </button>
+                              </div>
+
+                              {/* 景點主名 */}
+                              <h4 className={`text-base font-bold transition-all text-[#3D2C2E] font-serif flex items-center gap-2 ${
+                                isVisited ? 'text-[#8E7E7A] font-medium' : ''
+                              }`}>
+                                {spot.name}
+                              </h4>
+
+                              {/* 細節詳述 */}
+                              <p className="mt-2 text-xs sm:text-sm text-[#6B5558] leading-relaxed whitespace-pre-line font-sans">
+                                {spot.details}
+                              </p>
+
+                              {/* 秘笈提示 */}
+                              {spot.tips && (
+                                <div className="mt-3 bg-[#FAF6F0] border border-[#E8D8C8] rounded-xl p-3 text-xs text-[#8C6D58] flex gap-2 font-sans">
+                                  <span className="text-[#A66E74] font-bold shrink-0">🌸 探尋秘笈:</span>
+                                  <span className="flex-1 leading-relaxed text-[#6B5558]">{spot.tips}</span>
+                                </div>
+                              )}
+
+                              {/* 地址複製 */}
+                              {spot.address && (
+                                <div className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-[#FAF6F0]/30 rounded-xl p-3 border border-[#FAF6F0] text-xs">
+                                  <div className="flex items-start gap-1.5 text-[#8E7E7A] max-w-[80%] overflow-hidden">
+                                    <span className="shrink-0">📍</span>
+                                    <span className="font-mono truncate">{spot.address}</span>
+                                  </div>
+                                  <button
+                                    onClick={() => handleCopyAddress(spot.id, spot.address)}
+                                    className={`shrink-0 self-end sm:self-center px-2.5 py-1 rounded text-[10px] font-semibold transition-all border ${
+                                      copiedId === spot.id
+                                        ? 'bg-[#A66E74] border-[#A66E74] text-white'
+                                        : 'bg-white border-[#EBE4D8] hover:border-[#D1C7B7] text-[#6B5558]'
+                                    }`}
+                                  >
+                                    {copiedId === spot.id ? "已複製！" : "複製地址"}
+                                  </button>
+                                </div>
+                              )}
+
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    // --- 簡約卡片模式 ---
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {dayGroup.spots.map(spot => {
+                        const style = getCategoryStyle(spot.category);
+                        const isVisited = visitedSpots.has(spot.id);
+
+                        return (
+                          <div 
+                            key={spot.id} 
+                            onClick={() => toggleVisited(spot.id)}
+                            className={`cursor-pointer bg-white rounded-xl border p-4 transition-all shadow-sm hover:shadow-md ${
+                              spot.highlight ? 'border-[#A66E74] ring-1 ring-[#A66E74]/25' : 'border-[#EBE4D8]'
+                            } ${isVisited ? 'border-[#F2D7D9] opacity-60 bg-[#FAF6F0]/20' : ''}`}
+                          >
+                            <div className="flex items-center justify-between mb-2 text-[11px]">
+                              <span className="text-[#8E7E7A] font-serif">{spot.time}</span>
+                              <span className={`text-[9px] font-serif font-bold px-1.5 py-0.5 rounded-full ${style.badge}`}>
+                                {style.label}
+                              </span>
+                            </div>
+                            <h4 className="font-bold text-sm text-[#3D2C2E] font-serif flex items-center gap-1.5">
+                              {isVisited && <span className="text-[#A66E74]">✿</span>}
+                              {spot.name}
+                            </h4>
+                            <p className="text-xs text-[#6B5558] line-clamp-2 mt-1 leading-relaxed">
+                              {spot.details}
+                            </p>
+                            <div className="mt-2 text-[10px] text-slate-400 font-mono truncate">
+                              📍 {spot.address}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                </div>
+              ))}
+            </div>
+
+          </div>
+
+        </div>
+      </main>
+
+      {/* 底部優雅落款 */}
+      <footer className="max-w-7xl mx-auto mt-20 px-4 text-center border-t border-[#EBE4D8] pt-10">
+        <div className="inline-flex items-center justify-center gap-1 text-xs text-[#8E7E7A] mb-2 font-serif">
+          <span>白玉蘭落筆</span>
+          <span className="text-[#A66E74]">✿</span>
+          <span>漫天微雨東京行</span>
+        </div>
+        <p className="text-[10px] text-slate-400 max-w-xl mx-auto leading-relaxed">
+          本作品設計汲取玉蘭花之素雅色調與微粉花蕊配色。行程彙整自您的 6 日出遊備忘，內建一鍵複製地址、即時日幣匯率登帳與自訂備忘錄，兼具藝術古典美學與現代旅途便攜。
+        </p>
+      </footer>
+    </div>
+  );
+}
+
+```
