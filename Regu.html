@@ -1,0 +1,1728 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>教育行政與法規 互動題庫系統</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome 圖示 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&display=swap');
+    body {
+      font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    /* 自訂捲軸樣式 */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col selection:bg-indigo-500 selection:text-white">
+
+  <!-- 頂部導航 -->
+  <header class="bg-indigo-700 text-white shadow-md sticky top-0 z-40">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+      <div class="flex items-center space-x-3">
+        <div class="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center backdrop-blur-sm">
+          <i class="fa-solid fa-graduation-cap text-xl text-amber-300"></i>
+        </div>
+        <div>
+          <h1 class="text-base md:text-lg font-bold tracking-tight">教育行政與法規</h1>
+          <p class="text-xs text-indigo-200 hidden sm:block">教師資格檢定與甄試 • 互動試題實戰庫</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 text-sm">
+        <span id="quizModeBadge" class="bg-indigo-800/80 px-2.5 py-1 rounded-full text-indigo-100 text-xs font-medium border border-indigo-500/50">
+          即時練習模式
+        </span>
+        <button id="bookmarkFilterBtn" class="bg-amber-500 hover:bg-amber-600 active:scale-95 text-white px-3 py-1.5 rounded-xl text-xs sm:text-sm font-medium transition flex items-center gap-1.5 shadow-sm">
+          <i class="fa-solid fa-bookmark"></i>
+          <span>錯題與收藏 (<span id="bookmarkCount">0</span>)</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 主主體佈局 -->
+  <div class="max-w-6xl mx-auto px-4 py-6 flex-1 w-full flex flex-col lg:flex-row gap-6">
+
+    <!-- 左側主答題區塊 -->
+    <main class="flex-1 min-w-0">
+      
+      <!-- 控制列 -->
+      <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200/80 mb-5 flex flex-wrap gap-3 justify-between items-center">
+        <div class="flex flex-wrap items-center gap-2">
+          <label class="text-xs font-semibold text-slate-500">試題類別：</label>
+          <select id="categorySelect" class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium">
+            <option value="all">全卷完整測驗 (全收錄 70 題)</option>
+            <option value="law">教育法規體系與權限劃分</option>
+            <option value="teacher">教師聘任、解聘、停聘與權益救濟</option>
+            <option value="counsel">學生輔導、性平、兒保與霸凌防制</option>
+            <option value="practice">班級經營、教育哲學與教育實習</option>
+          </select>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button id="switchModeBtn" class="px-3 py-1.5 rounded-xl border border-indigo-600 text-indigo-600 hover:bg-indigo-50 text-xs sm:text-sm font-semibold transition active:scale-95">
+            切換為模擬測驗
+          </button>
+          <button id="resetQuizBtn" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-sm font-medium transition active:scale-95">
+            <i class="fa-solid fa-arrows-rotate mr-1"></i>重設
+          </button>
+        </div>
+      </div>
+
+      <!-- 進度與即時統計 -->
+      <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200/80 mb-5">
+        <div class="flex justify-between items-center text-xs sm:text-sm font-semibold mb-2 text-slate-600">
+          <div>
+            當前題目：<span id="currentQuestionNum" class="text-indigo-600 text-base font-bold">1</span> / <span id="totalQuestionsNum">0</span>
+          </div>
+          <div id="scoreDisplay" class="flex items-center gap-2">
+            <span>答對率：<strong id="accuracyRate" class="text-emerald-600 font-bold">0%</strong></span>
+            <span class="text-slate-400">|</span>
+            <span class="text-slate-500">(<span id="correctNum">0</span> 正確 / <span id="answeredNum">0</span> 已答)</span>
+          </div>
+          <div id="timerDisplay" class="hidden text-amber-600 font-mono text-sm font-bold bg-amber-50 px-2.5 py-0.5 rounded-lg border border-amber-200">
+            <i class="fa-regular fa-clock mr-1"></i>00:00
+          </div>
+        </div>
+        <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+          <div id="progressBar" class="bg-indigo-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <!-- 題幹核心卡片 -->
+      <div id="quizContainer" class="bg-white rounded-3xl shadow-sm border border-slate-200/80 p-5 sm:p-8 relative">
+        
+        <!-- 標籤與收藏 -->
+        <div class="flex justify-between items-center mb-4">
+          <span id="questionTag" class="text-xs px-3 py-1 bg-indigo-50 text-indigo-700 font-semibold rounded-full border border-indigo-100">
+            法規重點
+          </span>
+          <button id="starBtn" class="text-slate-300 hover:text-amber-500 transition text-xl p-1 rounded-lg" title="標記收藏或錯題">
+            <i class="fa-regular fa-star"></i>
+          </button>
+        </div>
+
+        <!-- 題幹文字 -->
+        <div id="questionText" class="text-base sm:text-lg font-medium text-slate-800 leading-relaxed mb-6">
+          題目載入中...
+        </div>
+
+        <!-- 選項列表 -->
+        <div id="optionsList" class="space-y-3 mb-6">
+          <!-- 選項按鈕由 JS 生成 -->
+        </div>
+
+        <!-- 試題解析面板 -->
+        <div id="explanationPanel" class="hidden bg-slate-50 border border-slate-200/90 rounded-2xl p-5 mt-6 transition-all duration-300">
+          <div class="flex items-center gap-2 mb-2 font-bold text-sm sm:text-base" id="resultStatus">
+            <!-- 結果標籤 -->
+          </div>
+          <div class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+            <i class="fa-solid fa-book-open-reader"></i> 法規條文解析與核心觀念
+          </div>
+          <div id="explanationText" class="text-xs sm:text-sm text-slate-600 leading-relaxed whitespace-pre-line bg-white p-4 rounded-xl border border-slate-100">
+            解析內容...
+          </div>
+        </div>
+
+        <!-- 底部切換按鈕 -->
+        <div class="flex justify-between items-center mt-8 pt-4 border-t border-slate-100">
+          <button id="prevBtn" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 text-xs sm:text-sm font-semibold transition disabled:opacity-40 disabled:cursor-not-allowed">
+            <i class="fa-solid fa-chevron-left mr-1"></i> 上一題
+          </button>
+          
+          <div class="flex items-center gap-2">
+            <button id="nextBtn" class="px-5 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 text-xs sm:text-sm font-semibold transition shadow-sm active:scale-95">
+              下一題 <i class="fa-solid fa-chevron-right ml-1"></i>
+            </button>
+            <button id="submitExamBtn" class="hidden px-5 py-2 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 text-xs sm:text-sm font-semibold transition shadow-sm active:scale-95">
+              <i class="fa-solid fa-paper-plane mr-1"></i> 提交考卷
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+    </main>
+
+    <!-- 右側題號導航卡 (電腦版常駐，手機版摺疊於下方) -->
+    <aside class="w-full lg:w-72 shrink-0">
+      <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200/80 sticky top-20">
+        <div class="flex justify-between items-center mb-3">
+          <h2 class="text-sm font-bold text-slate-700 flex items-center gap-1.5">
+            <i class="fa-solid fa-table-cells text-indigo-600"></i> 題號速查跳轉
+          </h2>
+          <span class="text-xs text-slate-400">點擊跳至該題</span>
+        </div>
+        
+        <!-- 狀態圖例 -->
+        <div class="flex items-center gap-3 text-[11px] text-slate-500 mb-3 pb-3 border-b border-slate-100">
+          <div class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>答對</div>
+          <div class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>答錯</div>
+          <div class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-indigo-500"></span>已選</div>
+          <div class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-slate-200"></span>未答</div>
+        </div>
+
+        <!-- 網格題號按鈕容器 -->
+        <div id="questionGrid" class="grid grid-cols-6 sm:grid-cols-8 lg:grid-cols-5 gap-2 max-h-72 overflow-y-auto p-1">
+          <!-- 由 JS 渲染 -->
+        </div>
+
+        <!-- 快捷功能 -->
+        <div class="mt-4 pt-4 border-t border-slate-100 flex flex-col gap-2">
+          <button id="quickClearBookmarks" class="text-xs text-slate-500 hover:text-rose-600 text-left py-1 flex items-center gap-1 transition">
+            <i class="fa-regular fa-trash-can"></i> 清除所有收藏與錯題記號
+          </button>
+        </div>
+      </div>
+    </aside>
+
+  </div>
+
+  <!-- 自訂確認與訊息對話框 (取代 alert/confirm) -->
+  <div id="customModal" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-5 text-center shadow-xl border border-slate-100">
+      <div id="modalIcon" class="w-12 h-12 rounded-full mx-auto mb-3 flex items-center justify-center text-xl bg-indigo-50 text-indigo-600">
+        <i class="fa-solid fa-circle-question"></i>
+      </div>
+      <h3 id="modalTitle" class="text-base font-bold text-slate-800 mb-1">提示訊息</h3>
+      <p id="modalMsg" class="text-xs sm:text-sm text-slate-500 mb-5 leading-relaxed">訊息內容</p>
+      <div class="flex gap-2">
+        <button id="modalCancelBtn" class="flex-1 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold text-xs sm:text-sm transition">
+          取消
+        </button>
+        <button id="modalConfirmBtn" class="flex-1 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs sm:text-sm transition shadow-sm">
+          確定
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 測驗結算成績面板 (Modal) -->
+  <div id="summaryModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 text-center shadow-2xl border border-slate-100">
+      <div class="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-3 text-2xl shadow-inner">
+        <i class="fa-solid fa-award"></i>
+      </div>
+      <h2 class="text-xl font-bold text-slate-800 mb-1">模擬測驗成績揭曉</h2>
+      <p class="text-xs text-slate-500 mb-5">測驗表現統計如下，建議針對錯題進行加強複習：</p>
+      
+      <div class="grid grid-cols-3 gap-3 mb-5 bg-slate-50 p-4 rounded-2xl border border-slate-200/80">
+        <div>
+          <div class="text-[11px] text-slate-400 font-medium">總測驗題數</div>
+          <div id="sumTotal" class="text-lg font-bold text-slate-700 mt-0.5">0</div>
+        </div>
+        <div>
+          <div class="text-[11px] text-slate-400 font-medium">答對題數</div>
+          <div id="sumCorrect" class="text-lg font-bold text-emerald-600 mt-0.5">0</div>
+        </div>
+        <div>
+          <div class="text-[11px] text-slate-400 font-medium">總得分率</div>
+          <div id="sumScore" class="text-lg font-bold text-indigo-600 mt-0.5">0%</div>
+        </div>
+      </div>
+
+      <div class="flex gap-3">
+        <button id="reviewExamBtn" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold text-xs sm:text-sm transition">
+          <i class="fa-solid fa-list-check mr-1"></i> 查看試題解析
+        </button>
+        <button id="restartBtn" class="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold text-xs sm:text-sm transition shadow-sm">
+          <i class="fa-solid fa-arrow-rotate-right mr-1"></i> 再試一次
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="text-center py-4 text-xs text-slate-400 bg-white border-t border-slate-200/80 mt-auto">
+    教育行政與法規 • 互動式複習評量系統 (收錄國民教育法/教育基本法/教師法/性平法最新題型)
+  </footer>
+
+  <!-- 試題資料與核心邏輯 -->
+  <script>
+    // 試題資料庫 (逐頁完整收錄 PDF 文件 1~72 頁全部 70 道試題與精闢解析)
+    const questions = [
+      {
+        id: 1,
+        category: "law",
+        tag: "國民教育法",
+        question: "依據我國《國民教育法》之規定，關於國民小學及國民中學校長之任期及連任限制，下列敘述何者正確？",
+        options: [
+          { key: "A", text: "任期三年，在同一學校得連任兩次。" },
+          { key: "B", text: "任期三年，在同一學校得連任一次。" },
+          { key: "C", text: "任期四年，在同一學校得連任兩次。" },
+          { key: "D", text: "任期四年，在同一學校得連任一次。" }
+        ],
+        answer: "D",
+        rationale: "依據我國《國民教育法》第17條規定，公立國民小學及國民中學校長任期一任為四年。校長辦學績效考評優良者，經遴選會就其考評結果審議通過後，在同一學校得連任一次（即在同一學校最長得擔任八年校長）。故選項(D)為正確描述。"
+      },
+      {
+        id: 2,
+        category: "practice",
+        tag: "教育行政體制",
+        question: "章老師是一位教學工作者，他常埋怨政府制定教育綱要時未能考慮當地的特殊教學狀況，而且學生常因學制分流造成跑道轉換的困難。請問章老師所在的教育行政體制為下列何者？",
+        options: [
+          { key: "A", text: "中央集權制；單軌制" },
+          { key: "B", text: "中央集權制；雙(多)軌制" },
+          { key: "C", text: "地方分權制；單軌制" },
+          { key: "D", text: "地方分權制；雙(多)軌制" }
+        ],
+        answer: "B",
+        rationale: "根據題幹「未能考慮當地的特殊教學狀況」，判斷應屬標準統一制定、無法因地制宜之中央集權制；又題幹提及學制的分流造成跑道轉換困難，指學生在國民教育結束後即進行普通學術及職業技術學校分流之雙(多)軌制。綜合以上答案為 (B)。"
+      },
+      {
+        id: 3,
+        category: "law",
+        tag: "行政權限分工",
+        question: "教育行政涉及中央、地方及學校等不同層級。下列有關教育行政權限分工的敘述，何者正確？",
+        options: [
+          { key: "A", text: "教育事務皆由中央主管機關決定。" },
+          { key: "B", text: "地方政府僅負責執行中央政策。" },
+          { key: "C", text: "各教育行政機關應依其法定職權辦理教育事務。" },
+          { key: "D", text: "學校不具有任何教育行政上的自主權。" }
+        ],
+        answer: "C",
+        rationale: "教育行政涉及不同層級機關的權責分工，中央、地方及學校各有其法定職權，並非所有教育事務皆由中央決定。因此(C)正確。(A)(B)將教育行政過度視為中央集權；(D)錯誤否定學校依法規享有的行政與校務自主空間。"
+      },
+      {
+        id: 4,
+        category: "counsel",
+        tag: "性別平等教育法",
+        question: "某國中陳導師在批改聯絡簿時，發現班上女學生小美留言反映，近期常遭同班男同學阿強以帶有性暗示的言語嘲笑與騷擾，讓她感到非常不舒服且害怕上學。依據《性別平等教育法》及相關校園安全法規，陳導師接下來的處理方式，下列何者最為適法？",
+        options: [
+          { key: "A", text: "為保護學生隱私，陳導師應先私下將雙方當事人找來辦公室進行調解，若調解不成再向上通報。" },
+          { key: "B", text: "陳導師應立刻親自展開調查，詢問周遭同學以釐清事件真相後，將調查報告送交學務處。" },
+          { key: "C", text: "陳導師應於知悉事件後24小時內，向學校權責人員進行校安通報，並由學校依法向當地社政主管機關通報。" },
+          { key: "D", text: "此為學生間的同儕衝突，陳導師應直接聯絡雙方家長，交由家長會協調道歉與賠償事宜即可。" }
+        ],
+        answer: "C",
+        rationale: "法規核心：依《性別平等教育法》規定，教師知悉疑似校園性別事件具備「24小時內通報」之絕對法定義務，且案件調查權專屬於學校「性平會」。《校園性別事件防治準則》明文禁止學校人員私下調解，導師亦無自行調查權。"
+      },
+      {
+        id: 5,
+        category: "counsel",
+        tag: "正向管教規範",
+        question: "某高中學生在上課期間使用手機，已影響正常教學活動。教師依學校相關規定，要求學生將手機交由學校暫時保管，若學生拒絕配合，教師則將其交由學務處依相關規定處理。關於上述教師的處理方式，下列何者最適當？",
+        options: [
+          { key: "A", text: "教師為維持教學秩序，得自行決定管教方式，不必受學校相關規定限制。" },
+          { key: "B", text: "學生拒絕教師的管教要求，即屬重大違規，教師得直接予以大過處分。" },
+          { key: "C", text: "教師得依學校相關規定採取適當的管教措施；學生拒絕配合時，必要時得請學校相關單位協助處理。" },
+          { key: "D", text: "為保障學生權益，教師不得暫時保管學生物品，也不得將學生交由學務處處理。" }
+        ],
+        answer: "C",
+        rationale: "教師及學校在符合相關規定的情況下，得對影響學習或教學活動之物品進行暫時保管；學生拒絕配合時，得依程序交由學務處等相關單位協助處理，管教措施必須依法行政並符合比例原則。"
+      },
+      {
+        id: 6,
+        category: "practice",
+        tag: "公費生培育規定",
+        question: "小明為師資培育公費生，畢業後依規定分發至偏遠地區學校服務。在服務期間，小明因個人生涯規劃，希望提前申請離開原分發學校，並至一般地區學校任教。下列何者符合師資培育公費生相關規定？",
+        options: [
+          { key: "A", text: "公費生可依個人意願隨時申請轉任其他地區學校。" },
+          { key: "B", text: "公費生應依規定履行服務義務，符合相關條件後始得申請介聘。" },
+          { key: "C", text: "公費生只要取得原服務學校校長同意，即可立即離開學校。" },
+          { key: "D", text: "公費生服務滿一年後，即可自由選擇任教學校。" }
+        ],
+        answer: "B",
+        rationale: "師資培育公費生由政府提供公費培育，畢業後依規定分發至指定學校服務，具有履行法定服務義務之責任。若分發至偏遠地區學校，亦須依《偏遠地區學校教育發展條例》及公費生契約履行規定期限後，始得提出介聘申請。"
+      },
+      {
+        id: 7,
+        category: "counsel",
+        tag: "暴力與網路霸凌",
+        question: "阿瑋在課間下課時與同班的小哲互相以言語戲謔攻擊，阿瑋甚至一度拿起原子筆刺向小哲。小哲回家後怒氣難平，在網路上對阿瑋謾罵並編造謠言。面對兩人的衝突，導師的處置何者最正確？",
+        options: [
+          { key: "A", text: "先找雙方家長私下溝通協調，若處理不順利再向學校進行校安通報。" },
+          { key: "B", text: "立即向校方陳報並完成校安通報，同步對兩位學生進行輔導與關懷。" },
+          { key: "C", text: "由於阿瑋暴力行為在先，因此小哲在網路上的行為可視為合理反擊。" },
+          { key: "D", text: "認為學生涉及傷害與誹謗罪嫌，直接聯繫警察調查以免事件再發酵。" }
+        ],
+        answer: "B",
+        rationale: "依校安通報要點，知悉校園暴力或疑似霸凌事件應於24小時內完成校安通報，「通報」與「輔導」應同時並行，不可因私下協調而延遲通報。先前的肢體衝突不能成為後續網路誹謗的合法理由，且校園事件應優先依循校內輔導與調查機制。"
+      },
+      {
+        id: 8,
+        category: "law",
+        tag: "教育基本法",
+        question: "下列何者較符合我國教育的基本精神？",
+        options: [
+          { key: "A", text: "教育應以學生考試成績為唯一目標。" },
+          { key: "B", text: "教育應培養學生健全人格與民主素養。" },
+          { key: "C", text: "教育主要是為了提高學校排名。" },
+          { key: "D", text: "教育應由教師單方面決定學生的一切。" }
+        ],
+        answer: "B",
+        rationale: "《教育基本法》第2條明確規範，教育之目的以培養人民健全人格、民主素養、法治觀念、人文涵養、愛國教育、鄉土關懷、資訊知能為宗旨。"
+      },
+      {
+        id: 9,
+        category: "counsel",
+        tag: "法規與親師合作",
+        question: "小美是國中新進教師，發現班上一名學生經常干擾學習。小美在處理過程中，除了依照學校規定進行輔導與管教，也主動與導師、行政人員及家長溝通共同協助。下列何者最符合教育行政與法規基本做法？",
+        options: [
+          { key: "A", text: "教師只要認為學生行為不當，即可自行決定處罰方式，不需要參考學校規定。" },
+          { key: "B", text: "教師處理學生問題時，應依相關法規及學校規定，並透過適當的輔導與管教協助學生。" },
+          { key: "C", text: "學生的行為問題完全屬於家庭教育，教師不需要介入處理。" },
+          { key: "D", text: "只要家長同意，教師即可採取任何方式處理學生問題。" }
+        ],
+        answer: "B",
+        rationale: "教師處理學生違規或行為問題時，必須受法規與正向管教要點之規範，並透過親師合作與適當輔導手段共同協助學生改善行為。"
+      },
+      {
+        id: 10,
+        category: "law",
+        tag: "教育法規體系",
+        question: "依據我國現行教育法規與體系架構，下列關於教育法規的敘述，何者正確？",
+        options: [
+          { key: "A", text: "教育基本法屬於我國的憲法層級。" },
+          { key: "B", text: "我國教育法規體系主要包含法律與命令等不同層級。" },
+          { key: "C", text: "地方政府得自行訂定與中央法律相牴觸的教育自治條例。" },
+          { key: "D", text: "學校教師之聘任條件完全由各校自行決定，不受國家法律限制。" }
+        ],
+        answer: "B",
+        rationale: "我國法規體系具階層性，由憲法、法律、法規命令及自治規章等構成。(A)《教育基本法》由立法院通過、總統公布，屬於法律層級；(C)自治條例不得牴觸憲法與中央法律；(D)教師聘任須受《教師法》規範。"
+      },
+      {
+        id: 11,
+        category: "practice",
+        tag: "教育心理學-鷹架",
+        question: "小明在數學課中遇到不會解的題目打算放棄。教師提醒他：「你可以先把題目中的已知條件圈起來，再想想以前學過哪些方法可能有幫助。」小明依照提示逐步找到策略解題。上述最符合下列何種概念？",
+        options: [
+          { key: "A", text: "鷹架作用 (Scaffolding)" },
+          { key: "B", text: "負增強 (Negative Reinforcement)" },
+          { key: "C", text: "觀察學習 (Observational Learning)" },
+          { key: "D", text: "頓悟學習 (Insight Learning)" }
+        ],
+        answer: "A",
+        rationale: "教師未直接給予答案，而是在學生的「近側發展區 (ZPD)」內提供適當提示與支持架構，協助其完成任務後再逐步撤除支持，此即為維高斯基理論的鷹架作用。"
+      },
+      {
+        id: 12,
+        category: "law",
+        tag: "學制結構與銜接",
+        question: "某國學生完成初等教育後，可依不同課程路徑進入普通中等教育或技職教育；兩種路徑之間仍設有轉換與升學管道。此制度主要涉及哪一項教育制度議題？",
+        options: [
+          { key: "A", text: "學制結構的分流與銜接問題" },
+          { key: "B", text: "學校人事編制與任用制度" },
+          { key: "C", text: "中央與地方財政收支劃分" },
+          { key: "D", text: "校園安全維護與防制機制" }
+        ],
+        answer: "A",
+        rationale: "題幹描述不同教育階段、普通教育與技職教育之間的分流及立交橋式之相互轉換管道，屬於學制結構與銜接之制度設計議題。"
+      },
+      {
+        id: 13,
+        category: "practice",
+        tag: "知識管理-外化",
+        question: "王主任發現校內幾位資深教師在班級經營上有豐富經驗，但多存在於個人實務知識中。王主任邀請資深教師分享並整理成具體的班級經營原則與教學策略供全校傳閱。此做法最符合下列哪一種知識轉化型態？",
+        options: [
+          { key: "A", text: "結合 (Combination)" },
+          { key: "B", text: "內化 (Internalization)" },
+          { key: "C", text: "外化 (Externalization)" },
+          { key: "D", text: "社會化 (Socialization)" }
+        ],
+        answer: "C",
+        rationale: "Nonaka 的知識創造 SECI 模式：將教師腦中原本存在的個人經驗、直覺（內隱知識），透過口述並具體記錄成原則手冊（外顯知識），即為「外化 (Externalization)」。"
+      },
+      {
+        id: 14,
+        category: "practice",
+        tag: "教育哲學-內在價值",
+        question: "相較於有些人抱持「辛苦讀書是為了考上理想大學，進而找到高薪工作」的信念，林老師更看重的是教育過程本身即可提升與完善學生心靈。林老師看重的是教育的何種價值？",
+        options: [
+          { key: "A", text: "外在價值" },
+          { key: "B", text: "實用價值" },
+          { key: "C", text: "工具價值" },
+          { key: "D", text: "內在價值" }
+        ],
+        answer: "D",
+        rationale: "考取大學與高薪工作將教育作為達成其他目的之手段，屬於工具價值／外在價值；林老師將教育歷程本身視為心靈陶冶與目的本身，屬於重視教育的「內在價值 (Intrinsic Value)」。"
+      },
+      {
+        id: 15,
+        category: "counsel",
+        tag: "校園霸凌防制準則",
+        question: "小花每天上學一到教室就發現座位被塞滿垃圾，還收到匿名謾罵攻擊紙條。向老師反映後，依據《校園霸凌防制準則》規定，校長或教職員工在知道學校發生疑似霸凌事件時，最慢必須在多久時間內向主管機關完成通報？",
+        options: [
+          { key: "A", text: "12小時內" },
+          { key: "B", text: "24小時內" },
+          { key: "C", text: "48小時內" },
+          { key: "D", text: "3天內" }
+        ],
+        answer: "B",
+        rationale: "依據《校園霸凌防制準則》第17條規定，校長及教職員工知悉疑似校園霸凌事件時，應立即通報學校權責人員，至遲不得超過24小時。"
+      },
+      {
+        id: 16,
+        category: "practice",
+        tag: "教育行政功能",
+        question: "某校為了了解學生對新課程的學習成效，蒐集學生的學習成果並進行分析。此作法屬於教育行政的哪一項功能？",
+        options: [
+          { key: "A", text: "計畫" },
+          { key: "B", text: "組織" },
+          { key: "C", text: "評鑑" },
+          { key: "D", text: "領導" }
+        ],
+        answer: "C",
+        rationale: "評鑑（Evaluation）是透過系統化之資料蒐集與分析，了解教育措施與教學活動是否達到預期目標，以作為回饋與改進依據。"
+      },
+      {
+        id: 17,
+        category: "law",
+        tag: "依法行政原則",
+        question: "有關我國教育法規體系的敘述，下列何者正確？",
+        options: [
+          { key: "A", text: "學校校務會議決議的效力高於教育部發布的法規命令。" },
+          { key: "B", text: "教育相關行政措施皆應以法律或授權訂定之法規命令為依據。" },
+          { key: "C", text: "教師可依個人教學理念決定是否遵循教育法規。" },
+          { key: "D", text: "各級學校可自行訂定與法律牴觸的校內規定，以符合辦學特色。" }
+        ],
+        answer: "B",
+        rationale: "教育行政必須遵循「依法行政原則」，各項行政措施皆須有法律或法律具體明確授權之法規命令為依據。校務會議或校內規定均屬下位規範，不得牴觸上位法規。"
+      },
+      {
+        id: 18,
+        category: "law",
+        tag: "教育基本法-政治中立",
+        question: "某國中校長為提升學生的愛國意識，要求全校教師在課堂中必須固定宣傳某一特定政治團體的理念，並要求學生參加該團體活動。依《教育基本法》之規定，下列何者最適當？",
+        options: [
+          { key: "A", text: "只要活動具有教育意義，學校即可辦理。" },
+          { key: "B", text: "學校可以宣傳政治團體，但不得強迫學生參加。" },
+          { key: "C", text: "學校不得為特定政治團體從事宣傳或活動。" },
+          { key: "D", text: "只要經家長會同意，學校即可進行政治團體宣傳。" }
+        ],
+        answer: "C",
+        rationale: "《教育基本法》第6條規定，教育應本中立原則。學校不得為特定政治團體從事宣傳或活動；主管教育行政機關及學校亦不得強迫教職員工及學生參加政治團體或活動。"
+      },
+      {
+        id: 19,
+        category: "law",
+        tag: "教育行政組織層級",
+        question: "在教育行政組織體系中，機關依《中央行政機關組織基準法》可分為內部單位與具獨立編制、預算之所屬機關。下列何者在組織法制層級上屬於教育部的「所屬三級機關(署)」，而非教育部之內部司處單位？",
+        options: [
+          { key: "A", text: "終身教育司" },
+          { key: "B", text: "青年發展署" },
+          { key: "C", text: "國際及兩岸教育司" },
+          { key: "D", text: "國家教育研究院" }
+        ],
+        answer: "B",
+        rationale: "教育部所屬三級行政「機關」為國民及學前教育署、青年發展署、體育署；終身教育司與國際司為內部一級業務司單位；國家教育研究院則為教育部所屬「機構」（事業文教研究機構），非行政機關署。"
+      },
+      {
+        id: 20,
+        category: "practice",
+        tag: "杜威實用主義教學",
+        question: "杜威的實用主義哲學主張經驗是有機體和環境持續作用的結果，強調做中學。請問以下何種教學案例最符合杜威的實用主義？",
+        options: [
+          { key: "A", text: "旻宣在設計教案時，喜歡讓學生利用數位工具主動查詢答案，並頻繁安排上台報告。" },
+          { key: "B", text: "曉佩在社會探究課上，讓組別採訪社區弱勢長者困擾，並優化解決方案且初步實行檢視成效。" },
+          { key: "C", text: "吉雄的班上採異質性分組，規定低學習成就學生答對題目可以為小組加更多分。" },
+          { key: "D", text: "麥克利用下課時間輔導學生建立系統化筆記，每學期末舉辦學習方法發表會。" }
+        ],
+        answer: "B",
+        rationale: "實用主義鼓勵學生在實作探究中發現問題並解決問題。選項(B)透過社區實地訪談、擬定對策並落實執行檢視成效，最符合真實情境的「做中學」與經驗重組。"
+      },
+      {
+        id: 21,
+        category: "law",
+        tag: "教育基本法-中央權限",
+        question: "依據我國《教育基本法》第9條之規定，下列何者屬於「中央政府」的教育權限？",
+        options: [
+          { key: "A", text: "辦理地方教育行政及執行中央教育法令" },
+          { key: "B", text: "設立及管理地方立各級學校" },
+          { key: "C", text: "教育制度之規劃設計與教育法規之制定" },
+          { key: "D", text: "編列地方教育預算" }
+        ],
+        answer: "C",
+        rationale: "依據《教育基本法》第9條，中央政府教育權限包含教育制度之規劃設計、對地方教育之適法監督、中央經費之編列等8大項；(A)(B)(D)均屬第10條地方政府權限。"
+      },
+      {
+        id: 22,
+        category: "law",
+        tag: "法規位階與法律規範",
+        question: "下列與教育行政相關之法律規定，何者正確？",
+        options: [
+          { key: "A", text: "《教育基本法》確立了教育制度中央立法、中央執行或交由地方執行的均權模式。" },
+          { key: "B", text: "《中華民國憲法》具體列舉了中央政府之教育權限8大項目。" },
+          { key: "C", text: "主管機關依《教育部組織法》第1條設立教育部。" },
+          { key: "D", text: "設立國民及學前教育署的法律依據為《教育部國民及學前教育署處務規程》。" }
+        ],
+        answer: "C",
+        rationale: "各部會組織依其組織法設立，教育部依《教育部組織法》第1條設立。均權原則明定於《憲法》第10章；列舉中央教育權限8大項目者為《教育基本法》第9條；設立國教署之法源為《教育部國民及學前教育署組織法》（法律位階），處務規程僅為內部法規命令。"
+      },
+      {
+        id: 23,
+        category: "teacher",
+        tag: "教師申訴法定途徑",
+        question: "依據現行《教師法》之規定，教師若對學校或主管教育行政機關之措施認為違法或不當致損害其權益時，下列何者為法定之救濟途徑？",
+        options: [
+          { key: "A", text: "逕向立法院提出請願" },
+          { key: "B", text: "向各級教師申訴評議委員會提起申訴" },
+          { key: "C", text: "逕向司法院憲法法庭聲請法規違憲審查" },
+          { key: "D", text: "向地方民意代表服務處申請行政調處" }
+        ],
+        answer: "B",
+        rationale: "依《教師法》第42條、第43條規定，教師對學校或主管機關有關其個人之措施認為違法或不當致損害其權益者，得依法向各級「教師申訴評議委員會」提起申訴、再申訴以尋求權益救濟。"
+      },
+      {
+        id: 24,
+        category: "counsel",
+        tag: "學生輔導法-二級輔導",
+        question: "某國中新生小安開學後出現嚴重適應不良、極度退縮。導師初步關懷無效後，將小安轉介給學校專任輔導教師進行深度個案輔導。依《學生輔導法》，該專任輔導教師之工作屬於下列何種層級？",
+        options: [
+          { key: "A", text: "發展性輔導" },
+          { key: "B", text: "介入性輔導" },
+          { key: "C", text: "處遇性輔導" },
+          { key: "D", text: "預防性輔導" }
+        ],
+        answer: "B",
+        rationale: "《學生輔導法》第6條三級輔導架構：專任輔導教師針對適應欠佳學生實施個別化深度個案輔導或小團體輔導，屬於第二層級「介入性輔導」。"
+      },
+      {
+        id: 25,
+        category: "law",
+        tag: "視導體制-一元體制",
+        question: "某縣市教育行政機關除了負責教育政策規劃外，也由督學系統負責學校視導工作，使教育行政與視導工作由同一體系負責。此體制屬於下列何者？",
+        options: [
+          { key: "A", text: "臺灣目前採取二元體制，行政與視導工作由不同機關分別負責。" },
+          { key: "B", text: "臺灣目前採取一元體制，行政機關直接兼管視導工作。" },
+          { key: "C", text: "臺灣目前採取地方分權制，中央原則上不參與地方教育行政事務。" },
+          { key: "D", text: "臺灣目前採取中央集權制，所有教育行政工作皆由教育部直接負責。" }
+        ],
+        answer: "B",
+        rationale: "一元體制又稱「行政視導合一」，指行政主管機關內部設督學室直接兼管視導工作。臺灣目前的直轄市、縣市教育局處與督學系統即屬於典型之一元體制。"
+      },
+      {
+        id: 26,
+        category: "law",
+        tag: "均權制",
+        question: "我國教育行政制度兼具中央集權與地方分權的特性，中央負責全國性政策規劃，地方則依需求推動相關教育措施。下列何者最能說明此種制度特徵？",
+        options: [
+          { key: "A", text: "中央集權制" },
+          { key: "B", text: "地方分權制" },
+          { key: "C", text: "均權制" },
+          { key: "D", text: "委員會制" }
+        ],
+        answer: "C",
+        rationale: "依憲法均權原則，事務具有全國一致性質者劃歸中央，具有地方因地制宜性質者劃歸地方，兼顧全國統整與地方自主，稱為均權制。"
+      },
+      {
+        id: 27,
+        category: "counsel",
+        tag: "管教注意事項-站立反省",
+        question: "林老師在課堂上要求持續干擾秩序之小明站立反省。依據現行《學校訂定教師輔導與管教學生辦法注意事項》之規定，下列敘述何者正確？",
+        options: [
+          { key: "A", text: "站立反省每次不得超過一節課，每日累計不得超過二節課。" },
+          { key: "B", text: "站立反省屬合法管教措施，每次得連續實施達兩節課。" },
+          { key: "C", text: "站立反省屬於違法體罰行為，學校教師絕對不得要求之。" },
+          { key: "D", text: "若學生拒絕站立反省，教師得改施以適當體能訓練處置。" }
+        ],
+        answer: "A",
+        rationale: "法規明定一般管教措施得命站立反省，但有嚴格時間界線：每次不得超過一節課，每日累計不得超過二節課。強迫學生罰跑或伏地挺身等體能訓練屬違法體罰。"
+      },
+      {
+        id: 28,
+        category: "teacher",
+        tag: "教師法規範內涵",
+        question: "下列何者主要規範教師的資格、聘任、解聘、不續聘、停聘及教師權利義務等事項？",
+        options: [
+          { key: "A", text: "教育基本法" },
+          { key: "B", text: "教師法" },
+          { key: "C", text: "國民教育法" },
+          { key: "D", text: "師資培育法" }
+        ],
+        answer: "B",
+        rationale: "《教師法》立法目的在明定教師權利義務、保障教師工作生活、提升專業地位，具體規範教師聘任、解聘、停聘、資遣及救濟制度。"
+      },
+      {
+        id: 29,
+        category: "law",
+        tag: "地方教育行政職權",
+        question: "小明想了解我國中央與地方教育行政的分工。下列有關我國中央與地方教育行政體制的敘述，何者正確？",
+        options: [
+          { key: "A", text: "所有教育事務皆由中央政府直接辦理，地方政府不得參與。" },
+          { key: "B", text: "地方政府可以完全不依循中央的教育政策，自行決定所有教育事項。" },
+          { key: "C", text: "中央與地方教育行政各有其職掌，地方政府可依地方需求推動教育事務。" },
+          { key: "D", text: "學校的所有教育行政事項皆由中央教育行政機關直接決定。" }
+        ],
+        answer: "C",
+        rationale: "中央負責全國教育制度法規規劃與適法監督，地方政府則依據《地方制度法》及《教育基本法》辦理自治教育事務與轄屬學校管理，各司其職。"
+      },
+      {
+        id: 30,
+        category: "law",
+        tag: "教育基本法-中央權限劃分",
+        question: "依據我國《教育基本法》之規定，下列何者屬於中央政府之教育權限？",
+        options: [
+          { key: "A", text: "地方市立學校之設立與管理" },
+          { key: "B", text: "教育制度之規劃設計" },
+          { key: "C", text: "國民小學學區之劃分與總量管制" },
+          { key: "D", text: "縣市立幼兒園之立案與教保稽查" }
+        ],
+        answer: "B",
+        rationale: "《教育基本法》第9條第1款明定「教育制度之規劃設計」為中央政府教育權限；(A)(C)(D)皆屬地方直轄市、縣市政府教育局處之職權。"
+      },
+      {
+        id: 31,
+        category: "practice",
+        tag: "班級經營-民主自律",
+        question: "小美老師發現班上部分學生課堂容易分心聊天。她先和學生共同討論課堂規範，讓學生了解規範目的並共同約定獎勵方式，學生干擾行為顯著改善。此方式符合下列何種理念？",
+        options: [
+          { key: "A", text: "以教師權威為核心，透過嚴格規定維持班級秩序。" },
+          { key: "B", text: "透過師生共同參與，培養學生的自律與責任感。" },
+          { key: "C", text: "透過增加作業量，降低學生在課堂中聊天的機會。" },
+          { key: "D", text: "以懲罰為主要手段，使學生畏懼違反班級規範。" }
+        ],
+        answer: "B",
+        rationale: "師生共同訂定班級公約與獎勵規則，能讓學生認同規範之合理性與意義，從他律邁向自律並培養社會責任感。"
+      },
+      {
+        id: 32,
+        category: "law",
+        tag: "中央集權體制特徵",
+        question: "某國教育制度規定，課程綱要、教師任用標準及學校經費分配皆由中央政府統一決定，地方政府僅負責執行。此種教育行政體制最接近下列何者？",
+        options: [
+          { key: "A", text: "地方分權制" },
+          { key: "B", text: "中央集權制" },
+          { key: "C", text: "學校本位管理制" },
+          { key: "D", text: "教育市場化" }
+        ],
+        answer: "B",
+        rationale: "重要教育政策決策權高度集中於中央機關，地方缺乏自主權僅扮演行政執行角色，屬於中央集權制的典型特徵。"
+      },
+      {
+        id: 33,
+        category: "practice",
+        tag: "課程社會學-艾波",
+        question: "某教育主管機關在修訂教科書時，為維護特定社會秩序，決定增加國家重大建設與企業成果，同時刪除階級抗爭與勞工運動內容。依艾波 (Apple) 觀點，此最符合何項概念？",
+        options: [
+          { key: "A", text: "潛在課程 (Hidden Curriculum)" },
+          { key: "B", text: "官方知識 (Official Knowledge)" },
+          { key: "C", text: "空白課程 (Null Curriculum)" },
+          { key: "D", text: "實用知識 (Practical Knowledge)" }
+        ],
+        answer: "B",
+        rationale: "艾波指出教科書知識受優勢群體利益與國家意識形態篩選，被法制化並代表國家傳遞者即為「官方知識 (Official Knowledge)」。"
+      },
+      {
+        id: 34,
+        category: "practice",
+        tag: "培根四偶像-劇場偶像",
+        question: "黃老師提醒學生在學習過程中，應避免陷入培根 (F. Bacon)「劇場偶像 (idols of the theatre)」的迷思，下列何種做法較適切？",
+        options: [
+          { key: "A", text: "引導學生釐清學習內容的相關概念" },
+          { key: "B", text: "引導學生對傳統理論的權威性進行反思與批判" },
+          { key: "C", text: "引導學生突破框架以進行自主學習" },
+          { key: "D", text: "引導學生跳脫自我中心並虛心求知" }
+        ],
+        answer: "B",
+        rationale: "培根「劇場偶像」係指盲目迷信傳統哲學學說、教條或權威體系。引導學生反思與批判既定理論的絕對權威性，即在破除劇場偶像迷思。"
+      },
+      {
+        id: 35,
+        category: "counsel",
+        tag: "性別平等教育法-性霸凌",
+        question: "學生小語平常講話聲音較輕細、舉止溫柔，同班同學阿凱經常當眾模仿其聲音並大聲嘲笑他是「娘娘腔」，造成小語害怕上學。依《性別平等教育法》，阿凱之行為屬於下列何者？",
+        options: [
+          { key: "A", text: "性侵害" },
+          { key: "B", text: "性騷擾" },
+          { key: "C", text: "性霸凌" },
+          { key: "D", text: "違反專業倫理行為" }
+        ],
+        answer: "C",
+        rationale: "《性別平等教育法》第3條明定，透過言語或肢體針對他人之「性別特質、性別特徵、性傾向或性別認同」進行貶抑、攻擊或威脅之行為，構成「性霸凌」。"
+      },
+      {
+        id: 36,
+        category: "practice",
+        tag: "教育領導理論",
+        question: "某國中校長推動新課程政策時，召集全校教師共同討論課程目標，鼓勵教師表達想法並依據討論結果修正推動方式。此領導方式最符合下列何者？",
+        options: [
+          { key: "A", text: "威權領導" },
+          { key: "B", text: "民主參與式領導" },
+          { key: "C", text: "放任式領導" },
+          { key: "D", text: "交易型領導" }
+        ],
+        answer: "B",
+        rationale: "校長尊重專業、廣納同仁建言並共享決策過程，透過群體智慧形塑推動共識，屬於典型的民主參與式領導。"
+      },
+      {
+        id: 37,
+        category: "law",
+        tag: "教育基本法理念",
+        question: "依據《教育基本法》規定，下列何者「不是」教育基本法所保障的重要理念？",
+        options: [
+          { key: "A", text: "維護學生受教權益" },
+          { key: "B", text: "尊重教師專業自主" },
+          { key: "C", text: "教育行政得任意限制學生受教機會" },
+          { key: "D", text: "鼓勵家長參與教育事務" }
+        ],
+        answer: "C",
+        rationale: "《教育基本法》保障人民之學習權及受教權，教育行政應依法行政，絕不得任意剝奪或不當限制學生之受教機會，故(C)錯誤。"
+      },
+      {
+        id: 38,
+        category: "law",
+        tag: "特殊教育保障與均等",
+        question: "某校發現班上一名身心障礙學生學習需求不同，校方為省事決定不讓該生參與一般活動，長期令其留在資源教室。從《教育基本法》精神判斷，何者最適切？",
+        options: [
+          { key: "A", text: "身心障礙學生因學習能力不同，可以完全排除於普通教育之外。" },
+          { key: "B", text: "為了維持一般學生的學習權，學校可以任意限制身心障礙學生參與普通課程。" },
+          { key: "C", text: "教育機會應平等，對身心障礙者等弱勢族群應依法予以特別保障並落實融合教育。" },
+          { key: "D", text: "只要資源教室有提供教育服務，即完全符合教育機會均等原則。" }
+        ],
+        answer: "C",
+        rationale: "《教育基本法》第4條規定，人民不因身心障礙等條件而受歧視，對弱勢族群應依法提供積極差別待遇與實質保障；特殊教育亦強調最少限制環境與融合教育理念。"
+      },
+      {
+        id: 39,
+        category: "law",
+        tag: "地方教育局處職權",
+        question: "依據我國現行教育法令與《地方制度法》之規定，下列關於地方政府教育局(處)職權與運作特性的敘述，何者最為正確？",
+        options: [
+          { key: "A", text: "直轄市、縣市教育局長之任用，一律須具備校長資格或教授職等，不得由行政公務員轉任。" },
+          { key: "B", text: "國中小之課程與教學規劃屬教育部絕對權限，地方教育局無權因地制宜訂定補充規定。" },
+          { key: "C", text: "縣市政府教育局處對轄屬市立高中、國中小負有監督、輔導與行政支援之責，並編列執行地方教育經費。" },
+          { key: "D", text: "地方教育局屬於中央教育部的派出機關，不受縣市長之指揮監督。" }
+        ],
+        answer: "C",
+        rationale: "直轄市及縣市教育局處為地方政府一級機關，受直轄市長或縣市長監督指揮，統理轄區各級公立學校並編列地方教育發展基金預算。(A)局處長亦可由合格高階公務員轉任；(B)地方可發展在地校訂課程與補充規範；(D)非教育部派出機關。"
+      },
+      {
+        id: 40,
+        category: "practice",
+        tag: "符號互動論-戲劇理論",
+        question: "嫣晨在校謙恭有禮但在家對父母惡言相向；語廷在校常喧鬧違規，在家卻孝順長輩分擔家務。高夫曼 (E. Goffman) 的「前台與後台」戲劇理論屬於下列何種學派的主張？",
+        options: [
+          { key: "A", text: "結構功能論" },
+          { key: "B", text: "道德發展論" },
+          { key: "C", text: "符號互動論" },
+          { key: "D", text: "自我價值論" }
+        ],
+        answer: "C",
+        rationale: "高夫曼 (Goffman) 的戲劇理論（前台角色扮演與後台真實卸防）被社會學界歸屬於符號互動論 (Symbolic Interactionism) 的重要分支。"
+      },
+      {
+        id: 41,
+        category: "practice",
+        tag: "行為制約理論-內在增強",
+        question: "從史金納 (Skinner) 操作制約與增強物觀點來看，下列哪一位教師在班級經營所培養的良好習慣，在學生畢業後最有可能持久維持？",
+        options: [
+          { key: "A", text: "坤坤：只要連續一個月準時交聯絡簿就獎勵一份冰炫風。" },
+          { key: "B", text: "雲峰：累積十個好問題就在週五帶全班玩數學益智遊戲（普力馬原則）。" },
+          { key: "C", text: "書情：起初稱讚整理行為，後來學生表示自己把桌子打掃乾淨後內心很有成就感。" },
+          { key: "D", text: "品萱：在簡報中放派大星圖片，最快發現大喊的小組可獲得加分點數。" }
+        ],
+        answer: "C",
+        rationale: "行為維持與消退：外在物質增強（冰炫風、加分代幣）一旦移除容易產生消退；當行為動機成功轉化為自我滿意與成就感等「內在增強物」時，行為最能持久維持。"
+      },
+      {
+        id: 42,
+        category: "law",
+        tag: "正當法律程序原則",
+        question: "公立大專院校或高中職若擬對行政部門進行重大組織裁撤，或調整涉及學生修業實質條件規範時，依釋字第382、684及784號解釋，應遵循何種憲法原則？",
+        options: [
+          { key: "A", text: "特別權力關係理論，學校主管得自由裁量無須對外說明。" },
+          { key: "B", text: "正當法律程序原則，應保障利害關係人（含學生代表）之知情、參與及表意機會。" },
+          { key: "C", text: "便宜原則，只要符合行政效率，得事後再行補行追認。" },
+          { key: "D", text: "唯校長獨任制，各項組織章程僅需校長一人核定即生效。" }
+        ],
+        answer: "B",
+        rationale: "大法官多號解釋已宣告揚棄威權的「特別權力關係」。學校各項重大變更牽涉學生權益時，必須遵守「正當法律程序 (Due Process)」，確保學生代表之參與、知情與陳述意見權益。"
+      },
+      {
+        id: 43,
+        category: "law",
+        tag: "特殊教育鑑輔會",
+        question: "某縣政府依《特殊教育法》成立「特殊教育學生鑑定及就學輔導會」(鑑輔會)。下列關於鑑輔會功能的敘述，何者正確？",
+        options: [
+          { key: "A", text: "主要負責全縣合格教師的資格檢定審查。" },
+          { key: "B", text: "主要辦理特殊教育學生與幼兒之鑑定、安置、輔導及支持服務。" },
+          { key: "C", text: "主要負責縣立各校校長遴選及主任聘任。" },
+          { key: "D", text: "主要負責研擬全國特殊教育基本法規。" }
+        ],
+        answer: "B",
+        rationale: "依據《特殊教育法》第6條，各級主管機關應設鑑輔會，其法定核心任務為特教學生的：1. 鑑定、2. 就學安置、3. 輔導、4. 相關支持服務。"
+      },
+      {
+        id: 44,
+        category: "law",
+        tag: "教育基本法核心精神",
+        question: "依據《教育基本法》之教育理念，下列何者最符合其保障學生受教權之精神？",
+        options: [
+          { key: "A", text: "學校應依學生學業成績進行嚴格能力分班，以提高升學競爭力。" },
+          { key: "B", text: "教育公平代表所有學生必須接受完全相同的教育內容與教學方式。" },
+          { key: "C", text: "教育應以學生為主體，保障學生平等受教機會，並提供適性發展之教育環境。" },
+          { key: "D", text: "學生學習成果主要取決於個人天賦，因此教育資源無需對弱勢進行傾斜支援。" }
+        ],
+        answer: "C",
+        rationale: "《教育基本法》第2條與第8條確立以學生為主體，尊重個別差異，提供適性教育，並透過教育資源之合理分配保障每位學生之實質受教權益。"
+      },
+      {
+        id: 45,
+        category: "law",
+        tag: "體罰之法定侵害",
+        question: "國一學生小明因考試成績不佳且未交作業，導師在課堂上當眾處罰小明在教室後方半蹲，並用愛的小手打手心五下。依《教育基本法》，導師行為主要侵害了學生的何種權益？",
+        options: [
+          { key: "A", text: "學生之身體自主權，且使學生遭受體罰之身心侵害。" },
+          { key: "B", text: "學生之學力鑑定權。" },
+          { key: "C", text: "家長為子女選擇受教育方式之權利。" },
+          { key: "D", text: "學校政治中立之規範。" }
+        ],
+        answer: "A",
+        rationale: "依《教育基本法》第8條第2項規定，學生之學習權、受教育權、身體自主權及人格發展權國家應予保障，並使學生不受任何體罰及霸凌行為造成身心之侵害。"
+      },
+      {
+        id: 46,
+        category: "practice",
+        tag: "孟子四端之說",
+        question: "在課堂討論中小明表達緊張顯得手足無措，同組同學冷眼旁觀。教師藉此引導學生設身處地為他人著想，進而主動伸出援手關懷。該教師的引導契合孟子四端中的何者？",
+        options: [
+          { key: "A", text: "惻隱之心（仁之端）" },
+          { key: "B", text: "羞惡之心（義之端）" },
+          { key: "C", text: "辭讓之心（禮之端）" },
+          { key: "D", text: "是非之心（智之端）" }
+        ],
+        answer: "A",
+        rationale: "見他人受窘、受苦而心生不忍、設身處地同理並願意主動給予關懷援助，屬於孟子所云「惻隱之心，仁之端也」。"
+      },
+      {
+        id: 47,
+        category: "practice",
+        tag: "雙重系統理論",
+        question: "某國中校長推行評鑑，行政處室訂立了統一表件流程，但教師認為教學具高度專業與個別自主，不宜受制式行政規範束縛，雙方產生磨擦。根據雙重系統理論 (Dual System Theory)，下列何者最能合理解釋？",
+        options: [
+          { key: "A", text: "學校行政系統與教學專業系統具有不同的運作邏輯，兩者之間可能產生結構性衝突。" },
+          { key: "B", text: "教學系統中的教師彼此高度依賴，因此具有典型的科層體制特徵。" },
+          { key: "C", text: "行政系統屬於鬆散結合系統，因此行政人員缺乏明確的權責命令關係。" },
+          { key: "D", text: "學校行政與教學系統之目標完全同質，故通常能順暢無礙融合。" }
+        ],
+        answer: "A",
+        rationale: "雙重系統理論指出學校同時存在「行政科層系統」（強調統一規範、監督與效率）與「專業教學系統」（強調自主、彈性與個別化），兩者因目標優先順序不同而容易產生張力。"
+      },
+      {
+        id: 48,
+        category: "counsel",
+        tag: "人格尊嚴與管教界線",
+        question: "某國中教師認為犯錯就要受罰，要求犯錯學生在全班面前公開道歉並以言語羞辱其自尊以儆效尤。依據《教育基本法》精神，下列敘述何者最適當？",
+        options: [
+          { key: "A", text: "教師為維持班級秩序，可依個人教育理念決定採取言語羞辱。" },
+          { key: "B", text: "學生既然是教育主體，學校即不得對其行為實施任何管教規範。" },
+          { key: "C", text: "教育應以學生為主體，保障人格尊嚴，教師管教必須符合法規並嚴禁羞辱人格。" },
+          { key: "D", text: "只要管教目的是改善學生行為，即使侵害人格尊嚴亦屬正當。" }
+        ],
+        answer: "C",
+        rationale: "管教之目的不得違背教育本質，更嚴格禁止以公開公審、人格羞辱或體罰作為手段，必須保障學生的人格發展權與尊嚴。"
+      },
+      {
+        id: 49,
+        category: "counsel",
+        tag: "正向輔導理念",
+        question: "小美老師發現班上一位學生近期經常分心且作業欠交，探詢後得知其與同儕相處發生衝突。若依「輔導與管教」教育理念，教師最適切的做法為何？",
+        options: [
+          { key: "A", text: "立即在課堂上公開嚴厲指責，避免其他同學群起效尤。" },
+          { key: "B", text: "直接處以記過處分，以貫徹班級常規維護。" },
+          { key: "C", text: "先傾聽並了解學生的困難與心理需求，再提供適切輔導與同儕調適支持。" },
+          { key: "D", text: "將該生全權移交家長自行解決，教師僅專注學科教學。" }
+        ],
+        answer: "C",
+        rationale: "正向輔導核心精神在於「理解行為背後的成因與需求」，給予支持引導，而非僅施以表面處罰。"
+      },
+      {
+        id: 50,
+        category: "counsel",
+        tag: "校規修訂與比例原則",
+        question: "某市立高中欲修改校規：「學生到校後一律由學校統一保管手機，若有違規者一律沒收至學期末。」根據《教育基本法》及法理，此校規修訂之評析何者最為適切？",
+        options: [
+          { key: "A", text: "合法，因為學校具有行政自主權，得為秩序訂定任何內部規範。" },
+          { key: "B", text: "違法，沒收至學期末過度侵害學生財產權，違反法律保留與比例原則。" },
+          { key: "C", text: "合法，只要校務會議表決通過並得家長會同意即可牴觸法律。" },
+          { key: "D", text: "違法，學校完全不得限制學生在校使用手機。" }
+        ],
+        answer: "B",
+        rationale: "校規不得牴觸上位法令。為維持教學秩序雖得「暫時保管」手機，但沒收至學期末之手段已過度侵犯學生財產權，明顯違反憲法上的比例原則。"
+      },
+      {
+        id: 51,
+        category: "counsel",
+        tag: "學生網路衝突處置",
+        question: "小羽是國中教師，發現兩名學生在班級群組中互嗆嘲諷，導師先釐清經過並分別與學生及家長溝通。下列處理方式何者最適切？",
+        options: [
+          { key: "A", text: "要求被嘲諷的學生噤聲不要再提起此事，以求息事寧人。" },
+          { key: "B", text: "在全班面前讓大家公開公審並票選誰對誰錯。" },
+          { key: "C", text: "先了解事件客觀事實與當事人內在需求，再依校內相關規定進行適切輔導與處理。" },
+          { key: "D", text: "未經充分調查即命令雙方立刻互相公開道歉並處以相同記過懲罰。" }
+        ],
+        answer: "C",
+        rationale: "處理同儕人際與網路衝突，應釐清客觀事實、同理需求、保護當事人隱私，並依正當法定程序介入輔導。"
+      },
+      {
+        id: 52,
+        category: "law",
+        tag: "校園監視器與隱私權",
+        question: "某校為防止考試作弊擬在教室全面加裝監視器全程錄影，部分師生擔憂侵害隱私。依現代教育行政原則，學校推動此措施時下列何者最適當？",
+        options: [
+          { key: "A", text: "只要能提升考試防弊效率，學校不需經任何討論即可直接裝設。" },
+          { key: "B", text: "因學生未成年，其隱私權不受憲法保障，無須諮詢其意見。" },
+          { key: "C", text: "學校應兼顧考試公平與學生隱私權益，透過民主正當程序進行通盤評估與對話。" },
+          { key: "D", text: "只要多數教師贊成，即可不理會學生與家長的疑慮。" }
+        ],
+        answer: "C",
+        rationale: "教育行政涉及基本人權（隱私權）與公共利益（考場紀律）之衡平時，必須遵循正當程序，邀集各方利害關係人共同評估符合比例原則之方案。"
+      },
+      {
+        id: 53,
+        category: "practice",
+        tag: "安全維護與主動求助",
+        question: "林老師認為除了在校保護學生安全外，更應培養學生「自我保護與主動求助」之能力。下列做法何者最符合此理念？",
+        options: [
+          { key: "A", text: "介入學生的所有大小互動，嚴禁學生自行處理任何衝突。" },
+          { key: "B", text: "教導學生辨識霸凌及不當對待，鼓勵其勇敢表達感受並及時向信任的大人尋求協助。" },
+          { key: "C", text: "要求學生遭遇人際侵害時必須全靠自己解決，不得輕易告訴師長。" },
+          { key: "D", text: "教導學生面對同儕攻擊時應一律忍氣吞聲，避免把爭端擴大。" }
+        ],
+        answer: "B",
+        rationale: "提升學生自我保護意識、教導情緒覺察與求助管道，賦予學生應對危機之主體能力，符合教育賦權理念。"
+      },
+      {
+        id: 54,
+        category: "law",
+        tag: "家長參與權與專業自主",
+        question: "國小校務會議中，家長代表要求全英語授課並指定教材，教師則主張教材選擇屬教師專業。依《教育基本法》之規定，下列何者最適當？",
+        options: [
+          { key: "A", text: "家長享有完全校務決定權，可直接強制指定教材。" },
+          { key: "B", text: "教師享專業自主權，因此家長完全無權在會議中表達意見。" },
+          { key: "C", text: "家長得參與學校教育事務並陳述意見，但課程與教材選擇仍應尊重教師專業自主。" },
+          { key: "D", text: "只要家長會表決通過，即具有取代國家課程綱要之絕對效力。" }
+        ],
+        answer: "C",
+        rationale: "《教育基本法》第8條第1項保障教師專業自主，第3項保障家長教育參與權，兩者應相互尊重與對話合作，家長不得直接越俎代庖取代教師專業判斷。"
+      },
+      {
+        id: 55,
+        category: "teacher",
+        tag: "教師證書發給機關",
+        question: "下列關於師資培育生修畢師資職前教育課程、通過教師資格檢定後之合格教師證書發給機關，何者正確？",
+        options: [
+          { key: "A", text: "由中央教育主管機關（教育部）發給。" },
+          { key: "B", text: "由實習學校逕行核發。" },
+          { key: "C", text: "由師資培育大學自行印製發給。" },
+          { key: "D", text: "由地方縣市政府教育局核發。" }
+        ],
+        answer: "A",
+        rationale: "依據《師資培育法》第11條及《教師法》第2條規定，經檢定合格之教師，由中央主管機關（教育部）發給教師證書。"
+      },
+      {
+        id: 56,
+        category: "teacher",
+        tag: "代理教師與代課教師",
+        question: "下列關於高級中等以下學校「代理教師」與「代課教師」之敘述，何者正確？",
+        options: [
+          { key: "A", text: "代理教師與代課教師均屬正式編制內教師，具有終身職保障。" },
+          { key: "B", text: "代理教師主要係代理出缺之專任教師職務，代課教師則主要擔任部分鐘點課務。" },
+          { key: "C", text: "代課教師連續任教滿兩年，可不經甄試直接取得正式專任教師資格。" },
+          { key: "D", text: "兩者在聘期、權利義務及考核機制上與正式編制教師完全無異。" }
+        ],
+        answer: "B",
+        rationale: "代理教師係指代理學校編制內教師因差假、留停等出缺之職務，通常有完整聘期；代課教師則以鐘點計薪，僅擔任學校編制內特定節數之課程。"
+      },
+      {
+        id: 57,
+        category: "teacher",
+        tag: "校事會議與解聘程序",
+        question: "校長接獲家長檢舉指稱某教師涉有不當管教情節重大。校長召開校務會議決議直接將該教師解聘。依《教師法》相關規定，此程序何者正確？",
+        options: [
+          { key: "A", text: "合法，校長基於安全維護得逕行解聘教師。" },
+          { key: "B", text: "合法，校務會議為學校最高決策會議，得直接決議解聘專任教師。" },
+          { key: "C", text: "違法，教師解聘為法定審議事項，應經校事會議調查並提經教師評審委員會 (教評會) 審議通過並報主管機關核准。" },
+          { key: "D", text: "只要家長簽署同意書，學校即可豁免法定調查程序。" }
+        ],
+        answer: "C",
+        rationale: "教師解聘受憲法工作權保障與法治程序約束。學校必須先由校事會議審議籌組全外聘調查小組完成報告，再移送「教評會」依特別表決門檻審查，並報主管教育行政機關核准後始得解聘。"
+      },
+      {
+        id: 58,
+        category: "teacher",
+        tag: "教師權利與義務",
+        question: "依據現行《教師法》之規定，下列何者屬於教師法明定的「教師義務」？",
+        options: [
+          { key: "A", text: "對學校教學及行政事項提供興革意見" },
+          { key: "B", text: "參與學校學術研究與進修活動之權利" },
+          { key: "C", text: "積極維護學生受教權益與適性輔導" },
+          { key: "D", text: "得拒絕所有學校指派之教學無關行政工作" }
+        ],
+        answer: "C",
+        rationale: "《教師法》第32條規範教師之義務，包含：遵守聘約、積極維護學生受教權益、依課綱實施適性教學等。(A)(B)(D)屬同法第31條保障之權利。"
+      },
+      {
+        id: 59,
+        category: "practice",
+        tag: "觀課議課之學習證據",
+        question: "張老師參與同儕「備觀議課」研習，欲在議課環節提供建設性專業回饋。下列哪一項發言最符合「以學生學習證據為基礎進行專業對話」之原則？",
+        options: [
+          { key: "A", text: "我發現第十五分鐘小組討論時，第三組多數學生能正確引用課文第二段句子來支持推論。" },
+          { key: "B", text: "我覺得您的上課個人風格非常有魅力，學生整節課都聽得非常愉快熱鬧。" },
+          { key: "C", text: "建議您講話速度應該再放慢一點點，這樣比較端莊穩重。" },
+          { key: "D", text: "老師今天板書寫得很漂亮，只可惜字體稍微偏小了一點。" }
+        ],
+        answer: "A",
+        rationale: "現代觀課議課強調「聚焦於學生的學習表現與具體證據」，而非主觀評價授課教師的儀態、聲調或外在風格。選項(A)提出具體時間、行為指標與學生學習成果證據。"
+      },
+      {
+        id: 60,
+        category: "counsel",
+        tag: "校園霸凌防制準則-調和機制",
+        question: "某國中二年級學生小琪遭同班同學集體排擠、惡意取綽號。學校依準則組成處理小組進行調和。關於校園生對生霸凌之調和機制，下列敘述何者完全正確？",
+        options: [
+          { key: "A", text: "導師知悉疑似霸凌事件時，不需先自行認定四要件成立，即應於24小時內向校內權責人員通報。" },
+          { key: "B", text: "調和程序中雙方所為之不利於己之陳述，於後續調查程序中一律可採為懲處證據。" },
+          { key: "C", text: "只要學校認為有助於和解，得強制進行當面公開對質。" },
+          { key: "D", text: "生對生霸凌調和不成時，事件即告終結，不得再轉入調查程序。" }
+        ],
+        answer: "A",
+        rationale: "依準則第17條，知悉「疑似」霸凌即負有24小時內通報責任，通報不以霸凌正式認定為前提。調和時雙方讓步陳述不得作為後續調查之不利證據；調查原則上不得強迫對質。"
+      },
+      {
+        id: 61,
+        category: "counsel",
+        tag: "非特定學生校安檢查",
+        question: "學務處接獲檢舉指稱非特定身分之七年級學生阿哲書包內疑似藏有彈簧刀。依現行規定，學校對阿哲進行「校園安全檢查」之法定程序何者正確？",
+        options: [
+          { key: "A", text: "導師因情勢緊急，得獨自一人在走廊將阿哲書包打開倒出翻找檢查。" },
+          { key: "B", text: "必須先耗費數週召開正式校園安全檢查全體委員會決議後始得檢查。" },
+          { key: "C", text: "學務處得與校長、導師或家長代表以通訊或當面方式緊急會商，認有危害之虞即由指定二位以上人員檢查，並全程錄影保存至少三年。" },
+          { key: "D", text: "為顧及尊嚴，檢查時應將阿哲強制帶離，不得讓其在場觀看。" }
+        ],
+        answer: "C",
+        rationale: "依管教注意事項第29點及第30點：針對非特定身分學生，經學務處與校長、導師或家長代表緊急會商認有危害之虞，得由指定二人以上進行檢查；受檢學生本人希望在場時應同意其在場，並全程錄影保存至少三年。"
+      },
+      {
+        id: 62,
+        category: "counsel",
+        tag: "兒少保護法通報",
+        question: "學生小澪哭訴放學後遭母親強迫至酒店陪朋友喝酒賭博，拒絕就遭毆打反鎖家中，並苦求導師千萬不要說出去。導師應如何處置？",
+        options: [
+          { key: "A", text: "屬於校園性平事件，於24小時內向校內權責人員通報。" },
+          { key: "B", text: "屬於校園霸凌事件，通報縣市政府教育主管機關。" },
+          { key: "C", text: "屬於兒少保護事件，應於知悉後24小時內依法向社政主管機關進行責任通報。" },
+          { key: "D", text: "尊重學生信任與隱私請求，先私下蒐證暫不通報。" }
+        ],
+        answer: "C",
+        rationale: "依《兒童及少年福利與權益保障法》第53條，教育人員知悉兒少遭受虐待、遺棄或強迫從事不正當場所行為，具法定通報義務，至遲不得超過24小時，不得因當事人請求保密而隱匿。"
+      },
+      {
+        id: 63,
+        category: "practice",
+        tag: "阿基米德頓悟之說",
+        question: "相傳古希臘學者阿基米德在澡盆沐浴見水溢出時突然領悟浮力原理，不禁高呼「Eureka!」。這種當下瞬間豁然開朗的頓悟，在知識論中屬於何種知識來源？",
+        options: [
+          { key: "A", text: "直觀 (Intuition)" },
+          { key: "B", text: "權威 (Authority)" },
+          { key: "C", text: "天啟 (Revelation)" },
+          { key: "D", text: "感官 (The Senses)" }
+        ],
+        answer: "A",
+        rationale: "直觀 (Intuition) 係指不需經過漫長逐步的演繹推理，而在剎那間透過洞察與直覺突然領悟知識或解答之哲學觀點。"
+      },
+      {
+        id: 64,
+        category: "counsel",
+        tag: "禁止集體處罰",
+        question: "小明上課多次玩手機，教師暫時保管手機並命其寫反省表，同時命令全班同學共同繳交罰款100元以示連帶警惕。此管教之評析何者正確？",
+        options: [
+          { key: "A", text: "為維護團體紀律，教師有權要求全班繳交連帶罰款。" },
+          { key: "B", text: "只要多數家長表決通過，即得以罰款作為合法管教手段。" },
+          { key: "C", text: "教師得依規定暫時保管手機，但嚴禁連帶罰款與集體處罰其他未違規之學生。" },
+          { key: "D", text: "教師可藉此機會直接解鎖翻閱手機通訊紀錄確認其他違規。" }
+        ],
+        answer: "C",
+        rationale: "依管教注意事項，教師管教必須遵循比例原則，且明令禁止連帶處罰無辜同學（禁止集體處罰），亦不得施加金錢罰款處罰。"
+      },
+      {
+        id: 65,
+        category: "practice",
+        tag: "教育實習請假規定",
+        question: "國文科實習學生小語因故未請假即曠職缺席4小時。依《師資培育之大學及教育實習機構辦理教育實習辦法》，此缺勤時數應如何計算？",
+        options: [
+          { key: "A", text: "應請假而未請假者以二倍時數計算，故以8小時計，視為請假1日。" },
+          { key: "B", text: "只要事後補填假單，即可依實際缺席4小時計。" },
+          { key: "C", text: "逕予調降教育實習總成績10分。" },
+          { key: "D", text: "視為重大違規，直接報請教育部終止實習。" }
+        ],
+        answer: "A",
+        rationale: "依實習辦法第16條，請假8小時以1日計算，應請假而未請假者以二倍時數計算。缺席4小時乘以二倍為8小時，故視為請假1日。"
+      },
+      {
+        id: 66,
+        category: "practice",
+        tag: "垃圾桶決策模式",
+        question: "某高中推動新課程，初期共識不清、參與人員流動頻繁，最後在一次臨時會議中，僅因當下某方案恰好符合部分參與者需求即告通過。此組織決策模式符合下列何者？",
+        options: [
+          { key: "A", text: "理性模式 (Rational Model)" },
+          { key: "B", text: "政治協商模式 (Political Model)" },
+          { key: "C", text: "垃圾桶模式 (Garbage Can Model)" },
+          { key: "D", text: "綜合掃描模式 (Mixed-Scanning Model)" }
+        ],
+        answer: "C",
+        rationale: "Cohen 等人提出「垃圾桶模式」，用以解釋組織在「目標模糊、技術不明、流動參與」之有組織的混亂狀態下，問題、解題方案、參與者與選擇機會四股潮流偶然碰撞產生的決策。"
+      },
+      {
+        id: 67,
+        category: "practice",
+        tag: "福祿貝爾園丁教育說",
+        question: "劉老師秉持福祿貝爾 (Froebel)「教師即園丁」之理念。下列何者為其最核心的教學實踐？",
+        options: [
+          { key: "A", text: "如嚴格修剪雜草般，強行規定全班必須完全整齊劃一進度。" },
+          { key: "B", text: "如依花草個別天性灌溉般，依照學生獨特天賦與個別差異調整教學引導方式。" },
+          { key: "C", text: "遵循制式化標準規訓手冊進行嚴苛管理。" },
+          { key: "D", text: "以高壓競爭手段拔除落後學生以維護花園整體水平。" }
+        ],
+        answer: "B",
+        rationale: "福祿貝爾視兒童為具有神性發展潛能的花草種子，教師如細心園丁，應尊重其內在自然生長天性與個別差異，提供適宜環境順性陶冶。"
+      },
+      {
+        id: 68,
+        category: "teacher",
+        tag: "校事會議組成規範",
+        question: "依現行《高級中等以下學校教師解聘不續聘停聘或資遣辦法》第12條，學校校事會議應置委員幾人？下列何者非屬法定當然組成代表？",
+        options: [
+          { key: "A", text: "校事會議應置委員五人。" },
+          { key: "B", text: "組成包含校長、家長會代表、行政人員代表、教師會代表及社會公正人士專家各一人。" },
+          { key: "C", text: "任一性別委員人數原則上不得少於三分之一。" },
+          { key: "D", text: "得由實習學生擔任教師代表出任校事會議。" }
+        ],
+        answer: "D",
+        rationale: "校事會議委員為五人（校長、家長代表、行政代表、教師會代表、校外專家各一），任一性別不得少於1/3。實習學生尚未具合格教師身分，依法不得擔任教師代表。"
+      },
+      {
+        id: 69,
+        category: "practice",
+        tag: "班級常規與規矩",
+        question: "洪老師將「學習規矩，成就方圓」定為班級經營的核心理念。這反映了洪老師重視下列何者在班級生活中的核心價值？",
+        options: [
+          { key: "A", text: "人格感召" },
+          { key: "B", text: "諄諄教誨" },
+          { key: "C", text: "情境薰陶" },
+          { key: "D", text: "制定原則（明訂行為界線與自律常規）" }
+        ],
+        answer: "D",
+        rationale: "語出「不以規矩，不能成方圓」，強調透過明確訂定清晰的常規標準與行為原則，讓學生有所依循並在界線內陶冶自律能力。"
+      },
+      {
+        id: 70,
+        category: "counsel",
+        tag: "校園霸凌通報與雙軌處置",
+        question: "小龍指控大龍故意伸腳將其絆倒並嘲笑，令小龍懼怕上學。導師知悉後，依現行法規應採取何項第一步適法處置？",
+        options: [
+          { key: "A", text: "絆倒僅發生一次非持續性，認定不符四要件而不受理。" },
+          { key: "B", text: "私下找兩位同學在走廊對質，待釐清真相後再考慮通報。" },
+          { key: "C", text: "優先對小龍進行個案輔導關懷，並於24小時內依規定進行校安通報由權責單位啟動處理。" },
+          { key: "D", text: "逕自要求大龍停學一週以示警惕。" }
+        ],
+        answer: "C",
+        rationale: "《校園霸凌防制準則》規定，知悉疑似霸凌行為應於24小時內完成法定通報，由學校審查小組依法審查受理並得視意願啟動調和或調查，導師不可私自判定結案或私下對質。"
+      }
+    ];
+
+    // 系統狀態
+    let activeQuestions = [...questions];
+    let currentIndex = 0;
+    let userAnswers = {}; // { qId: 'A' }
+    let bookmarkedIds = new Set();
+    let isExamMode = false;
+    let isBookmarkOnly = false;
+    let timerInterval = null;
+    let timerSeconds = 0;
+
+    // DOM 元素快取
+    const categorySelect = document.getElementById('categorySelect');
+    const switchModeBtn = document.getElementById('switchModeBtn');
+    const quizModeBadge = document.getElementById('quizModeBadge');
+    const resetQuizBtn = document.getElementById('resetQuizBtn');
+    const bookmarkFilterBtn = document.getElementById('bookmarkFilterBtn');
+    const bookmarkCount = document.getElementById('bookmarkCount');
+
+    const currentQuestionNum = document.getElementById('currentQuestionNum');
+    const totalQuestionsNum = document.getElementById('totalQuestionsNum');
+    const accuracyRate = document.getElementById('accuracyRate');
+    const correctNumSpan = document.getElementById('correctNum');
+    const answeredNumSpan = document.getElementById('answeredNum');
+    const progressBar = document.getElementById('progressBar');
+    const timerDisplay = document.getElementById('timerDisplay');
+
+    const questionTag = document.getElementById('questionTag');
+    const starBtn = document.getElementById('starBtn');
+    const questionText = document.getElementById('questionText');
+    const optionsList = document.getElementById('optionsList');
+    const explanationPanel = document.getElementById('explanationPanel');
+    const resultStatus = document.getElementById('resultStatus');
+    const explanationText = document.getElementById('explanationText');
+
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const submitExamBtn = document.getElementById('submitExamBtn');
+    const questionGrid = document.getElementById('questionGrid');
+    const quickClearBookmarks = document.getElementById('quickClearBookmarks');
+
+    // Modal 元件
+    const customModal = document.getElementById('customModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalMsg = document.getElementById('modalMsg');
+    const modalConfirmBtn = document.getElementById('modalConfirmBtn');
+    const modalCancelBtn = document.getElementById('modalCancelBtn');
+
+    const summaryModal = document.getElementById('summaryModal');
+    const sumTotal = document.getElementById('sumTotal');
+    const sumCorrect = document.getElementById('sumCorrect');
+    const sumScore = document.getElementById('sumScore');
+    const reviewExamBtn = document.getElementById('reviewExamBtn');
+    const restartBtn = document.getElementById('restartBtn');
+
+    // 彈出對話框回調管理
+    let modalConfirmCallback = null;
+
+    function showDialog(title, message, onConfirm, showCancel = true) {
+      modalTitle.innerText = title;
+      modalMsg.innerText = message;
+      modalConfirmCallback = onConfirm;
+      
+      if (showCancel) {
+        modalCancelBtn.classList.remove('hidden');
+      } else {
+        modalCancelBtn.classList.add('hidden');
+      }
+      customModal.classList.remove('hidden');
+    }
+
+    modalCancelBtn.addEventListener('click', () => {
+      customModal.classList.add('hidden');
+      modalConfirmCallback = null;
+    });
+
+    modalConfirmBtn.addEventListener('click', () => {
+      customModal.classList.add('hidden');
+      if (typeof modalConfirmCallback === 'function') {
+        modalConfirmCallback();
+      }
+      modalConfirmCallback = null;
+    });
+
+    // 初始化載入
+    function init() {
+      applyFilters();
+      buildQuestionGrid();
+      bindEvents();
+    }
+
+    // 事件監聽綁定
+    function bindEvents() {
+      categorySelect.addEventListener('change', () => {
+        isBookmarkOnly = false;
+        bookmarkFilterBtn.classList.remove('ring-2', 'ring-amber-300', 'bg-amber-600');
+        applyFilters();
+      });
+
+      switchModeBtn.addEventListener('click', toggleQuizMode);
+      resetQuizBtn.addEventListener('click', confirmReset);
+      bookmarkFilterBtn.addEventListener('click', toggleBookmarkView);
+      starBtn.addEventListener('click', toggleBookmarkCurrent);
+      quickClearBookmarks.addEventListener('click', clearAllBookmarks);
+
+      prevBtn.addEventListener('click', () => {
+        if (currentIndex > 0) {
+          currentIndex--;
+          renderCurrentQuestion();
+        }
+      });
+
+      nextBtn.addEventListener('click', () => {
+        if (currentIndex < activeQuestions.length - 1) {
+          currentIndex++;
+          renderCurrentQuestion();
+        }
+      });
+
+      submitExamBtn.addEventListener('click', submitExam);
+
+      reviewExamBtn.addEventListener('click', () => {
+        summaryModal.classList.add('hidden');
+        isExamMode = false;
+        quizModeBadge.innerText = '成績複習模式';
+        switchModeBtn.innerText = '切換為模擬測驗';
+        stopTimer();
+        timerDisplay.classList.add('hidden');
+        renderCurrentQuestion();
+      });
+
+      restartBtn.addEventListener('click', () => {
+        summaryModal.classList.add('hidden');
+        userAnswers = {};
+        currentIndex = 0;
+        if (isExamMode) startTimer();
+        renderCurrentQuestion();
+        updateStats();
+      });
+    }
+
+    // 篩選試題清單
+    function applyFilters() {
+      const cat = categorySelect.value;
+      if (isBookmarkOnly) {
+        activeQuestions = questions.filter(q => bookmarkedIds.has(q.id));
+      } else if (cat === 'all') {
+        activeQuestions = [...questions];
+      } else {
+        activeQuestions = questions.filter(q => q.category === cat);
+      }
+
+      currentIndex = 0;
+      totalQuestionsNum.innerText = activeQuestions.length;
+
+      if (activeQuestions.length === 0) {
+        questionText.innerText = "此分類下暫無題目。";
+        optionsList.innerHTML = "";
+        explanationPanel.classList.add('hidden');
+        currentQuestionNum.innerText = "0";
+        questionTag.innerText = "無題目";
+        progressBar.style.width = "0%";
+      } else {
+        renderCurrentQuestion();
+      }
+      buildQuestionGrid();
+      updateStats();
+    }
+
+    // 渲染當前試題
+    function renderCurrentQuestion() {
+      if (activeQuestions.length === 0) return;
+
+      const q = activeQuestions[currentIndex];
+      currentQuestionNum.innerText = currentIndex + 1;
+      totalQuestionsNum.innerText = activeQuestions.length;
+
+      // 進度條
+      const progressPercent = ((currentIndex + 1) / activeQuestions.length) * 100;
+      progressBar.style.width = `${progressPercent}%`;
+
+      // 標籤與星號
+      questionTag.innerText = q.tag;
+      if (bookmarkedIds.has(q.id)) {
+        starBtn.innerHTML = '<i class="fa-solid fa-star text-amber-500"></i>';
+      } else {
+        starBtn.innerHTML = '<i class="fa-regular fa-star text-slate-300"></i>';
+      }
+
+      // 題目
+      questionText.innerText = `${q.id}. ${q.question}`;
+
+      // 選項清單
+      optionsList.innerHTML = '';
+      const selected = userAnswers[q.id];
+
+      q.options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = "w-full text-left p-3.5 sm:p-4 rounded-2xl border transition-all text-xs sm:text-sm flex items-start gap-3 relative";
+
+        let borderClass = "border-slate-200/90 bg-white hover:bg-slate-50 text-slate-700 shadow-sm";
+        let badgeClass = "bg-slate-100 text-slate-600 border border-slate-300";
+
+        if (!isExamMode) {
+          // 練習模式或複習模式：若已作答，顯示顏色回饋
+          if (selected) {
+            if (opt.key === q.answer) {
+              borderClass = "border-emerald-500 bg-emerald-50/70 text-emerald-900 font-semibold ring-1 ring-emerald-400";
+              badgeClass = "bg-emerald-600 text-white border-emerald-600";
+            } else if (opt.key === selected) {
+              borderClass = "border-rose-400 bg-rose-50/70 text-rose-900 ring-1 ring-rose-400";
+              badgeClass = "bg-rose-500 text-white border-rose-500";
+            }
+          }
+        } else {
+          // 考試模式：僅標示目前選取項目
+          if (selected === opt.key) {
+            borderClass = "border-indigo-600 bg-indigo-50/70 text-indigo-900 font-semibold ring-1 ring-indigo-500";
+            badgeClass = "bg-indigo-600 text-white border-indigo-600";
+          }
+        }
+
+        btn.className = `w-full text-left p-3.5 sm:p-4 rounded-2xl border transition-all text-xs sm:text-sm flex items-start gap-3 ${borderClass}`;
+        btn.innerHTML = `
+          <span class="w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs shrink-0 mt-0.5 ${badgeClass}">
+            ${opt.key}
+          </span>
+          <span class="flex-1 leading-relaxed">${opt.text}</span>
+        `;
+
+        btn.addEventListener('click', () => chooseOption(q.id, opt.key));
+        optionsList.appendChild(btn);
+      });
+
+      // 解析卡片顯示控制
+      if (!isExamMode && selected) {
+        explanationPanel.classList.remove('hidden');
+        if (selected === q.answer) {
+          resultStatus.innerHTML = `<span class="text-emerald-600 flex items-center gap-1.5"><i class="fa-solid fa-circle-check text-lg"></i> 作答正確！</span>`;
+        } else {
+          resultStatus.innerHTML = `<span class="text-rose-600 flex items-center gap-1.5"><i class="fa-solid fa-circle-xmark text-lg"></i> 答錯了！正確解答為 (${q.answer})</span>`;
+        }
+        explanationText.innerText = q.rationale;
+      } else {
+        explanationPanel.classList.add('hidden');
+      }
+
+      // 按鈕狀態控制
+      prevBtn.disabled = currentIndex === 0;
+      if (currentIndex === activeQuestions.length - 1) {
+        nextBtn.classList.add('hidden');
+        if (isExamMode) {
+          submitExamBtn.classList.remove('hidden');
+        }
+      } else {
+        nextBtn.classList.remove('hidden');
+        submitExamBtn.classList.add('hidden');
+      }
+
+      highlightGridCurrent();
+    }
+
+    // 作答選擇邏輯
+    function chooseOption(qId, key) {
+      const q = questions.find(item => item.id === qId);
+
+      // 練習模式若已作答則不重複鎖定
+      if (!isExamMode && userAnswers[qId]) return;
+
+      userAnswers[qId] = key;
+
+      // 練習模式答錯自動收藏錯題
+      if (!isExamMode && key !== q.answer) {
+        bookmarkedIds.add(qId);
+        updateBookmarkCountUI();
+      }
+
+      updateStats();
+      renderCurrentQuestion();
+      buildQuestionGrid();
+    }
+
+    // 建立題號導航網格
+    function buildQuestionGrid() {
+      questionGrid.innerHTML = '';
+      activeQuestions.forEach((q, idx) => {
+        const itemBtn = document.createElement('button');
+        const ans = userAnswers[q.id];
+        
+        let colorClass = "bg-slate-100 text-slate-600 hover:bg-slate-200";
+
+        if (!isExamMode) {
+          if (ans) {
+            colorClass = ans === q.answer ? "bg-emerald-500 text-white font-bold" : "bg-rose-500 text-white font-bold";
+          }
+        } else {
+          if (ans) {
+            colorClass = "bg-indigo-600 text-white font-bold";
+          }
+        }
+
+        if (idx === currentIndex) {
+          colorClass += " ring-2 ring-offset-1 ring-slate-800 scale-105 z-10";
+        }
+
+        itemBtn.className = `w-8 h-8 rounded-lg text-xs flex items-center justify-center transition-all ${colorClass}`;
+        itemBtn.innerText = idx + 1;
+        itemBtn.title = `第 ${idx + 1} 題：${q.tag}`;
+
+        itemBtn.addEventListener('click', () => {
+          currentIndex = idx;
+          renderCurrentQuestion();
+        });
+
+        questionGrid.appendChild(itemBtn);
+      });
+    }
+
+    function highlightGridCurrent() {
+      const buttons = questionGrid.querySelectorAll('button');
+      buttons.forEach((btn, idx) => {
+        if (idx === currentIndex) {
+          btn.classList.add('ring-2', 'ring-offset-1', 'ring-slate-800', 'scale-105');
+        } else {
+          btn.classList.remove('ring-2', 'ring-offset-1', 'ring-slate-800', 'scale-105');
+        }
+      });
+    }
+
+    // 計分統計
+    function updateStats() {
+      let correct = 0;
+      let totalAnswered = 0;
+
+      activeQuestions.forEach(q => {
+        const ans = userAnswers[q.id];
+        if (ans) {
+          totalAnswered++;
+          if (ans === q.answer) correct++;
+        }
+      });
+
+      correctNumSpan.innerText = correct;
+      answeredNumSpan.innerText = totalAnswered;
+      const rate = totalAnswered > 0 ? Math.round((correct / totalAnswered) * 100) : 0;
+      accuracyRate.innerText = `${rate}%`;
+    }
+
+    // 收藏 / 錯題開關
+    function toggleBookmarkCurrent() {
+      const q = activeQuestions[currentIndex];
+      if (bookmarkedIds.has(q.id)) {
+        bookmarkedIds.delete(q.id);
+      } else {
+        bookmarkedIds.add(q.id);
+      }
+      updateBookmarkCountUI();
+      renderCurrentQuestion();
+    }
+
+    function updateBookmarkCountUI() {
+      bookmarkCount.innerText = bookmarkedIds.size;
+    }
+
+    function toggleBookmarkView() {
+      isBookmarkOnly = !isBookmarkOnly;
+      if (isBookmarkOnly) {
+        if (bookmarkedIds.size === 0) {
+          showDialog("收藏庫為空", "目前尚未收藏任何題目或產生錯題！在作答中點擊星星可隨時加入收藏。", null, false);
+          isBookmarkOnly = false;
+          return;
+        }
+        bookmarkFilterBtn.classList.add('ring-2', 'ring-amber-300', 'bg-amber-600');
+        applyFilters();
+      } else {
+        bookmarkFilterBtn.classList.remove('ring-2', 'ring-amber-300', 'bg-amber-600');
+        applyFilters();
+      }
+    }
+
+    function clearAllBookmarks() {
+      if (bookmarkedIds.size === 0) {
+        showDialog("提示", "目前沒有任何收藏題目。", null, false);
+        return;
+      }
+      showDialog("確認清除", "是否確定清空目前所有的錯題與星號收藏紀錄？", () => {
+        bookmarkedIds.clear();
+        updateBookmarkCountUI();
+        if (isBookmarkOnly) {
+          isBookmarkOnly = false;
+          bookmarkFilterBtn.classList.remove('ring-2', 'ring-amber-300', 'bg-amber-600');
+          applyFilters();
+        } else {
+          renderCurrentQuestion();
+        }
+      });
+    }
+
+    // 模式切換 (練習 <-> 測驗)
+    function toggleQuizMode() {
+      if (!isExamMode) {
+        showDialog("切換至模擬測驗模式", "測驗模式中將「隱藏即時答案與詳解」，並啟動測驗計時器。確定開始模擬考試嗎？", () => {
+          isExamMode = true;
+          quizModeBadge.innerText = '模擬測驗中';
+          quizModeBadge.className = 'bg-amber-500 px-2.5 py-1 rounded-full text-white text-xs font-semibold shadow-sm';
+          switchModeBtn.innerText = '切換為即時練習';
+          timerDisplay.classList.remove('hidden');
+          startTimer();
+          userAnswers = {}; // 重置答案以進行純測驗
+          renderCurrentQuestion();
+          buildQuestionGrid();
+          updateStats();
+        });
+      } else {
+        isExamMode = false;
+        quizModeBadge.innerText = '即時練習模式';
+        quizModeBadge.className = 'bg-indigo-800/80 px-2.5 py-1 rounded-full text-indigo-100 text-xs font-medium border border-indigo-500/50';
+        switchModeBtn.innerText = '切換為模擬測驗';
+        timerDisplay.classList.add('hidden');
+        stopTimer();
+        renderCurrentQuestion();
+        buildQuestionGrid();
+      }
+    }
+
+    // 計時器
+    function startTimer() {
+      timerSeconds = 0;
+      clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        timerSeconds++;
+        const mins = String(Math.floor(timerSeconds / 60)).padStart(2, '0');
+        const secs = String(timerSeconds % 60).padStart(2, '0');
+        timerDisplay.innerHTML = `<i class="fa-regular fa-clock mr-1"></i>${mins}:${secs}`;
+      }, 1000);
+    }
+
+    function stopTimer() {
+      clearInterval(timerInterval);
+    }
+
+    // 提交考卷
+    function submitExam() {
+      const unansweredCount = activeQuestions.filter(q => !userAnswers[q.id]).length;
+      let confirmMsg = "確定提交考卷並結算成績嗎？";
+      if (unansweredCount > 0) {
+        confirmMsg = `尚有 ${unansweredCount} 題未作答，確定要現在交卷結算嗎？`;
+      }
+
+      showDialog("交卷確認", confirmMsg, () => {
+        stopTimer();
+        let correctCount = 0;
+        activeQuestions.forEach(q => {
+          if (userAnswers[q.id] === q.answer) {
+            correctCount++;
+          } else {
+            bookmarkedIds.add(q.id); // 錯題自動加入收藏
+          }
+        });
+
+        updateBookmarkCountUI();
+        const score = Math.round((correctCount / activeQuestions.length) * 100);
+
+        sumTotal.innerText = activeQuestions.length;
+        sumCorrect.innerText = correctCount;
+        sumScore.innerText = `${score}分`;
+
+        summaryModal.classList.remove('hidden');
+      });
+    }
+
+    // 重設進度
+    function confirmReset() {
+      showDialog("重新作答", "是否確認清空目前答題紀錄？", () => {
+        userAnswers = {};
+        currentIndex = 0;
+        if (isExamMode) startTimer();
+        renderCurrentQuestion();
+        buildQuestionGrid();
+        updateStats();
+      });
+    }
+
+    // 頁面載入完成啟動
+    window.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
